@@ -101,7 +101,7 @@ class MysqlEchtIntegrationTest {
         MysqlSchema.initialisieren(mysql);
         MysqlSchema.initialisieren(mysql);
         assertTrue(MysqlSchema.istLeer(mysql), "Frische Schema-Anlage ohne Strafen gilt als leer");
-        assertEquals("1", metaWert("schema_version"));
+        assertEquals("2", metaWert("schema_version"));
     }
 
     @Test

@@ -27,6 +27,7 @@ public final class MysqlSchema {
     public static final String T_HISTORY = "punish_history";
     public static final String T_HISTORY_ARCHIV = "punish_history_archiv";
     public static final String T_SPIELER = "punish_spieler";
+    public static final String T_IP_HISTORIE = "punish_ip_historie";
     public static final String T_MISSED_BROADCASTS = "punish_missed_broadcasts";
     public static final String T_MISSED_CURSOR = "punish_missed_cursor";
     public static final String T_META = "punish_meta";
@@ -34,11 +35,12 @@ public final class MysqlSchema {
     public static final List<String> ALLE_TABELLEN = List.of(
             T_BANS, T_MUTES, T_TIMEOUTS, T_FREEZES, T_IP_BANS, T_IP_MUTES, T_IP_TIMEOUTS,
             T_WARNS, T_VERSTOESSE, T_NOTIZEN, T_REPORTS, T_HISTORY, T_HISTORY_ARCHIV, T_SPIELER,
-            T_MISSED_BROADCASTS, T_MISSED_CURSOR);
+            T_IP_HISTORIE, T_MISSED_BROADCASTS, T_MISSED_CURSOR);
 
     static final String META_SCHEMA_VERSION = "schema_version";
     static final String META_MIGRATION = "yaml_migration";
-    static final String SCHEMA_VERSION = "1";
+    static final String SCHEMA_VERSION = "2";
+    private static final String SCHEMA_VERSION_IP_HISTORIE = "1";
     public static final String MIGRATION_LAEUFT = "running";
     public static final String MIGRATION_FERTIG = "fertig";
 
@@ -189,6 +191,14 @@ public final class MysqlSchema {
                     + "PRIMARY KEY (uuid),"
                     + "KEY idx_spieler_name (name),"
                     + "KEY idx_spieler_ip (letzte_ip))" + ENGINE);
+            statement.execute("CREATE TABLE IF NOT EXISTS " + T_IP_HISTORIE + " ("
+                    + "ip VARCHAR(64) NOT NULL,"
+                    + "uuid CHAR(36) NOT NULL,"
+                    + "name VARCHAR(64) NOT NULL,"
+                    + "zuletzt_gesehen BIGINT NOT NULL,"
+                    + "PRIMARY KEY (ip, uuid),"
+                    + "KEY idx_ip_historie_uuid (uuid),"
+                    + "KEY idx_ip_historie_zeit (zuletzt_gesehen))" + ENGINE);
             statement.execute("CREATE TABLE IF NOT EXISTS " + T_MISSED_BROADCASTS + " ("
                     + "id BIGINT NOT NULL,"
                     + "typ VARCHAR(64) NOT NULL,"
@@ -209,7 +219,14 @@ public final class MysqlSchema {
                 metaSchreiben(verbindung, META_SCHEMA_VERSION, SCHEMA_VERSION);
                 LOG.info("MySQL-Schema angelegt ({} Tabellen, Schema-Version {}).",
                         ALLE_TABELLEN.size(), SCHEMA_VERSION);
-            } else if (!vorhandeneVersion.equals(SCHEMA_VERSION)) {
+            } else if (vorhandeneVersion.equals(SCHEMA_VERSION)) {
+                LOG.debug("MySQL-Schema-Version {} ist aktuell.", vorhandeneVersion);
+            } else if (vorhandeneVersion.equals(SCHEMA_VERSION_IP_HISTORIE)) {
+                ipHistorieNachfuellen(verbindung);
+                metaSchreiben(verbindung, META_SCHEMA_VERSION, SCHEMA_VERSION);
+                LOG.info("MySQL-Schema von Version {} auf {} migriert (IP-Historie).",
+                        vorhandeneVersion, SCHEMA_VERSION);
+            } else {
                 throw new IllegalStateException("MySQL-Schema-Version '" + vorhandeneVersion
                         + "' passt nicht zu dieser Plugin-Version (erwartet '" + SCHEMA_VERSION
                         + "'). Bitte Plugin-Stände und Datenbank abgleichen – Start verweigert, "
@@ -221,6 +238,19 @@ public final class MysqlSchema {
             throw new IllegalStateException("MySQL-Schema konnte nicht angelegt werden.", e);
         }
         LOG.info("MySQL-Schema geprüft ({} Tabellen).", ALLE_TABELLEN.size());
+    }
+
+    private static void ipHistorieNachfuellen(Connection verbindung) throws Exception {
+        try (Statement statement = verbindung.createStatement()) {
+            int zeilen = statement.executeUpdate("INSERT INTO " + T_IP_HISTORIE
+                    + " (ip, uuid, name, zuletzt_gesehen)"
+                    + " SELECT letzte_ip, uuid, name, zuletzt_gesehen FROM " + T_SPIELER
+                    + " WHERE letzte_ip IS NOT NULL AND letzte_ip <> '' AND letzte_ip <> 'unbekannt'"
+                    + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
+                    + " zuletzt_gesehen = GREATEST(zuletzt_gesehen, VALUES(zuletzt_gesehen))");
+            LOG.info("IP-Historie aus bestehenden Spieler-Cache-Einträgen nachgefüllt ({} Zeilen aktualisiert).",
+                    zeilen);
+        }
     }
 
     public static boolean istLeer(MysqlVerbindung mysql) {

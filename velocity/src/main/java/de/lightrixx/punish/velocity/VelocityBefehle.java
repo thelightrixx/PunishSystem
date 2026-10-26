@@ -25,6 +25,7 @@ import de.lightrixx.punish.command.PermabannCommand;
 import de.lightrixx.punish.command.PunishHistoryCommand;
 import de.lightrixx.punish.command.PunishNoteCommand;
 import de.lightrixx.punish.command.PunishStatusCommand;
+import de.lightrixx.punish.command.PsCheckCommand;
 import de.lightrixx.punish.command.PunishHelpCommand;
 import de.lightrixx.punish.command.PunishVersionCommand;
 import de.lightrixx.punish.command.PunishCommand;
@@ -254,6 +255,11 @@ public final class VelocityBefehle {
                         verstossService, warnService, banRepository, muteRepository,
                         timeoutRepository, freezeRepository, ipBanRepository, ipMuteRepository, ipTimeoutRepository,
                         verstossRepository, warnRepository, verzeichnis));
+        registrar(manager, plugin, proxy, messageService, "pscheck",
+                List.of(),
+                new PsCheckCommand(messageService, config, protectionService, playerCache,
+                        verstossService, warnService, banRepository, muteRepository,
+                        timeoutRepository, verzeichnis));
         registrar(manager, plugin, proxy, messageService, "punish-history",
                 List.of("pshistory"),
                 new PunishHistoryCommand(messageService, config, protectionService, playerCache,

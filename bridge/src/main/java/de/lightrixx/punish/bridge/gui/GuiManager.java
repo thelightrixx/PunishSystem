@@ -33,6 +33,7 @@ public final class GuiManager {
     private final Map<UUID, Long> letzteAnfrage = new ConcurrentHashMap<>();
     private final Map<UUID, Long> sitzungZeit = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> listenSeiten = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> reportIds = new ConcurrentHashMap<>();
     private static final long SITZUNG_TTL_MILLIS = 60L * 60L * 1000L;
     private static final long EINGABE_TTL_MILLIS = 60L * 1000L;
 
@@ -79,6 +80,7 @@ public final class GuiManager {
         sitzungZeit.remove(uuid);
         wartendeEingabeZeit.remove(uuid);
         listenSeiten.remove(uuid);
+        reportIds.remove(uuid);
     }
 
     public boolean darfOeffnen(Player spieler) {
@@ -250,18 +252,44 @@ public final class GuiManager {
     }
 
     public void oeffneReports(Player spieler, int seite) {
+        reportIds.remove(spieler.getUniqueId());
         ladeUndOeffne(spieler, GuiMenues.Menue.REPORTS, "Reports", Protokoll.GUI_REPORTS, seite);
+    }
+
+    public void oeffneReportInfo(Player spieler, long id) {
+        if (spieler == null || id <= 0L) {
+            return;
+        }
+        reportIds.put(spieler.getUniqueId(), id);
+        ladeUndOeffne(spieler, GuiMenues.Menue.REPORT_DETAIL, "Report #" + id,
+                Protokoll.GUI_REPORT_INFO, 1, String.valueOf(id));
     }
 
     @SuppressWarnings("null")
     private void ladeUndOeffne(Player spieler, GuiMenues.Menue menue, String kopf,
                                String typ, int seite) {
+        String extra = typ.equals(Protokoll.GUI_REPORTS) ? "offen" : "";
+        ladeUndOeffne(spieler, menue, kopf, typ, seite, extra);
+    }
+
+    @SuppressWarnings("null")
+    private void ladeUndOeffne(Player spieler, GuiMenues.Menue menue, String kopf,
+                               String typ, int seite, String extra) {
         GuiSitzung sitzung = sitzung(spieler);
         String ziel = sitzung.ziel();
-        String extra = typ.equals(Protokoll.GUI_REPORTS) ? "offen" : "";
         UUID uuid = spieler.getUniqueId();
         String zielKopie = ziel;
         int seiteKopie = Math.max(1, seite);
+        String extraKopie = extra == null ? "" : extra;
+        long detailId = 0L;
+        if (menue == GuiMenues.Menue.REPORT_DETAIL) {
+            try {
+                detailId = Long.parseLong(extraKopie.trim());
+            } catch (Exception e) {
+                detailId = 0L;
+            }
+        }
+        long detailIdKopie = detailId;
         sitzung.seite(seiteKopie);
         long anfrageId;
         try {
@@ -273,7 +301,7 @@ public final class GuiManager {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Protokoll.GuiAntwort antwort;
             try {
-                var anfrage = new Protokoll.GuiAnfrage(anfrageId, uuid, typ, zielKopie, "", seiteKopie, extra);
+                var anfrage = new Protokoll.GuiAnfrage(anfrageId, uuid, typ, zielKopie, "", seiteKopie, extraKopie);
                 antwort = kanal.frageGuiAn(anfrage, 4000L);
             } catch (Exception e) {
                 antwort = null;
@@ -300,17 +328,23 @@ public final class GuiManager {
                     if (!(offenes instanceof GuiMenues.GuiHolder holder) || holder.menue() != menue) {
                         return;
                     }
-                    Inventory inv = Objects.requireNonNull(GuiMenues.liste(menue, kopf + " " + (zielKopie.isBlank() ? "" : zielKopie), versand), "Inventar");
-                    online.openInventory(inv);
+                    Inventory inv = menue == GuiMenues.Menue.REPORT_DETAIL
+                            ? GuiMenues.reportDetail(versand, detailIdKopie)
+                            : GuiMenues.liste(menue, kopf + " " + (zielKopie.isBlank() ? "" : zielKopie), versand);
+                    online.openInventory(Objects.requireNonNull(inv, "Inventar"));
                 } catch (Exception e) {
                     org.slf4j.LoggerFactory.getLogger(GuiManager.class).trace("GUI-Liste konnte nicht geöffnet werden.", e);
                 }
             });
         });
         try {
-            spieler.openInventory(Objects.requireNonNull(GuiMenues.liste(menue, kopf + " lädt …",
-                    new Protokoll.GuiAntwort(1L, true, "", 1, 1, 0, List.of(
-                            new Protokoll.GuiZeile("INFO", "Lade vom Proxy …", "Bitte kurz warten.", "", "")))), "Inventar"));
+            Inventory ladeInv = menue == GuiMenues.Menue.REPORT_DETAIL
+                    ? GuiMenues.reportDetail(new Protokoll.GuiAntwort(1L, true, "", 1, 1, 0, List.of(
+                            new Protokoll.GuiZeile("INFO", "Lade vom Proxy …", "Bitte kurz warten.", "", ""))), detailIdKopie)
+                    : GuiMenues.liste(menue, kopf + " lädt …",
+                            new Protokoll.GuiAntwort(1L, true, "", 1, 1, 0, List.of(
+                                    new Protokoll.GuiZeile("INFO", "Lade vom Proxy …", "Bitte kurz warten.", "", ""))));
+            spieler.openInventory(Objects.requireNonNull(ladeInv, "Inventar"));
         } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(GuiManager.class).trace("Lade-Menü konnte nicht geöffnet werden.", e);
         }
@@ -355,6 +389,7 @@ public final class GuiManager {
             case STATUS -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.STATUS);
             case HISTORY -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.HISTORY);
             case REPORTS -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.REPORTS);
+            case REPORT_DETAIL -> klickReportDetail(spieler, sitzung, slot);
         };
     }
 
@@ -703,42 +738,87 @@ public final class GuiManager {
             return true;
         }
         if (slot >= 0 && slot < 45) {
-            var inv = spieler.getOpenInventory().getTopInventory();
-            try {
-                var stack = inv.getItem(slot);
-                if (stack == null || stack.getItemMeta() == null || stack.getItemMeta().lore() == null) {
+            String aktion = aktionAusLore(spieler, slot);
+            if (aktion != null && !aktion.isBlank()) {
+                if (menue == GuiMenues.Menue.REPORTS && aktion.startsWith("reports info ")) {
+                    String idRoh = aktion.substring("reports info ".length()).trim();
+                    try {
+                        oeffneReportInfo(spieler, Long.parseLong(idRoh));
+                    } catch (Exception e) {
+                        spieler.sendMessage(prefixHinweis("Ungültige Report-ID.", NamedTextColor.RED));
+                    }
                     return true;
                 }
-                String aktion = null;
-                for (var zeile : stack.getItemMeta().lore()) {
-                    String klar = klartext(zeile);
-                    if (klar != null && klar.startsWith("Klick: /")) {
-                        aktion = klar.substring("Klick: /".length()).trim();
-                        break;
+                try {
+                    kanal.sendeBefehl(spieler.getUniqueId(), aktion);
+                    spieler.sendMessage(prefixHinweis(Component.text().append(Component.text("Gesendet: ", NamedTextColor.GREEN))
+                            .append(Component.text("/" + aktion, NamedTextColor.WHITE)).build()));
+                    if (menue == GuiMenues.Menue.STATUS) {
+                        oeffneStatus(spieler, sitzung.seite());
+                    } else if (menue == GuiMenues.Menue.HISTORY) {
+                        oeffneHistory(spieler, sitzung.seite());
+                    } else if (menue == GuiMenues.Menue.REPORTS) {
+                        oeffneReports(spieler, sitzung.seite());
                     }
+                } catch (Exception e) {
+                    spieler.sendMessage(prefixHinweis("Proxy nicht erreichbar.", NamedTextColor.RED));
                 }
-                if (aktion != null && !aktion.isBlank()) {
-                    try {
-                        kanal.sendeBefehl(spieler.getUniqueId(), aktion);
-                        spieler.sendMessage(prefixHinweis(Component.text().append(Component.text("Gesendet: ", NamedTextColor.GREEN))
-                                .append(Component.text("/" + aktion, NamedTextColor.WHITE)).build()));
-                        if (menue == GuiMenues.Menue.STATUS) {
-                            oeffneStatus(spieler, sitzung.seite());
-                        } else if (menue == GuiMenues.Menue.HISTORY) {
-                            oeffneHistory(spieler, sitzung.seite());
-                        } else if (menue == GuiMenues.Menue.REPORTS) {
-                            oeffneReports(spieler, sitzung.seite());
-                        }
-                    } catch (Exception e) {
-                        spieler.sendMessage(prefixHinweis("Proxy nicht erreichbar.", NamedTextColor.RED));
-                    }
-                }
-            } catch (Exception e) {
-                org.slf4j.LoggerFactory.getLogger(GuiManager.class).trace("Listen-Klick übersprungen.", e);
             }
             return true;
         }
         return true;
+    }
+
+    private boolean klickReportDetail(Player spieler, GuiSitzung sitzung, int slot) {
+        if (verweigertOhneGuiRecht(spieler)) {
+            return true;
+        }
+        Long id = reportIds.get(spieler.getUniqueId());
+        if (slot == 22) {
+            reportIds.remove(spieler.getUniqueId());
+            oeffneReports(spieler, 1);
+            return true;
+        }
+        if (slot == 26) {
+            if (id != null) {
+                oeffneReportInfo(spieler, id);
+            }
+            return true;
+        }
+        String aktion = aktionAusLore(spieler, slot);
+        if (aktion == null || aktion.isBlank()) {
+            return true;
+        }
+        try {
+            kanal.sendeBefehl(spieler.getUniqueId(), aktion);
+            spieler.sendMessage(prefixHinweis(Component.text().append(Component.text("Gesendet: ", NamedTextColor.GREEN))
+                    .append(Component.text("/" + aktion, NamedTextColor.WHITE)).build()));
+            if (id != null) {
+                oeffneReportInfo(spieler, id);
+            }
+        } catch (Exception e) {
+            spieler.sendMessage(prefixHinweis("Proxy nicht erreichbar.", NamedTextColor.RED));
+        }
+        return true;
+    }
+
+    private String aktionAusLore(Player spieler, int slot) {
+        var inv = spieler.getOpenInventory().getTopInventory();
+        try {
+            var stack = inv.getItem(slot);
+            if (stack == null || stack.getItemMeta() == null || stack.getItemMeta().lore() == null) {
+                return null;
+            }
+            for (var zeile : stack.getItemMeta().lore()) {
+                String klar = klartext(zeile);
+                if (klar != null && klar.startsWith("Klick: /")) {
+                    return klar.substring("Klick: /".length()).trim();
+                }
+            }
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(GuiManager.class).trace("Klick-Aktion konnte nicht gelesen werden.", e);
+        }
+        return null;
     }
 
     private final Map<UUID, Long> wartendeEingabeZeit = new ConcurrentHashMap<>();

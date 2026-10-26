@@ -67,7 +67,7 @@ public final class AltsCommand extends PunishCommand {
         ServerScope filter = scope.hatteFlag() ? scope.scope() : null;
 
         List<CachedPlayer> alts = new ArrayList<>();
-        for (CachedPlayer kandidat : playerCache.findeNachIp(ip)) {
+        for (CachedPlayer kandidat : playerCache.findeNachIpMitHistorie(ip)) {
             if (kandidat == null) {
                 continue;
             }

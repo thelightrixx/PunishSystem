@@ -34,6 +34,22 @@ public final class PlayerCache {
     private final ConcurrentHashMap<UUID, CachedPlayer> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, UUID> namenCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, java.util.Set<UUID>> ipIndex = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<UUID, IpHistorienEintrag>> ipHistorie =
+            new ConcurrentHashMap<>();
+
+    public record IpHistorienEintrag(String ip, UUID uuid, String name, long zuletztGesehen) {
+        public IpHistorienEintrag {
+            Objects.requireNonNull(ip, "Die IP darf nicht null sein.");
+            Objects.requireNonNull(uuid, "Die UUID darf nicht null sein.");
+            if (name == null || name.isBlank()) {
+                name = "Unbekannt";
+            }
+        }
+
+        CachedPlayer alsSpieler() {
+            return new CachedPlayer(uuid, name, ip, zuletztGesehen);
+        }
+    }
 
     private final ConcurrentHashMap<UUID, Long> letztePersistierung = new ConcurrentHashMap<>();
     private static final long PERSISTENZ_THROTTLE_MILLIS = 10L * 60L * 1000L;
@@ -134,7 +150,42 @@ public final class PlayerCache {
             LOG.info("IP-Retention: {} abgelaufene IPs (> {} Tage) anonymisiert.",
                     anonymisiert, fristMillis / (24L * 60L * 60L * 1000L));
         }
+        sweepIpHistorie(jetztMillis, fristMillis);
         return anonymisiert;
+    }
+
+    private void sweepIpHistorie(long jetztMillis, long fristMillis) {
+        if (ipHistorie.isEmpty()) {
+            return;
+        }
+        long grenze = jetztMillis - fristMillis;
+        int entfernt = 0;
+        for (Map.Entry<String, ConcurrentHashMap<UUID, IpHistorienEintrag>> eintrag : ipHistorie.entrySet()) {
+            ConcurrentHashMap<UUID, IpHistorienEintrag> uuids = eintrag.getValue();
+            int vorher = uuids.size();
+            uuids.entrySet().removeIf(kandidat -> kandidat.getValue() == null
+                    || kandidat.getValue().zuletztGesehen() < grenze);
+            entfernt += vorher - uuids.size();
+            if (uuids.isEmpty()) {
+                ipHistorie.remove(eintrag.getKey(), uuids);
+            }
+        }
+        if (entfernt <= 0) {
+            return;
+        }
+        LOG.info("IP-Retention: {} abgelaufene IP-Historien-Einträge entfernt.", entfernt);
+        if (mysql != null) {
+            ioExecutor.ausfuehren(() -> {
+                try (Connection verbindung = mysql.verbindung();
+                     PreparedStatement loeschen = verbindung.prepareStatement(
+                             "DELETE FROM " + MysqlSchema.T_IP_HISTORIE + " WHERE zuletzt_gesehen < ?")) {
+                    loeschen.setLong(1, grenze);
+                    loeschen.executeUpdate();
+                } catch (Exception e) {
+                    LOG.warn("Abgelaufene IP-Historie konnte nicht aus MySQL entfernt werden.", e);
+                }
+            });
+        }
     }
     private final Object cacheLock = new Object();
     private final File datei;
@@ -281,6 +332,8 @@ public final class PlayerCache {
                 ipIndexEntfernen(alt);
             }
             ipIndexEintragen(spieler);
+            ipHistorieEintragen(new IpHistorienEintrag(spieler.letzteIp(), uuid,
+                    spieler.name(), spieler.zuletztGesehen()));
 
             negativCache.remove(neuerNameLower);
             if (negativCache.size() > 5000) {
@@ -448,6 +501,81 @@ public final class PlayerCache {
             }
         }
         return treffer;
+    }
+
+    public List<CachedPlayer> findeNachIpMitHistorie(String ip) {
+        if (mysql == null) {
+            return findeNachIp(ip);
+        }
+        String kanonisch = kanonischeIpAus(ip);
+        if (kanonisch == null) {
+            return List.of();
+        }
+        Map<UUID, CachedPlayer> treffer = new LinkedHashMap<>();
+        for (CachedPlayer spieler : mitKanonischerIp(kanonisch)) {
+            treffer.put(spieler.uuid(), spieler);
+        }
+        ConcurrentHashMap<UUID, IpHistorienEintrag> eintraege = ipHistorie.get(kanonisch);
+        if (eintraege != null) {
+            for (IpHistorienEintrag eintrag : eintraege.values()) {
+                CachedPlayer aktuell = cache.get(eintrag.uuid());
+                treffer.putIfAbsent(eintrag.uuid(), aktuell != null ? aktuell : eintrag.alsSpieler());
+            }
+        }
+        List<CachedPlayer> ergebnis = new ArrayList<>(treffer.values());
+        ergebnis.sort(java.util.Comparator.comparingLong(CachedPlayer::zuletztGesehen).reversed());
+        return ergebnis;
+    }
+
+    public List<String> historischeIpsFuer(UUID uuid) {
+        Objects.requireNonNull(uuid, "Die Spieler-UUID darf nicht null sein.");
+        java.util.Set<String> ips = new java.util.LinkedHashSet<>();
+        CachedPlayer aktuell = cache.get(uuid);
+        if (aktuell != null) {
+            String kanonisch = kanonischeIpAus(aktuell.letzteIp());
+            if (kanonisch != null) {
+                ips.add(kanonisch);
+            }
+        }
+        for (Map.Entry<String, ConcurrentHashMap<UUID, IpHistorienEintrag>> eintrag : ipHistorie.entrySet()) {
+            if (eintrag.getValue().containsKey(uuid)) {
+                ips.add(eintrag.getKey());
+            }
+        }
+        return List.copyOf(ips);
+    }
+
+    public void loescheIpHistorie(String ip) {
+        String kanonisch = kanonischeIpAus(ip);
+        if (kanonisch == null) {
+            return;
+        }
+        ipHistorie.remove(kanonisch);
+        if (mysql != null) {
+            ioExecutor.ausfuehren(() -> {
+                try (Connection verbindung = mysql.verbindung();
+                     PreparedStatement loeschen = verbindung.prepareStatement(
+                             "DELETE FROM " + MysqlSchema.T_IP_HISTORIE + " WHERE ip = ?")) {
+                    loeschen.setString(1, kanonisch);
+                    loeschen.executeUpdate();
+                } catch (Exception e) {
+                    LOG.warn("IP-Historie für '{}' konnte nicht gelöscht werden.", kanonisch, e);
+                }
+            });
+        }
+    }
+
+    private void ipHistorieEintragen(IpHistorienEintrag eintrag) {
+        if (eintrag == null) {
+            return;
+        }
+        String kanonisch = kanonischeIpAus(eintrag.ip());
+        if (kanonisch == null) {
+            return;
+        }
+        ipHistorie.computeIfAbsent(kanonisch, k -> new ConcurrentHashMap<>())
+                .merge(eintrag.uuid(), eintrag, (alt, neu) ->
+                        alt.zuletztGesehen() >= neu.zuletztGesehen() ? alt : neu);
     }
 
     private void ipIndexNeuBauen() {
@@ -970,6 +1098,8 @@ public final class PlayerCache {
                 cache.put(spieler.uuid(), spieler);
                 namenCache.put(spieler.name().toLowerCase(Locale.ROOT), spieler.uuid());
                 ipIndexEintragen(spieler);
+                ipHistorieEintragen(new IpHistorienEintrag(spieler.letzteIp(), spieler.uuid(),
+                        spieler.name(), spieler.zuletztGesehen()));
                 snapshot.add(spieler);
             }
             final List<CachedPlayer> kopie = List.copyOf(snapshot);
@@ -1012,14 +1142,45 @@ public final class PlayerCache {
                 throw new IllegalStateException("PlayerCache konnte nicht aus MySQL geladen werden – "
                         + "Start/Reload verweigert (Fail-Closed, kein leerer Bestand).", e);
             }
+            ConcurrentHashMap<String, ConcurrentHashMap<UUID, IpHistorienEintrag>> tmpHistorie =
+                    new ConcurrentHashMap<>();
+            try (Connection verbindung = mysql.verbindung();
+                 Statement statement = verbindung.createStatement();
+                 ResultSet ergebnis = statement.executeQuery(
+                         "SELECT ip, uuid, name, zuletzt_gesehen FROM " + MysqlSchema.T_IP_HISTORIE)) {
+                while (ergebnis.next()) {
+                    try {
+                        String ip = ergebnis.getString("ip");
+                        UUID uuid = UUID.fromString(ergebnis.getString("uuid"));
+                        String name = ergebnis.getString("name");
+                        long zuletztGesehen = ergebnis.getLong("zuletzt_gesehen");
+                        IpHistorienEintrag eintrag = new IpHistorienEintrag(ip, uuid, name, zuletztGesehen);
+                        String kanonisch = kanonischeIpAus(eintrag.ip());
+                        if (kanonisch == null) {
+                            continue;
+                        }
+                        tmpHistorie.computeIfAbsent(kanonisch, k -> new ConcurrentHashMap<>())
+                                .merge(uuid, eintrag, (alt, neu) ->
+                                        alt.zuletztGesehen() >= neu.zuletztGesehen() ? alt : neu);
+                    } catch (Exception e) {
+                        LOG.error("Eine IP-Historien-Zeile ist ungültig und wird übersprungen.", e);
+                    }
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException("IP-Historie konnte nicht aus MySQL geladen werden – "
+                        + "Start/Reload verweigert (Fail-Closed, kein leerer Bestand).", e);
+            }
             synchronized (cacheLock) {
                 cache.putAll(tmpCache);
                 cache.keySet().removeIf(uuid -> !tmpCache.containsKey(uuid));
                 namenCache.putAll(tmpNamen);
                 namenCache.keySet().removeIf(name -> !tmpNamen.containsKey(name));
                 ipIndexNeuBauen();
+                ipHistorie.clear();
+                ipHistorie.putAll(tmpHistorie);
             }
             LOG.info("Es wurden {} Spieler aus MySQL geladen.", cache.size());
+            LOG.info("Es wurden {} IP-Historien-Einträge aus MySQL geladen.", tmpHistorie.size());
         } finally {
             StoreLock.LOCK.writeLock().unlock();
         }
@@ -1051,10 +1212,29 @@ public final class PlayerCache {
                 upsert.setLong(4, spieler.zuletztGesehen());
                 upsert.executeUpdate();
             }
+            schreibeIpHistorie(verbindung, spieler);
         } catch (Exception e) {
             LOG.error("PlayerCache-Eintrag für {} konnte nicht nach MySQL geschrieben werden.",
                     spieler.uuid(), e);
             throw new IllegalStateException("PlayerCache-Schreibvorgang fehlgeschlagen: " + spieler.uuid(), e);
+        }
+    }
+
+    private void schreibeIpHistorie(Connection verbindung, CachedPlayer spieler) throws Exception {
+        String kanonisch = kanonischeIpAus(spieler.letzteIp());
+        if (kanonisch == null) {
+            return;
+        }
+        try (PreparedStatement upsert = verbindung.prepareStatement(
+                "INSERT INTO " + MysqlSchema.T_IP_HISTORIE
+                        + " (ip, uuid, name, zuletzt_gesehen) VALUES (?, ?, ?, ?)"
+                        + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
+                        + " zuletzt_gesehen = GREATEST(zuletzt_gesehen, VALUES(zuletzt_gesehen))")) {
+            upsert.setString(1, kanonisch);
+            upsert.setString(2, spieler.uuid().toString());
+            upsert.setString(3, spieler.name());
+            upsert.setLong(4, spieler.zuletztGesehen());
+            upsert.executeUpdate();
         }
     }
 
@@ -1064,7 +1244,12 @@ public final class PlayerCache {
                      "INSERT INTO " + MysqlSchema.T_SPIELER
                              + " (uuid, name, letzte_ip, zuletzt_gesehen) VALUES (?, ?, ?, ?)"
                              + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
-                             + " letzte_ip = VALUES(letzte_ip), zuletzt_gesehen = VALUES(zuletzt_gesehen)")) {
+                             + " letzte_ip = VALUES(letzte_ip), zuletzt_gesehen = VALUES(zuletzt_gesehen)");
+             PreparedStatement historie = verbindung.prepareStatement(
+                     "INSERT INTO " + MysqlSchema.T_IP_HISTORIE
+                             + " (ip, uuid, name, zuletzt_gesehen) VALUES (?, ?, ?, ?)"
+                             + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
+                             + " zuletzt_gesehen = GREATEST(zuletzt_gesehen, VALUES(zuletzt_gesehen))")) {
             for (CachedPlayer spieler : snapshot) {
                 if (spieler == null) {
                     continue;
@@ -1074,8 +1259,17 @@ public final class PlayerCache {
                 upsert.setString(3, spieler.letzteIp());
                 upsert.setLong(4, spieler.zuletztGesehen());
                 upsert.addBatch();
+                String kanonisch = kanonischeIpAus(spieler.letzteIp());
+                if (kanonisch != null) {
+                    historie.setString(1, kanonisch);
+                    historie.setString(2, spieler.uuid().toString());
+                    historie.setString(3, spieler.name());
+                    historie.setLong(4, spieler.zuletztGesehen());
+                    historie.addBatch();
+                }
             }
             upsert.executeBatch();
+            historie.executeBatch();
         } catch (Exception e) {
             LOG.error("PlayerCache konnte nicht nach MySQL geschrieben werden ({} Einträge).",
                     snapshot.size(), e);

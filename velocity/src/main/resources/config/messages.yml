@@ -216,6 +216,14 @@ messages:
   alts-ip-gebannt: " <red>[IP gebannt: %scope%]"
   alts-leer: "<green>Keine Accounts mit der IP <white>%ip% <green>gefunden."
 
+  # Spielerakte (/pscheck)
+  pscheck-syntax: "<red>Verwendung: /pscheck <Spieler>"
+  pscheck-kopf: "<yellow>Spielerakte <white>%ziel% <gray>| IP: <white>%ip%"
+  pscheck-status: "<gray>Bans: <white>%banns% <gray>| Mutes: <white>%mutes% <gray>| Timeouts: <white>%timeouts% <gray>| Verstöße: <white>%verstoesse% <gray>(<white>%punkte%<gray>/<white>%max%<gray>) | Warns: <white>%warns% <gray>| Alts: <white>%alts%"
+  pscheck-hinweis: "<gray>Aktionen:"
+  pscheck-link: "<gray>[<yellow>%label%<gray>]"
+  pscheck-unban-link: "<green>[Unban beantragen]"
+
   # Report-System
   syntax-report: "<red>Verwendung: /report <Spieler> <Grund>"
   syntax-reports: "<red>Verwendung: /reports [offen|alle] | info <Id> | accept <Id> | deny <Id> [Grund] | close <Id> [Grund] | delete <Id>"
@@ -246,7 +254,7 @@ messages:
   chatfilter-wort-ungueltig: "<red>Ungültiges Wort (2-50 Zeichen, keine Umbrüche)."
   chatfilter-sync-start: "<green>Modell-Sync an alle Server angestoßen (nur Server mit abweichendem Stand laden)."
   chatfilter-sync-aus: "<red>Modell-Sync inaktiv (chatfilter.modell-sync=false oder kein Modell auf dem Proxy)."
-  chatfilter-blockiert: "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%)."
+  chatfilter-blockiert: "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%, Kanal: %kanal%)."
 
   # Diagnose (/punish-diagnostics)
   punish-diagnostics-kopf: "<yellow>Diagnose <gray>(<white>%plattform% %version%<gray>)"

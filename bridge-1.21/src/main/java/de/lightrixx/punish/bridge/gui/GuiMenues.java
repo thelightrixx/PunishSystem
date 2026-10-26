@@ -19,7 +19,8 @@ import java.util.List;
 public final class GuiMenues {
 
     public enum Menue {
-        HAUPT, SPIELER, AKTION, GRUND, DAUER, SCOPE, BESTAETIGEN, STATUS, HISTORY, REPORTS
+        HAUPT, SPIELER, AKTION, GRUND, DAUER, SCOPE, BESTAETIGEN, STATUS, HISTORY, REPORTS,
+        REPORT_DETAIL
     }
 
     public record GuiHolder(Menue menue) implements InventoryHolder {
@@ -341,6 +342,60 @@ public final class GuiMenues {
         inv.setItem(48, item(Material.ARROW, "<gray>Seite -", List.of()));
         inv.setItem(49, item(Material.SUNFLOWER, "<yellow>Aktualisieren", List.of("<gray>Klick: neu laden")));
         inv.setItem(50, item(Material.ARROW, "<gray>Seite +", List.of()));
+        return inv;
+    }
+
+    public static Inventory reportDetail(Protokoll.GuiAntwort antwort, long id) {
+        Inventory inv = Bukkit.createInventory(new GuiHolder(Menue.REPORT_DETAIL), 27,
+                titel("Report #" + id));
+        if (antwort == null || !antwort.erfolg()) {
+            inv.setItem(13, item(Material.RED_CONCRETE, "<red>Report nicht verfügbar",
+                    List.of("<gray>" + escape(antwort == null ? "Timeout (4s)." : antwort.nachricht()))));
+            inv.setItem(22, item(Material.ARROW, "<gray>Zurück zur Liste", List.of()));
+            return inv;
+        }
+        Protokoll.GuiZeile kopf = null;
+        List<Protokoll.GuiZeile> aktionen = new ArrayList<>();
+        if (antwort.eintraege() != null) {
+            for (Protokoll.GuiZeile zeile : antwort.eintraege()) {
+                if (zeile == null) {
+                    continue;
+                }
+                if ("REPORT_AKTION".equals(zeile.typ())) {
+                    aktionen.add(zeile);
+                } else if (kopf == null) {
+                    kopf = zeile;
+                }
+            }
+        }
+        if (kopf != null) {
+            List<String> lore = new ArrayList<>();
+            if (!kopf.details().isBlank()) {
+                for (String teil : kopf.details().split("\n")) {
+                    lore.add("<gray>" + escape(teil));
+                }
+            }
+            inv.setItem(4, item(Material.WRITABLE_BOOK, "<white>" + escape(kopf.titel()), lore));
+        }
+        Material[] icons = {Material.LIME_CONCRETE, Material.RED_CONCRETE, Material.GRAY_CONCRETE};
+        int[] slots = {11, 13, 15};
+        for (int i = 0; i < aktionen.size() && i < slots.length; i++) {
+            Protokoll.GuiZeile zeile = aktionen.get(i);
+            List<String> lore = new ArrayList<>();
+            if (!zeile.details().isBlank()) {
+                lore.add("<gray>" + escape(zeile.details()));
+            }
+            if (!zeile.aktion().isBlank()) {
+                lore.add("<yellow>Klick: /" + escape(zeile.aktion()));
+            }
+            inv.setItem(slots[i], item(icons[i], "<white>" + escape(zeile.titel()), lore));
+        }
+        if (aktionen.isEmpty()) {
+            inv.setItem(13, item(Material.GRAY_CONCRETE, "<gray>Keine Aktionen", List.of()));
+        }
+        inv.setItem(22, item(Material.ARROW, "<gray>Zurück zur Liste", List.of()));
+        inv.setItem(26, item(Material.SUNFLOWER, "<yellow>Aktualisieren",
+                List.of("<gray>Klick: neu laden")));
         return inv;
     }
 

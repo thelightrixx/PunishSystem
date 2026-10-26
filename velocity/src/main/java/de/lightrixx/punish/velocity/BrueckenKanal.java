@@ -1119,6 +1119,7 @@ public final class BrueckenKanal {
             java.util.Map.entry("report", "punish.report"),
             java.util.Map.entry("reports", "punish.reports"),
             java.util.Map.entry("punish-status", "punish.status"),
+            java.util.Map.entry("pscheck", "punish.status"),
             java.util.Map.entry("punish-history", "punish.history"),
             java.util.Map.entry("punish-edit", "punish.edit"),
             java.util.Map.entry("alts", "punish.alts"),
@@ -1180,6 +1181,7 @@ public final class BrueckenKanal {
                     "punish.banip", "punish.muteip", "punish.timeoutip");
             case "punish-status", "psstatus" -> List.of("punish.status",
                     "punish.own", "punish.status.server");
+            case "pscheck" -> List.of("punish.status", "punish.own", "punish.status.server");
             case "punish-history", "pshistory" -> List.of("punish.history",
                     "punish.own", "punish.history.server");
             default -> List.of();

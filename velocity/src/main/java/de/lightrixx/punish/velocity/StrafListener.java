@@ -39,6 +39,10 @@ import de.lightrixx.punish.storage.VerpassteBroadcastsRepository;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,6 +64,11 @@ public final class StrafListener {
     private final AuftragsPlaner planer;
     private final BrueckenKanal kanal;
     private final GuiBrueckenDienst guiDienst;
+    private final BanRepository banRepository;
+    private volatile BroadcastService altWacheBroadcast;
+    private volatile de.lightrixx.punish.service.ProtectionService altWacheProtection;
+    private final java.util.concurrent.ConcurrentHashMap<UUID, Long> altWacheCooldown =
+            new java.util.concurrent.ConcurrentHashMap<>();
     private volatile PlatzhalterDienst platzhalterDienst;
     private volatile ChatfilterStaffelService chatfilterStaffel;
     private volatile ModellVerteilung modellVerteilung;
@@ -152,6 +161,13 @@ public final class StrafListener {
         this.planer = Objects.requireNonNull(planer, "Der Planer darf nicht null sein.");
         this.kanal = Objects.requireNonNull(kanal, "Der Kanal darf nicht null sein.");
         this.guiDienst = guiDienst;
+        this.banRepository = banRepository;
+    }
+
+    public void setAltWache(BroadcastService broadcastService,
+                            de.lightrixx.punish.service.ProtectionService protectionService) {
+        this.altWacheBroadcast = broadcastService;
+        this.altWacheProtection = protectionService;
     }
 
     public void setPlatzhalterDienst(PlatzhalterDienst platzhalterDienst) {
@@ -251,7 +267,105 @@ public final class StrafListener {
         } catch (Exception e) {
             logger.debug("PlayerCache-Update beim Login für '{}' fehlgeschlagen.", name, e);
         }
+        pruefeAltWache(uuid, name, ip);
         loginBasis.put(uuid, basis);
+    }
+
+    private void pruefeAltWache(UUID uuid, String name, String ip) {
+        BanRepository banns = this.banRepository;
+        BroadcastService broadcast = this.altWacheBroadcast;
+        if (banns == null || broadcast == null || ip == null || ip.isBlank()
+                || "unbekannt".equalsIgnoreCase(ip.trim())) {
+            return;
+        }
+        try {
+            if (!config.altWacheAktiv()) {
+                return;
+            }
+        } catch (Exception e) {
+            logger.debug("Alt-Wache-Aktiv-Lookup fehlgeschlagen, überspringe Prüfung.", e);
+            return;
+        }
+        long jetzt = System.currentTimeMillis();
+        long cooldownMillis = Math.max(1L, config.altWacheCooldownMinuten()) * 60_000L;
+        Long letzter = altWacheCooldown.get(uuid);
+        if (letzter != null && jetzt - letzter < cooldownMillis) {
+            return;
+        }
+        planer.aufgabeAsync(() -> {
+            try {
+                List<CachedPlayer> kandidaten = playerCache.findeNachIpMitHistorie(ip);
+                if (kandidaten == null || kandidaten.isEmpty()) {
+                    return;
+                }
+                long zeit = System.currentTimeMillis();
+                List<String> aktiveAlts = new ArrayList<>();
+                for (CachedPlayer kandidat : kandidaten) {
+                    if (kandidat == null || uuid.equals(kandidat.uuid())) {
+                        continue;
+                    }
+                    if (istAltGeschuetzt(kandidat.uuid())) {
+                        continue;
+                    }
+                    List<BanRecord> liste = banns.alleFuer(kandidat.uuid());
+                    if (liste == null || liste.isEmpty()) {
+                        continue;
+                    }
+                    boolean aktiv = false;
+                    for (BanRecord bann : liste) {
+                        if (bann != null && bann.istAktiv(zeit)) {
+                            aktiv = true;
+                            break;
+                        }
+                    }
+                    if (aktiv) {
+                        aktiveAlts.add(kandidat.name());
+                    }
+                }
+                if (aktiveAlts.isEmpty()) {
+                    return;
+                }
+                altWacheCooldown.put(uuid, zeit);
+                Map<String, String> platzhalter = new HashMap<>();
+                platzhalter.put("spieler", name);
+                platzhalter.put("alt", String.join(", ", aktiveAlts));
+                platzhalter.put("anzahl", String.valueOf(aktiveAlts.size()));
+                platzhalter.put("ip", maskiereIp(ip));
+                broadcast.senden(de.lightrixx.punish.core.MessageKeys.BROADCAST_ALT_WACHE, platzhalter);
+            } catch (Exception e) {
+                logger.debug("Alt-Wache-Prüfung für '{}' fehlgeschlagen.", name, e);
+            }
+        });
+    }
+
+    private boolean istAltGeschuetzt(UUID zielUuid) {
+        de.lightrixx.punish.service.ProtectionService protection = this.altWacheProtection;
+        if (protection == null || zielUuid == null) {
+            return false;
+        }
+        try {
+            return protection.istGeschuetzt(zielUuid,
+                    de.lightrixx.punish.service.ProtectionService.IgnoreTyp.ALTS);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String maskiereIp(String ip) {
+        String text = ip == null ? "" : ip.trim();
+        int doppelpunkt = text.indexOf(':');
+        if (doppelpunkt >= 0) {
+            int ende = text.lastIndexOf(':');
+            if (ende > 0) {
+                return text.substring(0, ende) + ":*";
+            }
+            return text;
+        }
+        int letzterPunkt = text.lastIndexOf('.');
+        if (letzterPunkt <= 0) {
+            return text;
+        }
+        return text.substring(0, letzterPunkt) + ".*";
     }
 
     private void migriereVorab(UUID uuid, String name, long jetzt) {

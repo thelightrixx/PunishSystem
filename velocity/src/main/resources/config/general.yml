@@ -274,6 +274,23 @@ chatfilter:
     buch: "stufe1"
     amboss: "stufe1"
 
+# --- Alt-Wache ---
+# Meldet beim Login ans Team, wenn derselbe Spieler mit einem anderen Account
+# auf derselben IP war, der aktuell gebannt ist. Reine Info, keine Auto-Strafe.
+# Grundlage ist die IP-Historie in MySQL (Fallback: Player-Cache).
+# cooldown-minuten: Sperre pro Spieler zwischen zwei Meldungen (1-1440).
+alt-wache:
+  aktiv: true
+  cooldown-minuten: 30
+
+# --- Unban-Antrag (Lite) ---
+# Optionaler Link im Bann-/IP-Bann-Screen und in /pscheck.
+# link: nur http:// oder https://; leer = kein Link.
+# text: MiniMessage-Text des klickbaren Links.
+bann-unban-antrag:
+  link: ""
+  text: "<green>Unban beantragen"
+
 # --- Update (/punish-update, Proxy-only) ---
 # Prüft Hangar auf neue Versionen, lädt sie und verteilt Backend-JARs per Kanal.
 # hangar-author/slug: Hangar-Projekt (z. B. author: lightrixx, slug: punishsystem).

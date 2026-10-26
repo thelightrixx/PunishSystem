@@ -7,11 +7,14 @@ import de.lightrixx.punish.model.IpBanRecord;
 import de.lightrixx.punish.util.MiniMessageUtil;
 import de.lightrixx.punish.util.ZeitFormat;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -96,12 +99,45 @@ public final class ScreenTexte {
                                         Map<String, String> platzhalter) {
         String vorlage = config.screen(screenTyp);
         String ersetzt = MiniMessageUtil.ersetzen(vorlage, platzhalter);
+        Component screen;
         try {
-            return MINI_MESSAGE.deserialize(ersetzt);
+            screen = MINI_MESSAGE.deserialize(ersetzt);
         } catch (Exception e) {
 
             LOG.warn("Ungültiges MiniMessage-Format im Screen '{}', nutze Plain-Text-Fallback.", screenTyp, e);
-            return Component.text(ersetzt);
+            screen = Component.text(ersetzt);
         }
+        return ergaenzeUnbanLink(config, screenTyp, screen);
+    }
+
+    private static Component ergaenzeUnbanLink(Konfiguration config, String screenTyp, Component screen) {
+        if (!screenTyp.equals(MessageKeys.SCREEN_BANN)
+                && !screenTyp.equals(MessageKeys.SCREEN_BANN_PERMANENT)
+                && !screenTyp.equals(MessageKeys.SCREEN_BANN_AUTO)
+                && !screenTyp.equals(MessageKeys.SCREEN_IP_BANN)) {
+            return screen;
+        }
+        String link = config.bannUnbanAntragLink();
+        if (link == null || link.isBlank()) {
+            return screen;
+        }
+        String ziel = link.trim();
+        String geprueft = ziel.toLowerCase(Locale.ROOT);
+        if (!geprueft.startsWith("http://") && !geprueft.startsWith("https://")) {
+            LOG.warn("Ungültiger Unban-Antrag-Link '{}' (nur http/https erlaubt).", ziel);
+            return screen;
+        }
+        String text = config.bannUnbanAntragText();
+        Component anzeige;
+        try {
+            anzeige = MINI_MESSAGE.deserialize(text == null ? "" : text);
+        } catch (Exception e) {
+            LOG.warn("Ungültiges MiniMessage-Format im Unban-Antrag-Text, nutze Plain-Text.", e);
+            anzeige = Component.text(text == null ? "" : text);
+        }
+        Component klickbar = anzeige
+                .clickEvent(ClickEvent.openUrl(ziel))
+                .hoverEvent(HoverEvent.showText(Component.text("Unban-Antrag öffnen")));
+        return screen.append(Component.newline()).append(Component.newline()).append(klickbar);
     }
 }

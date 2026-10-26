@@ -168,6 +168,12 @@ public final class DeleteIpCommand extends PunishCommand {
             fehler.add("Cache");
             LOG.warn("Delete-IP: Cache-Suche fehlgeschlagen.", e);
         }
+        try {
+            playerCache.loescheIpHistorie(kanonisch);
+        } catch (Exception e) {
+            fehler.add("IP-Historie");
+            LOG.warn("Delete-IP: IP-Historie-Löschung fehlgeschlagen.", e);
+        }
         LOG.info("IP-Löschung durchgeführt (Banns={}, Mutes={}, Timeouts={}, Cache={}).",
                 banns, mutes, timeouts, anonymisiert);
         int history = 0;

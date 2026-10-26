@@ -451,7 +451,7 @@ public final class BridgeKonfiguration implements Konfiguration {
             case "punish-help-fuss" ->
                     "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Beta: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>.";
             case "chatfilter-blockiert" ->
-                    "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%).";
+                    "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%, Kanal: %kanal%).";
             case "mute-sync-laeuft" ->
                     "<yellow>Strafen werden geladen, bitte kurz warten.";
             case "reload-teilweise" ->

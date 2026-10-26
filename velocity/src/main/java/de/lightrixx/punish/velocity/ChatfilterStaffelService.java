@@ -1,5 +1,6 @@
 package de.lightrixx.punish.velocity;
 
+import de.lightrixx.punish.chatfilter.FilterKanal;
 import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.model.ParseResult;
 import de.lightrixx.punish.net.Protokoll;
@@ -176,7 +177,7 @@ public final class ChatfilterStaffelService {
             broadcastService.senden(MessageKeys.BROADCAST_CHATFILTER_TREFFER, Map.of(
                     "spieler", name,
                     "quelle", treffer.quelle(),
-                    "kanal", treffer.kanal(),
+                    "kanal", FilterKanal.anzeigeFuer(treffer.kanal()),
                     "score", score,
                     "text", text));
         } catch (Exception e) {

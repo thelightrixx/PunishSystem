@@ -33,7 +33,9 @@ class AuditBridgeMessageKeysAbdeckungTest {
             "update-push-laufend", "update-push-fertig",
             "chatfilter-syntax", "chatfilter-an", "chatfilter-aus", "chatfilter-ai-an",
             "chatfilter-ai-aus", "chatfilter-add-erfolg", "chatfilter-wort-ungueltig",
-            "chatfilter-sync-start", "chatfilter-sync-aus");
+            "chatfilter-sync-start", "chatfilter-sync-aus",
+            "pscheck-syntax", "pscheck-kopf", "pscheck-status", "pscheck-hinweis",
+            "pscheck-link", "pscheck-unban-link", "alt-wache");
 
     private static final Set<String> PROXY_SYNC_DEFAULTS = Set.of(
             "ban-grund", "permabann-grund", "ban-ip-grund", "timeout-grund",
@@ -94,7 +96,12 @@ class AuditBridgeMessageKeysAbdeckungTest {
             Map.entry("befehl", "ban"),
             Map.entry("nutzung", "<Spieler> <Grund>"),
             Map.entry("kandidaten", "10"),
-            Map.entry("name", "Beispielname"));
+            Map.entry("name", "Beispielname"),
+            Map.entry("verstoesse", "4"),
+            Map.entry("alts", "2"),
+            Map.entry("alt", "AltAccount"),
+            Map.entry("warns", "1"),
+            Map.entry("label", "Status"));
 
     private static Map<String, Object> lade(String pfad) {
         try (InputStream in = AuditBridgeMessageKeysAbdeckungTest.class.getResourceAsStream(pfad)) {

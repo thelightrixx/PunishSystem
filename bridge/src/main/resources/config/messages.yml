@@ -133,7 +133,7 @@ messages:
   mute-blockiert: "<red>Du bist gemutet! Noch <white>%verbleibend%<red>. Grund: <white>%grund%"
   mute-sync-laeuft: "<yellow>Strafen werden geladen, bitte kurz warten."
   freeze-blockiert: "<red>Du bist eingefroren! Noch <white>%verbleibend%<red>. Grund: <white>%grund%"
-  chatfilter-blockiert: "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%)."
+  chatfilter-blockiert: "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%, Kanal: %kanal%)."
   auto-bann-abgelaufen-info: "<green>Dein Auto-Bann ist abgelaufen. Deine Verstöße wurden zurückgesetzt."
   ziel-gemutet: "<red>Du wurdest von <white>%ausfuehrer% <red>für <white>%dauer% <red>gemutet. Grund: <white>%grund%"
   ziel-entmutet: "<green>Du wurdest von <white>%ausfuehrer% <green>entmutet."

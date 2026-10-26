@@ -109,6 +109,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
                     "punish.mute", "punish.timeout", "punish.banip", "punish.muteip",
                     "punish.timeoutip");
             case "punish-status", "psstatus" -> List.of("punish.own", "punish.status.server");
+            case "pscheck" -> List.of("punish.own", "punish.status.server");
             case "punish-history", "pshistory" -> List.of("punish.own", "punish.history.server");
             default -> List.of();
         };
@@ -201,6 +202,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             case "punish-edit", "psedit" -> edit(sender, args, aktuell);
             case "punish-status", "psstatus", "punish-history", "pshistory" ->
                     statusHistory(befehl, sender, args, aktuell);
+            case "pscheck" -> args.length == 1 ? spielerVorschlag(sender, aktuell) : List.of();
             case "alts" -> alts(args, aktuell, sender);
             case "punish-delete-ip", "psdelete-ip", "psdeleteip" -> deleteIp(sender, aktuell);
             case "punish-version", "psversion" -> List.of();
@@ -300,6 +302,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
                 yield "Feld";
             }
             case "punish-status", "psstatus", "punish-history", "pshistory" -> "Spieler";
+            case "pscheck" -> "Spieler";
             case "chatfilter" -> "Unterbefehl";
             case "alts" -> "Spieler";
             case "punish-delete-ip", "psdelete-ip", "psdeleteip" -> "Spieler oder IP";

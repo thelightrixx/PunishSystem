@@ -189,6 +189,12 @@ public final class MessageKeys {
     public static final String CHATFILTER_SYNC_START = "chatfilter-sync-start";
     public static final String CHATFILTER_SYNC_AUS = "chatfilter-sync-aus";
     public static final String CHATFILTER_BLOCKIERT = "chatfilter-blockiert";
+    public static final String PSCHECK_SYNTAX = "pscheck-syntax";
+    public static final String PSCHECK_KOPF = "pscheck-kopf";
+    public static final String PSCHECK_STATUS = "pscheck-status";
+    public static final String PSCHECK_HINWEIS = "pscheck-hinweis";
+    public static final String PSCHECK_LINK = "pscheck-link";
+    public static final String PSCHECK_UNBAN_LINK = "pscheck-unban-link";
 
     public static final String IP_GETEILT_WARNUNG = "ip-geteilt-warnung";
     public static final String IP_GETEILT_BLOCK = "ip-geteilt-block";
@@ -261,6 +267,7 @@ public final class MessageKeys {
     public static final String BROADCAST_BAN_EDIT = "ban-edit";
     public static final String BROADCAST_MUTE_EDIT = "mute-edit";
     public static final String BROADCAST_TIMEOUT_EDIT = "timeout-edit";
+    public static final String BROADCAST_ALT_WACHE = "alt-wache";
 
     public static final String DEFAULT_BAN_GRUND = "ban-grund";
     public static final String DEFAULT_PERMABANN_GRUND = "permabann-grund";

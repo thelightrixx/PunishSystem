@@ -245,6 +245,22 @@ public interface Konfiguration {
         return true;
     }
 
+    default String bannUnbanAntragLink() {
+        return "";
+    }
+
+    default String bannUnbanAntragText() {
+        return "<green>Unban beantragen";
+    }
+
+    default boolean altWacheAktiv() {
+        return true;
+    }
+
+    default long altWacheCooldownMinuten() {
+        return 30L;
+    }
+
     default String verpassteKopf() {
         return "<gray>[<yellow>Verpasst<gray>] <white>%anzahl% <gray>verpasste Team-Nachrichten:";
     }

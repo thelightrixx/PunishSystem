@@ -40,8 +40,8 @@ public final class VelocityKonfiguration implements Konfiguration {
     private static final List<String> GENERAL_KEYS = List.of(
             "prefix", "netzwerk", "anzeige-zone", "schutz", "offline-resolution",
             "speicher", "datenschutz", "verstoesse", "warns", "limits", "bestaetigungen", "history", "mute", "tab",
-            "vorschlaege", "defaults", "reports", "chatfilter", "rang-buendel", "rang-gewicht",
-            "update", "config-version");
+            "vorschlaege", "defaults", "reports", "chatfilter", "alt-wache", "bann-unban-antrag",
+            "rang-buendel", "rang-gewicht", "update", "config-version");
 
     private final ProxyServer proxy;
     private final File datenOrdner;
@@ -1298,6 +1298,35 @@ public final class VelocityKonfiguration implements Konfiguration {
             return true;
         }
         return Karten.wahr(verpasst, "aktiv", true);
+    }
+
+    @Override
+    public String bannUnbanAntragLink() {
+        return Karten.text(abschnitt("bann-unban-antrag"), "link", "").trim();
+    }
+
+    @Override
+    public String bannUnbanAntragText() {
+        String text = Karten.text(abschnitt("bann-unban-antrag"), "text", null);
+        if (text == null || text.isBlank()) {
+            return Konfiguration.super.bannUnbanAntragText();
+        }
+        return text;
+    }
+
+    @Override
+    public boolean altWacheAktiv() {
+        return Karten.wahr(abschnitt("alt-wache"), "aktiv", true);
+    }
+
+    @Override
+    public long altWacheCooldownMinuten() {
+        long minuten = holeLang("alt-wache", "cooldown-minuten", 30L);
+        if (minuten < 1L) {
+            LOG.warn("alt-wache.cooldown-minuten < 1, nutze 1 (config/general.yml).");
+            return 1L;
+        }
+        return Math.min(minuten, 1440L);
     }
 
     @Override

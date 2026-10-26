@@ -54,6 +54,11 @@ commands:
     aliases: [psstatus]
     permission: punish.status
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  pscheck:
+    description: Zeigt eine kompakte Spielerakte (wird an den Proxy weitergeleitet).
+    usage: /pscheck <Spieler>
+    permission: punish.status
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
   ban:
     description: Bannt einen Spieler (wird an den Proxy weitergeleitet).
     usage: /ban <Spieler> <Dauer> [Grund] [--global|--server]

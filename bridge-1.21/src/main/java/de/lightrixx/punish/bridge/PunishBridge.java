@@ -199,6 +199,7 @@ public final class PunishBridge extends JavaPlugin {
         brigadierEintraege.add(tunnel("mute-all", new BridgeBefehlWeiterleitung(kanalClient, "mute-all", "punish.muteall", true, config)));
         brigadierEintraege.add(tunnel("unmute-all", new BridgeBefehlWeiterleitung(kanalClient, "unmute-all", "punish.unmuteall", false, config)));
         brigadierEintraege.add(tunnel("punish-status", new BridgeBefehlWeiterleitung(kanalClient, "punish-status", "punish.status", true, config)));
+        brigadierEintraege.add(tunnel("pscheck", new BridgeBefehlWeiterleitung(kanalClient, "pscheck", "punish.status", false, config)));
         brigadierEintraege.add(tunnel("punish-history", new BridgeBefehlWeiterleitung(kanalClient, "punish-history", "punish.history", true, config)));
         brigadierEintraege.add(tunnel("alts", new BridgeBefehlWeiterleitung(kanalClient, "alts", "punish.alts", true, config)));
         brigadierEintraege.add(tunnel("ban", new BridgeBefehlWeiterleitung(kanalClient, "ban", "punish.ban", true, config)));

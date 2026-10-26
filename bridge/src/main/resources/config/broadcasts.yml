@@ -61,7 +61,7 @@ broadcasts:
   warn-eskalation: { aktiv: true, nachricht: "<gray>[<yellow>Warn-Eskalation<gray>] <white>%spieler% <gray>hat bei <white>%anzahl% <gray>Verwarnungen automatisch einen Verstoß [%stufe%] erhalten. Auslöser: <white>%warn-grund%" }
   report-neu: { aktiv: true, nachricht: "<gray>[<red>Report<gray>] <white>%reporter% <gray>meldet <white>%spieler% <gray>(<white>#%id%<gray>, %server%). Grund: <white>%grund%" }
   report-close: { aktiv: true, nachricht: "<gray>[<green>Report<gray>] Report <white>#%id% <gray>gegen <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>geschlossen (<white>%status%<gray>)." }
-  chatfilter-treffer: { aktiv: true, nachricht: "<gray>[<yellow>Chatfilter<gray>] <white>%spieler% <gray>(%quelle%, %score%)<newline><gray>» <white>%text%" }
+  chatfilter-treffer: { aktiv: true, nachricht: "<gray>[<yellow>Chatfilter<gray>] <white>%spieler% <gray>(%quelle%, %kanal%, %score%)<newline><gray>» <white>%text%<newline><click:run_command:'/mute %spieler% 1h'><hover:show_text:'1 Stunde muten'><gray>[<yellow>/mute 1h<gray>]</hover></click> <click:run_command:'/warn %spieler% Chatfilter'><hover:show_text:'Verwarnen'><gray>[<yellow>/warn<gray>]</hover></click> <click:run_command:'/punish-gui %spieler%'><hover:show_text:'PunishGUI öffnen'><gray>[<yellow>GUI<gray>]</hover></click>" }
   version-mismatch: { aktiv: true, nachricht: "<gray>[<yellow>Version<gray>] <white>%server% <gray>meldet <white>%bridge% <gray>(Proxy: <white>%proxy%<gray>) – bitte alle Module auf dieselbe Version bringen." }
 
 # --- Verpasste Team-Nachrichten (Proxy-Master, lokaler Fallback vor Sync) ---

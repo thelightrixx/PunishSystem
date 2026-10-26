@@ -313,6 +313,7 @@ public final class PunishVelocity {
         kanal.setUpdateVerteilung(updateVerteilung);
         strafListener.setUpdateVerteilung(updateVerteilung);
         strafListener.setVerpasstNachsendung(verpasstRepo, verzeichnis, broadcastService);
+        strafListener.setAltWache(broadcastService, protectionService);
         try {
             loggeZeroConfigStatus(config, nutztMysql, modellVerteilung);
         } catch (Exception e) {

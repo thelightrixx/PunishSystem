@@ -995,7 +995,8 @@ public final class BridgeEnforcementListener implements Listener {
 
     private void sendeChatfilterBlockiert(Player spieler, FilterTreffer treffer) {
         String quelle = treffer.quelle() == TrefferQuelle.KI ? "KI" : "Wortliste";
-        Map<String, String> platzhalter = Map.of("quelle", quelle);
+        String kanal = treffer.kanal() == null ? "Chat" : treffer.kanal().anzeige();
+        Map<String, String> platzhalter = Map.of("quelle", quelle, "kanal", kanal);
         String vorlage = config.nachricht(de.lightrixx.punish.core.MessageKeys.CHATFILTER_BLOCKIERT);
         String ersetzt = MiniMessageUtil.ersetzen(vorlage, platzhalter);
         try {

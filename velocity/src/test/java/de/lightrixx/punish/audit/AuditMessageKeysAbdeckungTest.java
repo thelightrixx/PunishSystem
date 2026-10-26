@@ -83,7 +83,12 @@ class AuditMessageKeysAbdeckungTest {
             Map.entry("befehl", "ban"),
             Map.entry("nutzung", "/ban <Spieler> <Dauer> [Grund]"),
             Map.entry("kandidaten", "12"),
-            Map.entry("name", "BeispielName"));
+            Map.entry("name", "BeispielName"),
+            Map.entry("verstoesse", "4"),
+            Map.entry("alts", "2"),
+            Map.entry("alt", "AltAccount"),
+            Map.entry("warns", "1"),
+            Map.entry("label", "Status"));
 
     private static Map<String, Object> lade(String pfad) {
         try (InputStream in = AuditMessageKeysAbdeckungTest.class.getResourceAsStream(pfad)) {
