@@ -1,0 +1,299 @@
+name: PunishSystemBridge
+version: ${project.version}
+main: de.lightrixx.punish.bridge.PunishBridge
+api-version: '26.1'
+folia-supported: false
+description: >
+  PunishSystemBridge für Backend-Server: Mute-Enforcement, Befehls-Tunnel und PunishGUI (by lightrixx).
+  Source of Truth bleibt der Proxy, die Bridge hat keine eigene Straflogik.
+author: lightrixx
+authors: [lightrixx]
+softdepend: [PlaceholderAPI]
+commands:
+  punish-gui:
+    description: Öffnet die PunishGUI (Command-Builder, Daten live vom Proxy).
+    usage: /punish-gui [Spieler]
+    aliases: [psgui]
+    permission: punish.gui
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  mute:
+    description: Mutet einen Spieler (wird an den Proxy weitergeleitet).
+    usage: /mute <Spieler> <Dauer> [Grund] [--global|--server]
+    permission: punish.mute
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  unmute:
+    description: Entmutet einen Spieler (wird an den Proxy weitergeleitet).
+    usage: /unmute <Spieler>
+    permission: punish.unmute
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  mute-ip:
+    description: Mutet eine IP (wird an den Proxy weitergeleitet).
+    usage: /mute-ip <IP|Spieler> <Dauer> [Grund] [--global|--server]
+    aliases: [muteip]
+    permission: punish.muteip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  unmute-ip:
+    description: Entmutet eine IP (wird an den Proxy weitergeleitet).
+    usage: /unmute-ip <IP>
+    aliases: [unmuteip]
+    permission: punish.unmuteip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  mute-all:
+    description: Mutet alle Online-Spieler (wird an den Proxy weitergeleitet).
+    usage: /mute-all <Dauer> confirm [Grund]
+    permission: punish.muteall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  unmute-all:
+    description: Entmutet alle Spieler (wird an den Proxy weitergeleitet).
+    usage: /unmute-all confirm [Grund]
+    permission: punish.unmuteall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-status:
+    description: Zeigt aktive Strafen (wird an den Proxy weitergeleitet).
+    usage: /punish-status [Spieler] [filter:...] [--global|--server]
+    aliases: [psstatus]
+    permission: punish.status
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  ban:
+    description: Bannt einen Spieler (wird an den Proxy weitergeleitet).
+    usage: /ban <Spieler> <Dauer> [Grund] [--global|--server]
+    permission: punish.ban
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  permabann:
+    description: Bannt einen Spieler permanent (wird an den Proxy weitergeleitet).
+    usage: /permabann <Spieler> [Grund] [--global|--server]
+    permission: punish.permabann
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  ban-ip:
+    description: Bannt eine IP (wird an den Proxy weitergeleitet).
+    usage: /ban-ip <IP|Spieler> [Dauer] [Grund] [--global|--server]
+    permission: punish.banip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  unban-ip:
+    description: Entbannt eine IP (wird an den Proxy weitergeleitet).
+    usage: /unban-ip <IP|Spieler> [--global|--server|--unbekannt]
+    permission: punish.unbanip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  ban-all:
+    description: Bannt alle Online-Spieler (wird an den Proxy weitergeleitet).
+    usage: /ban-all <Dauer|perm> confirm [Grund]
+    permission: punish.banall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  kick:
+    description: Kickt einen Spieler (wird an den Proxy weitergeleitet).
+    usage: /kick <Spieler> [Grund]
+    permission: punish.kick
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  kick-ip:
+    description: Kickt alle Spieler einer IP (wird an den Proxy weitergeleitet).
+    usage: /kick-ip <IP|Spieler> [Grund]
+    aliases: [kickip]
+    permission: punish.kickip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  kick-all:
+    description: Kickt alle Online-Spieler (wird an den Proxy weitergeleitet).
+    usage: /kick-all confirm [Grund]
+    permission: punish.kickall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  pardon:
+    description: Entbannt einen Spieler (wird an den Proxy weitergeleitet).
+    usage: /pardon <Spieler> [--global|--server|--unbekannt]
+    aliases: [unban]
+    permission: punish.pardon
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  pardon-all:
+    description: Entbannt alle Spieler (wird an den Proxy weitergeleitet).
+    usage: /pardon-all confirm [Grund] [--global|--server]
+    aliases: [unban-all]
+    permission: punish.pardonall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  timeout:
+    description: Verhängt einen Timeout (wird an den Proxy weitergeleitet).
+    usage: /timeout <Spieler> <Dauer> [Grund] [--global|--server]
+    permission: punish.timeout
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  untimeout:
+    description: Hebt einen Timeout auf (wird an den Proxy weitergeleitet).
+    usage: /untimeout <Spieler> [--global|--server|--unbekannt]
+    permission: punish.untimeout
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  timeout-ip:
+    description: Verhängt einen IP-Timeout (wird an den Proxy weitergeleitet).
+    usage: /timeout-ip <IP|Spieler> <Dauer> [Grund] [--global|--server]
+    aliases: [timeoutip]
+    permission: punish.timeoutip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  untimeout-ip:
+    description: Hebt einen IP-Timeout auf (wird an den Proxy weitergeleitet).
+    usage: /untimeout-ip <IP|Spieler> [--global|--server|--unbekannt]
+    aliases: [untimeoutip]
+    permission: punish.untimeoutip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  timeout-all:
+    description: Versetzt alle Online-Spieler in den Timeout (wird an den Proxy weitergeleitet).
+    usage: /timeout-all <Dauer> confirm [Grund]
+    permission: punish.timeoutall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  untimeout-all:
+    description: Holt alle Spieler aus dem Timeout (wird an den Proxy weitergeleitet).
+    usage: /untimeout-all confirm [Grund]
+    permission: punish.untimeoutall
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  freeze:
+    description: Friert einen Spieler ein (wird an den Proxy weitergeleitet).
+    usage: /freeze <Spieler> [Dauer] [Grund] [--global|--server]
+    permission: punish.freeze
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  unfreeze:
+    description: Hebt einen Freeze auf (wird an den Proxy weitergeleitet).
+    usage: /unfreeze <Spieler> [--global|--server|--unbekannt]
+    permission: punish.unfreeze
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  verstoss:
+    description: Verwaltet Verstöße (wird an den Proxy weitergeleitet).
+    usage: /verstoss <add|remove|clear> <Spieler> [...] [level=<low|medium|high>]
+    aliases: [verstoß]
+    permission: punish.verstoss
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-note:
+    description: Verwaltet Notizen (wird an den Proxy weitergeleitet).
+    usage: /punish-note <add|delete|list> <Spieler> [...]
+    aliases: [psnote]
+    permission: punish.note
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-edit:
+    description: Bearbeitet Strafen (wird an den Proxy weitergeleitet).
+    usage: /punish-edit <Typ> <Ziel> [Nr] [Felder] [--global|--server]
+    aliases: [psedit]
+    permission: punish.edit
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  warn:
+    description: Verwarnt einen Spieler (wird an den Proxy weitergeleitet).
+    usage: /warn <add|delete|list|Spieler> [...]
+    aliases: [warnung, verwarnung]
+    permission: punish.warn
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-delete-ip:
+    description: Löscht alle IP-Daten (wird an den Proxy weitergeleitet).
+    usage: /punish-delete-ip <IP|Spieler>
+    aliases: [psdelete-ip, psdeleteip]
+    permission: punish.deleteip
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-version:
+    description: Zeigt die PunishSystem-Version des Netzwerks (wird an den Proxy weitergeleitet).
+    usage: /punish-version
+    aliases: [psversion]
+    permission: punish.version
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-help:
+    description: Zeigt alle PunishSystem-Befehle (wird an den Proxy weitergeleitet).
+    usage: /punish-help
+    aliases: [pshelp]
+    permission: punish.help
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-history:
+    description: Zeigt den Strafverlauf (wird an den Proxy weitergeleitet).
+    usage: /punish-history [Spieler] [filter:...] [Seite] [--global|--server]
+    aliases: [pshistory]
+    permission: punish.history
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  alts:
+    description: Zeigt Alt-Accounts anhand der IP mit Ban-Status (wird an den Proxy weitergeleitet).
+    usage: /alts <Spieler|IP> [--global|--server|--unbekannt]
+    permission: punish.alts
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  report:
+    description: Meldet einen Spieler an das Team (wird an den Proxy weitergeleitet).
+    usage: /report <Spieler> <Grund>
+    aliases: [melden]
+    permission: punish.report
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  reports:
+    description: Zeigt offene Reports (wird an den Proxy weitergeleitet).
+    usage: /reports [offen|alle] | info <Id> | accept <Id> | deny <Id> [Grund] | close <Id> [Grund] | delete <Id>
+    aliases: [reportlist]
+    permission: punish.reports
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  chatfilter:
+    description: Steuert den Chatfilter (wird an den Proxy weitergeleitet).
+    usage: /chatfilter <on|off|ai_on|ai_off|add <Wort>|sync>
+    permission: punish.chatfilter
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-diagnostics:
+    description: Zeigt lokale Diagnose mit Warnungen (läuft auf diesem Server).
+    usage: /punish-diagnostics
+    aliases: [psdiagnostics]
+    permission: punish.diagnostics
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+permissions:
+  punish.gui: { description: PunishGUI öffnen., default: false }
+  punish.allow-silent-syntax: { description: Stille Strafen mit -s ausführen (GUI-Toggle + Tunnel)., default: false }
+  punish.mute: { description: Spieler muten (via Proxy)., default: false }
+  punish.muteall: { description: Alle Spieler muten (via Proxy)., default: false }
+  punish.unmute: { description: Spieler entmuten (via Proxy)., default: false }
+  punish.unmuteall: { description: Alle entmuten (via Proxy)., default: false }
+  punish.muteip: { description: IP muten (via Proxy)., default: false }
+  punish.unmuteip: { description: IP entmuten (via Proxy)., default: false }
+  punish.status: { description: Aktive Strafen einsehen (via Proxy)., default: false }
+  punish.history: { description: Strafverlauf einsehen (via Proxy)., default: false }
+  punish.alts: { description: Alt-Accounts einsehen (via Proxy)., default: false }
+  punish.report: { description: Spieler an das Team melden., default: true }
+  punish.chatfilter: { description: Chatfilter steuern (via Proxy)., default: false }
+  punish.chatfilter.sync: { description: Chatfilter-Modell-/Text-Sync anstoßen (teuer, via Proxy)., default: false }
+  punish.reports: { description: Reports einsehen und bearbeiten., default: false }
+  punish.ban: { description: Spieler bannen (via Proxy)., default: false }
+  punish.permabann: { description: Spieler permanent bannen (via Proxy)., default: false }
+  punish.banip: { description: IP bannen (via Proxy)., default: false }
+  punish.unbanip: { description: IP entbannen (via Proxy)., default: false }
+  punish.banall: { description: Alle Spieler bannen (via Proxy)., default: false }
+  punish.kick: { description: Spieler kicken (via Proxy)., default: false }
+  punish.kickip: { description: IP kicken (via Proxy)., default: false }
+  punish.kickall: { description: Alle Spieler kicken (via Proxy)., default: false }
+  punish.pardon: { description: Spieler entbannen (via Proxy)., default: false }
+  punish.pardonall: { description: Alle entbannen (via Proxy)., default: false }
+  punish.timeout: { description: Timeout verhängen (via Proxy)., default: false }
+  punish.timeoutall: { description: Alle in Timeout versetzen (via Proxy)., default: false }
+  punish.untimeout: { description: Timeout aufheben (via Proxy)., default: false }
+  punish.untimeoutall: { description: Alle Timeouts aufheben (via Proxy)., default: false }
+  punish.timeoutip: { description: IP-Timeout verhängen (via Proxy)., default: false }
+  punish.untimeoutip: { description: IP-Timeout aufheben (via Proxy)., default: false }
+  punish.freeze: { description: Spieler einfrieren (via Proxy)., default: false }
+  punish.unfreeze: { description: Freeze aufheben (via Proxy)., default: false }
+  punish.verstoss: { description: Verstöße verwalten (via Proxy)., default: false }
+  punish.note: { description: Notizen verwalten (via Proxy)., default: false }
+  punish.edit: { description: Strafen bearbeiten (via Proxy)., default: false }
+  punish.warn: { description: Verwarnungen verwalten (via Proxy)., default: false }
+  punish.deleteip: { description: IP-Daten löschen (via Proxy)., default: false }
+  punish.version: { description: Netzwerk-Version einsehen (via Proxy)., default: false }
+  punish.help: { description: Befehlsübersicht einsehen (via Proxy)., default: false }
+  punish.diagnostics: { description: Lokale Diagnose mit Warnungen einsehen., default: false }
+  punish.status.server: { description: Aktive Strafen serverweit einsehen (via Proxy)., default: false }
+  punish.history.server: { description: Strafverlauf serverweit einsehen (via Proxy)., default: false }
+  punish.verstoss.add: { description: Verstöße eintragen (via Proxy)., default: false }
+  punish.verstoss.remove: { description: Verstöße entfernen (via Proxy)., default: false }
+  punish.verstoss.edit: { description: Verstöße bearbeiten (via Proxy)., default: false }
+  punish.verstoss.clear: { description: Verstöße zurücksetzen (via Proxy)., default: false }
+  punish.message.all-punishes: { description: Alle Straf-Broadcasts empfangen., default: false }
+  punish.own: { description: Eigene Strafen einsehen (via Proxy)., default: false }
+  punish.reload: { description: Konfiguration neu laden (via Proxy)., default: false }
+  punish.update: { description: Updates prüfen und verteilen (via Proxy)., default: false }
+  punish.chatfilter.bypass: { description: Chatfilter prüft diesen Spieler nie (nur direkt vergeben)., default: false }
+  punish.ignore.*: { description: Vor allen Strafen geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.ban: { description: Vor Banns geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.mute: { description: Vor Mutes geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.timeout: { description: Vor Timeouts geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.freeze: { description: Vor Freezes geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.kick: { description: Vor Kicks geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.warn: { description: Vor Verwarnungen geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.verstoss: { description: Vor Verstößen geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.note: { description: Vor Notizen geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.alts: { description: Vor Alt-Abfragen geschützt (nur direkt vergeben)., default: false }
+  punish.ignore.report: { description: Vor Reports geschützt (nur direkt vergeben)., default: false }
+  punish.ignore: { description: Veraltet, nur Kompatibilität (Schutz läuft über punish.ignore.*)., default: false }
+  punish.user: { description: Basis-Rolle., default: false }
+  punish.*: { description: Wildcard, gewährt alle Rechte (nur direkt vergeben)., default: false }
+  punish.all: { description: Wildcard-Alias, gewährt alle Rechte (nur direkt vergeben)., default: false }
+  # Rang-Bündel (punish.<gruppenname>) bewusst nicht deklariert: sie werden nur
+  # auf dem Proxy in config/general.yml (rang-buendel) gepflegt und per
+  # Text-Sync an die Bridges verteilt. LuckPerms-Nodes trotzdem pro Gruppe
+  # genau einmal vergeben (z. B. Gruppe "moderator" -> punish.moderator).

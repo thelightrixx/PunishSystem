@@ -1,0 +1,60 @@
+# =========================================================
+# PunishSystemBridge - KI-Chatfilter (chatfilter.yml)
+# =========================================================
+# Ordner: plugins/PunishSystemBridge/config/
+# Hybrid-Filter: Stufe 1 Wortliste (sofort, exakt) + Stufe 2 KI
+# (lokales ONNX-Modell, offline, keine Cloud).
+# Ablauf: Bypass-Recht? -> Stufe 1 (Wortliste) -> Stufe 2 (KI).
+# Treffer werden geblockt und an den Proxy gemeldet. Der Proxy
+# zählt Treffer pro Spieler und fährt die Staffel (Velocity-config).
+#
+# PROXY-ONLY: aktiv, schwelle, ki-timeout-ms, max-zeichen und kanaele
+# stehen auf dem Proxy (general.yml, chatfilter.*) und werden per Text-Sync
+# verteilt (Proxy-Master). Lokale chatfilter.yml ist nur Fallback vor Sync.
+# bypass-permission und Dateinamen bleiben lokal.
+#
+# Laufzeit-Befehle (Recht: punish.chatfilter, kein Neustart nötig):
+#   /chatfilter off|on     Filter global an/ausschalten (Laufzeit)
+#   /chatfilter ai_off|ai_on  nur KI an/ausschalten (Wortliste läuft weiter)
+#   /chatfilter add <Wort> Wort zentral aufnehmen (Proxy-Wortliste, sofort + dauerhaft,
+#                          per Sync an alle Bridges; Konsole und Spieler möglich)
+# Nach Änderungen: /punish-reload auf dem Proxy (lädt alles neu).
+# =========================================================
+
+chatfilter:
+  # Master-Schalter. false = Filter komplett aus.
+  aktiv: false
+
+  # Hash-only-Modus: false = Bridge sendet nur textHash an den Proxy
+  # (kein Klartext), Team-Info zeigt neutral den Hash. Standard true.
+  # Wird per Text-Sync vom Proxy (general.yml chatfilter.klartext-uebertragen)
+  # überschrieben, lokale Datei ist nur Fallback vor Sync.
+  klartext-uebertragen: true
+
+  # Optionale Filter-Ausnahmen für Befehle (z. B. ["/msg", "/r"]).
+  # Wortliste+KI prüfen sonst ALLE Spieler-Befehle; Mute-Block bleibt
+  # Verbieten-Liste (mute.blockierte-befehle). Leer = keine Ausnahme.
+  befehl-ausnahmen: []
+
+  # Wer diese Permission hat, wird nie geprüft (Team).
+  bypass-permission: "punish.chatfilter.bypass"
+
+  # Dateien in plugins/PunishSystemBridge/chatfilter/
+  # (oder absolute Pfade). Fehlt die Wortliste, läuft nur
+  # die KI; fehlt das Modell, läuft nur die Wortliste.
+  wortliste-datei: "wortliste.txt"
+  modell-datei: "modell_int8.onnx"
+  vocab-datei: "vocab.txt"
+
+  # --- Proxy-Sync-Schlüssel (nur Doku, hier NICHT wirksam) ---
+  # Diese Werte kommen per Text-Sync vom Proxy (dort in general.yml
+  # unter chatfilter.* pflegen) und gewinnen gegen alles Lokale.
+  # schwelle: 0.7              # KI-Schwelle 0..1
+  # ki-timeout-ms: 150         # Max. KI-Wartezeit pro Nachricht (20..5000)
+  # max-zeichen: 500           # Max. Zeichen für die KI (50..2000)
+  # kanaele:                   # Modus pro Kanal (aus | stufe1 | ki)
+  #   chat: "ki"               # Chat: KI blockiert
+  #   privat: "ki"             # Befehle/PNs: Stufe 1 blockt, KI meldet nachgelagert
+  #   schild: "stufe1"
+  #   buch: "stufe1"
+  #   amboss: "stufe1"

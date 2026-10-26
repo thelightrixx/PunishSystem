@@ -1,0 +1,20 @@
+PunishSystem Bridge – Drittbestandteile und Lizenzen
+====================================================
+
+Dieses Plugin bündelt („shaded") die folgenden Bestandteile. Die jeweiligen
+Lizenztexte liegen diesem Jar bei.
+
+1. ONNX Runtime 1.30.0 (com.microsoft.onnxruntime:onnxruntime)
+   Lizenz: MIT
+   Lizenztext: META-INF/LICENSE-ONNX-Runtime.txt in diesem Jar
+   Copyright: Microsoft Corporation und Mitwirkende
+   Weitere Hinweise: ThirdPartyNotices.txt im Wurzelverzeichnis dieses Jars
+
+2. PunishSystem Common (eigener Code, de.lightrixx.punish)
+   Lizenz: MIT – siehe LICENSE im Quell-Repository
+   (https://github.com/lightrixx/PunishSystem, Datei LICENSE)
+
+Hinweis zum Chatfilter-KI-Modell: Das Modell „ankekat1000/toxic-bert-german"
+und dessen vocab.txt werden NICHT mit diesem Jar verteilt (CC-BY-NC-SA-4.0,
+nur nicht-kommerziell). Sie werden bei Bedarf separat geladen, siehe
+scripts/chatfilter-modell-laden.ps1 im Quell-Repository.

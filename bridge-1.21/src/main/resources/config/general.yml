@@ -1,0 +1,55 @@
+# =========================================================
+# PunishSystemBridge - Allgemeine Konfiguration (general.yml)
+# =========================================================
+# Entwickelt von: lightrixx
+# Ordner: plugins/PunishSystemBridge/config/
+# PROXY-ONLY: Alles außer netzwerk.server-name und netzwerk.tunnel-secret wird
+# per Text-Sync vom Proxy übernommen (Zwischenspeicher config-sync/, sobald ein
+# Spieler online ist). Das tunnel-secret ist das EIGENE Secret dieser Bridge und
+# muss dem passenden Eintrag netzwerk.bridge-secrets.<servername> auf dem Proxy
+# entsprechen – es wird nicht verteilt.
+# Daher NUR auf dem Proxy pflegen (/punish-reload verteilt netzwerkweit).
+# Alle Strafen laufen über den Proxy (Source of Truth). Vor dem ersten
+# Proxy-Kontakt gelten eingebaute Standardwerte (TAB nur Dauern, Filter
+# Stufe-1, Diagnose Standardwerte) – auf bespielten Netzwerken hinfällig.
+# Neben dieser Datei gibt es noch:
+#   messages.yml   - alle Spieler-Nachrichten (messages.*)
+#   screens.yml    - Bann-/Kick-Screens (screens.*)
+#   broadcasts.yml - Team-Broadcasts (broadcasts.*)
+#   gui.yml        - PunishGUI-Titel + Fallbacks (gui.*)
+# =========================================================
+
+# Schema-Version dieser Config (EA26). Bei Downgrade Warnung im Log, kein Abbruch.
+config-version: "EA26"
+
+# --- Netzwerk (Zero-Config) ---
+# server-name: leer lassen = Auto (Proxy meldet kanonischen Namen via HELLO_ACK).
+# Nur setzen, wenn der Auto-Name überschrieben werden soll.
+# server-liste: deprecated, optionaler Zusatz. Live-Liste vom Proxy gewinnt.
+netzwerk:
+  server-name: ""
+  server-liste: []
+  # Tunnel-Signatur (HMAC-SHA256) zwischen Proxy und Bridges.
+  # Hier steht NUR das eigene Secret dieser Bridge. Es muss dem Eintrag
+  # netzwerk.bridge-secrets.<servername> in der Proxy-general.yml entsprechen.
+  # Jede Bridge hat ein eigenes Secret; ein gemeinsames Secret für mehrere
+  # Bridges wird nicht mehr unterstützt.
+  # Leer = Tunnel deaktiviert (Fail-closed): Die Bridge bleibt stumm, bis ein
+  # eigenes Secret gesetzt ist.
+  # Das Geheimnis erscheint nie in Logs.
+  # Empfehlung: mindestens 16 Zeichen Zufall – kürzere Secrets werden im Log gewarnt.
+  tunnel-secret: ""
+
+# --- Rang-Gewichte (Hierarchie-Schutz) ---
+# Höherer Rang kann niedrigere bestrafen, nie umgekehrt.
+rang-gewicht:
+  default: 0
+  supporter: 20
+  community: 20
+  moderator: 50
+  manager: 50
+  richter: 60
+  admin: 80
+  p-admin: 80
+  vize: 90
+  präsident: 100

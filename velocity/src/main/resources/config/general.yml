@@ -1,0 +1,475 @@
+# =========================================================
+# PunishSystem - Allgemeine Konfiguration (general.yml, Velocity)
+# =========================================================
+# Entwickelt von: lightrixx
+# Ordner: <Proxy-Datenordner>/config/
+# Proxy-Konfiguration: gleiche Keys wie Paper (config/*.yml), hier aufgeteilt.
+# netzwerk.server-name bleibt auf dem Proxy leer (Default-Scope kommt vom Server des Ausführenden).
+# Neben dieser Datei gibt es noch:
+#   messages.yml   - alle Spieler-Nachrichten (messages.*)
+#   screens.yml    - Bann-/Kick-Screens (screens.*)
+#   broadcasts.yml - Team-Broadcasts (broadcasts.*)
+# Nach Änderungen: Proxy neustarten oder /punish-reload nutzen.
+# =========================================================
+
+# Schema-Version dieser Config (EA26). Bei Downgrade (neuere Config auf älterer Jar)
+# Warnung im Log, kein Abbruch. Bitte nach Update /punish-reload nutzen.
+config-version: "EA26"
+
+prefix: "<dark_gray>[<red>PunishSystem<dark_gray>]"
+
+# --- Netzwerk / Proxy-Vorbereitung (Zero-Config) ---
+# server-name: bleibt auf dem Proxy leer (Default-Scope = aktueller Server, Auto).
+# server-liste: deprecated, Proxy nutzt die Live-Liste (velocity.toml). Eintrag optional.
+netzwerk:
+  server-name: ""
+  server-liste: []
+  # Tunnel-Signatur (HMAC-SHA256) zwischen Proxy und Bridges.
+  # Pro Bridge ein EIGENES Secret: Schluessel = Velocity-Servername (wie in
+  # velocity.toml), Wert = nur dieser Bridge bekanntes Secret. Die Bridge traegt
+  # denselben Wert unter netzwerk.tunnel-secret ein. Ein gemeinsames Secret fuer
+  # mehrere Bridges ist unsicher (eine kompromittierte Bridge koennte die andere
+  # imitieren); identische Werte werden beim Start als Warnung gemeldet.
+  # Beispiel:
+  # bridge-secrets:
+  #   lobby: "<langes Zufallsgeheimnis fuer lobby>"
+  #   survival: "<anderes langes Zufallsgeheimnis fuer survival>"
+  # Leer = Tunnel deaktiviert (Fail-Closed): Bridges bleiben stumm, bis fuer
+  # ihre Server jeweils ein Secret gesetzt ist.
+  # Die Secrets erscheinen nie in Logs. Empfehlung: mindestens 16 Zeichen Zufall.
+  bridge-secrets: {}
+
+# --- Zeit-Format für History-Einträge ---
+# Bestimmt, in welcher Zeitzone die Datum- und Zeitangaben angezeigt werden.
+# Beispiel: "Europe/Berlin" oder "UTC"
+anzeige-zone: "Europe/Berlin"
+
+# --- Offline-Schutz (granular) ---
+# Geprüft wird je Strafart: punish.ignore.* ODER punish.ignore.<typ>.
+# Typen: ban, mute, timeout, freeze, kick, warn, verstoss, note, alts, report.
+# IP-Varianten fallen unter den Grundtyp (banip/banall -> ban, muteip -> mute,
+# timeoutip -> timeout, kickip/kickall -> kick). Das alte globale punish.ignore
+# wird NICHT mehr geprüft.
+# Mit LuckPerms: gecachte User exakt und sofort. Nicht-gecachte User werden
+# per Kurz-Load (max ~1s, Async-Thread, Main bleibt flüssig) nachgeladen –
+# Offline-Banns funktionieren daher auch ohne LP-Cache.
+#
+# Optionen:
+# - fail-closed: true  (empfohlen für Team-Server) - Nur echte Unsicherheit
+#   (Load-Timeout, Storage-Fehler) wird ABGELEHNT. Bestätigt Ungeschützte werden
+#   normal bestraft, bestätigt Geschützte immer blockiert.
+# - fail-closed: false (kleine Server) - Auch echte Unsicherheit wird erlaubt.
+#   LP-vergebene punish.ignore.* / punish.ignore.<typ> (non-Op) sind bei LP-Ausfall ungeschützt.
+#
+# OHNE LuckPerms lässt sich der Schutz eines OFFLINE-Spielers nicht ermitteln
+# (auch nicht für die Konsole). Es gilt SchutzErgebnis UNSICHER; fail-closed
+# lehnt solche Strafen daher ab, fail-closed: false erlaubt sie.
+# Online-Spieler sind davon unabhängig (OP und Rechte werden direkt geprüft).
+schutz:
+  fail-closed: true
+
+# --- Offline-Auflösung / Vorab-Banns ---
+# allow-never-seen: false (empfohlen für Team-Server, Fail-Closed) – nie gesehene
+# Namen werden mit "Spieler nicht gefunden" abgelehnt. Kein Namens-Squatting,
+# keine Ban-Vererbung an unschuldige Erst-Joins, maximaler Tippfehlerschutz.
+# allow-never-seen: true – /ban, /mute, /timeout etc. funktionieren auch für
+# Spieler, die der Server noch nie gesehen hat (Vorab-Bann, Listen-Import).
+# Der Eintrag wird vorläufig mit der Bukkit-Offline-UUID angelegt und beim ersten
+# Join per Namensabgleich automatisch auf die echte (Premium-)UUID migriert.
+# Nur für Single-Server ohne Squatting-Risiko. Tippfehler erzeugen ggf. einen
+# Vorab-Eintrag – Namen bei Vorab-Banns immer doppelt prüfen.
+offline-resolution:
+  allow-never-seen: false
+
+# --- Speicher-Backend (YAML oder MySQL) ---
+# typ: "mysql" (Standard für Netzwerke) oder "yaml" (Single-Server, deprecated, Dateien unter data/).
+#   MySQL braucht einen laufenden MySQL-Server (z. B. 8.x, Datenbank + Benutzer
+#   vorher anlegen). Der Verbindungs-Pool ist im Plugin eingebaut, es muss
+#   nichts extra installiert werden. Nach einem Wechsel ist ein NEUSTART nötig
+#   (/punish-reload wechselt NICHT das Backend).
+# migration-beim-start: true = beim ersten Start mit leerer Datenbank einmalig
+#   alle YAML-Dateien nach MySQL importieren (danach werden YAML-Dateien ignoriert).
+speicher:
+  typ: "mysql"
+  migration-beim-start: true
+  mysql:
+    host: "127.0.0.1"
+    port: 3306
+    datenbank: "punishsystem"
+    benutzer: "punish"
+    passwort: ""
+    use-ssl: false
+    # use-ssl: nur fuer lokale Datenbanken gedacht. Bei remote MySQL auf true
+    # setzen, sonst laufen Zugangsdaten und Inhalte unverschluesselt.
+    pool-max: 10
+
+# --- Datenschutz / Retention (DSGVO) ---
+# IPs liegen in player_cache (letzte-ip) und IP-Sperren (ipbans/mutes/timeouts).
+# Aufbewahrungsfrist für IPs: 90 Tage (konfigurierbar, Default 90).
+# Abgelaufene letzte-ip werden beim Laden/Sweep anonymisiert ("unbekannt").
+datenschutz:
+  # Aufbewahrungsfrist für IPs in Tagen (Default 90, 1-3650). Abgelaufene IPs
+  # werden beim Laden/Sweep anonymisiert. /delete-ip löscht zusätzlich
+  # Strafen+Cache+History-Einträge der IP sofort.
+  ip-aufbewahrung-tage: 90
+# Löschen via /punish-delete-ip <Spieler|IP> (Recht: punish.deleteip, Default: op):
+# hebt aktive IP-Sperren aller Scopes auf und anonymisiert den Cache auf "unbekannt".
+# History bleibt als Audit-Trail bestehen (berechtigtes Interesse, Empfohlen: 90 Tage),
+# punish_log.txt rotiert selbst (10MB x 5). Backend-Ports per Firewall nur für Proxy öffnen.
+# HINWEIS Restspuren: /punish-delete-ip entfernt IP-Sperren und Cache-Einträge.
+# Die IP bleibt lesbar in: punish_log.txt (+ Rotationen, kein Zeitlimit),
+# History-Einträgen (BAN_IP/IP_MUTE/..., Audit-Trail) und verpassten Broadcasts
+# (missed_broadcasts, Retention 90 Tage). Für vollständige Löschung zusätzlich
+# Log-Rotation anstoßen bzw. History-/Broadcast-Bestände prüfen.
+
+# --- Verstoß-System ---
+# Verstöße haben eine Stufe (low/medium/high, Aliase: leicht/mittel/schwer).
+# Jede Stufe zählt Punkte und verfällt nach eigener Dauer:
+# low verfällt nach 30 Tagen, medium nach 90 Tagen, high nach 365 Tagen.
+# Erreicht die Punktesumme max-punkte, wird automatisch gebannt.
+# Beispiel: /verstoss add Notch Spamming level=high
+verstoesse:
+  # Punktesumme, ab der ein Auto-Bann ausgelöst wird (low = 1, medium = 2, high = 3)
+  max-punkte: 6
+  # Wie lange der Spieler gebannt wird, wenn er das Punkte-Limit erreicht.
+  # Zeitformat siehe limits. 'perm' ist hier NICHT sinnvoll und fällt auf 7d zurück.
+  auto-bann-dauer: "7d"
+  # Standard-Stufe, wenn beim Hinzufügen kein level= angegeben wird
+  default-stufe: "medium"
+  # Pro Stufe: Verfallsdauer (Zeitformat siehe limits, kein perm) + Punkte
+  stufen:
+    low: { dauer: "30d", punkte: 1 }
+    medium: { dauer: "90d", punkte: 2 }
+    high: { dauer: "365d", punkte: 3 }
+
+# --- Warn-Eskalation (/warn -> /verstoss) ---
+# Erreicht die Warn-Anzahl eines Spielers exakt eine Schwelle, wird automatisch
+# ein Verstoß der zugehörigen Stufe eingetragen. Der Verstoß zählt danach wie
+# jeder manuelle Verstoß Punkte und kann so bis zum Auto-Bann führen.
+# Standard: 3 Warns -> low, 5 -> medium, 10 -> high.
+# Es lösen nur exakte Treffer aus (keine Doppel-Auslösung); Warns bleiben bestehen.
+# Beispiel: 3 Warns -> low-Verstoß, 4. Warn -> nichts, 5. Warn -> medium-Verstoß.
+warns:
+  eskalation:
+    # false = keine automatischen Verstöße aus Warnungen
+    aktiv: true
+    schwellen:
+      - { ab: 3, stufe: low }
+      - { ab: 5, stufe: medium }
+      - { ab: 10, stufe: high }
+
+# --- Max./Min. Straf-Dauern ---
+# Hiermit begrenzt du, wie lang eine Strafe dauern darf.
+# Zeitformat überall: Zahl + Einheit, kombinierbar (z. B. 1h30m), case-insensitiv.
+# Einheiten: s = Sekunden, m = Minuten (nackte Zahl = Minuten), h = Stunden,
+# d = Tage, w = Wochen, mo = Monate (30d), y = Jahre (365d). perm/permanent nur
+# wo explizit erlaubt (/ban-ip, /ban-all, Edit mit perm). Ungültiges wie "7x"
+# wird ABGELEHNT (kein stiller Perm-Bann mehr).
+# timeout-max-minuten steuert GLEICHZEITIG das Ban-Minimum:
+# Alles darüber ist Ban, alles darunter Timeout. Beispiel Standard:
+# Timeout max 24h (1440), Ban min 24h (1440) bis max 1 Jahr (525600).
+limits:
+  timeout-max-minuten: 1440        # Max. 24 Stunden Timeout (= gleichzeitig Ban-Min, wenn unten nicht gesetzt)
+  mute-max-minuten: 43200          # Max. 30 Tage Mute
+  # Max. Freeze-Dauer in Minuten (ohne Dauer = permanent bis /unfreeze).
+  # Weglassen/auskommentieren oder <= 0: mute-max-minuten gilt als Fallback.
+  freeze-max-minuten: 43200        # Max. 30 Tage Freeze (Default = mute-max-minuten)
+  # Mindest-Dauer eines Bans in Minuten. Weglassen/auskommentieren oder <= 0:
+  # timeout-max-minuten gilt automatisch auch als Ban-Min (eine Option für beides).
+  # Nur setzen, wenn Ban-Min unabhängig vom Timeout-Max sein soll.
+  ban-min-minuten: 1440            # Min. 24 Stunden Bann (Default = timeout-max-minuten)
+  ban-max-minuten: 525600          # Max. 1 Jahr Bann
+  # Geteilte IPs (Proxy/NAT/CGNAT): Ab wie vielen betroffenen Online-Spielern
+  # warnt (Chat-Hinweis), blockt (Abbruch) bzw. eine Bestätigung verlangt wird.
+  # Bestätigung: /ban-ip <IP> confirm [Dauer] [Grund] (gilt für alle IP-Befehle).
+  # bestaetigung-ab <= 0 schaltet die Bestätigungspflicht aus.
+  ip-geteilt-warn-ab: 4
+  ip-geteilt-block-ab: 11
+  ip-geteilt-bestaetigung-ab: 2
+
+# --- Bestätigung für Massen-Befehle ---
+# Bei Massen-Befehlen (z. B. /ban-all oder /kick-all) wird nach einer
+# Bestätigung gefragt, um versehentliche Aktionen zu vermeiden.
+bestaetigungen:
+  # Wenn true: System fragt nach Bestätigung (/ban-all confirm Grund)
+  pardon-all: true
+  kick-all: true
+  ban-all: true
+  mute-all: true
+  timeout-all: true
+  unmute-all: true
+  untimeout-all: true
+
+# --- History (Verlauf der Strafen) ---
+# Wie viele Einträge pro Seite angezeigt werden, wenn man die History Ansieht
+history:
+  eintraege-pro-seite: 10
+
+# --- Report-System (/report, /reports) ---
+# cooldown-sekunden: Wartezeit zwischen zwei Reports desselben Reporters (Spam-Schutz).
+# max-offen-pro-reporter: Max. Anzahl gleichzeitig offener Reports pro Reporter.
+# duplikat-sperre-minuten: Gleiches Ziel + gleicher Reporter wird in diesem Fenster als Duplikat abgelehnt.
+reports:
+  cooldown-sekunden: 60
+  max-offen-pro-reporter: 3
+  duplikat-sperre-minuten: 10
+
+# --- Chatfilter-Staffel (Treffer vom Bridge-Chatfilter) ---
+# Die Bridge meldet blockierte Nachrichten (Wortliste/KI, nur Hash,
+# kein Klartext). Der Proxy zählt Treffer pro Spieler im Zeitfenster
+# und fährt die Staffel. Standard: 5 Treffer in 60 Minuten -> Warn.
+# staffel: Liste von {anzahl, aktion, dauer, grund}.
+#   aktion: warn (ohne dauer) oder mute (dauer Pflicht, z. B. 1h).
+#   grund: optional, %anzahl% wird ersetzt.
+#   Jede Stufe löst einmal pro Fenster aus (kein Spam bei Dauerfeuer).
+chatfilter:
+  aktiv: false
+  fenster-minuten: 60
+  staffel:
+    - { anzahl: 5, aktion: warn }
+  # Team-Info (Standard: aus): meldet JEDE blockierte Nachricht
+  # sofort ans Team (Broadcast chatfilter-treffer) INKLUSIVE Inhalt.
+  # Nur für Moderation aktivieren – enthält ggf. Schimpfwörter.
+  # Hinweis: Die Bridge überträgt Treffer-Texte (gekürzt auf 400 Zeichen)
+  # nur wenn klartext-uebertragen: true (Standard). Bei false meldet die
+  # Bridge nur den Text-Hash, die Team-Info zeigt dann neutral den Hash.
+  team-info: false
+  # klartext-uebertragen (Standard: true): false = Hash-only-Modus.
+  # Die Bridge sendet dann nur textHash an den Proxy (kein Klartext),
+  # Team-Info zeigt neutral den Hash. Staffel zählt weiterhin Treffer.
+  klartext-uebertragen: true
+  # Modell-Sync (Standard: an, Zero-Config): verteilt modell_int8.onnx + vocab.txt
+  # aus <Proxy-Ordner>/chatfilter/ automatisch an Bridges mit abweichendem
+  # Stand (SHA-256-Vergleich beim Join). Manuell via /chatfilter sync.
+  modell-sync: true
+  # Auto-Download (Standard: an): lädt vocab.txt beim ersten Start im
+  # Hintergrund nach (ankekat1000/toxic-bert-german, CC-BY-NC-SA-4.0, nur
+  # nicht-kommerziell). Der Proxy-Start wartet nicht darauf; bei
+  # chatfilter.aktiv: false wird nichts geladen.
+  # modell-url: optionaler Direktlink für modell_int8.onnx (mit SHA-Check).
+  # Ohne URL: Selbst-Export via scripts/chatfilter-modell-laden.ps1, einmal ablegen.
+  auto-download: true
+  modell-url: ""
+  # --- Filter-Ausführung auf den Bridges (Proxy-only) ---
+  # Diese Werte werden per Text-Sync an alle Bridges verteilt und gewinnen
+  # dort gegen config/chatfilter.yml (lokale Datei = nur Fallback vor dem
+  # ersten Sync). Hier pflegen, nicht auf den Backends.
+  # schwelle: KI-Schwelle 0..1 (Standard 0.7, kalibriert).
+  schwelle: 0.7
+  # ki-timeout-ms: Max. KI-Wartezeit pro Nachricht, 20..5000 (Standard 150).
+  ki-timeout-ms: 150
+  # max-zeichen: Max. Zeichen für die KI, 50..2000 (Standard 500).
+  max-zeichen: 500
+  # kanaele: Modus pro Kanal (aus | stufe1 | ki). Chat prüft KI-blockierend.
+  # Befehle/Privatnachrichten: Stufe 1 blockt sofort. Kann die KI im
+  # Server-Thread nicht warten (Cache-Miss), wird die Nachricht fail-open
+  # durchgelassen und nachgelagert gemeldet (zählt für die Staffel).
+  # Schild/Buch/Amboss: Default "stufe1" = nur Wortliste (keine KI). Mit "ki":
+  # Stufe 1 blockt sofort; die KI blockt bei Treffer bzw. meldet bei Ausfall
+  # fail-open nachgelagert.
+  kanaele:
+    chat: "ki"
+    privat: "ki"
+    schild: "stufe1"
+    buch: "stufe1"
+    amboss: "stufe1"
+
+# --- Update (/punish-update, Proxy-only) ---
+# Prüft Hangar auf neue Versionen, lädt sie und verteilt Backend-JARs per Kanal.
+# hangar-author/slug: Hangar-Projekt (z. B. author: lightrixx, slug: punishsystem).
+#   Ohne beide Werte meldet /punish-update einen Konfigurationsfehler.
+# channel: Release (stabil), Beta oder Snapshot – passend zum Hangar-Channel.
+# auto-check-beim-start: meldet beim Start im Log, falls ein Update verfügbar ist.
+# intervall-minuten: steuert den periodischen Hinweis-Check im Proxy (kein Auto-Download).
+# bestaetigung-fuer-apply: true = /punish-update apply verlangt ... apply confirm.
+# Nach apply: Proxy + alle Backends neustarten (JARs werden erst dann aktiv).
+#   Bridges legen die Datei unter plugins/PunishSystemBridge/update-pending/ ab.
+update:
+  hangar-author: "thelightrixx"
+  hangar-slug: "PunishSystem"
+  channel: "Release"
+  auto-check-beim-start: true
+  intervall-minuten: 60
+  bestaetigung-fuer-apply: true
+
+# --- Rang-Bündel (LuckPerms-Gruppen) ---
+# Jede Gruppe bekommt IM LUCKPERMS-EDITOR genau EINE Node: punish.<gruppenname>
+# (kleingeschrieben, z. B. Gruppe "moderator" -> Permission punish.moderator).
+# Das Plugin löst sie hier in echte Rechte auf. Direkt vergebene punish.*-Nodes
+# wirken immer zusätzlich. NIEMALS in Bündel aufnehmen: punish.ignore.*,
+# punish.ignore.<typ> und punish.chatfilter.bypass (Schutz/Bypass nur direkt
+# an einzelne Spieler, niemals an Gruppen). Eigene Gruppen einfach ergänzen,
+# Listen anpassen.
+# Nach Änderungen: /punish-reload auf dem Proxy (gilt sofort netzwerkweit).
+rang-buendel:
+  default: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  iron: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  gold: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  diamond: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  builder: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  builderplus: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  creator: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  test-sup: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.warn"]
+  supporter: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.warn",
+    "punish.mute", "punish.unmute", "punish.kick",
+    "punish.reports", "punish.message.all-punishes"]
+  community: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.warn",
+    "punish.mute", "punish.unmute", "punish.kick",
+    "punish.reports", "punish.message.all-punishes"]
+  moderator: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.message.all-punishes"]
+  manager: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.message.all-punishes"]
+  richter: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.pardon", "punish.message.all-punishes"]
+  admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.message.all-punishes",
+    "punish.ban", "punish.permabann", "punish.banip", "punish.unbanip", "punish.banall",
+    "punish.muteip", "punish.unmuteip", "punish.timeoutip", "punish.untimeoutip",
+    "punish.kickip", "punish.kickall", "punish.pardon", "punish.pardonall",
+    "punish.muteall", "punish.unmuteall", "punish.timeoutall", "punish.untimeoutall",
+    "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
+    "punish.verstoss.edit", "punish.verstoss.clear",
+    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics"]
+  p-admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.message.all-punishes",
+    "punish.ban", "punish.permabann", "punish.banip", "punish.unbanip", "punish.banall",
+    "punish.muteip", "punish.unmuteip", "punish.timeoutip", "punish.untimeoutip",
+    "punish.kickip", "punish.kickall", "punish.pardon", "punish.pardonall",
+    "punish.muteall", "punish.unmuteall", "punish.timeoutall", "punish.untimeoutall",
+    "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
+    "punish.verstoss.edit", "punish.verstoss.clear",
+    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics"]
+  developer: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.reload"]
+  präsident: ["punish.*"]
+  vize: ["punish.*"]
+
+# --- Rang-Gewichte (Hierarchie-Schutz) ---
+# Höherer Rang kann niedrigere bestrafen, nie umgekehrt. Gleichrangig erlaubt.
+# Gewicht aus LuckPerms-Gruppengewicht, Fallback diese Liste. Konsole/Selbst wie bisher.
+# Nach Änderungen: /punish-reload auf dem Proxy.
+rang-gewicht:
+  default: 0
+  iron: 0
+  gold: 0
+  diamond: 0
+  builder: 0
+  builderplus: 0
+  creator: 0
+  developer: 0
+  test-sup: 10
+  supporter: 20
+  community: 20
+  moderator: 50
+  manager: 50
+  richter: 60
+  admin: 80
+  p-admin: 80
+  vize: 90
+  präsident: 100
+
+# --- Blockierte Befehle beim Mute ---
+# Diese Befehle werden vom gemuteten Spieler blockiert.
+# Der Spieler kann keine privaten Nachrichten verschicken.
+mute:
+  blockierte-befehle: ["/msg", "/tell", "/w", "/whisper", "/t", "/r", "/reply", "/me", "/action", "/tellraw", "/say", "/teammsg", "/title", "/pm", "/dm", "/message", "/party", "/p", "/guild", "/g", "/plot", "/channel", "/ch", "/mail", "/nick", "/emsg", "/ereply", "/m"]
+
+# --- Tab-Autocomplete für Bann-Gründe ---
+# Vordefinierte Gründe, die beim Bann angezeigt werden können.
+# Diese ersparen das Eingeben von Gründen jedes Mal.
+tab:
+  # Zeitangaben für Bannliste (z. B. in der /ban-Anzeige)
+  dauer-liste: ["10m", "1h", "6h", "1d", "7d", "30d", "perm"]
+  # Gründe für Bann-Einträge (TAB-Fallback, wenn ein Befehl unten keine eigene Liste hat)
+  grund-liste: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
+
+# --- Vorschläge pro Befehl + Vorlagen (nur Vorschläge, keine Regeln) ---
+# Pro Befehl eigene TAB-Listen: /ban zeigt Ban-Gründe, /mute Mute-Gründe usw.
+# Fehlt ein Befehl, gilt tab.* oben als Fallback.
+# ban-ip/mute-ip/timeout-ip fallen ohne eigene Sektion auf ban/mute/timeout zurück.
+# vorlagen: Grund -> empfohlene Dauer (GUI zeigt sie als "Empf. Dauer" an).
+# Eigene Einträge einfach ergänzen oder anpassen:
+vorschlaege:
+  ban:
+    gruende: ["Cheating", "Hacking", "Bugusing", "Teaming", "Ban-Umgehung", "Bedrohung"]
+    dauern: ["1d", "7d", "14d", "30d"]
+  mute:
+    gruende: ["Spamming", "Beleidigung", "Werbung", "Provokation", "Streit"]
+    dauern: ["10m", "30m", "1h", "6h", "1d"]
+  timeout:
+    gruende: ["Cool-down", "Streit", "Provokation", "Trolling"]
+    dauern: ["10m", "30m", "1h", "6h"]
+  freeze:
+    gruende: ["Cheating-Verdacht", "Bugusing-Verdacht", "Regelverstoß", "Überprüfung"]
+    dauern: ["10m", "30m", "1h", "6h", "perm"]
+  kick:
+    gruende: ["Störung", "AFK", "Provokation", "Regelverstoß"]
+  warn:
+    gruende: ["Spamming", "Beleidigung", "Werbung", "Störung", "Regelverstoß"]
+  verstoss:
+    gruende: ["Cheating", "Hacking", "Bugusing", "Teaming", "Beleidigung", "Spamming"]
+  report:
+    gruende: ["Cheating", "Beleidigung", "Spamming", "Provokation", "Bugusing", "Teaming"]
+  vorlagen:
+    - { befehl: ban, grund: Cheating, dauer: 30d }
+    - { befehl: ban, grund: Ban-Umgehung, dauer: 30d }
+    - { befehl: ban, grund: Bedrohung, dauer: 30d }
+    - { befehl: ban, grund: Hacking, dauer: 30d }
+    - { befehl: ban, grund: Bugusing, dauer: 14d }
+    - { befehl: ban, grund: Teaming, dauer: 7d }
+    - { befehl: mute, grund: Spamming, dauer: 1h }
+    - { befehl: mute, grund: Beleidigung, dauer: 1d }
+    - { befehl: mute, grund: Werbung, dauer: 6h }
+    - { befehl: mute, grund: Provokation, dauer: 30m }
+    - { befehl: mute, grund: Streit, dauer: 30m }
+    - { befehl: timeout, grund: Cool-down, dauer: 30m }
+    - { befehl: timeout, grund: Streit, dauer: 1h }
+    - { befehl: timeout, grund: Provokation, dauer: 30m }
+    - { befehl: timeout, grund: Trolling, dauer: 1h }
+    - { befehl: freeze, grund: Cheating-Verdacht, dauer: 1h }
+    - { befehl: freeze, grund: Bugusing-Verdacht, dauer: 1h }
+    - { befehl: freeze, grund: Regelverstoß, dauer: 30m }
+    - { befehl: freeze, grund: Überprüfung, dauer: 30m }
+
+# --- Standard-Gründe für Strafen ---
+# Diese Gründe werden automatisch verwendet, wenn kein Grund angegeben wird.
+# Du kannst sie anpassen, um thematische Gründe zu verwenden.
+defaults:
+  ban-grund: "Regelverstoß"
+  permabann-grund: "Schwerwiegender Regelverstoß"
+  ban-ip-grund: "Umgehung / Evasion"
+  timeout-grund: "Cool-down"
+  freeze-grund: "Überprüfung"
+  kick-grund: "Regelverstoß"
+  verstoss-grund: "Regelverstoß"
+  warn-grund: "Regelverstoß"
+  # Vorlage für automatisch eskalierte Verstöße (%anzahl%, %stufe%, %grund%).
+  # Beispiel-Ergebnis: "Automatische Eskalation bei 3 Verwarnungen (Stufe low, Auslöser: Spamming)"
+  warn-eskalation-grund: "Automatische Eskalation bei %anzahl% Verwarnungen (Stufe %stufe%, Auslöser: %grund%)"
+  mute-grund: "Regelverstoß"
+  auto-bann-grund: "Automatischer Bann durch Verstoß-Limit"
+  auto-bann-reset-grund: "Verstöße nach Auto-Bann-Ablauf zurückgesetzt"

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.lightrixx</groupId>
+        <artifactId>punish-parent</artifactId>
+        <version>4.0-beta</version>
+    </parent>
+
+    <artifactId>punish-bridge-1.21</artifactId>
+    <packaging>jar</packaging>
+    <name>PunishSystem (Bridge 1.21)</name>
+    <description>Dünnes Backend-Plugin für Paper/Purpur 1.21.x: Mute-Enforcement, keine eigene Logik.</description>
+
+    <repositories>
+        <repository>
+            <id>extendedclip</id>
+            <url>https://repo.extendedclip.com/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>de.lightrixx</groupId>
+            <artifactId>punish-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.8-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-plain</artifactId>
+            <version>${adventure.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.12.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>${onnx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>PunishSystem-${project.version}-bridge-1.21</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>plugin.yml</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>de.lightrixx:punish-common</include>
+                                    <include>com.microsoft.onnxruntime:onnxruntime</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <!-- Nur Straf-Logik-Pakete aus punish-common werfen (command/service/hook).
+                                     Storage/Model/Util/Core bleiben drin (fettes, aber wartungsfreies Jar):
+                                     Bridge referenziert sie nicht (siehe BridgeShadeGuardTest.keineBridgeKlasseReferenziertExkludiertes),
+                                      ungenutzte Klassen werden nie geladen. minimizeJar geht nicht
+                                      (shade 3.6.0 + Java 21, "Unsupported class file major version 65"). -->
+                                <filter>
+                                    <artifact>de.lightrixx:punish-common</artifact>
+                                    <excludes>
+                                        <exclude>de/lightrixx/punish/command/**</exclude>
+                                        <exclude>de/lightrixx/punish/service/**</exclude>
+                                        <exclude>de/lightrixx/punish/hook/**</exclude>
+                                        <!-- MysqlVerbindung/MysqlSchema/YamlNachMysqlMigrator brauchen HikariCP,
+                                             das im Bridge-Shade fehlt. SpeicherTyp/MysqlKonfiguration bleiben drin
+                                             (von BridgeKonfiguration referenziert, ohne Fremd-Deps). -->
+                                        <exclude>de/lightrixx/punish/storage/mysql/MysqlVerbindung.class</exclude>
+                                        <exclude>de/lightrixx/punish/storage/mysql/MysqlSchema.class</exclude>
+                                        <exclude>de/lightrixx/punish/storage/mysql/YamlNachMysqlMigrator.class</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Nur Server-Natives für ONNX bündeln (linux-x64 + win-x64).
+                                     osx-*, linux-aarch64 und dSYM-Debugsymbole fliegen raus:
+                                     deutlich kleineres Bridge-Jar, KI läuft dort weiter, wo Server laufen. -->
+                                <filter>
+                                    <artifact>com.microsoft.onnxruntime:onnxruntime</artifact>
+                                    <excludes>
+                                        <exclude>ai/onnxruntime/native/osx*/**</exclude>
+                                        <exclude>ai/onnxruntime/native/linux-aarch64/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <!-- C-P.1: gebündelte Bibliotheken unter punish.lib verschieben,
+                                 sonst Querplugin-Klassenkollisionen (Hikari/MySQL in mehreren Plugins). -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.zaxxer</pattern>
+                                    <shadedPattern>de.lightrixx.punish.lib.zaxxer</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.mysql</pattern>
+                                    <shadedPattern>de.lightrixx.punish.lib.mysql</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Implementation-Version>${project.version}</Implementation-Version>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,30 @@
+PunishSystem Velocity-Plugin – Drittbestandteile und Lizenzen
+=============================================================
+
+Dieses Plugin bündelt („shaded") die folgenden Bibliotheken. Die jeweiligen
+Lizenztexte liegen diesem Jar bei.
+
+1. HikariCP 6.2.1 (com.zaxxer:HikariCP)
+   Lizenz: Apache License 2.0
+   Lizenztext: META-INF/LICENSE-HikariCP.txt in diesem Jar
+   Umbenannt/relocatet nach: de.lightrixx.punish.lib.zaxxer
+   Copyright: Brett Wooldridge und Mitwirkende
+
+2. MySQL Connector/J 9.2.0 (com.mysql:mysql-connector-j)
+   Lizenz: GNU General Public License, Version 2, mit FOSS-Exception
+   Lizenztext und Hinweise: LICENSE, README, INFO_BIN, INFO_SRC im
+   Wurzelverzeichnis dieses Jars (unverändert aus dem Original-Jar)
+   Umbenannt/relocatet nach: de.lightrixx.punish.lib.mysql
+
+3. PunishSystem Common (eigener Code, de.lightrixx.punish)
+   Lizenz: MIT – siehe LICENSE im Quell-Repository
+   (https://github.com/lightrixx/PunishSystem, Datei LICENSE)
+
+Hinweis zum Chatfilter-KI-Modell: Das Modell „ankekat1000/toxic-bert-german"
+und dessen vocab.txt werden NICHT mit diesem Jar verteilt (CC-BY-NC-SA-4.0,
+nur nicht-kommerziell). Sie werden bei Bedarf separat geladen, siehe
+scripts/chatfilter-modell-laden.ps1 im Quell-Repository.
+
+Hinweis: Die Dateien LICENSE, README, INFO_BIN und INFO_SRC im Wurzelverzeichnis
+dieses Jars stammen von MySQL Connector/J (Punkt 2) und gelten ausschließlich
+dafür. Der eigene Plugin-Code steht unter MIT (Punkt 3).

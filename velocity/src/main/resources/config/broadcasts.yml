@@ -1,0 +1,79 @@
+# =========================================================
+# PunishSystem - Broadcasts (broadcasts.yml, Velocity)
+# Entwickelt von: lightrixx
+# =========================================================
+# Ordner: <Proxy-Datenordner>/config/
+# Was bei Strafen im Server-Chat an Teammitglieder gesendet wird.
+# Pro Typ: aktiv (true/false) + nachricht im MiniMessage-Format.
+# Platzhalter: %spieler%, %ausfuehrer%, %dauer%, %grund%, %anzahl%, %ip%,
+#   %id%, %text%, %max%, %stufe%, %punkte%, %warn-grund%, %reporter%, %server%,
+#   %bridge%, %proxy%, %quelle%, %kanal%, %score%, %status%
+# warn-eskalation feuert, wenn eine Warn-Schwelle (warns.eskalation) einen
+# automatischen Verstoß auslöst – dann ersetzt sie den Standard-Verstoß-Broadcast
+# (kein Doppelpost). %anzahl% = Warn-Anzahl, %stufe% = Verstoß-Stufe,
+# %warn-grund% = auslösender Warn-Grund. Zum Abschalten: aktiv: false
+# (dann kommt wieder der normale verstoss-add-Broadcast).
+# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# =========================================================
+
+# --- Broadcast-Nachrichten (was im Server-Chat angezeigt wird) ---
+# Wenn ein Spieler bestraft wird, erscheint eine Nachricht für Teammitglieder.
+# Setze "aktiv: false", um die Nachricht komplett auszuschalten.
+# Platzhalter: %spieler%, %ausfuehrer%, %dauer%, %grund%, %anzahl%, %ip%
+broadcasts:
+  ban: { aktiv: true, nachricht: "<gray>[<red>Bann<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>gebannt (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  permabann: { aktiv: true, nachricht: "<gray>[<red>Permanentbann<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>permanent gebannt. Grund: <white>%grund%" }
+  ban-ip: { aktiv: true, nachricht: "<gray>[<red>IP-Bann<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>gebannt. Grund: <white>%grund%" }
+  ip-mute: { aktiv: true, nachricht: "<gray>[<yellow>IP-Mute<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>gemutet (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  ip-unmute: { aktiv: true, nachricht: "<gray>[<yellow>IP-Unmute<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>entmutet." }
+  ip-mute-edit: { aktiv: true, nachricht: "<gray>[<yellow>IP-Mute-Edit<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>aktualisiert (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  ip-timeout: { aktiv: true, nachricht: "<gray>[<yellow>IP-Timeout<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>in den Timeout versetzt (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  ip-untimeout: { aktiv: true, nachricht: "<gray>[<green>IP-Untimeout<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>aus dem Timeout geholt." }
+  ip-timeout-edit: { aktiv: true, nachricht: "<gray>[<yellow>IP-Timeout-Edit<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>aktualisiert (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  ip-kick: { aktiv: true, nachricht: "<gray>[<red>IP-Kick<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>gekickt (<white>%anzahl%<gray>). Grund: <white>%grund%" }
+  ban-all: { aktiv: true, nachricht: "<gray>[<red>Bann-All<gray>] <white>%anzahl% <gray>Spieler wurden von <white>%ausfuehrer% <gray>gebannt. Grund: <white>%grund%" }
+  mute: { aktiv: true, nachricht: "<gray>[<yellow>Mute<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>gemutet (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  mute-all: { aktiv: true, nachricht: "<gray>[<yellow>Mute-All<gray>] <white>%anzahl% <gray>Spieler wurden von <white>%ausfuehrer% <gray>gemutet. Grund: <white>%grund%" }
+  unmute: { aktiv: true, nachricht: "<gray>[<yellow>Unmute<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>entmutet." }
+  unmute-all: { aktiv: true, nachricht: "<gray>[<green>Unmute-All<gray>] <white>%anzahl% <gray>Mutes wurden von <white>%ausfuehrer% <gray>aufgehoben." }
+  kick: { aktiv: true, nachricht: "<gray>[<red>Kick<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>gekickt. Grund: <white>%grund%" }
+  kick-all: { aktiv: true, nachricht: "<gray>[<red>Kick-All<gray>] <white>%anzahl% <gray>Spieler wurden von <white>%ausfuehrer% <gray>gekickt. Grund: <white>%grund%" }
+  timeout: { aktiv: true, nachricht: "<gray>[<yellow>Timeout<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>in den Timeout versetzt (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  timeout-all: { aktiv: true, nachricht: "<gray>[<yellow>Timeout-All<gray>] <white>%anzahl% <gray>Spieler wurden von <white>%ausfuehrer% <gray>in den Timeout versetzt. Grund: <white>%grund%" }
+  pardon: { aktiv: true, nachricht: "<gray>[<green>Entbann<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>entbannt." }
+  pardon-all: { aktiv: true, nachricht: "<gray>[<green>Entbann-All<gray>] <white>%anzahl% <gray>Banns wurden von <white>%ausfuehrer% <gray>aufgehoben." }
+  unban-ip: { aktiv: true, nachricht: "<gray>[<green>Entbann-IP<gray>] <white>%ip% <gray>wurde von <white>%ausfuehrer% <gray>entbannt." }
+  untimeout: { aktiv: true, nachricht: "<gray>[<green>Untimeout<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>aus dem Timeout geholt." }
+  untimeout-all: { aktiv: true, nachricht: "<gray>[<green>Untimeout-All<gray>] <white>%anzahl% <gray>Timeouts wurden von <white>%ausfuehrer% <gray>aufgehoben." }
+  freeze: { aktiv: true, nachricht: "<gray>[<aqua>Freeze<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>eingefroren (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  unfreeze: { aktiv: true, nachricht: "<gray>[<green>Unfreeze<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>aufgetaut." }
+  auto-bann: { aktiv: true, nachricht: "<gray>[<red>Auto-Bann<gray>] <white>%spieler% <gray>erreichte das Verstoß-Limit und wurde automatisch gebannt (<white>%dauer%<gray>)." }
+  auto-pardon: { aktiv: true, nachricht: "<gray>[<green>Auto-Entbann<gray>] Der Auto-Bann von <white>%spieler% <gray>wurde aufgehoben (Verstöße unter Limit)." }
+  auto-bann-abgelaufen: { aktiv: true, nachricht: "<gray>[<green>Auto-Bann<gray>] Der Auto-Bann von <white>%spieler% <gray>ist abgelaufen; Verstöße wurden zurückgesetzt." }
+  verstoss-add: { aktiv: true, nachricht: "<gray>[<red>Verstoß<gray>] <white>%spieler% <gray>hat einen Verstoß [%stufe%] von <white>%ausfuehrer% <gray>erhalten (<white>%punkte%/%max% Punkte<gray>). Grund: <white>%grund%" }
+  verstoss-clear: { aktiv: true, nachricht: "<gray>[<green>Verstoß<gray>] Alle Verstöße von <white>%spieler% <gray>wurden von <white>%ausfuehrer% <gray>gelöscht (<white>%anzahl%<gray>)." }
+  ban-edit: { aktiv: true, nachricht: "<gray>[<yellow>Bann-Edit<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>aktualisiert (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  mute-edit: { aktiv: true, nachricht: "<gray>[<yellow>Mute-Edit<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>aktualisiert (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  timeout-edit: { aktiv: true, nachricht: "<gray>[<yellow>Timeout-Edit<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>aktualisiert (<white>%dauer%<gray>). Grund: <white>%grund%" }
+  verstoss-remove: { aktiv: true, nachricht: "<gray>[<green>Verstoß<gray>] Verstoß <white>#%id% <gray>von <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>entfernt." }
+  verstoss-edit: { aktiv: true, nachricht: "<gray>[<yellow>Verstoß<gray>] Verstoß <white>#%id% <gray>von <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>bearbeitet." }
+  note-add: { aktiv: true, nachricht: "<gray>[<yellow>Notiz<gray>] Notiz <white>#%id% <gray>für <white>%spieler% <gray>von <white>%ausfuehrer%<gray>: <white>%text%" }
+  note-edit: { aktiv: true, nachricht: "<gray>[<yellow>Notiz<gray>] Notiz <white>#%id% <gray>von <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>bearbeitet: <white>%text%" }
+  note-delete: { aktiv: true, nachricht: "<gray>[<yellow>Notiz<gray>] Notiz <white>#%id% <gray>von <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>gelöscht." }
+  warn-add: { aktiv: true, nachricht: "<gray>[<yellow>Warnung<gray>] <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>verwarnt (<white>#%id%<gray>). Grund: <white>%grund%" }
+  warn-edit: { aktiv: true, nachricht: "<gray>[<yellow>Warnung<gray>] Warnung <white>#%id% <gray>von <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>bearbeitet: <white>%grund%" }
+  warn-delete: { aktiv: true, nachricht: "<gray>[<yellow>Warnung<gray>] Warnung <white>#%id% <gray>von <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>gelöscht." }
+  warn-eskalation: { aktiv: true, nachricht: "<gray>[<yellow>Warn-Eskalation<gray>] <white>%spieler% <gray>hat bei <white>%anzahl% <gray>Verwarnungen automatisch einen Verstoß [%stufe%] erhalten. Auslöser: <white>%warn-grund%" }
+  report-neu: { aktiv: true, nachricht: "<gray>[<red>Report<gray>] <white>%reporter% <gray>meldet <white>%spieler% <gray>(<white>#%id%<gray>, %server%). Grund: <white>%grund%" }
+  report-close: { aktiv: true, nachricht: "<gray>[<green>Report<gray>] Report <white>#%id% <gray>gegen <white>%spieler% <gray>wurde von <white>%ausfuehrer% <gray>geschlossen (<white>%status%<gray>)." }
+  chatfilter-treffer: { aktiv: true, nachricht: "<gray>[<yellow>Chatfilter<gray>] <white>%spieler% <gray>(%quelle%, %score%)<newline><gray>» <white>%text%" }
+  version-mismatch: { aktiv: true, nachricht: "<gray>[<yellow>Version<gray>] <white>%server% <gray>meldet <white>%bridge% <gray>(Proxy: <white>%proxy%<gray>) – bitte alle Module auf dieselbe Version bringen." }
+
+# --- Verpasste Team-Nachrichten (Nachsendung beim Join) ---
+# Wer offline war, bekommt beim nächsten Lobby-Join alle seit der Abwesenheit
+# aufgelaufenen Team-Broadcasts erneut – mit Kopfzeile (%anzahl%) und [Verpasst]-
+# Markierung vor jeder Zeile. Ablage ist persistent (überlebt Proxy-Restarts).
+# Stille Strafen (silent) werden nie nachgesendet.
+# Zum Abschalten: aktiv: false.
+# Sicherheits-Retention: Einträge älter als 90 Tage entfernt der Cleanup-Task.
+  verpasst: { aktiv: true, kopf: "<gray>[<yellow>Verpasst<gray>] <white>%anzahl% <gray>verpasste Team-Nachrichten seit deiner Abwesenheit:", prefix: "<gray>[<yellow>Verpasst<gray>] " }

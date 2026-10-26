@@ -1,0 +1,25 @@
+# =========================================================
+# PunishSystem - Bann-Screens (screens.yml, Velocity)
+# Entwickelt von: lightrixx
+# =========================================================
+# Ordner: <Proxy-Datenordner>/config/
+# Was gebannte / gekickte Spieler auf dem Disconnect-Screen sehen.
+# Platzhalter: %spieler%, %grund%, %dauer%, %verbleibend%, %ablauf%,
+#   %ausfuehrer%, %anzahl%, %punkte%, %max%, %scope%, %ip%
+# Neue Zeile: <newline> - MiniMessage-Format.
+# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# =========================================================
+
+# --- Nachrichten für Bann-Screens ---
+# Was die Spieler sehen, wenn sie gebannt, gemutet oder gekickt werden.
+# Verwende %grund%, %verbleibend%, %ablauf%, %ausfuehrer% als Platzhalter.
+# Neue Zeile: <newline>
+screens:
+  bann: "<red>Du wurdest gebannt!<newline><newline><gray>Grund: <white>%grund%<newline><gray>Verbleibend: <white>%verbleibend%<newline><gray>Endet am: <white>%ablauf%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  bann-permanent: "<red>Du wurdest permanent gebannt!<newline><newline><gray>Grund: <white>%grund%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  bann-auto: "<red>Du wurdest automatisch gebannt (Verstoß-Limit erreicht).<newline><newline><gray>Grund: <white>%grund%<newline><gray>Verbleibend: <white>%verbleibend%<newline><gray>Endet am: <white>%ablauf%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  ip-bann: "<red>Deine IP-Adresse ist gebannt!<newline><newline><gray>Grund: <white>%grund%<newline><gray>Verbleibend: <white>%verbleibend%<newline><gray>Endet am: <white>%ablauf%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  timeout: "<yellow>Du befindest dich im Timeout.<newline><newline><gray>Grund: <white>%grund%<newline><gray>Verbleibend: <white>%verbleibend%<newline><gray>Endet am: <white>%ablauf%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  ip-timeout: "<yellow>Deine IP-Adresse befindet sich im Timeout.<newline><newline><gray>Grund: <white>%grund%<newline><gray>Verbleibend: <white>%verbleibend%<newline><gray>Endet am: <white>%ablauf%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  kick: "<red>Du wurdest vom Server gekickt!<newline><newline><gray>Grund: <white>%grund%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"
+  ip-kick: "<red>Deine IP-Adresse wurde vom Server gekickt!<newline><newline><gray>Grund: <white>%grund%<newline><gray>Von: <white>%ausfuehrer%<newline><newline><dark_gray>PunishSystem by lightrixx"

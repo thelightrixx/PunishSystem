@@ -1,0 +1,19 @@
+# =========================================================
+# PunishSystemBridge - GUI-Konfiguration (gui.yml)
+# Entwickelt von: lightrixx
+# =========================================================
+# Ordner: plugins/PunishSystemBridge/config/
+# PROXY-ONLY: Titel und Fallbacks werden per Text-Sync vom Proxy übernommen.
+# Nur auf dem Proxy pflegen (/punish-reload verteilt netzwerkweit).
+# Diese Datei ist nur Fallback vor dem ersten Proxy-Kontakt.
+# =========================================================
+
+# --- PunishGUI (Bridge, Command-Builder) ---
+# Die GUI baut nur die Befehlszeile und sendet sie per BEFEHL_AUSFUEHREN
+# an den Proxy. Status/History/Reports/Katalog kommen live per GUI_ANFRAGE.
+gui:
+  # Titel-Zeile der Hauptmenüs (MiniMessage erlaubt, ohne Prefix)
+  titel: "Punish"
+  # Falls der Proxy nicht antwortet (Timeout 4s), nutzt die GUI diese Fallbacks.
+  fallback-gruende: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
+  fallback-dauern: ["10m", "1h", "6h", "1d", "7d", "30d", "perm"]

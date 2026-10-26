@@ -1,0 +1,254 @@
+# =========================================================
+# PunishSystem - Spieler-Nachrichten (messages.yml, Velocity)
+# Entwickelt von: lightrixx
+# =========================================================
+# Ordner: <Proxy-Datenordner>/config/
+# Hier stehen alle Nachrichten für den Spieler selbst (Fehler, Erfolge, ...).
+# Platzhalter: %spieler%, %dauer%, %grund%, %anzahl%, %max%, %min%, %ip%, %id%,
+#   %text%, %ziel%, %filter%, %seite%, %seiten%, %typ%, %datum%, %ablauf%,
+#   %ausfuehrer%, %bearbeiter%, %reporter%, %server%, %status%, %level%,
+#   %punkte%, %stufe%, %wort%, %version%, %aktuell%, %channel%, %detail%,
+#   %scope%, %bekannt%, %zuletzt%, %banstatus%, %rest%, %ipstatus%,
+#   %banns%, %mutes%, %timeouts%, %plattform%, %warnungen%, %verbleibend%, %nummer%,
+#   %befehl%, %nutzung%, %kandidaten%, %quelle%, %name%
+# Hinweis: %warn-grund% wird in broadcasts.yml (warn-eskalation) genutzt und ist
+#   hier zur Vollständigkeit mit dokumentiert.
+# MiniMessage-Format, Prefix wird automatisch vorangestellt.
+# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# =========================================================
+
+# --- Nachrichten für den Spieler selbst ---
+# was der administrativ betroffene Spieler sieht
+messages:
+  # Fehler
+  kein-recht: "<red>Dazu hast du keine Berechtigung."
+  spieler-nicht-gefunden: "<red>Der Spieler <white>%spieler% <red>wurde nicht gefunden."
+  spieler-nicht-online: "<red>Der Spieler <white>%spieler% <red>ist nicht online."
+  nur-spieler: "<red>Dieser Befehl kann nur von einem Spieler ausgeführt werden."
+  dauer-ungueltig: "<red>Ungültige Zeitangabe. Beispiele: <white>1h30m<red>, <white>7d<red>, <white>30m<red>."
+  perm-nicht-erlaubt: "<red>'perm' ist hier nicht erlaubt. Nutze den passenden Befehl oder eine Zeitangabe."
+  limit-ueberschritten: "<red>Das Limit von <white>%max% Minuten <red>wurde überschritten."
+  limit-unterschritten: "<red>Die Dauer unterschreitet das Minimum von <white>%min% Minuten<red>. Nutze für kurze Strafen einen Timeout."
+  kein-grund: "<red>Bitte gib einen Grund an."
+  bereits-gebannt: "<red>Der Spieler <white>%spieler% <red>ist bereits gebannt."
+  nicht-gebannt: "<red>Der Spieler <white>%spieler% <red>ist nicht gebannt."
+  bereits-gemutet: "<red>Der Spieler <white>%spieler% <red>ist bereits gemutet."
+  nicht-gemutet: "<red>Der Spieler <white>%spieler% <red>ist nicht gemutet."
+  bereits-timeout: "<red>Der Spieler <white>%spieler% <red>befindet sich bereits im Timeout."
+  bereits-gefroren: "<red>Der Spieler <white>%spieler% <red>ist bereits eingefroren."
+  nicht-gefroren: "<red>Der Spieler <white>%spieler% <red>ist nicht eingefroren."
+  selbstbestrafung: "<red>Du kannst dich nicht selbst bestrafen."
+  geschuetzt: "<red>Dieser Spieler ist geschützt."
+  schutz-offline-unbekannt: "<yellow>Der Schutzstatus von <white>%spieler% <yellow>konnte nicht geprüft werden (offline, Rechte-Cache leer). Aktion aus Sicherheit blockiert – später erneut versuchen oder <white>schutz.fail-closed: false<yellow> setzen."
+  schutz-pruefung-laeuft: "<gray>Prüfe Schutzstatus von <white>%spieler%<gray> …"
+  silent-ohne-recht: "<yellow>Silent erfordert <white>punish.allow-silent-syntax<yellow> – die Strafe wurde laut ausgeführt."
+  ip-nicht-gefunden: "<red>Für <white>%spieler% <red>ist keine IP-Adresse bekannt."
+  bereits-gebannt-ip: "<red>Die IP <white>%ip% <red>ist bereits gebannt."
+  nicht-gebannt-ip: "<red>Die IP <white>%ip% <red>ist nicht gebannt."
+  bereits-gemutet-ip: "<red>Die IP <white>%ip% <red>ist bereits gemutet."
+  nicht-gemutet-ip: "<red>Die IP <white>%ip% <red>ist nicht gemutet."
+  ip-mute-erfolg: "<green>Die IP <white>%ip% <green>wurde für <white>%dauer% <green>gemutet. Grund: <white>%grund%"
+  ip-unmute-erfolg: "<green>Der IP-Mute für <white>%ip% <green>wurde aufgehoben."
+  ip-mute-edit-erfolg: "<green>Der IP-Mute für <white>%ip% <green>wurde aktualisiert (Dauer: <white>%dauer%<green>). Grund: <white>%grund%"
+  bereits-timeout-ip: "<red>Die IP <white>%ip% <red>befindet sich bereits im Timeout."
+  nicht-im-timeout-ip: "<red>Die IP <white>%ip% <red>befindet sich nicht im Timeout."
+  ip-timeout-erfolg: "<green>Die IP <white>%ip% <green>wurde für <white>%dauer% <green>in den Timeout versetzt. Grund: <white>%grund%"
+  ip-untimeout-erfolg: "<green>Der IP-Timeout für <white>%ip% <green>wurde aufgehoben."
+  ip-timeout-edit-erfolg: "<green>Der IP-Timeout für <white>%ip% <green>wurde aktualisiert (Dauer: <white>%dauer%<green>). Grund: <white>%grund%"
+  ip-kick-erfolgreich: "<green>Die IP <white>%ip% <green>wurde gekickt (<white>%anzahl%<green> Spieler). Grund: <white>%grund%"
+  selbst-ip-bann: "<red>Diese IP darf nicht gebannt werden (eigene/Server-IP)."
+  ip-geteilt-warnung: "<yellow>Warnung: <white>%anzahl% <yellow>Online-Spieler teilen die IP <white>%ip%<yellow> (Proxy/NAT?). Der Bann trifft alle!"
+  ip-geteilt-block: "<red>Abgebrochen: Die IP <white>%ip% <red>wird von zu vielen Online-Spielern geteilt (Proxy/NAT?). Bann zum Schutz verweigert."
+
+  # Bestätigung für Massen-Befehle
+  bestaetigung-noetig: "<yellow>Diese Aktion erfordert eine Bestätigung. Klicke auf den folgenden Befehl oder kopiere ihn:"
+  bestaetigung-erfolgreich: "<green>Massenaktion erfolgreich ausgeführt (<white>%anzahl%<green>)."
+  massen-limit-gekuerzt: "<yellow>Limit erreicht: Von <white>%kandidaten% <yellow>Kandidaten wurden nur die ersten <white>%anzahl% <yellow>bestraft (Limit <white>%max%<yellow>)."
+  massen-io-rueckstau: "<red>Die Massenaktion wurde nicht gestartet: Der I/O-Rückstau ist zu hoch (<white>%ausstehend%<red> offene Schreibvorgänge, Grenze <white>%max%<red>). Bitte später erneut versuchen."
+  grund-gekuerzt-hinweis: "<yellow>Hinweis: Der Grund wurde auf <white>%max% Zeichen <yellow>gekürzt."
+
+  # Reload
+  reload-erfolgreich: "<green>Die Konfiguration wurde neu geladen."
+  reload-teilweise: "<yellow>Die Konfiguration wurde geladen, aber Teile schlugen fehl: <white>%detail% <yellow>Details in der Konsole und /punish-diagnostics."
+  reload-fehler: "<red>Beim Neuladen der Konfiguration ist ein Fehler aufgetreten. Details in der Konsole."
+  reload-laeuft-bereits: "<yellow>Es läuft bereits ein Reload – bitte kurz warten."
+  aktion-fehlgeschlagen: "<red>Die Aktion konnte nicht ausgeführt werden. Details in der Konsole."
+
+  # Version
+  punish-version: "<gray>PunishSystem <white>%version% <gray>by <white>lightrixx"
+
+  # Update (/punish-update)
+  update-aktuell: "<green>PunishSystem ist aktuell (<white>%version%<green>)."
+  update-verfuegbar: "<yellow>Update verfügbar: <white>%version% <yellow>(installiert: <white>%aktuell%<yellow>, Channel: <white>%channel%<yellow>). Mit <white>/punish-update apply<yellow> installieren."
+  update-start: "<gray>Update wird geladen …"
+  update-fehler: "<red>Update fehlgeschlagen: <white>%detail%"
+  update-laeuft-bereits: "<yellow>Es läuft bereits ein Update – bitte kurz warten."
+  update-bestaetigung-noetig: "<yellow>Update auf <white>%version% <yellow>erfordert Bestätigung: <white>/punish-update apply confirm"
+  update-erfolgreich-neustart: "<green>Update <white>%version% <green>bereit. Proxy + Backends neustarten, damit es aktiv wird."
+  update-push-laufend: "<gray>Bridge-Update <white>%version% <gray>wird an alle Server verteilt …"
+  update-push-fertig: "<gray>Update-Status: Remote <white>%version% <gray>%detail%"
+
+  # Hilfe
+  punish-help-kopf: "<yellow>PunishSystem <gray>by <white>lightrixx <yellow>– Befehle:"
+  punish-help-eintrag: "<gray>• <green>/%befehl% <gray>%nutzung%"
+  punish-help-leer: "<gray>Keine Befehle für deine Rechte verfügbar."
+  punish-help-fuss: "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Beta: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>."
+
+  # Verstoß-System
+  syntax-verstoss: "<red>Verwendung: /verstoss add <Spieler> <Grund> [level=low|medium|high] | remove <Spieler> <Nr> | clear <Spieler> (Bearbeiten via /punish-edit)"
+  syntax-punish-edit: "<red>Verwendung: /punish-edit show <typ> <Spieler|IP> [Nr] | /punish-edit <typ> <Spieler|IP> [Nr] grund=<Text> [level=low|medium|high] [dauer=7d] [--global|--server] (Typen: verstoss, warn, note, ban, mute, timeout, ban-ip, mute-ip, timeout-ip)"
+  punish-edit-kein-feld: "<red>Es wurde kein änderbares Feld angegeben. Nutze z. B. <white>grund=...<red>, <white>level=...<red> oder <white>dauer=...<red>. Datum und Ausführer sind gesperrt."
+  syntax-warn: "<red>Verwendung: /warn <Spieler> <Grund> | add <Spieler> <Grund> | delete <Spieler> <Nr> | list <Spieler> (Bearbeiten via /punish-edit)"
+  warn-nicht-gefunden: "<red>Warnung <white>#%id% <red>von <white>%spieler% <red>existiert nicht."
+  warn-add-erfolg: "<green>Warnung <white>#%id% <green>für <white>%spieler% <green>eingetragen (<white>%anzahl%<green>). Grund: <white>%grund%"
+  warn-delete-erfolg: "<green>Warnung <white>#%id% <green>von <white>%spieler% <green>gelöscht."
+  warn-edit-erfolg: "<green>Warnung <white>#%id% <green>von <white>%spieler% <green>aktualisiert. Grund: <white>%grund%"
+  warns-leer: "<gray>%spieler% hat keine Warnungen."
+  warn-list-kopf: "<yellow>Warnungen von <white>%spieler% <yellow>(<white>%anzahl%<yellow>):"
+  warn-list-eintrag: "<gray>#%id% <white>%grund% <gray>von %ausfuehrer% am %datum%"
+  ziel-warn: "<yellow>Du wurdest von <white>%ausfuehrer% <yellow>verwarnt. Grund: <white>%grund%"
+  ziel-warn-entfernt: "<green>Warnung <white>#%id% <green>wurde von <white>%ausfuehrer% <green>entfernt."
+  ziel-warn-bearbeitet: "<yellow>Der Grund deiner Warnung <white>#%id% <yellow>wurde von <white>%ausfuehrer% <yellow>geändert: <white>%grund%"
+  syntax-note: "<red>Verwendung: /punish-note add <Spieler> <Text> | delete <Spieler> <Nr> | list <Spieler> (Bearbeiten via /punish-edit)"
+  note-nicht-gefunden: "<red>Notiz <white>#%id% <red>von <white>%spieler% <red>existiert nicht."
+  note-add-erfolg: "<green>Notiz <white>#%id% <green>für <white>%spieler% <green>eingetragen."
+  note-delete-erfolg: "<green>Notiz <white>#%id% <green>von <white>%spieler% <green>gelöscht."
+  note-edit-erfolg: "<green>Notiz <white>#%id% <green>von <white>%spieler% <green>aktualisiert."
+  notizen-leer: "<gray>%spieler% hat keine Notizen."
+  note-list-kopf: "<yellow>Notizen von <white>%spieler% <yellow>(<white>%anzahl%<yellow>):"
+  note-list-eintrag: "<gray>#%id% <white>%text% <gray>von %ausfuehrer% am %datum%"
+  nummer-ungueltig: "<red>Ungültige Nummer: <white>%nummer%<red>."
+  level-ungueltig: "<red>Ungültige Stufe: <white>%level%<red>. Gültig: <white>low, medium, high<red> (Aliase: leicht, mittel, schwer)."
+  verstoss-nicht-gefunden: "<red>Verstoß <white>#%id% <red>von <white>%spieler% <red>existiert nicht."
+  verstoss-add-erfolg: "<green>Verstoß <white>#%id% [%stufe%] <green>für <white>%spieler% <green>eingetragen (<white>%punkte%/%max% Punkte<green>)."
+  verstoss-remove-erfolg: "<green>Verstoß <white>#%id% <green>von <white>%spieler% <green>entfernt (<white>%punkte%/%max% Punkte<green>)."
+  verstoss-edit-erfolg: "<green>Verstoß <white>#%id% [%stufe%] <green>von <white>%spieler% <green>aktualisiert."
+  verstoesse-leer: "<green>%spieler% hat keine Verstöße."
+
+  # Auto-Bann
+  auto-bann-aktiv: "<red>Gegen <white>%spieler% <red>ist bereits ein Auto-Bann aktiv."
+
+  # History
+  history-eintrag: "<gray>[%id%] %typ% <white>%ziel% <gray>von %ausfuehrer% | %grund% | %datum%"
+  history-hover: "<yellow>%typ% auf %ziel%<newline><gray>Grund: <white>%grund%<newline><gray>Von: <white>%ausfuehrer%<newline><gray>Am: <white>%datum%<newline><gray>Ablauf: <white>%ablauf%"
+
+  # Punish Status
+  punish-status-eintrag: "<red>%typ% <gray>von %ausfuehrer% | Grund: %grund% | Ablauf: %ablauf% (noch %verbleibend%)"
+  punish-status-hover: "<yellow>Klicken, um die Aufhebung vorzubereiten."
+  punish-status-verstoesse-kopf: "<yellow>Verstöße (<white>%punkte%/%max% Punkte<yellow>, %anzahl% Einträge):"
+  punish-status-verstoss-eintrag: "<gray>#%id% [%stufe%] <white>%grund% <gray>von %ausfuehrer% am %datum%"
+  punish-status-warns-kopf: "<yellow>Warnungen (<white>%anzahl%<yellow>):"
+  punish-status-warn-eintrag: "<gray>#%id% <white>%grund% <gray>von %ausfuehrer% am %datum%"
+
+  # Mute
+  mute-blockiert: "<red>Du bist gemutet! Noch <white>%verbleibend%<red>. Grund: <white>%grund%"
+  mute-sync-laeuft: "<yellow>Strafen werden geladen, bitte kurz warten."
+  freeze-blockiert: "<red>Du bist eingefroren! Noch <white>%verbleibend%<red>. Grund: <white>%grund%"
+  auto-bann-abgelaufen-info: "<green>Dein Auto-Bann ist abgelaufen. Deine Verstöße wurden zurückgesetzt."
+  ziel-gemutet: "<red>Du wurdest von <white>%ausfuehrer% <red>für <white>%dauer% <red>gemutet. Grund: <white>%grund%"
+  ziel-entmutet: "<green>Du wurdest von <white>%ausfuehrer% <green>entmutet."
+  ziel-gefroren: "<red>Du wurdest von <white>%ausfuehrer% <red>eingefroren (<white>%dauer%<red>). Grund: <white>%grund%"
+  ziel-entfroren: "<green>Dein Freeze wurde von <white>%ausfuehrer% <green>aufgehoben."
+  ziel-gemutet-ip: "<red>Deine IP wurde von <white>%ausfuehrer% <red>für <white>%dauer% <red>gemutet. Grund: <white>%grund%"
+  ziel-entmutet-ip: "<green>Der Mute deiner IP wurde von <white>%ausfuehrer% <green>aufgehoben."
+  ziel-mute-bearbeitet-ip: "<yellow>Der Mute deiner IP wurde von <white>%ausfuehrer% <yellow>aktualisiert (Dauer: <white>%dauer%<yellow>). Grund: <white>%grund%"
+  ziel-verstoss: "<red>Du hast einen Verstoß [%stufe%] von <white>%ausfuehrer% <red>erhalten (<white>%punkte%/%max% Punkte<red>). Grund: <white>%grund%"
+  ziel-verstoss-clear: "<green>Alle deine Verstöße wurden von <white>%ausfuehrer% <green>gelöscht."
+  verstoss-clear-erfolg: "<green>Alle Verstöße von <white>%spieler% <green>gelöscht (<white>%anzahl%<green>)."
+
+  # Edit-Befehle
+  ban-edit-erfolg: "<green>Der Bann von <white>%spieler% <green>wurde aktualisiert (Dauer: <white>%dauer%<green>). Grund: <white>%grund%"
+  mute-edit-erfolg: "<green>Der Mute von <white>%spieler% <green>wurde aktualisiert (Dauer: <white>%dauer%<green>). Grund: <white>%grund%"
+  timeout-edit-erfolg: "<green>Der Timeout von <white>%spieler% <green>wurde aktualisiert (Dauer: <white>%dauer%<green>). Grund: <white>%grund%"
+  ip-ban-edit-erfolg: "<green>Der IP-Bann für <white>%ip% <green>wurde aktualisiert (Dauer: <white>%dauer%<green>). Grund: <white>%grund%"
+  ziel-mute-bearbeitet: "<yellow>Dein Mute wurde von <white>%ausfuehrer% <yellow>aktualisiert (Dauer: <white>%dauer%<yellow>). Grund: <white>%grund%"
+
+  # IP-Bann
+  tempban-ip-erfolg: "<green>Die IP <white>%ip% <green>wurde für <white>%dauer% <green>gebannt. Grund: <white>%grund%"
+  unban-ip-erfolg: "<green>Der IP-Bann für <white>%ip% <green>wurde aufgehoben."
+
+  # Kick
+  kick-erfolgreich: "<green>Der Spieler <white>%spieler% <green>wurde gekickt. Grund: <white>%grund%"
+  ban-ip-erfolg: "<green>Die IP <white>%ip% <green>wurde gebannt. Grund: <white>%grund%"
+
+  # Untimeout
+  untimeout-erfolg: "<green>Der Timeout von <white>%spieler% <green>wurde aufgehoben."
+  nicht-im-timeout: "<red>Der Spieler <white>%spieler% <red>befindet sich nicht im Timeout."
+
+  # Verstoß-Management
+  ziel-verstoss-entfernt: "<green>Verstoß <white>#%id% <green>wurde von <white>%ausfuehrer% <green>entfernt. Verbleibend: <white>%anzahl%/%max%"
+  ziel-verstoss-bearbeitet: "<yellow>Der Grund deines Verstoßes <white>#%id% <yellow>wurde von <white>%ausfuehrer% <yellow>geändert: <white>%grund%"
+
+  # Pardon
+  pardon-auto-hinweis: "<yellow>Hinweis: Die Verstöße von <white>%spieler% <yellow>bleiben bestehen – der nächste Verstoß löst sofort einen neuen Auto-Bann aus."
+  delete-ip-syntax: "<red>Verwendung: /punish-delete-ip <Spieler|IP>"
+  delete-ip-erfolg: "<green>IP-Daten gelöscht (<white>%ip%<green>): Banns <white>%banns%<green>, Mutes <white>%mutes%<green>, Timeouts <white>%timeouts%<green>, Cache-Einträge <white>%anzahl%<green>."
+  pardon-erfolg: "<green>Der Bann von <white>%spieler% <green>wurde aufgehoben."
+  unmute-erfolg: "<green>Der Mute von <white>%spieler% <green>wurde aufgehoben."
+  unfreeze-erfolg: "<green>Der Freeze von <white>%spieler% <green>wurde aufgehoben."
+  scope-unbekannt-warnung: "<yellow>Warnung: <white>%scope% <yellow>ist kein bekannter Server – die Strafe wirkt dort ggf. nirgends (Tippfehler?). Bekannt: <white>%bekannt%"
+  scope-abdeckend-hinweis: "<yellow>Hinweis: <white>%spieler% <yellow>ist in einem anderen Scope weiter aktiv (<white>%scope%<yellow>). Nutze den passenden Scope (z. B. --global), siehe /punish-status bzw. /punish-history."
+
+  # Punish Status Ansicht (nur aktive Strafen)
+  punish-status-kopf: "<yellow>Status für <white>%ziel% <yellow>(Filter: <white>%filter%<yellow>)"
+  punish-status-aktiv-kopf: "<yellow>Aktiv (<white>%anzahl%<yellow>):"
+  punish-status-aktiv-leer: "<green>Keine aktiven Strafen für %ziel%."
+  punish-status-verstoss-zeile: "<gray>• <white>%spieler% <gray>(<white>%anzahl% Einträge<gray>) – zuletzt: <white>[%stufe%] %grund% <gray>(%datum%)"
+  punish-status-mehr: "<gray>… und <white>%anzahl% <gray>weitere (Filter verfeinern, z. B. filter:bans)."
+  punish-status-syntax: "<red>Verwendung: /punish-status [self|Spieler|server] [filter:all|bans|mutes|timeouts|freezes|verstoesse|warns|ipbans|ipmutes|iptimeouts] [Seite] [--global|--server|--unbekannt]"
+  punish-status-filter-ungueltig: "<red>Unbekannter Filter: <white>%filter%<red>. Gültig: <white>all, bans, mutes, timeouts, freezes, verstoesse, warns, kicks, ipbans, ipmutes, iptimeouts<red>."
+
+  # Punish History Ansicht (nur Verlauf)
+  punish-history-kopf: "<yellow>History für <white>%ziel% <yellow>(Filter: <white>%filter%<yellow>, Seite <white>%seite%/%seiten%<yellow>)"
+  punish-history-verlauf-kopf: "<yellow>Verlauf (<white>%anzahl%<yellow>, Seite <white>%seite%/%seiten%<yellow>):"
+  punish-history-verlauf-leer: "<green>Kein Verlauf für %ziel% gefunden."
+  punish-history-syntax: "<red>Verwendung: /punish-history [self|Spieler|server] [filter:all|bans|mutes|timeouts|freezes|verstoesse|warns|kicks|ipbans|ipmutes|iptimeouts] [Seite] [--global|--server|--unbekannt]"
+  punish-history-filter-ungueltig: "<red>Unbekannter Filter: <white>%filter%<red>. Gültig: <white>all, bans, mutes, timeouts, freezes, verstoesse, warns, kicks, ipbans, ipmutes, iptimeouts<red>."
+  ip-ungueltig: "<red>Ungültige IP-Adresse: <white>%ip%<red>."
+
+  # Alt-Accounts (/alts)
+  alts-syntax: "<red>Verwendung: /alts <Spieler|IP> [--global|--server|--unbekannt]"
+  alts-kopf: "<yellow>Alt-Accounts für <white>%spieler% <yellow>(IP <white>%ip%<yellow>, <white>%anzahl%<yellow>)%ipstatus% <gray>(Beta: IP-Heuristik, kein Beweis)"
+  alts-eintrag: "<gray>• <white>%spieler% <gray>| zuletzt: <white>%zuletzt% <gray>| Ban: %banstatus%"
+  alts-ban-frei: "<green>kein Ban"
+  alts-ban-aktiv: "<red>aktiv [%scope%] (noch %rest%)"
+  alts-ip-frei: ""
+  alts-ip-gebannt: " <red>[IP gebannt: %scope%]"
+  alts-leer: "<green>Keine Accounts mit der IP <white>%ip% <green>gefunden."
+
+  # Report-System
+  syntax-report: "<red>Verwendung: /report <Spieler> <Grund>"
+  syntax-reports: "<red>Verwendung: /reports [offen|alle] | info <Id> | accept <Id> | deny <Id> [Grund] | close <Id> [Grund] | delete <Id>"
+  report-erfolg: "<green>Dein Report <white>#%id% <green>gegen <white>%spieler% <green>wurde aufgenommen. Danke für deine Meldung!"
+  report-selbst: "<red>Du kannst dich nicht selbst melden."
+  report-cooldown: "<red>Bitte warte noch <white>%verbleibend% <red>bevor du erneut meldest."
+  report-duplikat: "<yellow>Du hast <white>%spieler% <yellow>bereits gemeldet (Report <white>#%id%<yellow> ist noch offen)."
+  report-limit: "<red>Du hast zu viele offene Reports. Bitte warte, bis das Team sie bearbeitet hat."
+  report-nicht-gefunden: "<red>Report <white>#%id% <red>existiert nicht."
+  report-bereits-uebernommen: "<yellow>Report <white>#%id% <yellow>wurde bereits von <white>%bearbeiter% <yellow>übernommen."
+  report-bereits-geschlossen: "<yellow>Report <white>#%id% <yellow>ist bereits geschlossen (Status: <white>%status%<yellow>)."
+  reports-leer: "<green>Keine offenen Reports."
+  reports-kopf: "<yellow>Offene Reports (<white>%anzahl%<yellow>):"
+  reports-mehr: "<gray>… und <white>%anzahl% <gray>weitere (zeige max. 25, nutze /reports info &lt;ID&gt;)."
+  reports-eintrag: "<gray>#%id% <white>%spieler% <gray>von %reporter% | %grund% <gray>(%server%, %datum%)"
+  report-info: "<yellow>Report <white>#%id% <yellow>%status%<newline><gray>Ziel: <white>%spieler%<newline><gray>Reporter: <white>%reporter%<newline><gray>Grund: <white>%grund%<newline><gray>Server: <white>%server%<newline><gray>Erstellt: <white>%datum%"
+  report-close-erfolg: "<green>Report <white>#%id% <green>wurde als <white>%status% <green>geschlossen."
+  report-delete-erfolg: "<green>Report <white>#%id% <green>wurde gelöscht."
+  report-bearbeitet: "<yellow>Dein Report <white>#%id% <yellow>gegen <white>%spieler% <yellow>wurde bearbeitet (Status: <white>%status%<yellow>)."
+
+  # Chatfilter (/chatfilter)
+  chatfilter-syntax: "<red>Verwendung: /chatfilter <on|off|ai_on|ai_off|add <Wort>|sync> <gray>(Beta: KI-Stufe)"
+  chatfilter-an: "<green>Chatfilter auf allen Servern eingeschaltet (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
+  chatfilter-aus: "<yellow>Chatfilter auf allen Servern ausgeschaltet (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
+  chatfilter-ai-an: "<green>Chatfilter-KI auf allen Servern eingeschaltet (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
+  chatfilter-ai-aus: "<yellow>Chatfilter-KI auf allen Servern ausgeschaltet, Wortliste läuft weiter (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
+  chatfilter-add-erfolg: "<green>Wort <white>%wort% <green>an <white>%server% <green>übernommen (sofort aktiv, dauerhaft gespeichert)."
+  chatfilter-wort-ungueltig: "<red>Ungültiges Wort (2-50 Zeichen, keine Umbrüche)."
+  chatfilter-sync-start: "<green>Modell-Sync an alle Server angestoßen (nur Server mit abweichendem Stand laden)."
+  chatfilter-sync-aus: "<red>Modell-Sync inaktiv (chatfilter.modell-sync=false oder kein Modell auf dem Proxy)."
+  chatfilter-blockiert: "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%)."
+
+  # Diagnose (/punish-diagnostics)
+  punish-diagnostics-kopf: "<yellow>Diagnose <gray>(<white>%plattform% %version%<gray>)"
+  punish-diagnostics-zeile: "<gray>[%status%<gray>] <white>%name%<gray>: %detail%"
+  punish-diagnostics-fuss: "<gray>%warnungen% von %anzahl% Prüfungen mit WARN."

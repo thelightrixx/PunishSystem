@@ -1,0 +1,17 @@
+# =========================================================
+# PunishSystem - PunishGUI (gui.yml, Velocity/Proxy-Master)
+# =========================================================
+# Diese Datei wird per Text-Sync an alle Bridges verteilt (Proxy-only).
+# Bridges nutzen ihre lokale config/gui.yml nur als Fallback vor dem Sync.
+# Nach Änderungen: /punish-reload (gilt sofort netzwerkweit).
+# =========================================================
+
+# --- PunishGUI (Bridge, Command-Builder) ---
+# Die GUI baut nur die Befehlszeile und sendet sie per BEFEHL_AUSFUEHREN
+# an den Proxy. Status/History/Reports/Katalog kommen live per GUI_ANFRAGE.
+gui:
+  # Titel-Zeile der Hauptmenüs (MiniMessage erlaubt, ohne Prefix)
+  titel: "Punish"
+  # Falls der Proxy nicht antwortet (Timeout 4s), nutzt die GUI diese Fallbacks.
+  fallback-gruende: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
+  fallback-dauern: ["10m", "1h", "6h", "1d", "7d", "30d", "perm"]
