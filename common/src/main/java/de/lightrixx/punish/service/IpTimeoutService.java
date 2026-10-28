@@ -197,6 +197,9 @@ public final class IpTimeoutService {
             }
             return false;
         }
+        if (aktuell.isEmpty()) {
+            return false;
+        }
         Optional<IpTimeoutRecord> entfernt = repository.timeoutAufhebenWenn(kanonisch, scope,
                 b -> b.equals(aktuell.get()));
         if (entfernt.isEmpty()) {

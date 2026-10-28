@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -97,6 +98,23 @@ class MuteAllTimeoutAllTest {
                         inv.getArgument(1))));
         MuteService service = muteService(setup, repository);
         assertEquals(2, service.entmutenAlle("Fehler", "Konsole", ServerScope.UNBEKANNT_WERT));
+    }
+
+    @Test
+    void entmutenOhneEintragWirftNichtBeiNebenlaeufigemEintrag() {
+        Setup setup = setupMit(false);
+        MuteRepository repository = mock(MuteRepository.class);
+        var scope = ServerScope.unbekannt();
+        when(repository.finden(any(UUID.class), any(ServerScope.class))).thenReturn(Optional.empty());
+        when(repository.entmutenWenn(any(UUID.class), any(ServerScope.class), any()))
+                .thenAnswer(inv -> {
+                    java.util.function.Predicate<MuteRecord> bedingung = inv.getArgument(2);
+                    bedingung.test(new MuteRecord(setup.frei(), "Frei", "Spam", "Konsole",
+                            System.currentTimeMillis(), System.currentTimeMillis() + 60_000L, scope));
+                    return Optional.empty();
+                });
+        MuteService service = muteService(setup, repository);
+        assertFalse(service.entmuten(setup.frei(), "Frei", "Konsole", scope, ServerScope.UNBEKANNT_WERT));
     }
 
     @Test

@@ -206,6 +206,9 @@ public final class FreezeService {
             }
             return false;
         }
+        if (aktuell.isEmpty()) {
+            return false;
+        }
         Optional<FreezeRecord> entfernt = freezeRepository.entfreezenWenn(zielUuid, scope,
                 b -> b.equals(aktuell.get()));
         if (entfernt.isEmpty()) {

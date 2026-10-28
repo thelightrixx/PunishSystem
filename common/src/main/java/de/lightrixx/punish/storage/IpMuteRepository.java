@@ -35,6 +35,17 @@ public final class IpMuteRepository {
     private static final String SCHLUESSEL_ABLAUF_AM = "ablauf-am";
     private static final String SCHLUESSEL_SCOPE = "scope";
 
+    private static Map<String, Object> rohKarte(IpMuteRecord mute) {
+        Map<String, Object> eintrag = new LinkedHashMap<>();
+        eintrag.put(SCHLUESSEL_IP, mute.ip());
+        eintrag.put(SCHLUESSEL_GRUND, mute.grund());
+        eintrag.put(SCHLUESSEL_AUSFUEHRER, mute.ausfuehrer());
+        eintrag.put(SCHLUESSEL_ERSTELLT_AM, mute.erstelltAm());
+        eintrag.put(SCHLUESSEL_ABLAUF_AM, mute.ablaufAm());
+        eintrag.put(SCHLUESSEL_SCOPE, mute.scope().speicherwert());
+        return eintrag;
+    }
+
     private volatile ConcurrentHashMap<IpStrafSchluessel, IpMuteRecord> mutes = new ConcurrentHashMap<>();
 
     private volatile java.util.List<Object> rohQuarantaeneListe = java.util.List.of();
@@ -120,9 +131,12 @@ public final class IpMuteRepository {
                     }
                     IpMuteRecord mute = new IpMuteRecord(ip, grund, ausfuehrer, erstelltAm, ablaufAm, scope);
                     IpStrafSchluessel key = IpStrafSchluessel.von(mute.ip(), scope);
-                    if (tmp.put(key, mute) != null) {
-                        LOG.warn("Doppelter IP-Mute-Eintrag für {} (Scope '{}') – letzter gewinnt.",
+                    IpMuteRecord vorher = tmp.put(key, mute);
+                    if (vorher != null) {
+                        LOG.warn("Doppelter IP-Mute-Eintrag für {} (Scope '{}') – letzter gewinnt, "
+                                        + "der überschriebene Eintrag wird quarantänisiert.",
                                 mute.ip(), scope.speicherwert());
+                        tmpRoh.add(rohKarte(vorher));
                     }
                 } catch (Exception e) {
                     LOG.error("Ein IP-Mute-Eintrag ist korrupt und wird QUARANTIERT (nicht gelöscht).", e);

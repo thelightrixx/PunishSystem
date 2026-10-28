@@ -181,6 +181,9 @@ public final class MuteService {
             }
             return false;
         }
+        if (aktuell.isEmpty()) {
+            return false;
+        }
         Optional<MuteRecord> entfernt = muteRepository.entmutenWenn(zielUuid, scope,
                 b -> b.equals(aktuell.get()));
         if (entfernt.isEmpty()) {

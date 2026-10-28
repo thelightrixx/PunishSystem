@@ -368,7 +368,7 @@ details>div{padding:12px 16px 4px}
   <div class="tbl"><table>
     <thead><tr><th>Bestandteil</th><th>Anforderung</th></tr></thead>
     <tbody>
-      <tr><td>Java</td><td>Java 21 oder neuer (zum Bauen ist JDK 25 nötig, Bytecode-Ziel ist Release 21)</td></tr>
+      <tr><td>Java</td><td>Java 21 für Proxy und bridge-1.21, Java 25 für bridge (Paper 26.1+); zum Bauen ist JDK 25 nötig, Bytecode-Ziel der eigenen Klassen ist Release 21</td></tr>
       <tr><td>Proxy</td><td>Velocity 3.4 oder neuer</td></tr>
       <tr><td>Backend-Server</td><td>Paper oder Purpur 26.x mit der Bridge oder Paper 1.21.x mit der Bridge-1.21. Folia wird nicht unterstützt (die Bridge deaktiviert sich dort selbst).</td></tr>
       <tr><td>Rechteverwaltung</td><td>LuckPerms wird empfohlen, vor allem für den Schutz offline befindlicher Spieler.</td></tr>
@@ -2217,8 +2217,8 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <div><p>Der Befehl läuft auf Proxy und Bridge (Recht <code>punish.diagnostics</code>) und meldet jede Prüfung mit <code>OK</code> oder <code>WARN</code>: Speicher-Backend, <code>schutz.fail-closed</code>, Limits, Warn-Eskalation, LuckPerms-Anbindung, Chatfilter und ob Proxy und Bridges dieselbe Version haben. Auf der Bridge prüft er zusätzlich Server-Name, Proxy-Sync (WARN ab 10 Minuten ohne Kontakt) und Text-Sync. Jede <code>WARN</code>-Zeile nennt die Ursache.</p></div>
   </details>
   <details>
-    <summary>Der Proxy startet nicht (MySQL)</summary>
-    <div><p>Der Proxy startet absichtlich nicht, wenn MySQL nicht erreichbar ist, das Schema fehlt oder die Migration scheitert (Fail-Closed, keine leeren Straf-Listen). Die Konsole nennt die Ursache. Siehe <a href="#/speicher">Speicher und MySQL</a>.</p></div>
+    <summary>PunishSystem deaktiviert sich (MySQL)</summary>
+    <div><p>PunishSystem deaktiviert sich absichtlich, wenn MySQL nicht erreichbar ist, das Schema fehlt oder die Migration scheitert (Fail-Closed, keine leeren Straf-Listen); der Proxy selbst läuft weiter, aber ohne Strafverwaltung. Die Konsole nennt die Ursache. Siehe <a href="#/speicher">Speicher und MySQL</a>.</p></div>
   </details>
   <details>
     <summary>Die Bridge kennt den Proxy noch nicht</summary>

@@ -233,6 +233,9 @@ public final class BanService {
             }
             return false;
         }
+        if (aktuell.isEmpty()) {
+            return false;
+        }
         Optional<BanRecord> entfernt = banRepository.entbannenWenn(zielUuid, scope,
                 b -> b.equals(aktuell.get()));
         if (entfernt.isEmpty()) {

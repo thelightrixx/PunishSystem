@@ -82,6 +82,7 @@ public final class TimeoutRepository {
             Map<String, Object> daten = ladeStatus.daten();
             java.util.concurrent.ConcurrentHashMap<StrafSchluessel, TimeoutRecord> tmp = new java.util.concurrent.ConcurrentHashMap<>();
             java.util.concurrent.ConcurrentHashMap<String, Object> tmpRoh = new java.util.concurrent.ConcurrentHashMap<>();
+            java.util.HashMap<StrafSchluessel, String> quelle = new java.util.HashMap<>();
             for (String schluessel : daten.keySet()) {
                 Map<String, Object> abschnitt = Karten.abschnitt(daten, schluessel);
                 if (abschnitt == null) {
@@ -153,9 +154,17 @@ public final class TimeoutRepository {
                     TimeoutRecord timeout = new TimeoutRecord(spielerUuid, spielerName, grund, ausfuehrer,
                             erstelltAm, ablaufAm, scope);
                     StrafSchluessel key = StrafSchluessel.von(spielerUuid, scope);
+                    String vorherQuelle = quelle.put(key, schluessel);
                     if (tmp.put(key, timeout) != null) {
-                        LOG.warn("Doppelter Timeout-Eintrag für {} (Scope '{}') – letzter gewinnt.",
+                        LOG.warn("Doppelter Timeout-Eintrag für {} (Scope '{}') – letzter gewinnt, "
+                                        + "der überschriebene Eintrag wird quarantänisiert.",
                                 spielerUuid, scope.speicherwert());
+                        if (vorherQuelle != null) {
+                            Object altRoh = daten.get(vorherQuelle);
+                            if (altRoh != null) {
+                                tmpRoh.put(vorherQuelle, altRoh);
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     LOG.error("Der Timeout-Eintrag '{}' ist korrupt und wird QUARANTIERT (nicht gelöscht). "
@@ -712,11 +721,19 @@ public final class TimeoutRepository {
         }
         if (rohQuarantaene != null) {
             for (java.util.Map.Entry<String, Object> roh : rohQuarantaene.entrySet()) {
-                if (roh.getKey() == null || root.containsKey(roh.getKey())) {
+                if (roh.getKey() == null) {
                     continue;
                 }
                 try {
-                    root.put(roh.getKey(), roh.getValue());
+                    String ziel = roh.getKey();
+                    if (root.containsKey(ziel)) {
+                        ziel = "quarantaene|" + roh.getKey();
+                        int nummer = 2;
+                        while (root.containsKey(ziel)) {
+                            ziel = "quarantaene" + nummer++ + "|" + roh.getKey();
+                        }
+                    }
+                    root.put(ziel, roh.getValue());
                 } catch (Exception e) {
                     LOG.warn("Quarantäne-Eintrag '{}' konnte nicht zurückgeschrieben werden.", roh.getKey(), e);
                 }

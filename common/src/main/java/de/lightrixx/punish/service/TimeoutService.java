@@ -413,6 +413,9 @@ public final class TimeoutService {
             }
             return false;
         }
+        if (aktuell.isEmpty()) {
+            return false;
+        }
         Optional<TimeoutRecord> entfernt = timeoutRepository.timeoutAufhebenWenn(zielUuid, scope,
                 b -> b.equals(aktuell.get()));
         if (entfernt.isEmpty()) {

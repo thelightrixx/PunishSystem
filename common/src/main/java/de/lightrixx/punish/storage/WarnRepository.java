@@ -535,6 +535,11 @@ public final class WarnRepository {
             return null;
         }
         Map<String, Object> daten = ladeStatus.daten();
+        if (daten.containsKey(SCHLUESSEL_LISTE) && !(daten.get(SCHLUESSEL_LISTE) instanceof java.util.List)) {
+            LOG.error("Die Warn-Datei {} hat einen unbrauchbaren '{}'-Abschnitt.",
+                    datei.getName(), SCHLUESSEL_LISTE);
+            return null;
+        }
         java.util.List<Object> rohEintraege = Karten.liste(daten, SCHLUESSEL_LISTE);
         List<WarnRecord> ergebnis = new ArrayList<>();
         for (Object rohObj : rohEintraege) {

@@ -204,6 +204,9 @@ public final class IpMuteService {
             benachrichtige();
             return false;
         }
+        if (aktuell.isEmpty()) {
+            return false;
+        }
         Optional<IpMuteRecord> entfernt = repository.entmutenWenn(kanonisch, scope,
                 b -> b.equals(aktuell.get()));
         if (entfernt.isEmpty()) {

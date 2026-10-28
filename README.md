@@ -21,9 +21,9 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
 
 ## Systemanforderungen
 
-- **Java**: Mindestens **Java 21** (gebaut/getestet mit JDK 25, Bytecode Release 21).
+- **Java**: **Java 21** für Proxy und `bridge-1.21`; **Java 25** für das Modul `bridge` (Paper 26.1+ setzt Java 25 voraus, die Paper-API 26.1 ist auf Klassenversion 69 übersetzt). Gebaut wird in beiden Fällen mit JDK 25, Bytecode-Ziel der eigenen Klassen ist Release 21.
 - **Proxy**: Velocity **3.4.0**+
-- **Backend-Server**: Paper / Purpur **1.21.x** (Modul `bridge-1.21`) oder Paper **26.1**+ (Modul `bridge`).
+- **Backend-Server**: Paper / Purpur **1.21.x** (Modul `bridge-1.21`, Java 21) oder Paper **26.1**+ (Modul `bridge`, Java 25).
 - **Optionale Abhängigkeiten**: LuckPerms, PlaceholderAPI.
 
 ---
@@ -53,6 +53,15 @@ Alle drei Jars gehören zusammen und müssen auf derselben Version laufen.
    ```
    Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
 4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy.
+
+### 3. Datenhaltung einrichten (vor dem ersten Start beachten)
+
+Der Proxy speichert standardmäßig in **MySQL** (`config/general.yml`, Abschnitt `speicher`). Ist dort keine erreichbare Datenbank hinterlegt, deaktiviert sich das Proxy-Plugin beim Start (Fail-Closed) und der Proxy läuft ohne Strafverwaltung. Zwei Wege:
+
+- **MySQL (Standard für Netzwerke):** Datenbank und Benutzer anlegen und in `plugins/PunishSystemVelocity/config/general.yml` unter `speicher.mysql` eintragen (`host`, `port`, `datenbank`, `benutzer`, `passwort`). Vorhandene YAML-Daten werden beim ersten Start mit `migration-beim-start: true` einmalig übernommen.
+- **YAML (Einzelserver):** in derselben Datei `speicher.typ: "yaml"` setzen; die Daten liegen dann unter `plugins/PunishSystemVelocity/data/`.
+
+Die Bridges speichern nichts selbst; sie erhalten alle Strafen per Sync vom Proxy.
 
 ---
 

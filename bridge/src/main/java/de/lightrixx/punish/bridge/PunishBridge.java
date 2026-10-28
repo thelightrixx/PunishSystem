@@ -10,6 +10,8 @@ import de.lightrixx.punish.util.MiniMessageUtil;
 import de.lightrixx.punish.util.StartBanner;
 import de.lightrixx.punish.util.ZeitFormat;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -319,6 +321,31 @@ public final class PunishBridge extends JavaPlugin {
             }, 2400L, 2400L);
         } catch (Exception e) {
             LOG.debug("Periodischer HELLO-Refresh konnte nicht geplant werden.", e);
+        }
+        try {
+            String joinServer = config.serverName();
+            getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+                @EventHandler
+                public void beiJoin(PlayerJoinEvent event) {
+                    if (muteCache.istJeSynchronisiert()) {
+                        return;
+                    }
+                    for (long delay : new long[]{40L, 100L, 220L}) {
+                        planerLokal.spaeterAsync(() -> {
+                            try {
+                                if (muteCache.istJeSynchronisiert()) {
+                                    return;
+                                }
+                                kanalClient.sendeHello(joinServer);
+                            } catch (Exception e) {
+                                LOG.debug("HELLO-Nachziehversuch nach Join verworfen.", e);
+                            }
+                        }, delay);
+                    }
+                }
+            }, this);
+        } catch (Exception e) {
+            LOG.debug("Join-HELLO-Nachziehversuch konnte nicht registriert werden.", e);
         }
         LOG.info("PunishSystemBridge by lightrixx aktiviert (Server '{}', Proxy-Kanal bereit).", config.serverName());
     }

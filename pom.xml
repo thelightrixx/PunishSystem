@@ -91,6 +91,12 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.3.1</version>
+          <configuration>
+            <!-- Mockito als Agent laden (statt Selbstattach): ByteBudys externer
+                 Selbstattach scheitert, wenn der Pfad des lokalen Repositories
+                 Nicht-ASCII-Zeichen enthält (Agent JAR not found). -->
+            <argLine>-javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</argLine>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

@@ -98,6 +98,11 @@ public final class ReportRepository {
                         alteGroesse);
                 return;
             }
+            if (daten.containsKey(SCHLUESSEL_LISTE) && !(daten.get(SCHLUESSEL_LISTE) instanceof List)) {
+                LOG.error("reports.yml hat einen unbrauchbaren '{}'-Abschnitt – behalte alten Stand (Fail-Closed).",
+                        SCHLUESSEL_LISTE);
+                return;
+            }
             if (daten.isEmpty()) {
                 reports = new ConcurrentHashMap<>();
                 rohQuarantaene = List.of();

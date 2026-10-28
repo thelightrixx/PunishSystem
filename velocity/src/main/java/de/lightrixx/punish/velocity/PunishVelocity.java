@@ -684,7 +684,8 @@ public final class PunishVelocity {
             mysql = MysqlVerbindung.oeffnen(config.mysqlKonfiguration());
         } catch (Exception e) {
             logger.error("MySQL ist als Speicher konfiguriert, aber nicht erreichbar – "
-                    + "Proxy startet NICHT (Fail-Closed, keine leeren Straf-Listen).", e);
+                    + "PunishSystem wird deaktiviert (Fail-Closed, keine leeren Straf-Listen); "
+                    + "der Proxy läuft ohne Strafverwaltung.", e);
             throw new IllegalStateException("MySQL-Backend nicht verfügbar.", e);
         }
         try {
@@ -695,7 +696,8 @@ public final class PunishVelocity {
             } catch (Exception closeFehler) {
                 logger.debug("MySQL-Cleanup nach Schema-Fehler fehlgeschlagen.", closeFehler);
             }
-            logger.error("MySQL-Schema konnte nicht angelegt werden – Proxy startet NICHT.", e);
+            logger.error("MySQL-Schema konnte nicht angelegt werden – PunishSystem wird deaktiviert; "
+                    + "der Proxy läuft ohne Strafverwaltung.", e);
             throw new IllegalStateException("MySQL-Schema fehlerhaft.", e);
         }
         boolean migrationLaeuftNoch = MysqlSchema.migrationOffen(mysql);
@@ -718,8 +720,9 @@ public final class PunishVelocity {
                 } catch (Exception closeFehler) {
                     logger.debug("MySQL-Cleanup nach Migrations-Fehler fehlgeschlagen.", closeFehler);
                 }
-                logger.error("YAML→MySQL-Migration fehlgeschlagen – Proxy startet NICHT "
-                        + "(Migrationsstatus bleibt 'running', nächster Start versucht es erneut).", e);
+                logger.error("YAML→MySQL-Migration fehlgeschlagen – PunishSystem wird deaktiviert "
+                        + "(Migrationsstatus bleibt 'running', nächster Start versucht es erneut); "
+                        + "der Proxy läuft ohne Strafverwaltung.", e);
                 throw new IllegalStateException("MySQL-Migration fehlgeschlagen.", e);
             }
         }
