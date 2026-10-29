@@ -133,18 +133,15 @@ public final class ProtectionService {
         if (!luckPerms.isAvailable()) {
             return SchutzErgebnis.UNSICHER;
         }
-        boolean mainThread = offlineVerzeichnis.istMainThread();
-        LuckPermsZugang.OfflineStatus wildcard = mainThread
-                ? luckPerms.offlineStatusCachedOnly(zielUuid, Permissions.IGNORE_STAR.node())
-                : luckPerms.offlineStatusBlocking(zielUuid, Permissions.IGNORE_STAR.node());
-        if (wildcard == LuckPermsZugang.OfflineStatus.GESCHUETZT) {
-            return SchutzErgebnis.GESCHUETZT;
-        }
-        boolean unsicher = wildcard == LuckPermsZugang.OfflineStatus.UNBEKANNT;
+        java.util.List<String> nodes = new java.util.ArrayList<>(IgnoreTyp.values().length + 1);
+        nodes.add(Permissions.IGNORE_STAR.node());
         for (IgnoreTyp typ : IgnoreTyp.values()) {
-            LuckPermsZugang.OfflineStatus status = mainThread
-                    ? luckPerms.offlineStatusCachedOnly(zielUuid, typ.node())
-                    : luckPerms.offlineStatusBlocking(zielUuid, typ.node());
+            nodes.add(typ.node());
+        }
+        java.util.List<LuckPermsZugang.OfflineStatus> statusListe =
+                luckPerms.offlineStatusFuerMehrere(zielUuid, nodes);
+        boolean unsicher = false;
+        for (LuckPermsZugang.OfflineStatus status : statusListe) {
             if (status == LuckPermsZugang.OfflineStatus.GESCHUETZT) {
                 return SchutzErgebnis.GESCHUETZT;
             }
@@ -182,14 +179,9 @@ public final class ProtectionService {
         if (!luckPerms.isAvailable()) {
             return SchutzErgebnis.UNSICHER;
         }
-        boolean mainThread = offlineVerzeichnis.istMainThread();
-        LuckPermsZugang.OfflineStatus wildcard = mainThread
-                ? luckPerms.offlineStatusCachedOnly(zielUuid, Permissions.IGNORE_STAR.node())
-                : luckPerms.offlineStatusBlocking(zielUuid, Permissions.IGNORE_STAR.node());
-        LuckPermsZugang.OfflineStatus spezifisch = mainThread
-                ? luckPerms.offlineStatusCachedOnly(zielUuid, typ.node())
-                : luckPerms.offlineStatusBlocking(zielUuid, typ.node());
-        return kombiniereOfflineStatus(wildcard, spezifisch);
+        java.util.List<LuckPermsZugang.OfflineStatus> statusListe = luckPerms.offlineStatusFuerMehrere(
+                zielUuid, java.util.List.of(Permissions.IGNORE_STAR.node(), typ.node()));
+        return kombiniereOfflineStatus(statusListe.get(0), statusListe.get(1));
     }
 
     static SchutzErgebnis entscheideOfflineSchutz(LuckPermsZugang.OfflineStatus status) {

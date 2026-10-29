@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -45,6 +46,18 @@ public final class GuiListener implements Listener {
             return;
         }
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void beiInventarSchliessen(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player spieler)) {
+            return;
+        }
+        try {
+            manager.inventarGeschlossen(spieler);
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(GuiListener.class).debug("Wartende GUI-Eingabe konnte nicht verworfen werden.", e);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -133,7 +133,7 @@ public final class VerpassteBroadcastsRepository {
         }
         if (!opfer.isEmpty()) {
             if (mysql != null) {
-                loescheAelterAlsNachMysql(grenze);
+                ioExecutor.ausfuehren(() -> loescheAelterAlsNachMysql(grenze));
             }
             for (Long id : opfer) {
                 eintraege.remove(id);

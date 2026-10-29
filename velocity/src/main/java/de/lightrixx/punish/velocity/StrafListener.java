@@ -462,6 +462,8 @@ public final class StrafListener {
                     }
                 });
             }
+        } else {
+            logger.warn("IP für '{}' nicht lesbar – IP-Bann-Prüfung übersprungen (Fail-Open in der IP-Dimension).", name);
         }
         Optional<TimeoutRecord> timeout;
         try {
@@ -512,6 +514,8 @@ public final class StrafListener {
                     }
                 });
             }
+        } else if (ipTimeoutService != null) {
+            logger.warn("IP für '{}' nicht lesbar – IP-Timeout-Prüfung übersprungen (Fail-Open in der IP-Dimension).", name);
         }
         try {
             var mute = muteService.findeAktivenMuteFuer(uuid, jetzt, "unbekannt");
@@ -557,8 +561,7 @@ public final class StrafListener {
             logger.debug("Mute-Join-Hinweis fehlgeschlagen.", e);
         }
         try {
-            if (ipMuteService != null && !"unbekannt".equals(ip)) {
-                var ipMute = ipMuteService.findeAktivenMuteFuer(ip, jetzt, "unbekannt");
+            if (ipMuteService != null && !"unbekannt".equals(ip)) {                var ipMute = ipMuteService.findeAktivenMuteFuer(ip, jetzt, "unbekannt");
                 if (ipMute.isEmpty()) {
                     ipMute = ipMuteService.findeAbdeckend(ip, ServerScope.global());
                 }
@@ -682,6 +685,9 @@ public final class StrafListener {
                             sperre = fallbackSperre();
                         }
                     }
+                } else {
+                    logger.warn("IP für '{}' (PreConnect) nicht lesbar – IP-Bann-Prüfung übersprungen (Fail-Open in der IP-Dimension).",
+                            spieler.getUsername());
                 }
             } catch (Exception e) {
                 logger.warn("IP-Lookup (PreConnect) für '{}' fehlgeschlagen ({}).", spieler.getUsername(),
@@ -725,6 +731,9 @@ public final class StrafListener {
                             sperre = fallbackSperre();
                         }
                     }
+                } else {
+                    logger.warn("IP für '{}' (PreConnect) nicht lesbar – IP-Timeout-Prüfung übersprungen (Fail-Open in der IP-Dimension).",
+                            spieler.getUsername());
                 }
             } catch (Exception e) {
                 logger.warn("IP-Timeout-Lookup (PreConnect) für '{}' fehlgeschlagen ({}).", spieler.getUsername(),
@@ -761,6 +770,7 @@ public final class StrafListener {
         Player spieler = event.getPlayer();
         UUID uuid = spieler.getUniqueId();
         loginBasis.remove(uuid);
+        altWacheCooldown.remove(uuid);
         long jetzt = System.currentTimeMillis();
         try {
             playerCache.finden(uuid).ifPresent(alt -> {

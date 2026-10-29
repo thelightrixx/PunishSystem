@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -37,6 +38,12 @@ class SchutzNieGesehenTest {
         when(zugang.isAvailable()).thenReturn(true);
         when(zugang.offlineStatusCachedOnly(any(UUID.class), anyString()))
                 .thenReturn(LuckPermsZugang.OfflineStatus.UNBEKANNT);
+        when(zugang.offlineStatusFuerMehrere(any(UUID.class), anyList()))
+                .thenAnswer(inv -> {
+                    java.util.List<String> nodes = inv.getArgument(1);
+                    return java.util.Collections.nCopies(nodes.size(),
+                            LuckPermsZugang.OfflineStatus.UNBEKANNT);
+                });
         return zugang;
     }
 

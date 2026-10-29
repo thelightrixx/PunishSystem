@@ -798,10 +798,20 @@ public final class PunishBridge extends JavaPlugin {
                         } catch (Exception e) {
                             LOG.debug("Modell-Quittung fehlgeschlagen.", e);
                         }
-                        try {
-                            aktualisiereModellStand();
-                        } catch (Exception e) {
-                            LOG.debug("Modell-Stand konnte nicht aktualisiert werden.", e);
+                        // SHA-256 über das vollständige Modell gehört nicht in den
+                        // Plugin-Message-Handler (Main-Thread).
+                        Runnable standAufnahme = () -> {
+                            try {
+                                aktualisiereModellStand();
+                            } catch (Exception e) {
+                                LOG.debug("Modell-Stand konnte nicht aktualisiert werden.", e);
+                            }
+                        };
+                        BukkitAuftragsPlaner planerLokal = planer;
+                        if (planerLokal != null) {
+                            planerLokal.spaeterAsync(standAufnahme, 1L);
+                        } else {
+                            standAufnahme.run();
                         }
                     }
 

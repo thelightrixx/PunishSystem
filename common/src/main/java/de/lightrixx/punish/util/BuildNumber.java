@@ -206,6 +206,8 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         if (cmp != 0) {
             return cmp;
         }
+        // Bewusst umgekehrt zu UpdateVergleich: hier sortiert die Freigabe (null)
+        // unter die Beta-Stufen; UpdateVergleich behandelt die Freigabe als neueste.
         return Integer.compare(stufenRang(stabilitaet), stufenRang(andere.stabilitaet));
     }
 

@@ -28,6 +28,11 @@ public final class ChatfilterKonfiguration {
     private final File datei;
     private volatile FileConfiguration konfiguration = new YamlConfiguration();
     private volatile boolean ladeFehler;
+    // Laufzeit-Schalter als eigener Spiegel: Die YamlConfiguration wird von Async-Chat-Threads
+    // gelesen und darf deshalb nicht nebenbei mutiert werden.
+    private record LaufzeitSchalter(Boolean filter, Boolean ki) {
+    }
+    private volatile LaufzeitSchalter schalterSpiegel = new LaufzeitSchalter(null, null);
 
     public ChatfilterKonfiguration(JavaPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin, "Das Plugin darf nicht null sein.");
@@ -69,6 +74,9 @@ public final class ChatfilterKonfiguration {
             mergeDefaults(geladen);
             wendeProxyFilterDefaultsAn(geladen);
             this.konfiguration = geladen;
+            this.schalterSpiegel = new LaufzeitSchalter(
+                    leseBoolAus(geladen, "chatfilter.laufzeit-filter"),
+                    leseBoolAus(geladen, "chatfilter.laufzeit-ki"));
             sichereWortliste();
         } catch (Exception e) {
             ladeFehler = true;
@@ -138,17 +146,16 @@ public final class ChatfilterKonfiguration {
     }
 
     public Boolean leseLaufzeitFilter() {
-        try {
-            Object roh = konfiguration.get("chatfilter.laufzeit-filter");
-            return roh instanceof Boolean bool ? bool : null;
-        } catch (Exception e) {
-            return null;
-        }
+        return schalterSpiegel.filter();
     }
 
     public Boolean leseLaufzeitKi() {
+        return schalterSpiegel.ki();
+    }
+
+    private static Boolean leseBoolAus(FileConfiguration quelle, String pfad) {
         try {
-            Object roh = konfiguration.get("chatfilter.laufzeit-ki");
+            Object roh = quelle.get(pfad);
             return roh instanceof Boolean bool ? bool : null;
         } catch (Exception e) {
             return null;
@@ -189,8 +196,7 @@ public final class ChatfilterKonfiguration {
                 java.nio.file.Files.move(tmp.toPath(), datei.toPath(),
                         java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
-            konfiguration.set("chatfilter.laufzeit-filter", filter);
-            konfiguration.set("chatfilter.laufzeit-ki", ki);
+            schalterSpiegel = new LaufzeitSchalter(filter, ki);
             return true;
         } catch (Exception e) {
             LOG.warn("Laufzeit-Schalter konnte nicht persistiert werden.", e);

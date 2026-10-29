@@ -154,6 +154,50 @@ public final class LuckPermsZugang {
         }
     }
 
+    /**
+     * Prüft mehrere Permission-Nodes gegen denselben User und lädt diesen dabei
+     * höchstens einmal blocking. Ergebnis je Node in Reihenfolge der Eingabe;
+     * UNBEKANNT, wenn der User nicht gelesen werden konnte.
+     */
+    public java.util.List<OfflineStatus> offlineStatusFuerMehrere(UUID uuid, java.util.List<String> permissions) {
+        int anzahl = permissions == null ? 0 : permissions.size();
+        if (uuid == null || anzahl == 0 || !isAvailable()) {
+            return java.util.Collections.nCopies(anzahl, OfflineStatus.UNBEKANNT);
+        }
+        try {
+            Optional<Object> apiOpt = getApi();
+            if (apiOpt.isEmpty()) {
+                return java.util.Collections.nCopies(anzahl, OfflineStatus.UNBEKANNT);
+            }
+            Object api = apiOpt.get();
+            Object userManager = invoke(api, "getUserManager");
+            if (userManager == null) {
+                return java.util.Collections.nCopies(anzahl, OfflineStatus.UNBEKANNT);
+            }
+            Object user = invoke(userManager, "getUser", new Class[]{UUID.class}, uuid);
+            if (user == null) {
+                if (mainThread.getAsBoolean()) {
+                    return java.util.Collections.nCopies(anzahl, OfflineStatus.UNBEKANNT);
+                }
+                Optional<Object> geladen = loadUserBlocking(userManager, uuid);
+                if (geladen.isEmpty()) {
+                    return java.util.Collections.nCopies(anzahl, OfflineStatus.UNBEKANNT);
+                }
+                user = geladen.get();
+            }
+            java.util.List<OfflineStatus> ergebnis = new java.util.ArrayList<>(anzahl);
+            for (String permission : permissions) {
+                ergebnis.add(checkCachedPermission(user, permission)
+                        ? OfflineStatus.GESCHUETZT
+                        : OfflineStatus.NICHT_GESCHUETZT);
+            }
+            return ergebnis;
+        } catch (Throwable t) {
+            LOG.debug("Fehler bei LuckPerms-Batch-Statusabfrage für {}: {}", uuid, t.toString());
+            return java.util.Collections.nCopies(anzahl, OfflineStatus.UNBEKANNT);
+        }
+    }
+
     public java.util.OptionalInt rangGewicht(UUID uuid) {
         if (uuid == null || !isAvailable()) {
             return java.util.OptionalInt.empty();

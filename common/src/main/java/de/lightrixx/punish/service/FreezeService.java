@@ -204,6 +204,7 @@ public final class FreezeService {
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }
+            benachrichtige(zielUuid);
             return false;
         }
         if (aktuell.isEmpty()) {

@@ -411,6 +411,7 @@ public final class TimeoutService {
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }
+            benachrichtige();
             return false;
         }
         if (aktuell.isEmpty()) {

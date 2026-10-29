@@ -63,6 +63,10 @@ public final class MuteCache {
         syncGeneration.set(0L);
     }
 
+    public boolean syncLaeuft() {
+        return syncGeneration.get() != 0L;
+    }
+
     public void syncBeginn(long generation) {
         if (generation <= 0) {
             return;

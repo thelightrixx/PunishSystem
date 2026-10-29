@@ -73,71 +73,76 @@ public final class HangarUpdateService {
 
     private static final int MAX_UMLEITUNGEN = 3;
 
-    public static HttpAbruf standardAbruf() {
-        return new HttpAbruf() {
-            private final java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
-                    .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
-                    .connectTimeout(Duration.ofSeconds(20))
-                    .build();
+    // Eine Instanz statt einer pro Aufruf: der HttpClient hängt sonst an GC/Cleaner
+    // statt an einem definierten Lifecycle, und jeder Update-Check erzeugte einen
+    // neuen Selektor-Thread.
+    private static final HttpAbruf STANDARD_ABRUF = new HttpAbruf() {
+        private final java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
+                .connectTimeout(Duration.ofSeconds(20))
+                .build();
 
-            @Override
-            public String leseText(String url) throws Exception {
-                return new String(ladeBytes(url, 512L * 1024L), java.nio.charset.StandardCharsets.UTF_8);
+        @Override
+        public String leseText(String url) throws Exception {
+            return new String(ladeBytes(url, 512L * 1024L), java.nio.charset.StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public byte[] ladeBytes(String url, long maxBytes) throws Exception {
+            java.net.URI ziel = java.net.URI.create(url);
+            pruefeHttpsNachRedirect(ziel);
+            for (int sprung = 0; sprung <= MAX_UMLEITUNGEN; sprung++) {
+                var request = java.net.http.HttpRequest.newBuilder(ziel)
+                        .timeout(Duration.ofMinutes(10))
+                        .GET()
+                        .build();
+                var response = client.send(request,
+                        java.net.http.HttpResponse.BodyHandlers.ofInputStream());
+                int status = response.statusCode();
+                if (status >= 300 && status < 400) {
+                    String zielKopf = response.headers().firstValue("Location").orElse("");
+                    response.body().close();
+                    if (zielKopf.isBlank()) {
+                        throw new IllegalStateException("Umleitung ohne Ziel.");
+                    }
+                    java.net.URI neu = ziel.resolve(zielKopf);
+                    pruefeHttpsNachRedirect(neu);
+                    ziel = neu;
+                    continue;
+                }
+                if (status < 200 || status >= 300) {
+                    response.body().close();
+                    throw new IllegalStateException("HTTP " + status);
+                }
+                byte[] body = leseBegrenzt(response.body(), maxBytes);
+                if (body.length < 1) {
+                    throw new IllegalStateException("Unerwartete Download-Größe.");
+                }
+                return body;
             }
+            throw new IllegalStateException("Zu viele Umleitungen.");
+        }
 
-            @Override
-            public byte[] ladeBytes(String url, long maxBytes) throws Exception {
-                java.net.URI ziel = java.net.URI.create(url);
-                pruefeHttpsNachRedirect(ziel);
-                for (int sprung = 0; sprung <= MAX_UMLEITUNGEN; sprung++) {
-                    var request = java.net.http.HttpRequest.newBuilder(ziel)
-                            .timeout(Duration.ofMinutes(10))
-                            .GET()
-                            .build();
-                    var response = client.send(request,
-                            java.net.http.HttpResponse.BodyHandlers.ofInputStream());
-                    int status = response.statusCode();
-                    if (status >= 300 && status < 400) {
-                        String zielKopf = response.headers().firstValue("Location").orElse("");
-                        response.body().close();
-                        if (zielKopf.isBlank()) {
-                            throw new IllegalStateException("Umleitung ohne Ziel.");
-                        }
-                        java.net.URI neu = ziel.resolve(zielKopf);
-                        pruefeHttpsNachRedirect(neu);
-                        ziel = neu;
-                        continue;
-                    }
-                    if (status < 200 || status >= 300) {
-                        response.body().close();
-                        throw new IllegalStateException("HTTP " + status);
-                    }
-                    byte[] body = leseBegrenzt(response.body(), maxBytes);
-                    if (body.length < 1) {
+        private byte[] leseBegrenzt(java.io.InputStream in, long maxBytes) throws Exception {
+            try (in) {
+                java.io.ByteArrayOutputStream puff = new java.io.ByteArrayOutputStream();
+                byte[] block = new byte[8192];
+                long gesamt = 0;
+                int gelesen;
+                while ((gelesen = in.read(block)) > 0) {
+                    gesamt += gelesen;
+                    if (gesamt > maxBytes) {
                         throw new IllegalStateException("Unerwartete Download-Größe.");
                     }
-                    return body;
+                    puff.write(block, 0, gelesen);
                 }
-                throw new IllegalStateException("Zu viele Umleitungen.");
+                return puff.toByteArray();
             }
+        }
+    };
 
-            private byte[] leseBegrenzt(java.io.InputStream in, long maxBytes) throws Exception {
-                try (in) {
-                    java.io.ByteArrayOutputStream puff = new java.io.ByteArrayOutputStream();
-                    byte[] block = new byte[8192];
-                    long gesamt = 0;
-                    int gelesen;
-                    while ((gelesen = in.read(block)) > 0) {
-                        gesamt += gelesen;
-                        if (gesamt > maxBytes) {
-                            throw new IllegalStateException("Unerwartete Download-Größe.");
-                        }
-                        puff.write(block, 0, gelesen);
-                    }
-                    return puff.toByteArray();
-                }
-            }
-        };
+    public static HttpAbruf standardAbruf() {
+        return STANDARD_ABRUF;
     }
 
     public String latestReleaseUrl() {

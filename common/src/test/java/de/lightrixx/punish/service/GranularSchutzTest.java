@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -104,12 +105,17 @@ class GranularSchutzTest {
         when(offline.istMainThread()).thenReturn(false);
         LuckPermsZugang zugang = mock(LuckPermsZugang.class);
         when(zugang.isAvailable()).thenReturn(true);
-        when(zugang.offlineStatusBlocking(eq(uuid), anyString()))
-                .thenReturn(LuckPermsZugang.OfflineStatus.NICHT_GESCHUETZT);
-        when(zugang.offlineStatusBlocking(eq(uuid), eq("punish.ignore.*")))
-                .thenReturn(LuckPermsZugang.OfflineStatus.NICHT_GESCHUETZT);
-        when(zugang.offlineStatusBlocking(eq(uuid), eq("punish.ignore.mute")))
-                .thenReturn(LuckPermsZugang.OfflineStatus.GESCHUETZT);
+        when(zugang.offlineStatusFuerMehrere(eq(uuid), anyList()))
+                .thenAnswer(inv -> {
+                    java.util.List<String> nodes = inv.getArgument(1);
+                    java.util.List<LuckPermsZugang.OfflineStatus> ergebnis = new java.util.ArrayList<>();
+                    for (String node : nodes) {
+                        ergebnis.add("punish.ignore.mute".equals(node)
+                                ? LuckPermsZugang.OfflineStatus.GESCHUETZT
+                                : LuckPermsZugang.OfflineStatus.NICHT_GESCHUETZT);
+                    }
+                    return ergebnis;
+                });
         ProtectionService schutz = new ProtectionService(verzeichnis, offline, zugang);
         assertEquals(ProtectionService.SchutzErgebnis.GESCHUETZT,
                 schutz.pruefeSchutz(uuid, ProtectionService.IgnoreTyp.MUTE));

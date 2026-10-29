@@ -189,6 +189,7 @@ public final class IpMuteService {
         try {
             kanonisch = IpBanRecord.kanonisieren(ip);
         } catch (Exception e) {
+            LOG.warn("ipUnmute für '{}' abgewiesen: ungültige IP.", ip);
             return false;
         }
         Optional<IpMuteRecord> aktuell = repository.finden(kanonisch, scope);

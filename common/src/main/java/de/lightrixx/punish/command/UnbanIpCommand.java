@@ -85,13 +85,14 @@ public final class UnbanIpCommand extends PunishCommand {
         Optional<de.lightrixx.punish.model.IpBanRecord> entfernt =
                 ipBanService.ipEntbannen(kanonisch, ausfuehrerName(sender),
                         scope.scope(), herkunftVon(sender), silent);
+        String anzeigeIp = PunishStatusCommand.maskeIp(sender, kanonisch);
         if (entfernt.isEmpty()) {
-            messageService.senden(sender, MessageKeys.NICHT_GEBANNT_IP, Map.of("ip", kanonisch));
+            messageService.senden(sender, MessageKeys.NICHT_GEBANNT_IP, Map.of("ip", anzeigeIp));
             try {
                 var abdeckend = ipBanService.ipFindeAbdeckend(kanonisch, scope.scope());
                 if (abdeckend.isPresent()) {
                     Map<String, String> hinweis = new java.util.HashMap<>();
-                    hinweis.put("spieler", kanonisch);
+                    hinweis.put("spieler", anzeigeIp);
                     hinweis.put("scope", abdeckend.get().scope().anzeige());
                     messageService.senden(sender, MessageKeys.SCOPE_ABDECKEND_HINWEIS, hinweis);
                 }
@@ -100,7 +101,7 @@ public final class UnbanIpCommand extends PunishCommand {
             }
             return;
         }
-        messageService.senden(sender, MessageKeys.UNBAN_IP_ERFOLG, Map.of("ip", kanonisch));
+        messageService.senden(sender, MessageKeys.UNBAN_IP_ERFOLG, Map.of("ip", anzeigeIp));
     }
 
     @Override
@@ -119,7 +120,10 @@ public final class UnbanIpCommand extends PunishCommand {
             return silentVorschlag(sender, letztes);
         }
         if (args.length == 1) {
-            List<IpBanRecord> aktiveIpBanns = ipBanService.findeAktiveIpBannsFuerTab();
+            List<IpBanRecord> aktiveIpBanns = sender != null
+                    && sender.hatRecht(Permissions.PUNISH_ALTS.node())
+                    ? ipBanService.findeAktiveIpBannsFuerTab()
+                    : List.of();
             List<String> ips = new ArrayList<>();
             for (IpBanRecord bann : aktiveIpBanns) {
                 if (ips.size() >= 25) {

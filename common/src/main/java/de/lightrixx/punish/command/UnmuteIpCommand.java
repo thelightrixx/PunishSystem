@@ -77,13 +77,14 @@ public final class UnmuteIpCommand extends PunishCommand {
 
         boolean erfolg = ipMuteService.entmuten(kanonisch, ausfuehrerName(sender),
                 scope.scope(), herkunftVon(sender), silent);
+        String anzeigeIp = PunishStatusCommand.maskeIp(sender, kanonisch);
         if (!erfolg) {
-            messageService.senden(sender, MessageKeys.NICHT_GEMUTET_IP, Map.of("ip", kanonisch));
+            messageService.senden(sender, MessageKeys.NICHT_GEMUTET_IP, Map.of("ip", anzeigeIp));
             try {
                 var abdeckend = ipMuteService.findeAbdeckend(kanonisch, scope.scope());
                 if (abdeckend.isPresent()) {
                     Map<String, String> hinweis = new java.util.HashMap<>();
-                    hinweis.put("spieler", kanonisch);
+                    hinweis.put("spieler", anzeigeIp);
                     hinweis.put("scope", abdeckend.get().scope().anzeige());
                     messageService.senden(sender, MessageKeys.SCOPE_ABDECKEND_HINWEIS, hinweis);
                 }
@@ -92,7 +93,7 @@ public final class UnmuteIpCommand extends PunishCommand {
             }
             return;
         }
-        messageService.senden(sender, MessageKeys.IP_UNMUTE_ERFOLG, Map.of("ip", kanonisch));
+        messageService.senden(sender, MessageKeys.IP_UNMUTE_ERFOLG, Map.of("ip", anzeigeIp));
     }
 
     @Override
@@ -112,12 +113,14 @@ public final class UnmuteIpCommand extends PunishCommand {
         }
         if (args.length == 1) {
             List<String> ips = new ArrayList<>();
-            for (var mute : ipMuteService.findeAktiveMutesFuerTab()) {
-                if (ips.size() >= 25) {
-                    break;
-                }
-                if (mute != null && mute.ip() != null) {
-                    ips.add(mute.ip());
+            if (sender != null && sender.hatRecht(Permissions.PUNISH_ALTS.node())) {
+                for (var mute : ipMuteService.findeAktiveMutesFuerTab()) {
+                    if (ips.size() >= 25) {
+                        break;
+                    }
+                    if (mute != null && mute.ip() != null) {
+                        ips.add(mute.ip());
+                    }
                 }
             }
             return filtere(ips.stream().distinct().toList(), args[0]);

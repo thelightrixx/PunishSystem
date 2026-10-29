@@ -200,7 +200,7 @@ public final class IoExecutor {
         }
         try {
             barriere.get(wartezeit, einheit);
-            return true;
+            return geplanteNeueste.isEmpty();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;

@@ -312,15 +312,17 @@ public final class IpBanService {
                 if (abgelaufen.istAbgelaufen(jetzt)) {
                     Optional<IpBanRecord> weg = ipBanRepository.entbannenWenn(ip, scope,
                             b -> b.equals(abgelaufen));
-                    IpBanRecord rec = weg.orElse(abgelaufen);
-                    try {
-                        historyService.hinzufuegen(HistoryType.UNBAN_IP, "System", rec.ip(),
-                                "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                                rec.scope(), herkunft == null || herkunft.isBlank()
-                                        ? ServerScope.UNBEKANNT_WERT
-                                        : herkunft.trim().toLowerCase(java.util.Locale.ROOT));
-                    } catch (Exception e) {
-                        LOG.debug("Ablauf-History für IP {} konnte nicht geschrieben werden.", rec.ip(), e);
+                    if (weg.isPresent()) {
+                        IpBanRecord rec = weg.get();
+                        try {
+                            historyService.hinzufuegen(HistoryType.UNBAN_IP, "System", rec.ip(),
+                                    "Abgelaufen (Grund war: " + rec.grund() + ")", null,
+                                    rec.scope(), herkunft == null || herkunft.isBlank()
+                                            ? ServerScope.UNBEKANNT_WERT
+                                            : herkunft.trim().toLowerCase(java.util.Locale.ROOT));
+                        } catch (Exception e) {
+                            LOG.debug("Ablauf-History für IP {} konnte nicht geschrieben werden.", rec.ip(), e);
+                        }
                     }
                 }
             });

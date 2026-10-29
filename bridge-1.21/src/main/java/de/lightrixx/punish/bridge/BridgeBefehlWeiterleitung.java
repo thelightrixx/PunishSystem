@@ -1072,6 +1072,28 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
         return namen;
     }
 
+    // getOfflinePlayers() parst usercache.json synchron; der Cache hält das aus dem
+    // TAB-Complete-Pfad (Server-Thread) und begrenzt es auf einen Refresh je 30 s.
+    private volatile List<OfflinePlayer> offlineSpielerCache = List.of();
+    private volatile long offlineSpielerStand = 0L;
+
+    private List<OfflinePlayer> offlineSpielerMitCache() {
+        long jetzt = System.currentTimeMillis();
+        List<OfflinePlayer> cache = offlineSpielerCache;
+        if (jetzt - offlineSpielerStand < 30_000L) {
+            return cache;
+        }
+        try {
+            List<OfflinePlayer> frisch = java.util.Arrays.asList(Bukkit.getOfflinePlayers());
+            offlineSpielerCache = frisch;
+            offlineSpielerStand = jetzt;
+            return frisch;
+        } catch (Exception e) {
+            LOG.trace("Offline-Spieler konnten nicht gelesen werden.", e);
+            return cache;
+        }
+    }
+
     private List<String> offlineVorschlaege(CommandSender sender, String vergleich, Set<String> bereits) {
         Set<String> klein = new LinkedHashSet<>();
         if (bereits != null) {
@@ -1084,7 +1106,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
         String eigenerName = sender instanceof Player spieler ? spieler.getName() : null;
         List<String> treffer = new ArrayList<>();
         try {
-            for (OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
+            for (OfflinePlayer offline : offlineSpielerMitCache()) {
                 if (offline == null) {
                     continue;
                 }

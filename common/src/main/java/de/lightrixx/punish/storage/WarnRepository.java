@@ -471,7 +471,7 @@ public final class WarnRepository {
             final java.util.List<WarnRecord> effektiv =
                     (snapshot == null) ? java.util.List.of() : snapshot;
             final Map<String, Object> daten = konfigurationErstellen(effektiv, rohSnapshot);
-            ioExecutor.ausfuehrenMitSchluessel(datei.getName(), () -> yamlSpeicher.speichern(daten, datei));
+            ioExecutor.ausfuehrenMitSchluessel(datei.getPath(), () -> yamlSpeicher.speichern(daten, datei));
         }
     }
 

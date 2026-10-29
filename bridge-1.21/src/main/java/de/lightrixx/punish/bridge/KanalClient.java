@@ -163,6 +163,21 @@ public final class KanalClient implements PluginMessageListener {
         return proxyZuBridgeSchluessel != null && bridgeZuProxySchluessel != null;
     }
 
+    // Ein HELLO darf einen laufenden Chunk-Sync nicht abbrechen: Der neue Voll-Sync
+    // verwirft das alte Staging selbst beim SYNC_BEGIN. Ein erzwungenes syncVerwerfen()
+    // mittendrin ließe die restlichen Chunks als Teilmengen-Stand anwenden.
+    private void syncStagingVerwerfenWennIdle() {
+        if (muteCache.syncLaeuft()
+                || (ipMuteCache != null && ipMuteCache.syncLaeuft())
+                || (banCache != null && banCache.syncLaeuft())
+                || (timeoutCache != null && timeoutCache.syncLaeuft())
+                || (freezeCache != null && freezeCache.syncLaeuft())) {
+            LOG.info("HELLO übersprungenes Sync-Verwerfen: ein Voll-Sync läuft bereits.");
+            return;
+        }
+        syncStagingVerwerfen();
+    }
+
     private void syncStagingVerwerfen() {
         try {
             muteCache.syncVerwerfen();
@@ -202,7 +217,7 @@ public final class KanalClient implements PluginMessageListener {
     public void sendeHello(String serverName) {
         sendeSeq.set(0L);
         empfangsPruefer.zuruecksetzen();
-        syncStagingVerwerfen();
+        syncStagingVerwerfenWennIdle();
         try {
             sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante));
             LOG.info("Bridge-HELLO als '{}' gesendet.", serverName);

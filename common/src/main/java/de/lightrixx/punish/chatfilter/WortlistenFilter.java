@@ -39,7 +39,7 @@ public final class WortlistenFilter {
             return Optional.empty();
         }
         String normiert = TextNormalisierer.normalisiere(getrimmt);
-        if (normiert.length() < 2) {
+        if (normiert.length() < 2 || normiert.length() > 50) {
             return Optional.empty();
         }
         return Optional.of(normiert);

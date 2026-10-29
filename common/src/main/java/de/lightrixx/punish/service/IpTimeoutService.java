@@ -103,6 +103,7 @@ public final class IpTimeoutService {
             return false;
         }
         if (dauerMillis <= 0) {
+            LOG.warn("ipTimeout für {}: ungültige Dauer {} ms.", kanonisch, dauerMillis);
             return false;
         }
         long jetzt = System.currentTimeMillis();
@@ -182,6 +183,7 @@ public final class IpTimeoutService {
         try {
             kanonisch = IpBanRecord.kanonisieren(ip);
         } catch (Exception e) {
+            LOG.warn("ipUntimeout für '{}' abgewiesen: ungültige IP.", ip);
             return false;
         }
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
@@ -236,12 +238,15 @@ public final class IpTimeoutService {
         try {
             kanonisch = IpBanRecord.kanonisieren(ip);
         } catch (Exception e) {
+            LOG.warn("ipTimeout-Bearbeitung für '{}' abgewiesen: ungültige IP.", ip);
             return Optional.empty();
         }
         if (istIpDurchOnlineSchutzBlockiert(kanonisch)) {
+            LOG.warn("ipTimeout-Bearbeitung für {} abgewiesen: geschützt.", kanonisch);
             return Optional.empty();
         }
         if (dauerMillis <= 0) {
+            LOG.warn("ipTimeout-Bearbeitung für {} abgewiesen: ungültige Dauer {} ms.", kanonisch, dauerMillis);
             return Optional.empty();
         }
         long jetzt = System.currentTimeMillis();
@@ -249,6 +254,8 @@ public final class IpTimeoutService {
         try {
             ablaufAm = Math.addExact(jetzt, dauerMillis);
         } catch (ArithmeticException e) {
+            LOG.debug("ipTimeout-Bearbeitung für {}: Dauer {} ms überläuft die Ablaufrechnung.",
+                    kanonisch, dauerMillis);
             return Optional.empty();
         }
         Optional<IpTimeoutRecord> alt = repository.findeAbdeckend(kanonisch, scopeSelektor, jetzt);

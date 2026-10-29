@@ -75,6 +75,14 @@ public final class MuteIpCommand extends PunishCommand {
                 return;
             }
             try {
+                if (protectionService.istRangBlockiert(sender, spielerZiel.uuid())) {
+                    messageService.senden(sender, MessageKeys.GESCHUETZT);
+                    return;
+                }
+            } catch (Exception e) {
+                LOG.debug("Rang-Hierarchie-Check übersprungen (/muteip).", e);
+            }
+            try {
                 if (protectionService.istGeschuetzt(spielerZiel.uuid(), ProtectionService.IgnoreTyp.MUTE)) {
                     messageService.senden(sender, MessageKeys.GESCHUETZT);
                     return;
@@ -262,7 +270,8 @@ public final class MuteIpCommand extends PunishCommand {
                         kanonischeIp, betroffen, sender.name());
                 try {
                     messageService.senden(sender, MessageKeys.IP_GETEILT_WARNUNG, Map.of(
-                            "ip", kanonischeIp, "anzahl", String.valueOf(betroffen)));
+                            "ip", PunishStatusCommand.maskeIp(sender, kanonischeIp),
+                            "anzahl", String.valueOf(betroffen)));
                 } catch (Exception e) {
                     LOG.debug("Geteilte-IP-Warnung konnte nicht gesendet werden.", e);
                 }

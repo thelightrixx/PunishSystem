@@ -58,6 +58,10 @@ public final class Protokoll {
             gerahmt[1 + i] = (byte) (sequenz >>> (56 - 8 * i));
         }
         System.arraycopy(paket, 0, gerahmt, 9, paket.length);
+        // Nach dem Rahmen ist der Kanal (MAX_NUTZDATEN) die Obergrenze; Signatur kommt noch dazu.
+        if (gerahmt.length > MAX_NUTZDATEN) {
+            throw new IOException("Gerahmtes Paket übersteigt die Kanalgröße: " + gerahmt.length);
+        }
         return gerahmt;
     }
 

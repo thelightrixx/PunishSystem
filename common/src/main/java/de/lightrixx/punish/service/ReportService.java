@@ -157,7 +157,6 @@ public final class ReportService {
         boolean gekuerzt = sauber.codePointCount(0, sauber.length()) > 256;
         if (gekuerzt) {
             sauber = sauber.substring(0, sauber.offsetByCodePoints(0, 256));
-            sendeKuerzungsHinweis(reporterUuid);
         }
         if (reporterUuid != null && reporterUuid.equals(zielUuid)) {
             return new Ergebnis(false, null, 0L, MessageKeys.REPORT_SELBST);
@@ -211,6 +210,9 @@ public final class ReportService {
             }
         } finally {
             de.lightrixx.punish.storage.StoreLock.LOCK.writeLock().unlock();
+        }
+        if (gekuerzt) {
+            sendeKuerzungsHinweis(reporterUuid);
         }
         Map<String, String> platzhalter = new HashMap<>();
         platzhalter.put("spieler", zielName);

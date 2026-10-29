@@ -1,7 +1,7 @@
 {
   "id": "punishsystem",
   "name": "PunishSystemVelocity",
-  "version": "4.0-beta",
+  "version": "${project.version}",
   "description": "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
   "authors": ["lightrixx"],
   "main": "de.lightrixx.punish.velocity.PunishVelocity"

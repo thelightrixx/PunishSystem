@@ -76,6 +76,14 @@ public final class KickIpCommand extends PunishCommand {
                 return;
             }
             try {
+                if (protectionService.istRangBlockiert(sender, ziel.get().uuid())) {
+                    messageService.senden(sender, MessageKeys.GESCHUETZT);
+                    return;
+                }
+            } catch (Exception e) {
+                LOG.debug("Rang-Hierarchie-Check übersprungen (/kickip).", e);
+            }
+            try {
                 if (protectionService.istGeschuetzt(ziel.get().uuid(), ProtectionService.IgnoreTyp.KICK)) {
                     messageService.senden(sender, MessageKeys.GESCHUETZT);
                     return;
@@ -213,7 +221,8 @@ public final class KickIpCommand extends PunishCommand {
                         kanonischeIp, betroffen, sender.name());
                 try {
                     messageService.senden(sender, MessageKeys.IP_GETEILT_WARNUNG, Map.of(
-                            "ip", kanonischeIp, "anzahl", String.valueOf(betroffen)));
+                            "ip", PunishStatusCommand.maskeIp(sender, kanonischeIp),
+                            "anzahl", String.valueOf(betroffen)));
                 } catch (Exception e) {
                     LOG.debug("Geteilte-IP-Warnung konnte nicht gesendet werden.", e);
                 }

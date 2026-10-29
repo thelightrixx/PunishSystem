@@ -395,12 +395,12 @@ public final class NoteRepository {
         final java.util.List<Object> rohSnapshot = (roh == null) ? java.util.List.of() : List.copyOf(roh);
         final File datei = dateiFuer(spielerUuid);
         if ((snapshot == null || snapshot.isEmpty()) && rohSnapshot.isEmpty()) {
-            ioExecutor.ausfuehrenMitSchluessel(datei.getName(), () -> sichereLoeschung(datei));
+            ioExecutor.ausfuehrenMitSchluessel(datei.getPath(), () -> sichereLoeschung(datei));
         } else {
             final java.util.List<NoteRecord> effektiv =
                     (snapshot == null) ? java.util.List.of() : snapshot;
             final Map<String, Object> daten = konfigurationErstellen(effektiv, rohSnapshot);
-            ioExecutor.ausfuehrenMitSchluessel(datei.getName(), () -> yamlSpeicher.speichern(daten, datei));
+            ioExecutor.ausfuehrenMitSchluessel(datei.getPath(), () -> yamlSpeicher.speichern(daten, datei));
         }
     }
 

@@ -1188,31 +1188,49 @@ public final class PlayerCache {
 
     private void speichereSpielerNachMysql(CachedPlayer spieler, List<UUID> opfer) {
         try (Connection verbindung = mysql.verbindung()) {
-            if (opfer != null && !opfer.isEmpty()) {
-                try (PreparedStatement loeschen = verbindung.prepareStatement(
-                        "DELETE FROM " + MysqlSchema.T_SPIELER + " WHERE uuid = ?")) {
-                    for (UUID uuid : opfer) {
-                        if (uuid == null || uuid.equals(spieler.uuid())) {
-                            continue;
+            boolean autoCommit = verbindung.getAutoCommit();
+            try {
+                verbindung.setAutoCommit(false);
+                if (opfer != null && !opfer.isEmpty()) {
+                    try (PreparedStatement loeschen = verbindung.prepareStatement(
+                            "DELETE FROM " + MysqlSchema.T_SPIELER + " WHERE uuid = ?")) {
+                        for (UUID uuid : opfer) {
+                            if (uuid == null || uuid.equals(spieler.uuid())) {
+                                continue;
+                            }
+                            loeschen.setString(1, uuid.toString());
+                            loeschen.addBatch();
                         }
-                        loeschen.setString(1, uuid.toString());
-                        loeschen.addBatch();
+                        loeschen.executeBatch();
                     }
-                    loeschen.executeBatch();
+                }
+                try (PreparedStatement upsert = verbindung.prepareStatement(
+                        "INSERT INTO " + MysqlSchema.T_SPIELER
+                                + " (uuid, name, letzte_ip, zuletzt_gesehen) VALUES (?, ?, ?, ?)"
+                                + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
+                                + " letzte_ip = VALUES(letzte_ip), zuletzt_gesehen = VALUES(zuletzt_gesehen)")) {
+                    upsert.setString(1, spieler.uuid().toString());
+                    upsert.setString(2, spieler.name());
+                    upsert.setString(3, spieler.letzteIp());
+                    upsert.setLong(4, spieler.zuletztGesehen());
+                    upsert.executeUpdate();
+                }
+                schreibeIpHistorie(verbindung, spieler);
+                verbindung.commit();
+            } catch (Exception e) {
+                try {
+                    verbindung.rollback();
+                } catch (Exception rollbackFehler) {
+                    LOG.debug("Rollback fehlgeschlagen.", rollbackFehler);
+                }
+                throw e;
+            } finally {
+                try {
+                    verbindung.setAutoCommit(autoCommit);
+                } catch (Exception restoreFehler) {
+                    LOG.debug("autoCommit konnte nicht wiederhergestellt werden.", restoreFehler);
                 }
             }
-            try (PreparedStatement upsert = verbindung.prepareStatement(
-                    "INSERT INTO " + MysqlSchema.T_SPIELER
-                            + " (uuid, name, letzte_ip, zuletzt_gesehen) VALUES (?, ?, ?, ?)"
-                            + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
-                            + " letzte_ip = VALUES(letzte_ip), zuletzt_gesehen = VALUES(zuletzt_gesehen)")) {
-                upsert.setString(1, spieler.uuid().toString());
-                upsert.setString(2, spieler.name());
-                upsert.setString(3, spieler.letzteIp());
-                upsert.setLong(4, spieler.zuletztGesehen());
-                upsert.executeUpdate();
-            }
-            schreibeIpHistorie(verbindung, spieler);
         } catch (Exception e) {
             LOG.error("PlayerCache-Eintrag für {} konnte nicht nach MySQL geschrieben werden.",
                     spieler.uuid(), e);

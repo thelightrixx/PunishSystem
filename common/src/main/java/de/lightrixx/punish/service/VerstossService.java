@@ -133,9 +133,10 @@ public final class VerstossService {
             LOG.error("Verstoß-Zähler für {} nach dem Speichern nicht lesbar – "
                     + "Anzeige ohne Zähler, Auto-Bann-Prüfung mit Vorher-Stand.", zielUuid, e);
             if (punkteVorher >= 0) {
-                punkte = punkteVorher + effektiveStufe.standardPunkte();
+                int stufenPunkte = configManager.verstossStufenPunkte(effektiveStufe);
+                punkte = punkteVorher + stufenPunkte;
                 LOG.warn("Auto-Bann-Prüfung für {} nutzt den Vorher-Stand ({} + {}).",
-                        zielUuid, punkteVorher, effektiveStufe.standardPunkte());
+                        zielUuid, punkteVorher, stufenPunkte);
             }
         }
 
@@ -187,8 +188,16 @@ public final class VerstossService {
         }
 
         Konfiguration.LimitSnapshot snapshot = configManager.limitSnapshot();
-        int anzahl = verstossRepository.anzahl(zielUuid);
-        int punkte = punkteOhneCleanup(zielUuid);
+        int anzahl;
+        int punkte;
+        try {
+            anzahl = verstossRepository.anzahl(zielUuid);
+            punkte = punkteOhneCleanup(zielUuid);
+        } catch (Exception e) {
+            LOG.warn("Verstoß-Zähler für {} nach dem Entfernen nicht lesbar – Anzeige ohne Zähler.", zielUuid, e);
+            anzahl = -1;
+            punkte = -1;
+        }
         int maximum = snapshot.maxPunkte();
 
         Map<String, String> platzhalter = new HashMap<>();
@@ -196,8 +205,8 @@ public final class VerstossService {
         platzhalter.put("ausfuehrer", ausfuehrer);
         platzhalter.put("id", String.valueOf(nummer));
         platzhalter.put("stufe", entfernt.get().stufe().schluessel());
-        platzhalter.put("anzahl", String.valueOf(anzahl));
-        platzhalter.put("punkte", String.valueOf(punkte));
+        platzhalter.put("anzahl", anzahl < 0 ? "?" : String.valueOf(anzahl));
+        platzhalter.put("punkte", punkte < 0 ? "?" : String.valueOf(punkte));
         platzhalter.put("max", String.valueOf(maximum));
 
         zielInformieren(zielUuid, MessageKeys.ZIEL_VERSTOSS_ENTFERNT, platzhalter);

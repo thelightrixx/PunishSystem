@@ -320,7 +320,7 @@ public final class BanIpCommand extends PunishCommand {
                         kanonischeIp, betroffen, sender.name());
                 try {
                     messageService.senden(sender, MessageKeys.IP_GETEILT_WARNUNG, Map.of(
-                            "ip", kanonischeIp,
+                            "ip", PunishStatusCommand.maskeIp(sender, kanonischeIp),
                             "anzahl", String.valueOf(betroffen)));
                 } catch (Exception e) {
                     LOG.debug("Geteilte-IP-Warnung konnte nicht gesendet werden.", e);

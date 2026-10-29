@@ -949,7 +949,8 @@ public abstract class PunishCommand {
     protected boolean pruefeGeteilteIp(BefehlsSender sender, String befehlLabel, String[] args,
                                        String kanonischeIp, int betroffen, boolean bestaetigt) {
         if (betroffen >= ipGeteiltBlockAb()) {
-            messageService.senden(sender, MessageKeys.IP_GETEILT_BLOCK, Map.of("ip", kanonischeIp));
+            messageService.senden(sender, MessageKeys.IP_GETEILT_BLOCK,
+                    Map.of("ip", PunishStatusCommand.maskeIp(sender, kanonischeIp)));
             return false;
         }
         if (betroffen >= ipGeteiltBestaetigungAb() && !bestaetigt) {
@@ -978,7 +979,7 @@ public abstract class PunishCommand {
         try {
             Component hinweis = messageService.komponente(MessageKeys.BESTAETIGUNG_NOETIG, Map.of());
             Component umfang = Component.text("Betroffen sind " + betroffen
-                    + " Online-Spieler dieser IP (" + kanonischeIp + ").",
+                    + " Online-Spieler dieser IP (" + PunishStatusCommand.maskeIp(sender, kanonischeIp) + ").",
                     NamedTextColor.YELLOW);
             Component klickbar = Component.text(befehl.toString(), NamedTextColor.WHITE)
                     .clickEvent(ClickEvent.suggestCommand(befehl.toString()));

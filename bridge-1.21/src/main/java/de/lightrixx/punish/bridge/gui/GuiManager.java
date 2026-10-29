@@ -822,10 +822,12 @@ public final class GuiManager {
     }
 
     private final Map<UUID, Long> wartendeEingabeZeit = new ConcurrentHashMap<>();
+    private final java.util.Set<UUID> closeUeberspringen = ConcurrentHashMap.newKeySet();
 
     private void warteAufChat(Player spieler, Eingabe eingabe) {
         wartendeEingabe.put(spieler.getUniqueId(), eingabe);
         wartendeEingabeZeit.put(spieler.getUniqueId(), System.currentTimeMillis());
+        closeUeberspringen.add(spieler.getUniqueId());
         spieler.closeInventory();
         Component hinweis = switch (eingabe) {
             case SPIELER -> Component.text("Schreibe den Spielernamen in den Chat ( Abbrechen mit 'abbrechen' ).", NamedTextColor.YELLOW);
@@ -833,6 +835,20 @@ public final class GuiManager {
             case DAUER -> Component.text("Schreibe die Dauer in den Chat, z. B. 10m, 1h, 7d, perm ( Abbrechen mit 'abbrechen' ).", NamedTextColor.YELLOW);
         };
         spieler.sendMessage(prefixHinweis(hinweis));
+    }
+
+    // Räumt eine wartende Chat-Eingabe auf, wenn das Inventar ohne den internen
+    // warteAufChat-Close geschlossen wird (sonst fängt sie 60 s lang Chat ab).
+    public void inventarGeschlossen(Player spieler) {
+        if (spieler == null) {
+            return;
+        }
+        UUID uuid = spieler.getUniqueId();
+        if (closeUeberspringen.remove(uuid)) {
+            return;
+        }
+        wartendeEingabe.remove(uuid);
+        wartendeEingabeZeit.remove(uuid);
     }
 
     public boolean chatEingabe(Player spieler, String nachricht) {

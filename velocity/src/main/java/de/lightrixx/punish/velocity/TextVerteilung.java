@@ -146,7 +146,9 @@ public final class TextVerteilung {
     static byte[] bereinigeGeneral(byte[] roh) {
         Object geladen = safeYaml().load(new String(roh, StandardCharsets.UTF_8));
         if (!(geladen instanceof Map)) {
-            return roh;
+            // Kein Mapping (Redaktionsfehler): nie die rohe Datei verteilen – sie kann
+            // speicher.mysql.passwort und bridge-secrets enthalten.
+            return null;
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> karte = new LinkedHashMap<>((Map<String, Object>) geladen);

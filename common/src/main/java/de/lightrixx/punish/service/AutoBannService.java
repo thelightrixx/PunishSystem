@@ -115,7 +115,13 @@ public final class AutoBannService {
         }
 
         String grund = configManager.standardGrund(MessageKeys.DEFAULT_AUTO_BANN_GRUND);
-        BanRecord record = new BanRecord(zielUuid, zielName, grund, ausfuehrer, jetzt, ablaufAm, true);
+        BanRecord record;
+        try {
+            record = new BanRecord(zielUuid, zielName, grund, ausfuehrer, jetzt, ablaufAm, true);
+        } catch (Exception e) {
+            LOG.warn("Auto-Bann für {} ({}) konnte nicht erzeugt werden.", zielUuid, zielName, e);
+            return false;
+        }
 
         boolean irgendwoAktiv = banRepository.alleFuer(zielUuid).stream()
                 .anyMatch(b -> b != null && b.istAktiv(jetzt));

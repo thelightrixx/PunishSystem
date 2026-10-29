@@ -157,10 +157,10 @@ public final class HistoryRepository {
         boolean istAufhebung = eintrag.typ().istAufhebung();
 
         StoreLock.LOCK.writeLock().lock();
-        final List<HistoryEntry> altSnapshot = List.copyOf(
-                eintraege.getOrDefault(schluessel, List.of()).stream()
-                        .filter(java.util.Objects::nonNull).toList());
         try {
+            final List<HistoryEntry> altSnapshot = List.copyOf(
+                    eintraege.getOrDefault(schluessel, List.of()).stream()
+                            .filter(java.util.Objects::nonNull).toList());
             eintraege.compute(schluessel, (schluesselWert, alte) -> {
                 List<HistoryEntry> basis = (alte == null) ? List.of() : alte;
                 List<HistoryEntry> aktualisiert = new ArrayList<>(basis.size() + 1);
@@ -396,6 +396,10 @@ public final class HistoryRepository {
             try {
                 UUID schluessel = UUID.fromString(name.substring(0, 36));
                 List<HistoryEntry> gelesen = ladenDatei(datei, new ArrayList<>());
+                if (gelesen == null) {
+                    LOG.warn("History-Archivdatei {} ist korrupt und wird übersprungen.", name);
+                    continue;
+                }
                 if (gelesen.isEmpty()) {
                     continue;
                 }
@@ -1092,13 +1096,13 @@ public final class HistoryRepository {
             final java.util.List<Object> rohSnapshot = (roh == null) ? java.util.List.of() : List.copyOf(roh);
             final File datei = dateiFuer(schluessel);
             if ((snapshot == null || snapshot.isEmpty()) && rohSnapshot.isEmpty()) {
-                ioExecutor.ausfuehrenMitSchluessel(datei.getName(), () -> sichereLoeschung(datei));
+                ioExecutor.ausfuehrenMitSchluessel(datei.getPath(), () -> sichereLoeschung(datei));
                 return;
             }
             final java.util.List<HistoryEntry> effektiv =
                     (snapshot == null) ? java.util.List.of() : snapshot;
             final Map<String, Object> konfiguration = konfigurationErstellen(effektiv, rohSnapshot);
-            ioExecutor.ausfuehrenMitSchluessel(datei.getName(), () -> yamlSpeicher.speichern(konfiguration, datei));
+            ioExecutor.ausfuehrenMitSchluessel(datei.getPath(), () -> yamlSpeicher.speichern(konfiguration, datei));
         } finally {
             StoreLock.LOCK.writeLock().unlock();
         }

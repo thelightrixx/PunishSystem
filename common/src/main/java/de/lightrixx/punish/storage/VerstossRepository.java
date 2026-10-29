@@ -599,7 +599,7 @@ public final class VerstossRepository {
             final java.util.List<VerstossRecord> effektiv =
                     (snapshot == null) ? java.util.List.of() : snapshot;
             final Map<String, Object> daten = konfigurationErstellen(effektiv, rohSnapshot);
-            ioExecutor.ausfuehrenMitSchluessel(datei.getName(), () -> yamlSpeicher.speichern(daten, datei));
+            ioExecutor.ausfuehrenMitSchluessel(datei.getPath(), () -> yamlSpeicher.speichern(daten, datei));
         }
     }
 

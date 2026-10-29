@@ -17,6 +17,8 @@ import java.util.Objects;
 
 public final class KickCommand extends PunishCommand {
 
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(KickCommand.class);
+
     private final KickService kickService;
 
     public KickCommand(MessageService messageService,
@@ -69,6 +71,14 @@ public final class KickCommand extends PunishCommand {
         if (protectionService.istSelbstbestrafung(sender, online.uuid())) {
             messageService.senden(sender, MessageKeys.SELBSTBESTRAFUNG);
             return;
+        }
+        try {
+            if (protectionService.istRangBlockiert(sender, online.uuid())) {
+                messageService.senden(sender, MessageKeys.GESCHUETZT);
+                return;
+            }
+        } catch (Exception e) {
+            LOG.debug("Rang-Hierarchie-Check übersprungen.", e);
         }
         if (protectionService.istGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
             messageService.senden(sender, MessageKeys.GESCHUETZT);
