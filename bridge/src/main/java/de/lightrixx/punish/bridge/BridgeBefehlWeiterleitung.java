@@ -198,6 +198,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             case "untimeout-ip" -> entstrafeIp(sender, aktuell, "untimeout-ip");
             case "verstoss" -> verstoss(sender, args, aktuell);
             case "warn" -> warn(sender, args, aktuell);
+            case "punish" -> punishVorlagen(sender, args, aktuell);
             case "punish-note", "psnote" -> notiz(sender, args, aktuell);
             case "punish-edit", "psedit" -> edit(sender, args, aktuell);
             case "punish-status", "psstatus", "punish-history", "pshistory" ->
@@ -227,6 +228,12 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             }
             if (vorschlag.equalsIgnoreCase("server")) {
                 return "Server-Daten";
+            }
+        }
+        if (befehl.equals("punish") && vorschlag != null && args != null && args.length == 2) {
+            String vorlagenHinweis = vorlagenHinweis(vorschlag);
+            if (vorlagenHinweis != null) {
+                return vorlagenHinweis;
             }
         }
         String grundSchluessel = grundSchluesselFuerHinweis();
@@ -264,6 +271,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
                 yield TabHinweis.dauerFoermig(letztes) ? "Dauer" : "Grund";
             }
             case "permabann", "kick" -> position <= 1 ? "Spieler" : "Grund";
+            case "punish" -> position <= 1 ? "Spieler" : position == 2 ? "Vorlage" : "Text";
             case "kick-ip" -> position <= 1 ? "Spieler oder IP" : "Grund";
             case "ban-all", "mute-all", "timeout-all" -> position <= 1 ? "Dauer" : "Grund";
             case "kick-all", "pardon-all", "unmute-all", "untimeout-all" -> "Grund";
@@ -362,6 +370,54 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             flags.add("-s");
         }
         return TabHinweis.filtere(flags, aktuell);
+    }
+
+    private List<String> punishVorlagen(CommandSender sender, String[] args, String aktuell) {
+        if (args.length == 1) {
+            return spielerVorschlag(sender, aktuell);
+        }
+        if (args.length == 2) {
+            List<String> vorschlaege = new ArrayList<>(vorlagenNamen());
+            vorschlaege.addAll(endFlags(sender, ""));
+            return TabHinweis.filtere(vorschlaege, aktuell);
+        }
+        return endFlags(sender, aktuell);
+    }
+
+    private List<String> vorlagenNamen() {
+        if (config == null) {
+            return List.of();
+        }
+        try {
+            List<String> namen = new ArrayList<>();
+            for (de.lightrixx.punish.core.Konfiguration.Vorlage vorlage : config.vorlagen()) {
+                if (vorlage.grund() != null && !vorlage.grund().isBlank() && !vorlage.grund().contains(" ")) {
+                    namen.add(vorlage.grund());
+                }
+            }
+            return namen;
+        } catch (Exception e) {
+            LOG.trace("Vorlagen konnten nicht gelesen werden.", e);
+            return List.of();
+        }
+    }
+
+    private String vorlagenHinweis(String vorschlag) {
+        if (config == null || vorschlag == null || vorschlag.isBlank()) {
+            return null;
+        }
+        try {
+            for (de.lightrixx.punish.core.Konfiguration.Vorlage vorlage : config.vorlagen()) {
+                if (vorlage.grund() != null && vorlage.grund().trim().equalsIgnoreCase(vorschlag.trim())) {
+                    return vorlage.dauer() == null || vorlage.dauer().isBlank()
+                            ? String.valueOf(vorlage.befehl())
+                            : vorlage.befehl() + " " + vorlage.dauer();
+                }
+            }
+        } catch (Exception e) {
+            LOG.trace("Vorlagen-Hinweis konnte nicht gelesen werden.", e);
+        }
+        return null;
     }
 
     private List<String> kickNormal(CommandSender sender, String[] args, String aktuell) {

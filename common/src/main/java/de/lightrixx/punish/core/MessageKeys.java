@@ -55,6 +55,10 @@ public final class MessageKeys {
     public static final String PUNISH_HELP_EINTRAG = "punish-help-eintrag";
     public static final String PUNISH_HELP_LEER = "punish-help-leer";
     public static final String PUNISH_HELP_FUSS = "punish-help-fuss";
+    public static final String PUNISH_VORLAGE_KOPF = "punish-vorlage-kopf";
+    public static final String PUNISH_VORLAGE_EINTRAG = "punish-vorlage-eintrag";
+    public static final String PUNISH_VORLAGE_UNBEKANNT = "punish-vorlage-unbekannt";
+    public static final String PUNISH_VORLAGE_BEFEHL_UNTERSTUETZT = "punish-vorlage-befehl-ungueltig";
     public static final String SYNTAX_VERSTOSS = "syntax-verstoss";
     public static final String SYNTAX_PUNISH_EDIT = "syntax-punish-edit";
     public static final String PUNISH_EDIT_KEIN_FELD = "punish-edit-kein-feld";

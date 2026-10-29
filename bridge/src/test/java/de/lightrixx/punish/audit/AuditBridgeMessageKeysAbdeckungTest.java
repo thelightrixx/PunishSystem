@@ -94,6 +94,7 @@ class AuditBridgeMessageKeysAbdeckungTest {
             Map.entry("bridge", "lobby"),
             Map.entry("proxy", "proxy"),
             Map.entry("befehl", "ban"),
+            Map.entry("vorlage", "Cheating"),
             Map.entry("nutzung", "<Spieler> <Grund>"),
             Map.entry("kandidaten", "10"),
             Map.entry("name", "Beispielname"),

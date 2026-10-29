@@ -430,6 +430,12 @@ tab:
 # Fehlt ein Befehl, gilt tab.* oben als Fallback.
 # ban-ip/mute-ip/timeout-ip fallen ohne eigene Sektion auf ban/mute/timeout zurück.
 # vorlagen: Grund -> empfohlene Dauer (GUI zeigt sie als "Empf. Dauer" an).
+# Diese Einträge steuern auch den Befehl /punish <Spieler> <Vorlage>: Er führt die
+# Vorlage automatisch aus (Aktion + Dauer + Grund). Dabei gilt:
+#   - Vorlagen-Namen (grund) ohne Leerzeichen angeben, erster Treffer gewinnt.
+#   - Per /punish ausführbar: ban, ban-ip, mute, mute-ip, timeout, timeout-ip,
+#     freeze (mit dauer) sowie permabann, kick, kick-ip, warn (dauer entfällt dort).
+#   - Andere befehl-Werte bleiben GUI-/Tab-Hinweis und werden nicht ausgeführt.
 # Eigene Einträge einfach ergänzen oder anpassen:
 vorschlaege:
   ban:

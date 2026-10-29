@@ -206,6 +206,13 @@ public interface Konfiguration {
         return java.util.Map.of();
     }
 
+    record Vorlage(String befehl, String grund, String dauer) {
+    }
+
+    default java.util.List<Vorlage> vorlagen() {
+        return java.util.List.of();
+    }
+
     static String normiereVorschlagBefehl(String befehl) {
         if (befehl == null) {
             return "";

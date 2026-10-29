@@ -55,6 +55,7 @@ public final class PunishHelpCommand extends PunishCommand {
             new Eintrag("punish-note (psnote)", "<add|delete|list> <Spieler> [...]", Permissions.PUNISH_NOTE.node()),
             new Eintrag("punish-edit (psedit)", "<Typ> <Ziel> [Nr] [Felder]", Permissions.PUNISH_EDIT.node()),
             new Eintrag("warn (warnung)", "<Spieler> <Grund> | add|delete|list", Permissions.PUNISH_WARN.node()),
+            new Eintrag("punish", "<Spieler> <Vorlage> [Text]", Permissions.PUNISH_TEMPLATES.node()),
             new Eintrag("punish-status (psstatus)", "[Spieler|server] [filter:...]", Permissions.PUNISH_STATUS.node(),
                     Permissions.PUNISH_OWN.node()),
             new Eintrag("punish-history (pshistory)", "[Spieler|server] [filter:...] [Seite]", Permissions.PUNISH_HISTORY.node(),

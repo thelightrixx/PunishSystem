@@ -10,7 +10,7 @@
 #   %punkte%, %stufe%, %wort%, %version%, %aktuell%, %channel%, %detail%,
 #   %scope%, %bekannt%, %zuletzt%, %banstatus%, %rest%, %ipstatus%,
 #   %banns%, %mutes%, %timeouts%, %plattform%, %warnungen%, %verbleibend%, %nummer%,
-#   %befehl%, %nutzung%, %kandidaten%, %quelle%, %name%
+#   %befehl%, %nutzung%, %kandidaten%, %quelle%, %name%, %vorlage%
 # Hinweis: %warn-grund% wird in broadcasts.yml (warn-eskalation) genutzt und ist
 #   hier zur Vollständigkeit mit dokumentiert.
 # MiniMessage-Format, Prefix wird automatisch vorangestellt.
@@ -93,6 +93,12 @@ messages:
   punish-help-eintrag: "<gray>• <green>/%befehl% <gray>%nutzung%"
   punish-help-leer: "<gray>Keine Befehle für deine Rechte verfügbar."
   punish-help-fuss: "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Beta: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>."
+
+  # Straf-Vorlagen (/punish)
+  punish-vorlage-kopf: "<yellow>Straf-Vorlagen <gray>(/punish <Spieler> <Vorlage>):"
+  punish-vorlage-eintrag: "<gray>• <green>%grund% <gray>→ <white>%befehl% %dauer%"
+  punish-vorlage-unbekannt: "<red>Unbekannte Vorlage <white>%vorlage%<red>. Verfügbare Vorlagen:"
+  punish-vorlage-befehl-ungueltig: "<red>Die Vorlage <white>%vorlage% <red>nutzt den Befehl <white>%befehl%<red>, der über /punish nicht ausführbar ist."
 
   # Verstoß-System
   syntax-verstoss: "<red>Verwendung: /verstoss add <Spieler> <Grund> [level=low|medium|high] | remove <Spieler> <Nr> | clear <Spieler> (Bearbeiten via /punish-edit)"

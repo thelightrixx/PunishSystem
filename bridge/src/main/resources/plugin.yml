@@ -16,6 +16,11 @@ commands:
     aliases: [psgui]
     permission: punish.gui
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish:
+    description: Führt eine Straf-Vorlage aus (wird an den Proxy weitergeleitet).
+    usage: /punish <Spieler> <Vorlage> [Text]
+    permission: punish.templates
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
   mute:
     description: Mutet einen Spieler (wird an den Proxy weitergeleitet).
     usage: /mute <Spieler> <Dauer> [Grund] [--global|--server]
@@ -232,6 +237,7 @@ commands:
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
 permissions:
   punish.gui: { description: PunishGUI öffnen., default: false }
+  punish.templates: { description: Straf-Vorlagen per /punish ausführen (via Proxy)., default: false }
   punish.allow-silent-syntax: { description: Stille Strafen mit -s ausführen (GUI-Toggle + Tunnel)., default: false }
   punish.mute: { description: Spieler muten (via Proxy)., default: false }
   punish.muteall: { description: Alle Spieler muten (via Proxy)., default: false }

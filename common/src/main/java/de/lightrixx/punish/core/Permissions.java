@@ -52,6 +52,7 @@ public enum Permissions {
     PUNISH_CHATFILTER_SYNC("punish.chatfilter.sync"),
     PUNISH_CHATFILTER_BYPASS("punish.chatfilter.bypass"),
     PUNISH_GUI("punish.gui"),
+    PUNISH_TEMPLATES("punish.templates"),
     ALLOW_SILENT("punish.allow-silent-syntax"),
 
     BROADCAST_RECEIVE_ALL("punish.message.all-punishes"),

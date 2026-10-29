@@ -859,6 +859,27 @@ public final class BridgeKonfiguration implements Konfiguration {
         return java.util.Map.copyOf(ergebnis);
     }
 
+    @Override
+    public List<Vorlage> vorlagen() {
+        List<Vorlage> ergebnis = new java.util.ArrayList<>();
+        for (java.util.Map<?, ?> roh : konfiguration.getMapList("vorschlaege.vorlagen")) {
+            if (roh == null) {
+                continue;
+            }
+            String grund = textAus(roh, "grund");
+            if (grund.isEmpty()) {
+                continue;
+            }
+            ergebnis.add(new Vorlage(textAus(roh, "befehl").toLowerCase(Locale.ROOT), grund, textAus(roh, "dauer")));
+        }
+        return List.copyOf(ergebnis);
+    }
+
+    private static String textAus(java.util.Map<?, ?> map, String schluessel) {
+        Object wert = map.get(schluessel);
+        return wert == null ? "" : String.valueOf(wert).trim();
+    }
+
     private List<java.util.Map<String, String>> vorlagenRoh() {
         List<java.util.Map<String, String>> ergebnis = new java.util.ArrayList<>();
         for (java.util.Map<?, ?> roh : konfiguration.getMapList("vorschlaege.vorlagen")) {

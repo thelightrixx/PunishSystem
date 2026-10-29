@@ -100,4 +100,9 @@ class PermissionsKonsistenzTest {
     void chatfilterBypassInAllenQuellen() {
         pruefeDreiQuellen("punish.chatfilter.bypass");
     }
+
+    @Test
+    void punishTemplatesInAllenQuellen() {
+        pruefeDreiQuellen("punish.templates");
+    }
 }

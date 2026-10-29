@@ -226,6 +226,7 @@ public final class PunishBridge extends JavaPlugin {
         brigadierEintraege.add(tunnel("punish-note", new BridgeBefehlWeiterleitung(kanalClient, "punish-note", "punish.note", false, config)));
         brigadierEintraege.add(tunnel("punish-edit", new BridgeBefehlWeiterleitung(kanalClient, "punish-edit", "punish.edit", true, config)));
         brigadierEintraege.add(tunnel("warn", new BridgeBefehlWeiterleitung(kanalClient, "warn", "punish.warn", false, config)));
+        brigadierEintraege.add(tunnel("punish", new BridgeBefehlWeiterleitung(kanalClient, "punish", "punish.templates", true, config)));
         brigadierEintraege.add(tunnel("punish-delete-ip", new BridgeBefehlWeiterleitung(kanalClient, "punish-delete-ip", "punish.deleteip", false, config)));
         brigadierEintraege.add(tunnel("punish-version", new BridgeBefehlWeiterleitung(kanalClient, "punish-version", "punish.version", false, config)));
         brigadierEintraege.add(tunnel("punish-help", new BridgeBefehlWeiterleitung(kanalClient, "punish-help", "punish.help", false, config)));

@@ -1186,6 +1186,26 @@ public final class VelocityKonfiguration implements Konfiguration {
         return Map.copyOf(ergebnis);
     }
 
+    @Override
+    public List<Vorlage> vorlagen() {
+        Map<String, Object> vorschlaege = abschnitt("vorschlaege");
+        List<Vorlage> ergebnis = new ArrayList<>();
+        for (Object roh : Karten.liste(vorschlaege, "vorlagen")) {
+            Map<String, Object> eintrag = Karten.abschnitt(roh);
+            if (eintrag == null) {
+                continue;
+            }
+            String grund = Karten.text(eintrag, "grund", "").trim();
+            if (grund.isEmpty()) {
+                continue;
+            }
+            String befehl = Karten.text(eintrag, "befehl", "").trim().toLowerCase(java.util.Locale.ROOT);
+            String dauer = Karten.text(eintrag, "dauer", "").trim();
+            ergebnis.add(new Vorlage(befehl, grund, dauer));
+        }
+        return List.copyOf(ergebnis);
+    }
+
     private List<String> vorschlagListe(String befehl, String feld) {
         Map<String, Object> vorschlaege = abschnitt("vorschlaege");
         Map<String, Object> eintrag = Karten.abschnitt(vorschlaege, befehl);
