@@ -190,13 +190,13 @@ messages:
   scope-abdeckend-hinweis: "<yellow>Hinweis: <white>%spieler% <yellow>ist in einem anderen Scope weiter aktiv (<white>%scope%<yellow>). Nutze den passenden Scope (z. B. --global), siehe /punish-status bzw. /punish-history."
 
   # Punish Status Ansicht (nur aktive Strafen)
-  punish-status-kopf: "<yellow>Status für <white>%ziel% <yellow>(Filter: <white>%filter%<yellow>)"
+  punish-status-kopf: "<yellow>Status für <white>%ziel% <yellow>(Filter: <white>%filter%<yellow>) <gray>– Seite %seite%/%seiten%"
   punish-status-aktiv-kopf: "<yellow>Aktiv (<white>%anzahl%<yellow>):"
   punish-status-aktiv-leer: "<green>Keine aktiven Strafen für %ziel%."
   punish-status-verstoss-zeile: "<gray>• <white>%spieler% <gray>(<white>%anzahl% Einträge<gray>) – zuletzt: <white>[%stufe%] %grund% <gray>(%datum%)"
   punish-status-mehr: "<gray>… und <white>%anzahl% <gray>weitere (Filter verfeinern, z. B. filter:bans)."
   punish-status-syntax: "<red>Verwendung: /punish-status [self|Spieler|server] [filter:all|bans|mutes|timeouts|freezes|verstoesse|warns|ipbans|ipmutes|iptimeouts] [Seite] [--global|--server|--unbekannt]"
-  punish-status-filter-ungueltig: "<red>Unbekannter Filter: <white>%filter%<red>. Gültig: <white>all, bans, mutes, timeouts, freezes, verstoesse, warns, kicks, ipbans, ipmutes, iptimeouts<red>."
+  punish-status-filter-ungueltig: "<red>Unbekannter Filter: <white>%filter%<red>. Gültig: <white>all, bans, mutes, timeouts, freezes, verstoesse, warns, ipbans, ipmutes, iptimeouts<red>."
 
   # Punish History Ansicht (nur Verlauf)
   punish-history-kopf: "<yellow>History für <white>%ziel% <yellow>(Filter: <white>%filter%<yellow>, Seite <white>%seite%/%seiten%<yellow>)"

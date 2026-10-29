@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BridgeModulParitaetTest {
@@ -52,6 +54,57 @@ class BridgeModulParitaetTest {
                 .toList();
         assertTrue(unerwartet.isEmpty(),
                 "Neue Drift zwischen bridge und bridge-1.21: " + unerwartet);
+    }
+
+    /**
+     * Gleiche Nachrichtenschluessel muessen in allen drei ausgelieferten Bundles denselben
+     * Text haben. Sonst haengt die Ausgabe eines Befehls davon ab, ob der Proxy oder eine
+     * Bridge sie rendert, und Textfehler bleiben in einem Bundle unbemerkt.
+     */
+    @Test
+    void messagesWerteSindUeberAlleModuleKonsistent() throws IOException {
+        Path wurzel = wurzel();
+        Map<String, String> velocity = leseNachrichten(
+                wurzel.resolve("velocity/src/main/resources/config/messages.yml"));
+        Map<String, String> bridge = leseNachrichten(
+                wurzel.resolve("bridge/src/main/resources/config/messages.yml"));
+        Map<String, String> bridge121 = leseNachrichten(
+                wurzel.resolve("bridge-1.21/src/main/resources/config/messages.yml"));
+
+        assertFalse(velocity.isEmpty(), "messages.yml ohne Nachrichten gelesen.");
+
+        List<String> abweichend = new ArrayList<>();
+        for (Map.Entry<String, String> eintrag : velocity.entrySet()) {
+            vergleiche(abweichend, "bridge", eintrag.getKey(), eintrag.getValue(),
+                    bridge.get(eintrag.getKey()));
+            vergleiche(abweichend, "bridge-1.21", eintrag.getKey(), eintrag.getValue(),
+                    bridge121.get(eintrag.getKey()));
+        }
+        assertTrue(abweichend.isEmpty(),
+                "Abweichende Nachrichtentexte zwischen den Modulen: " + abweichend);
+    }
+
+    private static void vergleiche(List<String> abweichend, String modul, String schluessel,
+                                   String erwartet, String tatsaechlich) {
+        if (tatsaechlich != null && !erwartet.equals(tatsaechlich)) {
+            abweichend.add(modul + "/" + schluessel + ": " + tatsaechlich);
+        }
+    }
+
+    private static Map<String, String> leseNachrichten(Path datei) throws IOException {
+        Map<String, String> nachrichten = new LinkedHashMap<>();
+        for (String zeile : Files.readAllLines(datei, StandardCharsets.UTF_8)) {
+            if (!zeile.startsWith("  ") || zeile.startsWith("   ") || zeile.trim().startsWith("#")) {
+                continue;
+            }
+            int trenner = zeile.indexOf(':', 2);
+            if (trenner < 0) {
+                continue;
+            }
+            nachrichten.put(zeile.substring(2, trenner).trim(),
+                    zeile.substring(trenner + 1).trim());
+        }
+        return nachrichten;
     }
 
     private static Map<String, String> lese(Path basis) throws IOException {
