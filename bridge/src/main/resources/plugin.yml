@@ -180,7 +180,7 @@ commands:
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
   punish-delete-ip:
     description: Löscht alle IP-Daten (wird an den Proxy weitergeleitet).
-    usage: /punish-delete-ip <IP|Spieler>
+    usage: /punish-delete-ip <IP|Spieler> confirm
     aliases: [psdelete-ip, psdeleteip]
     permission: punish.deleteip
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."

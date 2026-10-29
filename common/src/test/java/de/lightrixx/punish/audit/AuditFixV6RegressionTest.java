@@ -158,6 +158,9 @@ class AuditFixV6RegressionTest {
                 ipBanRepo, ipMuteRepo, ipTimeoutRepo, verzeichnis);
         BefehlsSender sender = senderMit("punish.deleteip");
         cmd.ausfuehren(sender, new String[]{ip});
+        assertFalse(ipBanRepo.alleFuer(ip).isEmpty(),
+                "Ohne confirm darf /punish-delete-ip nichts löschen");
+        cmd.ausfuehren(sender, new String[]{ip, "confirm"});
         assertTrue(ipBanRepo.alleFuer(ip).isEmpty(), "IP-Banns müssen gelöscht sein");
         assertTrue(ipMuteRepo.alleFuer(ip).isEmpty(), "IP-Mutes müssen gelöscht sein");
         assertTrue(ipTimeoutRepo.alleFuer(ip).isEmpty(), "IP-Timeouts müssen gelöscht sein");

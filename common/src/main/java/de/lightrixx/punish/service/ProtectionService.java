@@ -364,6 +364,9 @@ public final class ProtectionService {
     }
 
     int rangGewichtFuer(UUID uuid) {
+        // Bewusst fail-open: Liefert diese Methode für beide Beteiligten 0 (Rangdaten
+        // unlesbar), greift die Rang-Hierarchie-Sperre nicht – verbleibender Schutz
+        // sind die Ignore-Prüfungen (istGeschuetzt), die fail-closed laufen.
         try {
             java.util.OptionalInt lp = luckPerms.rangGewicht(uuid);
             if (lp.isPresent()) {

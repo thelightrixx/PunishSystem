@@ -13,6 +13,9 @@ import de.lightrixx.punish.storage.IpBanRepository;
 import de.lightrixx.punish.storage.IpMuteRepository;
 import de.lightrixx.punish.storage.IpTimeoutRepository;
 import de.lightrixx.punish.storage.PlayerCache;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,6 +108,10 @@ public final class DeleteIpCommand extends PunishCommand {
             }
         }
         if (istIpGeschuetzt(sender, kanonisch)) {
+            return;
+        }
+        if (!istBestaetigt(args)) {
+            sendeLoeschBestaetigung(sender, kanonisch);
             return;
         }
         List<String> fehler = new ArrayList<>();
@@ -212,8 +219,22 @@ public final class DeleteIpCommand extends PunishCommand {
                 "anzahl", String.valueOf(anonymisiert)));
     }
 
-    private boolean istIpGeschuetzt(BefehlsSender sender, String kanonisch) {
+    private void sendeLoeschBestaetigung(BefehlsSender sender, String kanonisch) {
+        String befehl = "/punish-delete-ip " + kanonisch + " " + BESTAETIGUNGS_ARGUMENT;
         try {
+            Component hinweis = messageService.komponente(MessageKeys.BESTAETIGUNG_NOETIG, Map.of());
+            Component umfang = Component.text("Löscht alle IP-Daten (Banns, Mutes, Timeouts, Cache, History) für "
+                    + PunishStatusCommand.maskeIp(sender, kanonisch) + " unwiderruflich.", NamedTextColor.YELLOW);
+            Component klickbar = Component.text(befehl, NamedTextColor.WHITE)
+                    .clickEvent(ClickEvent.suggestCommand(befehl));
+            messageService.sendeKomponente(sender, hinweis.append(Component.newline()).append(umfang)
+                    .append(Component.newline()).append(klickbar));
+        } catch (Exception e) {
+            LOG.debug("IP-Lösch-Bestätigung konnte nicht gesendet werden.", e);
+        }
+    }
+
+    private boolean istIpGeschuetzt(BefehlsSender sender, String kanonisch) {        try {
             for (CachedPlayer kandidat : playerCache.findeNachIp(kanonisch)) {
                 if (kandidat != null && istAbfrageZielGeschuetzt(sender, kandidat.uuid())) {
                     return true;

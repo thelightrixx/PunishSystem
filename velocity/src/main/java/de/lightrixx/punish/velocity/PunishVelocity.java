@@ -73,6 +73,11 @@ public final class PunishVelocity {
     private final Logger logger;
     private final Path datenOrdner;
 
+    // Dirty-Flag für den entprellten Sync-Push: Massenaktionen stoßen pro Spieler
+    // einen Observer an, der Push läuft aber nur einmal je Intervall.
+    private final java.util.concurrent.atomic.AtomicBoolean muteSyncPushFaellig =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
     private IoExecutor ioExecutor;
     private volatile boolean persistenzWarnungAktiv;
     private VelocityAuftragsPlaner planer;
@@ -212,12 +217,13 @@ public final class PunishVelocity {
         } catch (Exception e) {
             logger.debug("Tunnel-Secret konnte nicht an den Brückenkanal gegeben werden.", e);
         }
-        muteService.beobachterHinzufuegen(uuid -> kanal.mutePushAnAlle());
-        ipMuteService.beobachterHinzufuegen(() -> kanal.mutePushAnAlle());
-        banService.beobachterHinzufuegen(() -> kanal.mutePushAnAlle());
-        timeoutService.beobachterHinzufuegen(() -> kanal.mutePushAnAlle());
-        freezeService.beobachterHinzufuegen(uuid -> kanal.mutePushAnAlle());
+        muteService.beobachterHinzufuegen(uuid -> muteSyncAnstossen());
+        ipMuteService.beobachterHinzufuegen(() -> muteSyncAnstossen());
+        banService.beobachterHinzufuegen(() -> muteSyncAnstossen());
+        timeoutService.beobachterHinzufuegen(() -> muteSyncAnstossen());
+        freezeService.beobachterHinzufuegen(uuid -> muteSyncAnstossen());
         kanal.registrieren();
+        starteMuteSyncPush();
 
         UpdateVerteilung updateVerteilung = new UpdateVerteilung(proxy, logger,
                 kanal::sendeAn);
@@ -505,6 +511,22 @@ public final class PunishVelocity {
             }
             textVerteilung = null;
         }
+    }
+
+    private void muteSyncAnstossen() {
+        muteSyncPushFaellig.set(true);
+    }
+
+    private void starteMuteSyncPush() {
+        planer.intervallAsync(() -> {
+            try {
+                if (muteSyncPushFaellig.compareAndSet(true, false)) {
+                    kanal.mutePushAnAlle();
+                }
+            } catch (Exception e) {
+                logger.debug("Entprellter Sync-Push an Bridges fehlgeschlagen.", e);
+            }
+        }, 20L, 20L);
     }
 
     private void starteUpdateAutoCheck(VelocityKonfiguration config) {
