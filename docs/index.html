@@ -542,7 +542,7 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
       <tr><td><code>--global</code></td><td>Die Strafe gilt auf allen Servern.</td></tr>
       <tr><td><code>--survival</code></td><td>Die Strafe gilt nur auf dem Server <code>survival</code>. Der Servername steht direkt hinter den zwei Strichen.</td></tr>
       <tr><td><code>--server=survival</code></td><td>Gleiche Wirkung, ausführlich geschrieben. Praktisch bei Servernamen, die wie ein anderes Flag aussehen.</td></tr>
-      <tr><td><code>--unbekannt</code></td><td>Nur bei Aufhebebefehlen und <code>/alts</code> (<code>/pardon</code>, <code>/unmute</code>, <code>/untimeout</code>, <code>/unban-ip</code>, <code>/unmute-ip</code>, <code>/untimeout-ip</code>, <code>/unfreeze</code>, <code>/alts</code>), etwa für alte Einträge, deren Server nicht bekannt war. Beim Verhängen neuer Strafen nicht möglich.</td></tr>
+      <tr><td><code>--unbekannt</code></td><td>Filtert auf Einträge ohne bekannten Server. Erlaubt bei den Aufhebebefehlen (<code>/pardon</code>, <code>/unmute</code>, <code>/untimeout</code>, <code>/unban-ip</code>, <code>/unmute-ip</code>, <code>/untimeout-ip</code>, <code>/unfreeze</code>), bei <code>/alts</code> sowie als Filter bei <code>/punish-status</code> und <code>/punish-history</code>. Beim Verhängen neuer Strafen nicht möglich.</td></tr>
     </tbody>
   </table></div>
 
@@ -599,7 +599,7 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
   </table></div>
   <pre data-lang="cmd">/ban Notch 1w2d Cheating
 /mute Notch 1h30m Spamming</pre>
-  <p>Ausgeschriebene Formen gehen ebenfalls, zum Beispiel <code>minute</code>, <code>sekunde</code>, <code>stunde</code>, <code>tag</code>, <code>woche</code>, <code>monat</code>, <code>jahr</code> und <code>permanent</code>. Auch Leerzeichen sind erlaubt: <code>1h 30m</code>. Alles über 100 Jahre wird abgelehnt.</p>
+  <p>Ausgeschriebene Formen gehen ebenfalls, zum Beispiel <code>minute</code>, <code>sekunde</code>, <code>stunde</code>, <code>tag</code>, <code>woche</code>, <code>monat</code>, <code>jahr</code> und <code>permanent</code>. Zusätzlich gelten die Kurzformen <code>min</code>/<code>mins</code>, <code>sek</code>/<code>sec</code>/<code>secs</code>, <code>std</code>, <code>t</code> und <code>j</code>; auch <code>perma</code> wird als dauerhaft erkannt. Auch Leerzeichen sind erlaubt: <code>1h 30m</code>. Alles über 100 Jahre wird abgelehnt.</p>
   <div class="callout ok"><div><span class="ttl">Ungültige Eingaben werden abgelehnt</span><p>Eine Eingabe wie <code>7x</code> führt zu einer Fehlermeldung. Es entsteht nie versehentlich ein dauerhafter Bann.</p></div></div>
 
   <h2>Timeout, Freeze oder Bann?</h2>
@@ -781,6 +781,7 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
       <tr><td><a href="#/befehle-akten/verstoss"><code>/verstoss</code></a></td><td>Verstöße verwalten</td><td><code>punish.verstoss</code></td></tr>
       <tr><td><a href="#/befehle-akten/punish-note"><code>/punish-note</code></a></td><td>Interne Notizen verwalten</td><td><code>punish.note</code></td></tr>
       <tr><td><a href="#/befehle-einsicht/punish-status"><code>/punish-status</code></a></td><td>Aktive Strafen ansehen</td><td><code>punish.status</code></td></tr>
+      <tr><td><a href="#/befehle-einsicht/pscheck"><code>/pscheck</code></a></td><td>Kompakte Spielerakte ansehen</td><td><code>punish.status</code></td></tr>
       <tr><td><a href="#/befehle-einsicht/punish-history"><code>/punish-history</code></a></td><td>Verlauf ansehen</td><td><code>punish.history</code></td></tr>
       <tr><td><a href="#/befehle-einsicht/alts"><code>/alts</code></a></td><td>Zweitaccounts über die IP finden</td><td><code>punish.alts</code></td></tr>
       <tr><td><a href="#/befehle-bearbeiten"><code>/punish-edit</code></a></td><td>Bestehende Einträge ändern</td><td><code>punish.edit</code></td></tr>
@@ -906,12 +907,12 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
 
   <p>Bei allen Befehlen hier wird entweder eine IP-Adresse oder der Name eines Spielers angegeben. Bei einem Namen nutzt das System dessen zuletzt bekannte IP.</p>
   <div class="callout warn">
-    <div><span class="ttl">Vorsicht bei geteilten IPs</span><p>In Schulen, Wohnheimen oder bei mobilem Internet teilen sich viele Menschen eine IP. Das System warnt, wenn mehrere Online-Spieler dieselbe IP nutzen, und bricht bei zu vielen ab. Vorher empfiehlt sich eine Prüfung mit <a href="#/befehle-einsicht/alts"><code>/alts</code></a>.</p></div>
+    <div><span class="ttl">Vorsicht bei geteilten IPs</span><p>In Schulen, Wohnheimen oder bei mobilem Internet teilen sich viele Menschen eine IP. Das System warnt, wenn mehrere Online-Spieler dieselbe IP nutzen, verlangt ab <code>ip-geteilt-bestaetigung-ab</code> ein <code>confirm</code> und bricht ab <code>ip-geteilt-block-ab</code> ab. Vorher empfiehlt sich eine Prüfung mit <a href="#/befehle-einsicht/alts"><code>/alts</code></a>.</p></div>
   </div>
 
   <article class="cmd-card" data-cmd="/ban-ip" data-perm="punish.banip" data-scope="ja">
-    <p class="desc">Bannt eine IP. Ohne Dauer ist der Bann dauerhaft; dafür ist zusätzlich <code>punish.permabann</code> nötig.</p>
-    <pre data-lang="cmd">/ban-ip &lt;IP|Spieler&gt; [Dauer] [Grund] [--Scope] [-s]</pre>
+    <p class="desc">Bannt eine IP. Ohne Dauer ist der Bann dauerhaft; dafür ist zusätzlich <code>punish.permabann</code> nötig. Bei geteilten IPs verlangt das System ab <code>ip-geteilt-bestaetigung-ab</code> ein <code>confirm</code>.</p>
+    <pre data-lang="cmd">/ban-ip &lt;IP|Spieler&gt; [confirm] [Dauer] [Grund] [--Scope] [-s]</pre>
     <pre data-lang="cmd">/ban-ip Notch 30d Ban-Umgehung
 /ban-ip 203.0.113.7 perm</pre>
   </article>
@@ -1066,17 +1067,23 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
   <p class="lead">Nachsehen, was gegen einen Spieler vorliegt, was früher war und welche Zweitaccounts er hat.</p>
 
   <article class="cmd-card" data-cmd="/punish-status" data-alias="/psstatus" data-perm="punish.status" data-scope="ja">
-    <p class="desc">Zeigt, was für einen Spieler aktuell aktiv ist: Banns, Mutes, Timeouts, Freezes, Verstoß-Punkte und Warns, jeweils mit Restzeit. Ein Klick auf einen Eintrag bereitet die Aufhebung vor. <code>filter:</code> grenzt nach Straftyp ein, ein Scope-Flag am Ende (<code>--global</code>, <code>--Servername</code>) schränkt zusätzlich auf Server ein. IP-Strafen zeigen die Adresse ohne <code>punish.alts</code> nur maskiert (z.&nbsp;B. <code>203.0.…</code>); der Klick zum Aufheben einer IP-Strafe braucht zusätzlich <code>punish.alts</code>.</p>
-    <pre data-lang="cmd">/punish-status [self|Spieler|server] [filter:...] [Seite] [--global|--Servername]</pre>
+    <p class="desc">Zeigt, was für einen Spieler aktuell aktiv ist: Banns, Mutes, Timeouts, Freezes, Verstoß-Punkte und Warns, jeweils mit Restzeit. Ein Klick auf einen Eintrag bereitet die Aufhebung vor. <code>filter:</code> grenzt nach Straftyp ein, ein Scope-Flag am Ende (<code>--global</code>, <code>--Servername</code>, <code>--unbekannt</code>) filtert zusätzlich nach Scope; <code>--unbekannt</code> zeigt Einträge ohne bekannten Server. IP-Strafen zeigen die Adresse ohne <code>punish.alts</code> nur maskiert (z.&nbsp;B. <code>203.0.…</code>); der Klick zum Aufheben einer IP-Strafe braucht zusätzlich <code>punish.alts</code>.</p>
+    <pre data-lang="cmd">/punish-status [self|Spieler|server] [filter:...] [Seite] [--global|--Servername|--unbekannt]</pre>
     <pre data-lang="cmd">/punish-status Notch
 /punish-status Notch filter:bans
 /punish-status self</pre>
     <div class="shot" data-title="Screenshot folgt: /punish-status" data-hint="Ausgabe mit aktiven Strafen und Verstoß-Punkten"></div>
   </article>
 
+  <article class="cmd-card" data-cmd="/pscheck" data-perm="punish.status" data-scope="nein">
+    <p class="desc">Kompakte Spielerakte: aktive Banns, Mutes und Timeouts, Anzahl Verstöße und Punkte, Warns und Alts. Die IP erscheint ohne <code>punish.alts</code> nur maskiert. Buttons führen zu Status und GUI, mit <code>punish.alts</code> auch zu den Alts.</p>
+    <pre data-lang="cmd">/pscheck &lt;Spieler&gt;</pre>
+    <p>Nutzt dieselbe Permission wie <code>/punish-status</code>. Ist unter <code>bann-unban-antrag.link</code> ein Link hinterlegt, erscheint er auch hier.</p>
+  </article>
+
   <article class="cmd-card" data-cmd="/punish-history" data-alias="/pshistory" data-perm="punish.history" data-scope="ja">
-    <p class="desc">Zeigt den kompletten Verlauf, neueste zuerst, seitenweise. Beim Überfahren eines Eintrags mit der Maus werden Ziel, Grund, Ausführer, Datum und Ablauf angezeigt. <code>filter:</code> grenzt nach Straftyp ein, ein Scope-Flag am Ende (<code>--global</code>, <code>--Servername</code>) schränkt zusätzlich auf Server ein.</p>
-    <pre data-lang="cmd">/punish-history [self|Spieler|server] [filter:...] [Seite] [--global|--Servername]</pre>
+    <p class="desc">Zeigt den kompletten Verlauf, neueste zuerst, seitenweise. Beim Überfahren eines Eintrags mit der Maus werden Ziel, Grund, Ausführer, Datum und Ablauf angezeigt. <code>filter:</code> grenzt nach Straftyp ein, ein Scope-Flag am Ende (<code>--global</code>, <code>--Servername</code>, <code>--unbekannt</code>) filtert zusätzlich nach Scope; <code>--unbekannt</code> zeigt Einträge ohne bekannten Server.</p>
+    <pre data-lang="cmd">/punish-history [self|Spieler|server] [filter:...] [Seite] [--global|--Servername|--unbekannt]</pre>
     <pre data-lang="cmd">/punish-history Notch
 /punish-history Notch filter:mutes 2</pre>
   </article>
@@ -1186,7 +1193,7 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
     <pre data-lang="cmd">/reports
 /reports list [offen|alle]
 /reports info &lt;Id&gt;
-/reports accept &lt;Id&gt;
+/reports accept &lt;Id&gt; [Grund]
 /reports deny &lt;Id&gt; [Grund]
 /reports close &lt;Id&gt; [Grund]
 /reports delete &lt;Id&gt;</pre>
@@ -1248,7 +1255,7 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
   <article class="cmd-card" data-cmd="/punish-delete-ip" data-alias="/psdelete-ip, /psdeleteip" data-perm="punish.deleteip" data-scope="nein">
     <p class="desc">Löscht die gespeicherten IP-Daten eines Spielers oder einer IP. Gedacht für Datenschutzanfragen.</p>
     <pre data-lang="cmd">/punish-delete-ip &lt;Spieler|IP&gt;</pre>
-    <p>Aktive IP-Sperren aller Scopes werden aufgehoben und die gespeicherte IP wird auf „unbekannt“ gesetzt. Der Verlauf bleibt als Nachweis bestehen. Das System nennt danach, wie viele Einträge betroffen waren. Mehr unter <a href="#/datenschutz">Datenschutz</a>.</p>
+    <p>Aktive IP-Banns, IP-Mutes und IP-Timeouts aller Scopes werden aufgehoben, die gespeicherte IP wird auf „unbekannt“ gesetzt und die IP-Historie im Spieler-Cache sowie die IP-bezogenen History-Einträge (z.&nbsp;B. <code>BAN_IP</code>, <code>IP_MUTE</code>, <code>IP_TIMEOUT</code>) werden gelöscht. Der spielerbezogene Verlauf bleibt bestehen. Das System nennt danach Banns, Mutes, Timeouts und Cache-Einträge. Mehr unter <a href="#/datenschutz">Datenschutz</a>.</p>
   </article>
 </section>
 
@@ -1316,7 +1323,7 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
   <div class="tbl"><table>
     <thead><tr><th>Permission</th><th>Erlaubt</th></tr></thead>
     <tbody>
-      <tr><td><code>punish.status</code></td><td><code>/punish-status</code> für Spieler</td></tr>
+      <tr><td><code>punish.status</code></td><td><code>/punish-status</code> und <code>/pscheck</code> für Spieler</td></tr>
       <tr><td><code>punish.status.server</code></td><td><code>/punish-status server</code></td></tr>
       <tr><td><code>punish.history</code></td><td><code>/punish-history</code> für Spieler</td></tr>
       <tr><td><code>punish.history.server</code></td><td><code>/punish-history server</code></td></tr>
@@ -1458,6 +1465,14 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
 <section class="page" data-id="config-general" data-group="Konfiguration" data-title="general.yml (Proxy)">
   <h1>general.yml (Proxy)</h1>
   <p class="lead">Die Hauptdatei. Jeder Abschnitt ist hier mit seinen Schlüsseln erklärt. Alle Dauern ohne Einheit sind Minuten, sofern nicht anders angegeben.</p>
+
+  <details>
+    <summary>config-version</summary>
+    <div>
+      <pre data-lang="yaml">config-version: "EA26"</pre>
+      <p>Schema-Version der Konfiguration. Ist sie neuer als die laufende Jar, schreibt das Plugin beim Start eine Downgrade-Warnung ins Log, bricht aber nicht ab. Nach einem Update empfiehlt sich <code>/punish-reload</code>.</p>
+    </div>
+  </details>
 
   <details open>
     <summary>prefix und anzeige-zone</summary>
@@ -1617,6 +1632,26 @@ history:
   </details>
 
   <details>
+    <summary>alt-wache</summary>
+    <div>
+      <pre data-lang="yaml">alt-wache:
+  aktiv: true
+  cooldown-minuten: 30</pre>
+      <p>Meldet dem Team beim Login, wenn ein anderer Account mit derselben IP aktuell gebannt ist. Reine Information, keine automatische Strafe. Grundlage ist die IP-Historie in MySQL (Fallback: Spieler-Cache); geschützte Alts werden übersprungen. <code>cooldown-minuten</code> legt fest, wie lange pro Spieler zwischen zwei Meldungen gewartet wird (1 bis 1440). Die Meldung ist <code>broadcasts.alt-wache</code>.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>bann-unban-antrag</summary>
+    <div>
+      <pre data-lang="yaml">bann-unban-antrag:
+  link: ""
+  text: "&lt;green&gt;Unban beantragen"</pre>
+      <p>Optionaler Link im Bann- und IP-Bann-Screen sowie in <a href="#/befehle-einsicht/pscheck"><code>/pscheck</code></a>. <code>link</code> muss mit <code>http://</code> oder <code>https://</code> beginnen; leer bedeutet kein Link. <code>text</code> ist der klickbare MiniMessage-Text.</p>
+    </div>
+  </details>
+
+  <details>
     <summary>update</summary>
     <div>
       <pre data-lang="yaml">update:
@@ -1635,7 +1670,7 @@ history:
     <div>
       <pre data-lang="yaml">datenschutz:
   ip-aufbewahrung-tage: 90</pre>
-      <p>Aufbewahrungsfrist für IP-Adressen in Tagen (Standard 90, gültig 1 bis 3650; andere Werte werden auf 90 zurückgesetzt). Abgelaufene IPs werden beim Laden bzw. beim nächsten Durchlauf im Spieler-Cache auf „unbekannt“ gesetzt. <code>/punish-delete-ip</code> löscht zusätzlich sofort die aktiven IP-Sperren und den Cache-Eintrag. Siehe <a href="#/datenschutz">Datenschutz</a>.</p>
+      <p>Aufbewahrungsfrist für IP-Adressen in Tagen (Standard 90, gültig 1 bis 3650; andere Werte werden auf 90 zurückgesetzt). Abgelaufene IPs werden beim Laden bzw. beim nächsten Durchlauf im Spieler-Cache auf „unbekannt“ gesetzt. <code>/punish-delete-ip</code> löscht zusätzlich sofort die aktiven IP-Banns, IP-Mutes und IP-Timeouts, anonymisiert die Cache-Einträge, entfernt die IP-Historie und die IP-bezogenen History-Einträge. Siehe <a href="#/datenschutz">Datenschutz</a>.</p>
     </div>
   </details>
 
@@ -1643,6 +1678,32 @@ history:
     <summary>rang-buendel</summary>
     <div>
       <p>Siehe <a href="#/rang-buendel">Rang-Bündel und LuckPerms</a>. Der Abschnitt wird nur auf dem Proxy gepflegt und per Text-Sync automatisch an die Bridges verteilt.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>rang-gewicht</summary>
+    <div>
+      <pre data-lang="yaml">rang-gewicht:
+  default: 0
+  iron: 0
+  gold: 0
+  diamond: 0
+  builder: 0
+  builderplus: 0
+  creator: 0
+  developer: 0
+  test-sup: 10
+  supporter: 20
+  community: 20
+  moderator: 50
+  manager: 50
+  richter: 60
+  admin: 80
+  p-admin: 80
+  vize: 90
+  präsident: 100</pre>
+      <p>Legt fest, wie hoch eine Gruppe in der Hierarchie steht. Ist LuckPerms aktiv, gilt zuerst das dortige Gruppengewicht; diese Liste ist der Fallback. Höhere Gewichte dürfen niedrigere bestrafen, nie umgekehrt. Fehlende Gruppen zählen als 0.</p>
     </div>
   </details>
 
@@ -1658,14 +1719,17 @@ history:
   <details>
     <summary>tab und vorschlaege</summary>
     <div>
-      <pre data-lang="yaml">vorschlaege:
+      <pre data-lang="yaml">tab:
+  dauer-liste: ["10m", "1h", "6h", "1d", "7d", "30d", "perm"]
+  grund-liste: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
+vorschlaege:
   ban:
     gruende: ["Cheating", "Hacking", "Bugusing"]
     dauern: ["1d", "7d", "14d", "30d"]
   vorlagen:
     - { befehl: ban, grund: Cheating, dauer: 30d }
     - { befehl: mute, grund: Spamming, dauer: 1h }</pre>
-      <p>Das sind <strong>nur Vorschläge</strong>, keine Regeln. Sie erscheinen bei TAB und in der GUI. Jeder Befehl hat eigene Listen für Gründe und Dauern. Fehlt ein Befehl, gelten die allgemeinen Listen unter <code>tab</code>. <code>vorlagen</code> verknüpft einen Grund mit einer empfohlenen Dauer, die die GUI als „Empf. Dauer“ anzeigt.</p>
+      <p><code>tab</code> enthält die allgemeinen Listen: <code>dauer-liste</code> und <code>grund-liste</code> gelten, wenn ein Befehl unter <code>vorschlaege</code> keine eigene Liste hat; <code>ban-ip</code>, <code>mute-ip</code> und <code>timeout-ip</code> fallen ohne eigene Sektion auf <code>ban</code>, <code>mute</code> und <code>timeout</code> zurück. Die Einträge unter <code>vorschlaege</code> sind <strong>nur Vorschläge</strong>, keine Regeln. Sie erscheinen bei TAB und in der GUI. Jeder Befehl hat eigene Listen für Gründe und Dauern. <code>vorlagen</code> verknüpft einen Grund mit einer empfohlenen Dauer, die die GUI als „Empf. Dauer“ anzeigt.</p>
     </div>
   </details>
 
@@ -1711,7 +1775,7 @@ history:
   kein-recht: "&lt;red&gt;Dazu hast du keine Berechtigung."
   bereits-gebannt: "&lt;red&gt;Der Spieler &lt;white&gt;%spieler% &lt;red&gt;ist bereits gebannt."
   ziel-warn: "&lt;yellow&gt;Du wurdest von &lt;white&gt;%ausfuehrer% &lt;yellow&gt;verwarnt. Grund: &lt;white&gt;%grund%"</pre>
-  <p>Verfügbare Platzhalter: <code>%spieler%</code>, <code>%dauer%</code>, <code>%grund%</code>, <code>%anzahl%</code>, <code>%max%</code>, <code>%min%</code>, <code>%ip%</code>, <code>%id%</code>, <code>%text%</code>, <code>%ziel%</code>, <code>%filter%</code>, <code>%seite%</code>, <code>%seiten%</code>, <code>%typ%</code>, <code>%datum%</code>, <code>%ablauf%</code>, <code>%ausfuehrer%</code>, <code>%bearbeiter%</code>, <code>%reporter%</code>, <code>%server%</code>, <code>%status%</code>, <code>%level%</code>, <code>%punkte%</code>, <code>%stufe%</code>, <code>%wort%</code>, <code>%version%</code>, <code>%aktuell%</code>, <code>%channel%</code>, <code>%detail%</code>, <code>%scope%</code>, <code>%bekannt%</code>, <code>%zuletzt%</code>, <code>%banstatus%</code>, <code>%rest%</code>, <code>%ipstatus%</code>, <code>%banns%</code>, <code>%mutes%</code>, <code>%timeouts%</code>, <code>%plattform%</code>, <code>%warnungen%</code>, <code>%verbleibend%</code>, <code>%nummer%</code>, <code>%befehl%</code>, <code>%nutzung%</code>, <code>%kandidaten%</code>, <code>%quelle%</code>, <code>%name%</code>. Welche in einer Meldung funktionieren, zeigen die vorhandenen Beispiele.</p>
+  <p>Verfügbare Platzhalter: <code>%spieler%</code>, <code>%dauer%</code>, <code>%grund%</code>, <code>%anzahl%</code>, <code>%max%</code>, <code>%min%</code>, <code>%ip%</code>, <code>%id%</code>, <code>%text%</code>, <code>%ziel%</code>, <code>%filter%</code>, <code>%seite%</code>, <code>%seiten%</code>, <code>%typ%</code>, <code>%datum%</code>, <code>%ablauf%</code>, <code>%ausfuehrer%</code>, <code>%bearbeiter%</code>, <code>%reporter%</code>, <code>%server%</code>, <code>%status%</code>, <code>%level%</code>, <code>%punkte%</code>, <code>%stufe%</code>, <code>%wort%</code>, <code>%version%</code>, <code>%aktuell%</code>, <code>%channel%</code>, <code>%detail%</code>, <code>%scope%</code>, <code>%bekannt%</code>, <code>%zuletzt%</code>, <code>%banstatus%</code>, <code>%rest%</code>, <code>%ipstatus%</code>, <code>%banns%</code>, <code>%mutes%</code>, <code>%timeouts%</code>, <code>%plattform%</code>, <code>%warnungen%</code>, <code>%verbleibend%</code>, <code>%nummer%</code>, <code>%befehl%</code>, <code>%nutzung%</code>, <code>%kandidaten%</code>, <code>%quelle%</code>, <code>%name%</code>, <code>%ausstehend%</code>, <code>%verstoesse%</code>, <code>%warns%</code>, <code>%alts%</code>, <code>%label%</code>, <code>%kanal%</code>. Welche in einer Meldung funktionieren, zeigen die vorhandenen Beispiele.</p>
 
   <h2>screens.yml</h2>
   <p>Der Text, den ein Spieler auf dem Disconnect-Screen sieht.</p>
@@ -1735,7 +1799,7 @@ history:
   <pre data-lang="yaml">broadcasts:
   ban: { aktiv: true, nachricht: "&lt;gray&gt;[&lt;red&gt;Bann&lt;gray&gt;] &lt;white&gt;%spieler% &lt;gray&gt;wurde von &lt;white&gt;%ausfuehrer% &lt;gray&gt;gebannt (&lt;white&gt;%dauer%&lt;gray&gt;). Grund: &lt;white&gt;%grund%" }
   kick: { aktiv: false, nachricht: "..." }</pre>
-  <p>Mit <code>aktiv: false</code> wird eine einzelne Meldung abgeschaltet. Zusätzliche Platzhalter gibt es etwa für <code>%stufe%</code>, <code>%punkte%</code>, <code>%warn-grund%</code>, <code>%reporter%</code>, <code>%server%</code>, <code>%quelle%</code>, <code>%kanal%</code>, <code>%score%</code> und <code>%status%</code>.</p>
+  <p>Mit <code>aktiv: false</code> wird eine einzelne Meldung abgeschaltet. Zusätzliche Platzhalter gibt es etwa für <code>%stufe%</code>, <code>%punkte%</code>, <code>%warn-grund%</code>, <code>%reporter%</code>, <code>%server%</code>, <code>%quelle%</code>, <code>%kanal%</code>, <code>%alt%</code>, <code>%score%</code> und <code>%status%</code>.</p>
 
   <h3>Alle Meldungsarten</h3>
   <div class="tbl"><table>
@@ -1748,6 +1812,7 @@ history:
       <tr><td>IP-Strafen</td><td><code>ban-ip</code>, <code>unban-ip</code>, <code>ip-mute</code>, <code>ip-unmute</code>, <code>ip-mute-edit</code>, <code>ip-timeout</code>, <code>ip-untimeout</code>, <code>ip-timeout-edit</code>, <code>ip-kick</code></td></tr>
       <tr><td>Verstöße</td><td><code>verstoss-add</code>, <code>verstoss-remove</code>, <code>verstoss-edit</code>, <code>verstoss-clear</code>, <code>auto-bann</code>, <code>auto-pardon</code>, <code>auto-bann-abgelaufen</code></td></tr>
       <tr><td>Warns und Notizen</td><td><code>warn-add</code>, <code>warn-edit</code>, <code>warn-delete</code>, <code>warn-eskalation</code>, <code>note-add</code>, <code>note-edit</code>, <code>note-delete</code></td></tr>
+      <tr><td>Alt-Wache</td><td><code>alt-wache</code></td></tr>
       <tr><td>Reports, Chatfilter, Versionen</td><td><code>report-neu</code>, <code>report-close</code>, <code>chatfilter-treffer</code>, <code>version-mismatch</code></td></tr>
     </tbody>
   </table></div>
@@ -1771,11 +1836,12 @@ history:
     <li><code>server-name</code> ist der Eigenname dieses Servers, zum Beispiel <code>lobby</code>. Er sollte gesetzt sein, denn danach richtet sich der Scope aller Strafen auf diesem Server. Leer lassen geht auch: Dann startet die Bridge im Lern-Modus und übernimmt den Namen automatisch vom Proxy (bis dahin fail-closed, mit Warnung im Log).</li>
     <li><code>server-liste</code> ist veraltet und wird nur noch als Zusatz gelesen; TAB-Vorschläge für Scopes kommen live vom Proxy.</li>
     <li><code>tunnel-secret</code> ist das <strong>eigene</strong> Secret dieser Bridge und muss dem Eintrag <code>netzwerk.bridge-secrets.&lt;servername&gt;</code> auf dem Proxy entsprechen. Jede Bridge hat ein eigenes Secret; identische Secrets für mehrere Bridges werden beim Start als Warnung gemeldet und bleiben unsicher. Leer bedeutet Fail-Closed: Die Bridge bleibt stumm, bis ein Secret gesetzt ist.</li>
-    <li><code>rang-gewicht</code> enthält nur eine Teilmenge (u. a. <code>supporter</code>, <code>moderator</code>, <code>admin</code>). Fehlende Gruppen fallen auf 0 zurück.</li>
+    <li><code>rang-gewicht</code> enthält die Standard-Gewichte (u. a. <code>supporter</code>, <code>community</code>, <code>moderator</code>, <code>richter</code>, <code>admin</code>, <code>vize</code>, <code>präsident</code>). Fehlende Gruppen fallen auf 0 zurück; höhere Gewichte dürfen niedrigere bestrafen, nie umgekehrt.</li>
   </ul>
   <p>Alle übrigen Abschnitte (Limits, Verstoß-System, <code>rang-buendel</code>, <code>mute.blockierte-befehle</code>, Vorschläge, Standardgründe, Chatfilter-Staffel) existieren nur auf dem Proxy und werden per Text-Sync automatisch an die Bridges verteilt. Auf der Bridge werden sie nicht gepflegt.</p>
 
-  <h2>gui.yml</h2>
+  <h2>gui.yml (Proxy-Master)</h2>
+  <p>Die Datei wird auf dem Proxy gepflegt und per Text-Sync an alle Bridges verteilt; die lokale Kopie der Bridge dient nur als Fallback vor dem Sync. <code>/punish-reload</code> wendet Änderungen netzwerkweit an.</p>
   <pre data-lang="yaml">gui:
   titel: "Punish"
   fallback-gruende: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
@@ -1911,7 +1977,7 @@ gratis vip rank</pre>
     </tbody>
   </table></div>
   <p>Jede Stufe löst pro Zeitfenster nur einmal aus. Dauerfeuer erzeugt also keinen Spam.</p>
-  <div class="callout warn"><div><span class="ttl">team-info zeigt auch Schimpfwörter</span><p>Mit <code>team-info: true</code> sieht das Team den Wortlaut jeder blockierten Nachricht, gekürzt auf 400 Zeichen. Die Option sollte nur für die Moderation eingeschaltet werden.</p></div></div>
+  <div class="callout warn"><div><span class="ttl">team-info zeigt auch Schimpfwörter</span><p>Mit <code>team-info: true</code> sieht das Team den Wortlaut jeder blockierten Nachricht, gekürzt auf 200 Zeichen. Die Option sollte nur für die Moderation eingeschaltet werden.</p></div></div>
 
   <h2>Der Befehl /chatfilter</h2>
   <article class="cmd-card" data-cmd="/chatfilter" data-perm="punish.chatfilter" data-scope="nein">
@@ -2080,10 +2146,10 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <pre data-lang="cmd">/punish-delete-ip Notch
 /punish-delete-ip 203.0.113.7</pre>
   <ul>
-    <li>Aktive IP-Sperren aller Scopes werden aufgehoben.</li>
+    <li>Aktive IP-Banns, IP-Mutes und IP-Timeouts aller Scopes werden aufgehoben.</li>
     <li>Die gespeicherte IP wird im Cache auf „unbekannt" gesetzt.</li>
-    <li>Der Verlauf bleibt als Nachweis bestehen.</li>
-    <li>Restspuren beachten: Die IP bleibt lesbar in <code>punish_log.txt</code> (+ Rotationen, kein Zeitlimit), in History-Einträgen (BAN_IP/IP_MUTE/…) und in verpassten Broadcasts (Retention 90 Tage). Für vollständige Löschung Log-Rotation anstoßen bzw. diese Bestände prüfen.</li>
+    <li>Der spielerbezogene Verlauf bleibt als Nachweis bestehen; die IP-Historie im Spieler-Cache und History-Einträge mit IP-Ziel (<code>BAN_IP</code>, <code>IP_MUTE</code>, <code>IP_TIMEOUT</code>) werden gelöscht.</li>
+    <li>Restspuren beachten: Die IP kann noch in <code>punish_log.txt</code> (+ Rotationen, kein Zeitlimit) und in verpassten Broadcasts (Retention 90 Tage) stehen. Für vollständige Löschung Log-Rotation anstoßen bzw. diese Bestände prüfen.</li>
   </ul>
   <p>Der Befehl braucht die Permission <code>punish.deleteip</code>. Sie steckt im Admin-Bündel und muss sonst direkt vergeben werden; die Konsole hat sie immer.</p>
 
@@ -2091,7 +2157,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <p>Die History dient als Nachweis und wird nicht zeitgesteuert gelöscht. Pro Spieler führt das System höchstens 1000 Einträge; ältere wandern ins Archiv (bei YAML nach <code>data/history/archive/</code>, bei MySQL in die Tabelle <code>punish_history_archiv</code>). Die 90 Tage aus <code>datenschutz.ip-aufbewahrung-tage</code> betreffen nur IP-Adressen, nicht die History. Wie lange Einträge tatsächlich vorgehalten werden, legt der Betreiber fest.</p>
 
   <h2>Chatfilter</h2>
-  <p>Das KI-Modell läuft lokal auf den eigenen Servern. Es werden keine Chatnachrichten an Dritte gesendet. Zum Zählen der Treffer genügt dem Proxy ein Hash. Den Text sendet die Bridge nur mit, damit die optionale Team-Info ihn anzeigen kann, gekürzt auf 400 Zeichen.</p>
+  <p>Das KI-Modell läuft lokal auf den eigenen Servern. Es werden keine Chatnachrichten an Dritte gesendet. Zum Zählen der Treffer genügt dem Proxy ein Hash. Den Text sendet die Bridge nur mit, damit die optionale Team-Info ihn anzeigen kann, gekürzt auf 200 Zeichen.</p>
 
   <h2>Empfehlung für die Absicherung der Server</h2>
   <p>Die Ports der Backend-Server werden per Firewall nur für den Proxy geöffnet. Das gilt für Strafdaten genauso wie für alles andere.</p>

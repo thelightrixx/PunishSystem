@@ -113,14 +113,15 @@ datenschutz:
   # Strafen+Cache+History-Einträge der IP sofort.
   ip-aufbewahrung-tage: 90
 # Löschen via /punish-delete-ip <Spieler|IP> (Recht: punish.deleteip, Default: op):
-# hebt aktive IP-Sperren aller Scopes auf und anonymisiert den Cache auf "unbekannt".
-# History bleibt als Audit-Trail bestehen (berechtigtes Interesse, Empfohlen: 90 Tage),
-# punish_log.txt rotiert selbst (10MB x 5). Backend-Ports per Firewall nur für Proxy öffnen.
-# HINWEIS Restspuren: /punish-delete-ip entfernt IP-Sperren und Cache-Einträge.
-# Die IP bleibt lesbar in: punish_log.txt (+ Rotationen, kein Zeitlimit),
-# History-Einträgen (BAN_IP/IP_MUTE/..., Audit-Trail) und verpassten Broadcasts
-# (missed_broadcasts, Retention 90 Tage). Für vollständige Löschung zusätzlich
-# Log-Rotation anstoßen bzw. History-/Broadcast-Bestände prüfen.
+# hebt aktive IP-Banns/-Mutes/-Timeouts aller Scopes auf, anonymisiert den Cache
+# auf "unbekannt" und löscht die IP-Historie sowie History-Einträge mit IP-Ziel.
+# Spielerbezogene History bleibt als Audit-Trail bestehen (berechtigtes Interesse,
+# Empfohlen: 90 Tage), punish_log.txt rotiert selbst (10MB x 5). Backend-Ports per
+# Firewall nur für Proxy öffnen.
+# HINWEIS Restspuren: Die IP kann weiterhin in punish_log.txt (+ Rotationen,
+# kein Zeitlimit) und in verpassten Broadcasts (missed_broadcasts, Retention
+# 90 Tage) stehen. Für vollständige Löschung zusätzlich Log-Rotation anstoßen
+# bzw. Broadcast-Bestände prüfen.
 
 # --- Verstoß-System ---
 # Verstöße haben eine Stufe (low/medium/high, Aliase: leicht/mittel/schwer).
