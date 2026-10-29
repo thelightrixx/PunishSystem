@@ -26,6 +26,7 @@ import java.util.UUID;
 
 public final class BrueckenKanal {
 
+    private final PunishVelocity plugin;
     private final ProxyServer proxy;
     private final Logger logger;
     private final MuteRepository muteRepository;
@@ -76,6 +77,7 @@ public final class BrueckenKanal {
     public BrueckenKanal(PunishVelocity plugin, ProxyServer proxy, Logger logger,
                          MuteRepository muteRepository, IpMuteRepository ipMuteRepository) {
         Objects.requireNonNull(plugin, "Das Plugin darf nicht null sein.");
+        this.plugin = plugin;
         this.proxy = Objects.requireNonNull(proxy, "Der Proxy darf nicht null sein.");
         this.logger = Objects.requireNonNull(logger, "Der Logger darf nicht null sein.");
         this.muteRepository = Objects.requireNonNull(muteRepository, "Das MuteRepository darf nicht null sein.");
@@ -595,13 +597,13 @@ public final class BrueckenKanal {
                     logger.debug("Mute-Sync an {} fehlgeschlagen.", server.getServerInfo().getName(), e);
                     return false;
                 }
-                return sendeBanTimeoutFreezeSync(server);
+                return sendeBanTimeoutFreezeSync(server, true);
             } catch (Exception e) {
                 logger.warn("Mute-Sync konnte nicht kodiert werden, weiche auf Einzel-Sync aus.", e);
                 sendeEinzelMutes(server, eintraege, ipEintraege);
             }
         }
-        return sendeBanTimeoutFreezeSync(server);
+        return sendeBanTimeoutFreezeSync(server, false);
     }
 
     private void sendeEinzelMutes(RegisteredServer server, List<Protokoll.MuteEintrag> mutes,
@@ -636,26 +638,31 @@ public final class BrueckenKanal {
         }
     }
 
-    private boolean sendeBanTimeoutFreezeSync(RegisteredServer server) {
+    private boolean sendeBanTimeoutFreezeSync(RegisteredServer server, boolean mutesEingeschlossen) {
+        // Mutes/IP-Mutes wurden von mutePushAn bereits gesendet (Bulk- oder Einzel-Sync);
+        // sie nur dann erneut mitsenden, wenn sie oben wegen der Chunk-Grenze ausgelassen wurden.
         List<Protokoll.BanEintrag> banns;
         List<Protokoll.TimeoutEintrag> timeouts;
         List<Protokoll.FreezeEintrag> freezes;
-        List<Protokoll.MuteEintrag> mutes;
-        List<Protokoll.IpMuteEintrag> ipMutes;
+        List<Protokoll.MuteEintrag> mutes = List.of();
+        List<Protokoll.IpMuteEintrag> ipMutes = List.of();
         try {
             banns = aktiveBanns();
             timeouts = aktiveTimeouts();
             freezes = aktiveFreezes();
-            mutes = aktiveMutes();
-            ipMutes = aktiveIpMutes();
+            if (!mutesEingeschlossen) {
+                mutes = aktiveMutes();
+                ipMutes = aktiveIpMutes();
+            }
         } catch (RuntimeException e) {
             logger.warn("Ban/Timeout/Freeze-Sync abgebrochen (Repository nicht lesbar), "
                     + "Bridge-Caches bleiben unverändert.", e);
             return false;
         }
+        boolean mutesImBulk = mutesEingeschlossen
+                || (mutes.size() <= SYNC_CHUNK_GROESSE && ipMutes.size() <= SYNC_CHUNK_GROESSE);
         if (banns.size() <= SYNC_CHUNK_GROESSE && timeouts.size() <= SYNC_CHUNK_GROESSE
-                && freezes.size() <= SYNC_CHUNK_GROESSE
-                && mutes.size() <= SYNC_CHUNK_GROESSE && ipMutes.size() <= SYNC_CHUNK_GROESSE) {
+                && freezes.size() <= SYNC_CHUNK_GROESSE && mutesImBulk) {
             try {
                 byte[] banPaket = Protokoll.banSync(banns);
                 byte[] timeoutPaket = Protokoll.timeoutSync(timeouts);
@@ -1006,7 +1013,7 @@ public final class BrueckenKanal {
         UpdateVerteilung updates = updateVerteilung;
         if (updates != null) {
             try {
-                updates.standEmpfangen(server, kanonisch);
+                updates.standEmpfangen(server, kanonisch, variante);
             } catch (Exception e) {
                 logger.debug("Update-Stand nach HELLO fehlgeschlagen.", e);
             }
@@ -1020,13 +1027,36 @@ public final class BrueckenKanal {
         }
         if (vollSyncFaellig(kanonisch, System.currentTimeMillis())) {
             logger.info("Bridge-HELLO von '{}' (kanonisch '{}', Protokoll v{}).", sauber, kanonisch, version);
-            if (mutePushAn(server)) {
-                merkeVollSync(kanonisch, System.currentTimeMillis());
-            } else {
+            // Voll-Sync vom Netty-Thread verlagern: Bei großen Straflisten kostet der
+            // Versand Serialisierung + HMAC je Paket. Das sofortige Reservieren verhindert
+            // Doppel-Tasks bei parallelen HELLOs; bei Fehlschlag wird die Reservierung
+            // gelöst, damit der nächste HELLO es erneut versucht.
+            merkeVollSync(kanonisch, System.currentTimeMillis());
+            if (!planeVollSync(server, kanonisch) && !mutePushAn(server)) {
+                letzterVollSync.remove(syncSchluessel(kanonisch));
                 logger.warn("Voll-Sync für '{}' unvollständig – nächster HELLO versucht es erneut.", kanonisch);
             }
         } else {
             logger.debug("Bridge-HELLO-Refresh von '{}' (Voll-Sync aktuell).", kanonisch);
+        }
+    }
+
+    private boolean planeVollSync(RegisteredServer server, String kanonisch) {
+        try {
+            proxy.getScheduler().buildTask(plugin, () -> {
+                try {
+                    if (!mutePushAn(server)) {
+                        letzterVollSync.remove(syncSchluessel(kanonisch));
+                        logger.warn("Voll-Sync für '{}' unvollständig – nächster HELLO versucht es erneut.", kanonisch);
+                    }
+                } catch (Exception e) {
+                    logger.debug("Voll-Sync nach HELLO fehlgeschlagen.", e);
+                }
+            }).schedule();
+            return true;
+        } catch (Exception e) {
+            logger.debug("Voll-Sync konnte nicht geplant werden, läuft synchron.", e);
+            return false;
         }
     }
 

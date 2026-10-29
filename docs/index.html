@@ -209,6 +209,49 @@ details>div{padding:12px 16px 4px}
 .hint{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-3)}
 
 .scrim{display:none}
+[hidden]{display:none!important}
+
+/* Interaktive Werkzeuge */
+.wk{border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);padding:16px;margin:18px 0 22px}
+.wk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.wk-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.wk-field label,.wk-label{font-size:13px;font-weight:600;color:var(--text-2)}
+.wk-field input[type=text],.wk-field select,.wk-field textarea{width:100%;border:1px solid var(--line-2);border-radius:8px;background:var(--bg-soft);color:var(--text);font:500 13.5px/1.5 var(--mono);padding:8px 10px}
+.wk-field textarea{resize:vertical;min-height:76px}
+.wk-field input[type=text]:focus,.wk-field select:focus,.wk-field textarea:focus{outline:2px solid var(--accent);outline-offset:0}
+.wk-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:12px}
+.wk-check{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--text-2);cursor:pointer}
+.wk-check input{accent-color:var(--accent);width:15px;height:15px}
+.wk-chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip-btn{border:1px solid var(--line-2);border-radius:999px;background:var(--bg-soft);color:var(--text-2);font-size:12.5px;padding:3px 10px}
+.chip-btn:hover{border-color:var(--text-3);color:var(--text)}
+.chip-btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-2)}
+:root[data-theme="dark"] .chip-btn.on{color:var(--accent)}
+.wk-seg{display:flex;flex-wrap:wrap;gap:6px}
+.wk-btn{border:1px solid var(--line-2);border-radius:8px;background:var(--bg-soft);color:var(--text);font-size:13.5px;font-weight:500;padding:7px 12px}
+.wk-btn:hover{border-color:var(--text-3)}
+.wk-hint{margin-top:10px;font-size:14px;line-height:1.55;color:var(--ok)}
+.wk-hint:empty{display:none}
+.wk-hint.warn{color:var(--warn)}
+.wk-hint.err{color:var(--danger)}
+.wk-note{font-size:13px;color:var(--text-3);margin:10px 0 0}
+.wk-result{margin:12px 0 0;font-size:14.5px;color:var(--text-2)}
+.wk-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:14px}
+.wk-node{border:1px solid var(--line-2);border-radius:10px;padding:12px 10px;text-align:center;background:var(--bg-soft);color:var(--text-3);font-size:13px;font-weight:500}
+.wk-node b{display:block;font-size:15px;font-family:var(--mono)}
+.wk-node.lit{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2)}
+:root[data-theme="dark"] .wk-node.lit{color:var(--accent)}
+.wk-status{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0 0;font-size:14px;font-weight:500;color:var(--text-2)}
+.wk-badge{display:inline-flex;align-items:center;border:1px solid var(--danger);background:var(--danger-bg);color:var(--danger);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600}
+.wk-bar{height:8px;border-radius:999px;background:var(--bg-hover);overflow:hidden;margin:10px 0 4px}
+.wk-bar>span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .35s cubic-bezier(.16,1,.3,1)}
+.wk-log{list-style:none;margin:12px 0 0;padding:0;font-size:13.5px;color:var(--text-2);display:flex;flex-direction:column;gap:4px}
+.wk-log li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:4px 2px}
+.wk-log li:last-child{border-bottom:0}
+.wk-log .pts{font-family:var(--mono);color:var(--text-3);white-space:nowrap}
+.mm-var{color:#55ffff;border-bottom:1px dashed rgba(255,255,255,.45)}
+.mm-o{filter:blur(1.6px)}
+.mm-lit{color:#7a7a7a;font-style:italic}
 
 @media (max-width:1180px){
   .shell{grid-template-columns:var(--sidebar-w) minmax(0,1fr)}
@@ -231,7 +274,7 @@ details>div{padding:12px 16px 4px}
   .brand small{display:none}
 }
 @media print{
-  .header,.sidebar,.toc,.pager,.copy{display:none!important}
+  .header,.sidebar,.toc,.pager,.copy,.wk{display:none!important}
   .shell{display:block;padding:0}
   .page{display:block!important;max-width:none;page-break-after:always}
 }
@@ -350,6 +393,11 @@ details>div{padding:12px 16px 4px}
     <a class="card" href="#/schnellstart"><b>Schnellstart</b><span>Die ersten Strafen in fünf Minuten.</span></a>
     <a class="card" href="#/befehle"><b>Befehle</b><span>Alle Befehle mit Syntax, Aliasen und Rechten.</span></a>
     <a class="card" href="#/rang-buendel"><b>Rechte und Rang-Bündel</b><span>Eine Permission pro Gruppe statt vieler einzelner.</span></a>
+  </div>
+
+  <div class="callout">
+    <div><span class="ttl">So navigierst du am schnellsten</span>
+    <p>Mit <code>Strg</code>+<code>K</code> (oder der <code>/</code>-Taste) durchsuchst du die komplette Dokumentation — von Befehlen bis zu den Einträgen der <code>general.yml</code>. Auf mehreren Seiten gibt es außerdem Werkzeuge zum Ausprobieren: einen Befehls-Baukasten, eine Scope-Vorschau und eine MiniMessage-Vorschau.</p></div>
   </div>
 
   <h2>Was PunishSystem kann</h2>
@@ -473,6 +521,40 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
     </tbody>
   </table></div>
 
+  <h2>Befehl zusammenbauen</h2>
+  <p>Ausfüllen, Ergebnis kopieren. Der Baukasten prüft Dauer und Scope nach denselben Regeln wie das System.</p>
+  <div class="wk" id="bk" role="group" aria-label="Befehl zusammenbauen">
+    <div class="wk-grid">
+      <div class="wk-field"><label for="bkTyp">Strafart</label>
+        <select id="bkTyp">
+          <option value="ban">/ban</option>
+          <option value="permabann">/permabann</option>
+          <option value="timeout">/timeout</option>
+          <option value="mute">/mute</option>
+          <option value="freeze">/freeze</option>
+          <option value="warn">/warn</option>
+          <option value="kick">/kick</option>
+        </select></div>
+      <div class="wk-field"><label for="bkSpieler">Spieler</label><input type="text" id="bkSpieler" placeholder="Notch" autocomplete="off" spellcheck="false"></div>
+      <div class="wk-field" id="bkDauerFeld"><label for="bkDauer">Dauer</label><input type="text" id="bkDauer" placeholder="7d" autocomplete="off" spellcheck="false"></div>
+      <div class="wk-field"><label for="bkGrund">Grund</label><input type="text" id="bkGrund" placeholder="Regelverstoß" autocomplete="off" spellcheck="false"></div>
+      <div class="wk-field" id="bkScopeFeld"><label for="bkScope">Scope</label>
+        <select id="bkScope">
+          <option value="">ohne Flag (aktueller Server)</option>
+          <option value="global">--global (ganzes Netzwerk)</option>
+          <option value="server">--&lt;Servername&gt;</option>
+        </select></div>
+      <div class="wk-field" id="bkServerFeld" hidden><label for="bkServer">Servername</label><input type="text" id="bkServer" placeholder="survival" autocomplete="off" spellcheck="false"></div>
+    </div>
+    <div class="wk-row">
+      <label class="wk-check"><input type="checkbox" id="bkSilent"> stille Strafe <code>-s</code></label>
+      <div class="wk-chips" id="bkPresets"></div>
+    </div>
+    <div class="wk-out" id="bkOut" aria-live="polite"></div>
+    <div class="wk-hint" id="bkHint" aria-live="polite"></div>
+    <p class="wk-note">Die Grenzen (Timeout bis 24 Stunden, Bann ab 24 Stunden, Mute bis 30 Tage) sind Standardwerte und lassen sich in der <a href="#/dauer">general.yml ändern</a>. Wer lieber klickt statt tippt, nimmt die <a href="#/gui">PunishGUI</a>.</p>
+  </div>
+
   <h2>Nachsehen, was gegen einen Spieler vorliegt</h2>
   <pre data-lang="cmd">/punish-status Notch
 /punish-history Notch</pre>
@@ -575,6 +657,32 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
   </div>
   <div class="callout">
     <div><span class="ttl">Flag und stille Strafe</span><p>Scope-Flag und <code>-s</code> stehen beide am Ende. Die Reihenfolge ist egal: <code>… Cheating --global -s</code> und <code>… Cheating -s --global</code> sind gleichwertig.</p></div>
+  </div>
+
+  <h2>Ausprobieren: Wo gilt die Strafe?</h2>
+  <p>Zwei Dinge entscheiden zusammen, wo eine Strafe wirkt: wer den Befehl ausführt und welches Flag angehängt wird. Hier lässt sich beides durchspielen (Beispielserver: <code>lobby</code>, <code>survival</code>, <code>kreativ</code>):</p>
+  <div class="wk" id="sc" role="group" aria-label="Scope-Vorschau">
+    <div class="wk-grid">
+      <div class="wk-field"><span class="wk-label" id="scExecLabel">Ausgeführt als</span>
+        <div class="wk-seg" role="radiogroup" aria-labelledby="scExecLabel">
+          <button type="button" class="chip-btn on" data-k="exec" data-v="lobby">Spieler auf lobby</button>
+          <button type="button" class="chip-btn" data-k="exec" data-v="survival">Spieler auf survival</button>
+          <button type="button" class="chip-btn" data-k="exec" data-v="konsole">Konsole</button>
+        </div></div>
+      <div class="wk-field"><span class="wk-label" id="scFlagLabel">Scope-Flag</span>
+        <div class="wk-seg" role="radiogroup" aria-labelledby="scFlagLabel">
+          <button type="button" class="chip-btn on" data-k="flag" data-v="">keines</button>
+          <button type="button" class="chip-btn" data-k="flag" data-v="global">--global</button>
+          <button type="button" class="chip-btn" data-k="flag" data-v="survival">--survival</button>
+        </div></div>
+    </div>
+    <div class="code"><div class="code-head"><span>Befehl</span></div><pre><code id="scCmd">/ban Notch 7d Cheating</code></pre></div>
+    <div class="wk-map" id="scMap">
+      <div class="wk-node" data-s="lobby"><b>lobby</b></div>
+      <div class="wk-node" data-s="survival"><b>survival</b></div>
+      <div class="wk-node" data-s="kreativ"><b>kreativ</b></div>
+    </div>
+    <p class="wk-result" id="scText" aria-live="polite"></p>
   </div>
 </section>
 
@@ -733,6 +841,22 @@ build_all_jars.bat nobump skiptests nur bauen ohne Tests</pre>
     <li>Im Team-Chat erscheint eine Eskalations-Meldung statt der normalen Verstoß-Meldung.</li>
   </ul>
   <p>Schwellen und Stufen werden unter <code>warns.eskalation</code> in der <a href="#/config-general">general.yml</a> geändert. Mit <code>aktiv: false</code> wird die Eskalation abgeschaltet.</p>
+
+  <h2>Ausprobieren: Punkte bis zum Auto-Bann</h2>
+  <p>Ein Klick pro Eintrag. Bei genau 3, 5 und 10 Verwarnungen greift die Eskalation von allein, ab 6 Punkten greift der Auto-Bann:</p>
+  <div class="wk" id="pk" role="group" aria-label="Verstoß-Punkte-Demo">
+    <div class="wk-seg" id="pkAktionen">
+      <button type="button" class="wk-btn" data-akt="warn">Verwarnung aussprechen</button>
+      <button type="button" class="wk-btn" data-akt="low">Verstoß low (+1)</button>
+      <button type="button" class="wk-btn" data-akt="medium">Verstoß medium (+2)</button>
+      <button type="button" class="wk-btn" data-akt="high">Verstoß high (+3)</button>
+      <button type="button" class="wk-btn" data-akt="reset">Zurücksetzen</button>
+    </div>
+    <div class="wk-status"><span class="wk-badge" id="pkBadge" hidden>Auto-Bann: 7 Tage</span><span id="pkZaehler"></span></div>
+    <div class="wk-bar"><span id="pkFuellung" style="width:0%"></span></div>
+    <ul class="wk-log" id="pkLog"></ul>
+    <p class="wk-note">Vereinfachte Demo: Die Verfallsfristen der Verstöße bleiben unberücksichtigt, und 6 Punkte mit 7 Tagen Bann sind die Standardwerte. Beides lässt sich in der <a href="#/config-general">general.yml</a> ändern.</p>
+  </div>
 </section>
 
 <!-- =============================== BEFEHLE =============================== -->
@@ -1768,6 +1892,27 @@ vorschlaege:
     </tbody>
   </table></div>
   <p>Den Prefix setzt das System automatisch vor jede Nachricht in der <code>messages.yml</code>.</p>
+
+  <h3>Ausprobieren: MiniMessage-Vorschau</h3>
+  <p>Eintippen, das Ergebnis erscheint sofort in der Chat-Vorschau. Die Vorschau bildet die gängigen Tags nach: Farben, Formatierungen, <code>&lt;newline&gt;</code>, Hex-Farben und Gradients.</p>
+  <div class="wk" id="mm" role="group" aria-label="MiniMessage-Vorschau">
+    <div class="wk-field"><label for="mmIn">MiniMessage-Text</label>
+      <textarea id="mmIn" rows="3" spellcheck="false"></textarea></div>
+    <div class="wk-chips" id="mmChips">
+      <button type="button" class="chip-btn" data-tag="&lt;red&gt;">&lt;red&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;yellow&gt;">&lt;yellow&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;gray&gt;">&lt;gray&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;white&gt;">&lt;white&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;bold&gt;">&lt;bold&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;italic&gt;">&lt;italic&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;underlined&gt;">&lt;underlined&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;newline&gt;">&lt;newline&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;#ff5555&gt;">&lt;#hex&gt;</button>
+      <button type="button" class="chip-btn" data-tag="&lt;gradient:red:yellow&gt;Text&lt;/gradient&gt;">&lt;gradient&gt;</button>
+    </div>
+    <div class="mc" id="mmOut" aria-live="polite"></div>
+    <p class="wk-note">Platzhalter wie <code>%grund%</code> erscheinen in der Vorschau hervorgehoben und werden erst beim Senden ersetzt. Die vollständige Tag-Referenz steht in der <a href="https://docs.advntr.dev/minimessage/format.html">MiniMessage-Dokumentation von Adventure</a>.</p>
+  </div>
 
   <h2>messages.yml</h2>
   <p>Enthält alle Meldungen: Fehler, Erfolge, Hinweise und Ansichten. Jede hat einen festen Schlüssel.</p>
@@ -2912,6 +3057,308 @@ Verstöße: %punish_verstoss_punkte%</pre>
         });
       };
     }
+  })();
+
+  /* ---------- Interaktive Werkzeuge ---------- */
+  var DAUER_EINHEITEN = {
+    s: 1, sek: 1, secs: 1, sec: 1, sekunde: 1, sekunden: 1,
+    m: 60, min: 60, mins: 60, minute: 60, minuten: 60,
+    h: 3600, std: 3600, stunde: 3600, stunden: 3600,
+    d: 86400, t: 86400, tag: 86400, tage: 86400,
+    w: 604800, woche: 604800, wochen: 604800,
+    mo: 2592000, monat: 2592000, monate: 2592000,
+    y: 31536000, j: 31536000, jahr: 31536000, jahre: 31536000
+  };
+  function dauerParse(raw) {
+    var s = String(raw || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!s) return { fehler: 'Bitte eine Dauer angeben.' };
+    if (/^(perm|perma|permanent)$/.test(s)) return { perm: true };
+    if (/^\d+(?:[.,]\d+)?$/.test(s)) {
+      var sekunden = parseFloat(s.replace(',', '.')) * 60;
+      if (!sekunden) return { fehler: 'Die Dauer muss größer als 0 sein.' };
+      if (sekunden > 100 * 31536000) return { fehler: 'Zu lang: Mehr als 100 Jahre wird abgelehnt.' };
+      return { sek: Math.round(sekunden) };
+    }
+    var re = /(\d+(?:[.,]\d+)?)\s*(monate|monat|mo|minuten|minute|mins|min|sekunden|sekunde|secs|sek|sec|stunden|stunde|std|tage|tag|wochen|woche|jahre|jahr|s|m|h|d|w|y|t|j)/g;
+    var sek = 0, last = 0, m;
+    while ((m = re.exec(s)) !== null) {
+      var dazwischen = s.slice(last, m.index).trim();
+      if (dazwischen) return { fehler: 'Das versteht das System nicht: „' + dazwischen + '“.' };
+      sek += parseFloat(m[1].replace(',', '.')) * DAUER_EINHEITEN[m[2]];
+      last = m.index + m[0].length;
+    }
+    var rest = s.slice(last).trim();
+    if (rest) return { fehler: 'Das versteht das System nicht: „' + rest + '“.' };
+    if (!sek) return { fehler: 'Die Dauer muss größer als 0 sein.' };
+    if (sek > 100 * 31536000) return { fehler: 'Zu lang: Mehr als 100 Jahre wird abgelehnt.' };
+    return { sek: Math.round(sek) };
+  }
+  function dauerText(sekGesamt) {
+    var stufen = [[31536000, 'Jahr', 'Jahre'], [2592000, 'Monat', 'Monate'], [86400, 'Tag', 'Tage'], [3600, 'Stunde', 'Stunden'], [60, 'Minute', 'Minuten'], [1, 'Sekunde', 'Sekunden']];
+    var rest = sekGesamt, teile = [];
+    for (var i = 0; i < stufen.length && teile.length < 3; i++) {
+      var n = Math.floor(rest / stufen[i][0]);
+      if (n) { teile.push(n + ' ' + (n === 1 ? stufen[i][1] : stufen[i][2])); rest -= n * stufen[i][0]; }
+    }
+    return teile.join(' ') || '0 Sekunden';
+  }
+
+  (function () {
+    if (!$('#bk')) return;
+    var BK_TYPEN = {
+      ban: { dauer: true, scope: true, presets: ['1d', '7d', '30d', '1y'] },
+      permabann: { dauer: false, scope: true, presets: [] },
+      timeout: { dauer: true, scope: true, presets: ['10m', '30m', '1h', '6h', '24h'] },
+      mute: { dauer: true, scope: true, presets: ['1h', '1d', '7d', '30d'] },
+      freeze: { dauer: true, scope: true, presets: ['1h', '1d', '30d'], leerOk: true },
+      warn: { dauer: false, scope: false, presets: [] },
+      kick: { dauer: false, scope: false, presets: [] }
+    };
+    var LIMIT = { timeout: 86400, banMin: 86400, banMax: 31536000, mute: 2592000, freeze: 2592000 };
+    var typ = $('#bkTyp'), spieler = $('#bkSpieler'), dauer = $('#bkDauer'), grund = $('#bkGrund'),
+        scope = $('#bkScope'), server = $('#bkServer'), silent = $('#bkSilent'),
+        dauerFeld = $('#bkDauerFeld'), scopeFeld = $('#bkScopeFeld'), serverFeld = $('#bkServerFeld'),
+        presets = $('#bkPresets'), out = $('#bkOut'), hint = $('#bkHint');
+
+    function bkRender() {
+      var t = BK_TYPEN[typ.value] || BK_TYPEN.ban;
+      dauerFeld.hidden = !t.dauer;
+      scopeFeld.hidden = !t.scope;
+      serverFeld.hidden = scope.value !== 'server';
+      var chips = '';
+      t.presets.forEach(function (p) {
+        chips += '<button type="button" class="chip-btn' + (dauer.value === p ? ' on' : '') + '">' + esc(p) + '</button>';
+      });
+      if (t.leerOk) chips += '<button type="button" class="chip-btn' + (dauer.value.trim() === '' ? ' on' : '') + '">ohne Dauer</button>';
+      presets.innerHTML = chips;
+
+      var meldungen = [], fehler = 0, warn = 0;
+      function notiz(txt, lvl) { meldungen.push(txt); if (lvl === 'err') fehler = 1; else if (lvl === 'warn' && !fehler) warn = 1; }
+
+      var name = spieler.value.trim();
+      if (!name) notiz('Spielernamen eintragen, dann ist der Befehl fertig.', 'warn');
+      var teile = ['/' + typ.value, name || '<Spieler>'];
+
+      if (t.dauer) {
+        var roh = dauer.value.trim();
+        var dauerToken = null;
+        if (!roh && t.leerOk) {
+          notiz('Ohne Dauer gilt der Freeze, bis er mit /unfreeze aufgehoben wird.', 'warn');
+        } else if (roh) {
+          var d = dauerParse(roh);
+          if (d.fehler) {
+            notiz(d.fehler, 'err');
+          } else if (d.perm) {
+            if (typ.value === 'ban') notiz('/ban erlaubt kein perm — dafür gibt es /permabann.', 'err');
+            else if (typ.value === 'freeze') notiz('Beim Freeze wird für permanent die Dauer weggelassen — Feld leer lassen.', 'warn');
+            else notiz('perm ist hier nicht erlaubt.', 'err');
+          } else {
+            if (typ.value === 'ban' && d.sek < LIMIT.banMin) notiz('Ein Bann dauert mindestens 24 Stunden. Für kürzer gibt es /timeout.', 'err');
+            else if (typ.value === 'ban' && d.sek > LIMIT.banMax) notiz('Ein Bann dauert höchstens ein Jahr.', 'err');
+            else if (typ.value === 'timeout' && d.sek > LIMIT.timeout) notiz('Ein Timeout dauert höchstens 24 Stunden.', 'err');
+            else if (typ.value === 'mute' && d.sek > LIMIT.mute) notiz('Ein Mute dauert höchstens 30 Tage.', 'err');
+            else if (typ.value === 'freeze' && d.sek > LIMIT.freeze) notiz('Ein Freeze dauert höchstens 30 Tage (ohne Dauer permanent).', 'err');
+            else notiz('Passt — ' + esc(roh) + ' = ' + dauerText(d.sek) + '.', 'ok');
+            dauerToken = roh;
+          }
+        } else {
+          notiz('Bitte eine Dauer angeben.', 'err');
+        }
+        if (dauerToken) teile.push(dauerToken);
+      }
+      var grundText = grund.value.trim();
+      if (grundText) teile.push(grundText);
+      if (t.scope && scope.value === 'global') teile.push('--global');
+      if (t.scope && scope.value === 'server') {
+        var serverName = server.value.trim();
+        if (!serverName) notiz('Servernamen eintragen — oder --global wählen.', 'err');
+        else teile.push('--' + serverName);
+      }
+      if (silent.checked) teile.push('-s');
+      var cmd = teile.join(' ');
+
+      out.innerHTML = '<div class="code-head"><span>Befehl</span><button class="copy" type="button" aria-label="Befehl kopieren">' + ICON.copy + '<span>Kopieren</span></button></div><pre><code>' + hlCmd(cmd) + '</code></pre>';
+      $('.copy', out).addEventListener('click', function (e) { copyText(cmd, e.currentTarget); });
+      hint.className = 'wk-hint' + (fehler ? ' err' : warn ? ' warn' : '');
+      hint.innerHTML = meldungen.join('<br>');
+    }
+    [typ, scope].forEach(function (el) { el.addEventListener('change', bkRender); });
+    [spieler, dauer, grund, server].forEach(function (el) { el.addEventListener('input', bkRender); });
+    silent.addEventListener('change', bkRender);
+    presets.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      dauer.value = b.textContent === 'ohne Dauer' ? '' : b.textContent;
+      bkRender();
+    });
+    bkRender();
+  })();
+
+  (function () {
+    if (!$('#sc')) return;
+    var scExec = 'lobby', scFlag = '';
+    function scUpdate() {
+      var lit = {};
+      if (scFlag === 'global' || (scFlag === '' && scExec === 'konsole')) lit = { lobby: 1, survival: 1, kreativ: 1 };
+      else if (scFlag === 'survival') lit = { survival: 1 };
+      else lit[scExec] = 1;
+      $$('#scMap .wk-node').forEach(function (n) { n.classList.toggle('lit', !!lit[n.getAttribute('data-s')]); });
+      $('#scCmd').innerHTML = hlCmd('/ban Notch 7d Cheating' + (scFlag === 'global' ? ' --global' : scFlag === 'survival' ? ' --survival' : ''));
+      var text;
+      if (scFlag === 'global') text = '--global: Die Strafe gilt auf allen Servern des Netzwerks.';
+      else if (scFlag === 'survival') text = '--survival: Die Strafe gilt nur auf survival. lobby und kreativ bleiben frei.';
+      else if (scExec === 'konsole') text = 'Aus der Konsole gilt die Strafe im ganzen Netzwerk — der Proxy ergänzt --global.';
+      else text = 'Ausgeführt auf ' + scExec + ' ergänzt der Proxy automatisch --' + scExec + '. Die Strafe gilt nur dort.';
+      $('#scText').textContent = text;
+    }
+    $('#sc').addEventListener('click', function (e) {
+      var b = e.target.closest('.chip-btn');
+      if (!b) return;
+      var k = b.getAttribute('data-k');
+      if (k === 'exec') scExec = b.getAttribute('data-v'); else scFlag = b.getAttribute('data-v');
+      $$('#sc .chip-btn[data-k="' + k + '"]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      scUpdate();
+    });
+    scUpdate();
+  })();
+
+  (function () {
+    if (!$('#pk')) return;
+    var state;
+    function render() {
+      $('#pkZaehler').textContent = state.warns + (state.warns === 1 ? ' Warn' : ' Warns') + ' · ' + Math.min(state.punkte, 6) + ' / 6 Punkte';
+      $('#pkBadge').hidden = !state.gebannt;
+      $('#pkFuellung').style.width = Math.min(100, state.punkte / 6 * 100) + '%';
+      var html = '';
+      state.zeilen.slice(0, 12).forEach(function (z) {
+        html += '<li><span>' + esc(z.label) + '</span><span class="pts">' + esc(z.pts) + '</span></li>';
+      });
+      if (state.zeilen.length > 12) html += '<li><span>…</span></li>';
+      $('#pkLog').innerHTML = html;
+    }
+    function reset() {
+      state = { warns: 0, punkte: 0, gebannt: false, zeilen: [] };
+      render();
+    }
+    function addWarn() {
+      state.warns++;
+      state.zeilen.unshift({ label: 'Verwarnung', pts: '—' });
+      var esk = { 3: ['low', 1], 5: ['medium', 2], 10: ['high', 3] }[state.warns];
+      if (esk) {
+        state.punkte += esk[1];
+        state.zeilen.unshift({ label: 'Automatischer Verstoß (' + esk[0] + ') — Warn-Eskalation', pts: '+' + esk[1] });
+      }
+      render();
+    }
+    function addVerstoss(stufe) {
+      var pts = { low: 1, medium: 2, high: 3 }[stufe];
+      state.punkte += pts;
+      state.zeilen.unshift({ label: 'Verstoß ' + stufe, pts: '+' + pts });
+      if (state.punkte >= 6 && !state.gebannt) {
+        state.gebannt = true;
+        state.zeilen.unshift({ label: 'Auto-Bann ausgelöst (7 Tage)', pts: state.punkte + ' Punkte' });
+      }
+      render();
+    }
+    $('#pkAktionen').addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      var a = b.getAttribute('data-akt');
+      if (a === 'reset') reset();
+      else if (a === 'warn') addWarn();
+      else if (!state.gebannt) addVerstoss(a);
+    });
+    reset();
+  })();
+
+  (function () {
+    if (!$('#mm')) return;
+    var MM_FARBEN = {
+      black: '#000000', dark_gray: '#555555', gray: '#aaaaaa', white: '#ffffff',
+      dark_red: '#aa0000', red: '#ff5555', gold: '#ffaa00', yellow: '#ffff55',
+      dark_green: '#00aa00', green: '#55ff55', aqua: '#55ffff', dark_aqua: '#00aaaa',
+      blue: '#5555ff', dark_blue: '#0000aa', light_purple: '#ff55ff', dark_purple: '#aa00aa'
+    };
+    var MM_DEKO = { bold: 'b', b: 'b', italic: 'i', em: 'i', i: 'i', underlined: 'u', u: 'u', strikethrough: 's', st: 's', strike: 's', obfuscated: 'o', obf: 'o' };
+    function mmStil(stapel) {
+      var farbe = '#ffffff', deko = {}, grad = null;
+      stapel.forEach(function (s) {
+        if (s.farbe) farbe = s.farbe;
+        if (s.grad) grad = s.grad;
+        if (s.deko) deko[s.deko] = true;
+      });
+      return { farbe: farbe, deko: deko, grad: grad };
+    }
+    function mmText(t, st) {
+      if (!t) return '';
+      var cls = '';
+      if (st.deko.b) cls += ' mm-b';
+      if (st.deko.i) cls += ' mm-i';
+      if (st.deko.u) cls += ' mm-u';
+      if (st.deko.s) cls += ' mm-s';
+      var style = st.grad
+        ? 'background:linear-gradient(90deg,' + st.grad[0] + ',' + st.grad[1] + ');-webkit-background-clip:text;background-clip:text;color:transparent'
+        : 'color:' + st.farbe;
+      var klasse = 'style="' + style + '"';
+      if (cls) klasse = 'class="' + cls + '" ' + klasse;
+      var inhalt = t.split(/(%[a-zA-Z0-9_]+%)/).map(function (p) {
+        if (!p) return '';
+        if (p.charAt(0) === '%') return '<span class="mm-var">' + esc(p) + '</span>';
+        return esc(p);
+      }).join('');
+      return '<span ' + klasse + '>' + inhalt + '</span>';
+    }
+    function mmRender(src) {
+      var stapel = [], out = '', last = 0, m;
+      var re = /<(\/?)([a-zA-Z0-9_]+|#[0-9a-fA-F]{6})(:[^<>]*)?>|%[a-zA-Z0-9_]+%/g;
+      while ((m = re.exec(src)) !== null) {
+        out += mmText(src.slice(last, m.index), mmStil(stapel));
+        last = m.index + m[0].length;
+        if (m[0].charAt(0) === '%') { out += '<span class="mm-var">' + esc(m[0]) + '</span>'; continue; }
+        var zu = m[1] === '/', name = m[2].toLowerCase(), args = m[3] || '';
+        if (!zu && name === 'newline') { out += '<br>'; continue; }
+        if (name === 'reset' || name === 'r') { stapel = []; continue; }
+        if (zu) {
+          for (var j = stapel.length - 1; j >= 0; j--) {
+            if (stapel[j].name === name) { stapel.splice(j, 1); break; }
+          }
+          continue;
+        }
+        if (MM_FARBEN[name] || name.charAt(0) === '#') {
+          stapel.push({ name: name, farbe: MM_FARBEN[name] || name });
+          continue;
+        }
+        if (MM_DEKO[name]) { stapel.push({ name: name, deko: MM_DEKO[name] }); continue; }
+        if (name === 'gradient') {
+          var teile = args.split(':');
+          var c1 = MM_FARBEN[teile[1]] || (/^#[0-9a-fA-F]{6}$/.test(teile[1]) ? teile[1] : '#ffff55');
+          var c2 = MM_FARBEN[teile[2]] || (/^#[0-9a-fA-F]{6}$/.test(teile[2]) ? teile[2] : '#ff5555');
+          stapel.push({ name: 'gradient', grad: [c1, c2] });
+          continue;
+        }
+        out += '<span class="mm-lit">' + esc(m[0]) + '</span>';
+      }
+      out += mmText(src.slice(last), mmStil(stapel));
+      return out;
+    }
+    function mmUpdate() {
+      var zeilen = $('#mmIn').value.split('\n');
+      $('#mmOut').innerHTML = zeilen.map(function (z) { return '<div class="l">' + (mmRender(z) || '&nbsp;') + '</div>'; }).join('');
+    }
+    $('#mmIn').value = '<red>Du wurdest gebannt!<newline><newline><gray>Grund: <white>%grund%<newline><gray>Verbleibend: <white>%verbleibend%';
+    $('#mmIn').addEventListener('input', mmUpdate);
+    $('#mmChips').addEventListener('click', function (e) {
+      var b = e.target.closest('.chip-btn');
+      if (!b) return;
+      var inp = $('#mmIn'), tag = b.getAttribute('data-tag');
+      var start = inp.selectionStart != null ? inp.selectionStart : inp.value.length;
+      var ende = inp.selectionEnd != null ? inp.selectionEnd : start;
+      inp.value = inp.value.slice(0, start) + tag + inp.value.slice(ende);
+      try { inp.setSelectionRange(start + tag.length, start + tag.length); } catch (err) { /* Auswahl nicht möglich */ }
+      inp.focus();
+      mmUpdate();
+    });
+    mmUpdate();
   })();
 
   route();

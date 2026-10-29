@@ -157,12 +157,15 @@ public final class WarnService {
         }
     }
 
-    private record AusstehendeEskalation(int schwelle, VerstossStufe stufe) {
+    private record AusstehendeEskalation(int schwelle, VerstossStufe stufe, long gemerktAm) {
     }
 
     private final java.util.concurrent.ConcurrentHashMap<UUID, AusstehendeEskalation> ausstehende =
             new java.util.concurrent.ConcurrentHashMap<>();
     private static final int MAX_AUSSTEHENDE = 1000;
+    // Vormerkungen verfallen: Sie halten Stufen- und Schwellenwerte aus der damaligen
+    // Konfiguration und dürfen nach einem Reload nicht mehr mit alter Stufe feuern.
+    private static final long AUSSTEHENDE_TTL_MILLIS = 60L * 60L * 1000L;
     private final java.util.concurrent.atomic.AtomicLong verworfeneEskalationen = new java.util.concurrent.atomic.AtomicLong();
 
     public long anzahlVerworfenerEskalationen() {
@@ -179,7 +182,8 @@ public final class WarnService {
             }
             AusstehendeEskalation bisher = ausstehende.get(zielUuid);
             if (bisher == null || anzahl < bisher.schwelle()) {
-                ausstehende.put(zielUuid, new AusstehendeEskalation(anzahl, stufe));
+                ausstehende.put(zielUuid, new AusstehendeEskalation(anzahl, stufe,
+                        System.currentTimeMillis()));
             }
         } catch (Exception e) {
             LOG.debug("Ausstehende Eskalation konnte nicht gemerkt werden.", e);
@@ -195,6 +199,11 @@ public final class WarnService {
             return;
         }
         if (ausstehend == null) {
+            return;
+        }
+        if (System.currentTimeMillis() - ausstehend.gemerktAm() > AUSSTEHENDE_TTL_MILLIS) {
+            ausstehende.remove(zielUuid, ausstehend);
+            LOG.debug("Ausstehende Warn-Eskalation für {} ist veraltet und wurde verworfen.", zielUuid);
             return;
         }
         Konfiguration config = this.configManager;

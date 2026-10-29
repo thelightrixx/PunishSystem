@@ -296,6 +296,9 @@ public final class GuiBrueckenDienst {
             case MUTE, MUTE_EDIT -> "unmute " + ziel;
             case TIMEOUT, TIMEOUT_EDIT -> "untimeout " + ziel;
             case FREEZE -> "unfreeze " + ziel;
+            case BAN_IP, IP_BAN_EDIT -> "unban-ip " + ziel;
+            case IP_MUTE, IP_MUTE_EDIT -> "unmute-ip " + ziel;
+            case IP_TIMEOUT, IP_TIMEOUT_EDIT -> "untimeout-ip " + ziel;
             default -> null;
         };
     }

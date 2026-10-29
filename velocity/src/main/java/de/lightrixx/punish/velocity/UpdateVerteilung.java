@@ -60,11 +60,11 @@ public final class UpdateVerteilung {
         return version;
     }
 
-    public void standEmpfangen(RegisteredServer server, String kanonisch) {
+    public void standEmpfangen(RegisteredServer server, String kanonisch, String variante) {
         if (server == null || !bereit()) {
             return;
         }
-        pushAn(server, kanonisch);
+        pushAn(server, kanonisch, variante);
     }
 
     public void quittungEmpfangen(RegisteredServer server, Protokoll.UpdateQuittung quittung) {
@@ -100,7 +100,7 @@ public final class UpdateVerteilung {
             if (variante.isBlank()) {
                 pushBeide(server, kanonisch);
             } else {
-                pushAn(server, kanonisch);
+                pushAn(server, kanonisch, variante);
             }
         }
         logger.info("Update-Push an alle Bridges angestoßen (Version {}).", version);
@@ -115,12 +115,16 @@ public final class UpdateVerteilung {
         }
     }
 
-    public void pushAn(RegisteredServer server, String kanonisch) {
+    public void pushAn(RegisteredServer server, String kanonisch, String variante) {
         if (server == null || !bereit()) {
             return;
         }
         String name = kanonisch == null || kanonisch.isBlank() ? serverName(server) : kanonisch;
-        pushBeide(server, name);
+        if (variante == null || variante.isBlank()) {
+            pushBeide(server, name);
+        } else {
+            pushVarianteAn(server, variante);
+        }
     }
 
     public void pushVarianteAn(RegisteredServer server, String variante) {

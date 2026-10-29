@@ -27,7 +27,6 @@ class BridgeModulParitaetTest {
             PAKET + "BridgeDiagnosticsBefehl.java",
             PAKET + "BridgeKonfiguration.java",
             PAKET + "FreezeCache.java",
-            PAKET + "GenericScopeCache.java",
             PAKET + "IpMuteCache.java",
             PAKET + "MuteCache.java",
             PAKET + "PunishBridge.java",

@@ -1118,7 +1118,7 @@ public final class StrafListener {
                             try {
                                 planer.aufgabeAsync(() -> {
                                     try {
-                                        ziel.standEmpfangen(server, kanonisch);
+                                        ziel.standEmpfangen(server, kanonisch, stand.variante());
                                     } catch (Exception e) {
                                         logger.debug("Update-Stand fehlgeschlagen.", e);
                                     }

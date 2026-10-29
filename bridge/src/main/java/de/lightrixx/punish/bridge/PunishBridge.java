@@ -264,6 +264,16 @@ public final class PunishBridge extends JavaPlugin {
                 if (expansion.register()) {
                     LOG.info("PlaceholderAPI-Expansion 'punish' registriert.");
                     papiExpansion = expansion;
+                    getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+                        @org.bukkit.event.EventHandler
+                        public void beiQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+                            try {
+                                papiCache.vergessen(event.getPlayer().getUniqueId());
+                            } catch (Exception e) {
+                                LOG.debug("Platzhalter-Cache konnte bei Quit nicht geräumt werden.", e);
+                            }
+                        }
+                    }, this);
                 } else {
                     LOG.warn("PlaceholderAPI-Expansion 'punish' konnte nicht registriert werden.");
                 }

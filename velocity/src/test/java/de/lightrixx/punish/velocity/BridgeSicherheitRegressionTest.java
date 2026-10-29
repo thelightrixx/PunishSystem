@@ -165,8 +165,14 @@ class BridgeSicherheitRegressionTest {
                 case de.lightrixx.punish.net.Protokoll.SYNC_END -> ende++;
                 case de.lightrixx.punish.net.Protokoll.MUTE_SETZEN -> gesendeteMutes.add(
                         de.lightrixx.punish.net.Protokoll.leseMute(paket.nutzdaten()).uuid());
+                case de.lightrixx.punish.net.Protokoll.MUTE_SYNC -> de.lightrixx.punish.net.Protokoll
+                        .leseMuteSync(paket.nutzdaten()).forEach(
+                                eintrag -> gesendeteMutes.add(eintrag.uuid()));
                 case de.lightrixx.punish.net.Protokoll.IP_MUTE_SETZEN -> gesendeteIpMutes.add(
                         de.lightrixx.punish.net.Protokoll.leseIpMute(paket.nutzdaten()).ip());
+                case de.lightrixx.punish.net.Protokoll.IP_MUTE_SYNC -> de.lightrixx.punish.net.Protokoll
+                        .leseIpMuteSync(paket.nutzdaten()).forEach(
+                                eintrag -> gesendeteIpMutes.add(eintrag.ip()));
                 case de.lightrixx.punish.net.Protokoll.BAN_SETZEN -> bannRahmen++;
                 default -> {
                 }
