@@ -100,6 +100,24 @@ messages:
   punish-vorlage-unbekannt: "<red>Unbekannte Vorlage <white>%vorlage%<red>. Verfügbare Vorlagen:"
   punish-vorlage-befehl-ungueltig: "<red>Die Vorlage <white>%vorlage% <red>nutzt den Befehl <white>%befehl%<red>, der über /punish nicht ausführbar ist."
 
+  # Aktion zurücknehmen (/punish-undo)
+  punish-undo-syntax: "<red>Verwendung: /punish-undo [Spieler]"
+  punish-undo-keine: "<yellow>Keine aktive, rückgängig machbare Aktion von <white>%ausfuehrer%<yellow> gefunden."
+  punish-undo-nicht: "<red>Die letzte Aktion (<white>%typ%<red> für <white>%ziel%<red>) ist nicht rückgängig machbar."
+  punish-undo-aktion: "<gray>Rückgängig: <white>%typ% <gray>für <white>%ziel% <gray>(%grund%)"
+
+  # Team-Statistik (/punish-stats)
+  punish-stats-syntax: "<red>Verwendung: /punish-stats [7d|30d|all] [Staff]"
+  punish-stats-kopf: "<yellow>Team-Statistik <gray>(Zeitraum: <white>%zeitraum%<gray>)"
+  punish-stats-zeile: "<gray>• <white>%staff%<gray>: Bans <white>%banns%<gray>, Mutes <white>%mutes%<gray>, Timeouts <white>%timeouts%<gray>, Warns <white>%warns%<gray>, Verstöße <white>%verstoesse%<gray>, Reports <white>%reports%"
+  punish-stats-leer: "<green>Keine Einträge im Zeitraum <white>%zeitraum%<green> gefunden."
+  punish-stats-zeitraum-ungueltig: "<red>Ungültiger Zeitraum: <white>%zeitraum%<red>. Beispiele: 7d, 30d, all."
+
+  # Backup (/punish-export)
+  punish-export-syntax: "<red>Verwendung: /punish-export"
+  punish-export-erfolg: "<green>Backup geschrieben: <white>%pfad% <gray>(<white>%eintraege%<gray> Datensätze)"
+  punish-export-fehler: "<red>Backup fehlgeschlagen: <white>%fehler%"
+
   # Verstoß-System
   syntax-verstoss: "<red>Verwendung: /verstoss add <Spieler> <Grund> [level=low|medium|high] | remove <Spieler> <Nr> | clear <Spieler> (Bearbeiten via /punish-edit)"
   syntax-punish-edit: "<red>Verwendung: /punish-edit show <typ> <Spieler|IP> [Nr] | /punish-edit <typ> <Spieler|IP> [Nr] grund=<Text> [level=low|medium|high] [dauer=7d] [--global|--server] (Typen: verstoss, warn, note, ban, mute, timeout, ban-ip, mute-ip, timeout-ip)"
@@ -251,7 +269,7 @@ messages:
   report-bearbeitet: "<yellow>Dein Report <white>#%id% <yellow>gegen <white>%spieler% <yellow>wurde bearbeitet (Status: <white>%status%<yellow>)."
 
   # Chatfilter (/chatfilter)
-  chatfilter-syntax: "<red>Verwendung: /chatfilter <on|off|ai_on|ai_off|add <Wort>|sync> <gray>(Beta: KI-Stufe)"
+  chatfilter-syntax: "<red>Verwendung: /chatfilter <on|off|ai_on|ai_off|add <Wort>|remove <Wort>|list|test <Text>|sync> <gray>(Beta: KI-Stufe)"
   chatfilter-an: "<green>Chatfilter auf allen Servern eingeschaltet (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
   chatfilter-aus: "<yellow>Chatfilter auf allen Servern ausgeschaltet (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
   chatfilter-ai-an: "<green>Chatfilter-KI auf allen Servern eingeschaltet (Laufzeit, bis Neustart/Reload). <gray>(Beta)"
@@ -261,6 +279,13 @@ messages:
   chatfilter-sync-start: "<green>Modell-Sync an alle Server angestoßen (nur Server mit abweichendem Stand laden)."
   chatfilter-sync-aus: "<red>Modell-Sync inaktiv (chatfilter.modell-sync=false oder kein Modell auf dem Proxy)."
   chatfilter-blockiert: "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%, Kanal: %kanal%)."
+  chatfilter-liste-kopf: "<yellow>Wortliste <gray>(<white>%anzahl%<gray> Einträge):"
+  chatfilter-liste-eintrag: "<gray>• <white>%wort%"
+  chatfilter-liste-leer: "<green>Die Wortliste ist leer."
+  chatfilter-remove-erfolg: "<green>Wort <white>%wort% <green>entfernt (Sync an alle Server)."
+  chatfilter-remove-nicht-gefunden: "<yellow>Wort <white>%wort% <yellow>ist nicht in der Wortliste."
+  chatfilter-test-treffer: "<red>Treffer: <white>%wort% <gray>in \"%text%\""
+  chatfilter-test-sauber: "<green>Kein Wortlisten-Treffer in \"%text%\". <gray>(Die KI-Stufe läuft nur auf den Bridges.)"
 
   # Diagnose (/punish-diagnostics)
   punish-diagnostics-kopf: "<yellow>Diagnose <gray>(<white>%plattform% %version%<gray>)"

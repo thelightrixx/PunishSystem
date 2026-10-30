@@ -89,6 +89,23 @@ class TextVerteilungTest {
     }
 
     @Test
+    void woerterIgnoriertKommentare() {
+        assertEquals(List.of("wortA"), verteilung.woerter());
+    }
+
+    @Test
+    void wortEntfernenSchreibtListeNeu() throws Exception {
+        File wortliste = new File(new File(datenOrdner, "chatfilter"), "wortliste.txt");
+        Files.writeString(wortliste.toPath(), "# kopf\nwortA\nwortB\n", StandardCharsets.UTF_8);
+        assertTrue(verteilung.wortEntfernen("worta"));
+        assertFalse(verteilung.woerter().contains("wortA"));
+        assertTrue(verteilung.woerter().contains("wortB"));
+        String inhalt = Files.readString(wortliste.toPath(), StandardCharsets.UTF_8);
+        assertTrue(inhalt.contains("# kopf"), "Kommentar/Header muss erhalten bleiben");
+        assertFalse(verteilung.wortEntfernen("worta"), "zweites Entfernen muss false liefern");
+    }
+
+    @Test
     void bereinigeGeneral_entferntSpeicherUndServername() {
         String roh = "prefix: \"x\"\nnetzwerk:\n  server-name: \"lobby\"\n  server-liste: []\n"
                 + "speicher:\n  typ: \"mysql\"\n  mysql:\n    passwort: \"geheim\"\n";

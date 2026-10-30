@@ -85,7 +85,7 @@ public final class WarnService {
         }
         WarnRepository.HinzufuegeErgebnis ergebnis = warnRepository.hinzufuegenMitAnzahl(zielUuid, zielName, grund, ausfuehrer);
         WarnRecord record = ergebnis.record();
-        int neueAnzahl = ergebnis.anzahl();
+        int neueAnzahl = aktiveAnzahl(zielUuid);
 
         Map<String, String> platzhalter = new HashMap<>();
         platzhalter.put("spieler", zielName);
@@ -295,7 +295,7 @@ public final class WarnService {
             platzhalter.put("spieler", zielName);
             platzhalter.put("ausfuehrer", ausfuehrer);
             platzhalter.put("id", String.valueOf(nummer));
-            platzhalter.put("anzahl", String.valueOf(warnRepository.anzahl(zielUuid)));
+            platzhalter.put("anzahl", String.valueOf(aktiveAnzahl(zielUuid)));
             zielInformieren(zielUuid, MessageKeys.ZIEL_WARN_ENTFERNT, platzhalter);
             if (historyService != null) {
                 try {
@@ -354,9 +354,50 @@ public final class WarnService {
         return warnRepository.finden(zielUuid);
     }
 
+    /**
+     * Liefert nur noch gültige Verwarnungen. Abgelaufene Einträge bleiben in der
+     * Persistenz erhalten, zählen aber nicht mehr für Eskalation und Status.
+     */
+    public List<WarnRecord> aktiveWarns(UUID zielUuid) {
+        Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
+        List<WarnRecord> alle = warnRepository.finden(zielUuid);
+        if (alle == null || alle.isEmpty()) {
+            return List.of();
+        }
+        long ablauf = warnAblaufMillis();
+        if (ablauf <= 0) {
+            return alle;
+        }
+        long jetzt = System.currentTimeMillis();
+        return alle.stream()
+                .filter(warn -> warn != null && warn.erstelltAm() + ablauf > jetzt)
+                .toList();
+    }
+
     public int anzahl(UUID zielUuid) {
         Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
-        return warnRepository.anzahl(zielUuid);
+        return aktiveAnzahl(zielUuid);
+    }
+
+    private int aktiveAnzahl(UUID zielUuid) {
+        long ablauf = warnAblaufMillis();
+        if (ablauf <= 0) {
+            return warnRepository.anzahl(zielUuid);
+        }
+        return aktiveWarns(zielUuid).size();
+    }
+
+    private long warnAblaufMillis() {
+        Konfiguration config = this.configManager;
+        if (config == null) {
+            return 0L;
+        }
+        try {
+            return Math.max(0L, config.warnAblaufMillis());
+        } catch (Exception e) {
+            LOG.debug("Warn-Ablauf konnte nicht gelesen werden, nutze unbegrenzt.", e);
+            return 0L;
+        }
     }
 
     private void broadcasten(String typ, Map<String, String> platzhalter, boolean silent) {

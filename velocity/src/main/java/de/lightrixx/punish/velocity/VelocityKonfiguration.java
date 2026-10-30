@@ -845,6 +845,26 @@ public final class VelocityKonfiguration implements Konfiguration {
     }
 
     @Override
+    public long warnAblaufMillis() {
+        Map<String, Object> warns = abschnitt("warns");
+        if (warns == null || warns.isEmpty()) {
+            return 0L;
+        }
+        String roh = Karten.text(warns, "ablauf", "0");
+        if (roh == null || roh.isBlank()
+                || roh.equalsIgnoreCase("aus") || roh.equalsIgnoreCase("off")
+                || roh.equalsIgnoreCase("nie") || roh.equals("0")) {
+            return 0L;
+        }
+        var geparst = new TimeParser().parsen(roh);
+        if (geparst instanceof ParseResult.Geltzeit geltzeit) {
+            return geltzeit.millis();
+        }
+        LOG.warn("warns.ablauf '{}' ist ungültig (erwartet z. B. 30d oder aus), nutze unbegrenzt.", roh);
+        return 0L;
+    }
+
+    @Override
     public Map<Integer, VerstossStufe> warnEskalationsSchwellen() {
         Map<String, Object> eskalation = warnEskalationAbschnitt();
         if (eskalation == null || !eskalation.containsKey("schwellen")) {

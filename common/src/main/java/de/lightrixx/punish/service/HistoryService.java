@@ -62,4 +62,16 @@ public final class HistoryService {
     public List<HistoryEntry> findeServerHistory(int limit) {
         return historyRepository.findeAlle(limit);
     }
+
+    /**
+     * Gesamter Verlauf ohne Limit (bereits im Speicher geladen). Für Auswertungen
+     * wie die Team-Statistik, die nicht auf die neuesten Einträge beschränkt sein dürfen.
+     */
+    public List<HistoryEntry> findeAlle() {
+        return historyRepository.alleSchluessel().values().stream()
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .toList();
+    }
 }

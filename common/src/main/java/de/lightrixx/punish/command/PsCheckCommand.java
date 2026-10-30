@@ -109,7 +109,7 @@ public final class PsCheckCommand extends PunishCommand {
         int warns = 0;
         if (warnService != null) {
             try {
-                warns = warnService.findeWarns(zielUuid).size();
+                warns = warnService.anzahl(zielUuid);
             } catch (Exception e) {
                 LOG.debug("Warns für /pscheck konnten nicht geladen werden.", e);
             }
@@ -143,6 +143,8 @@ public final class PsCheckCommand extends PunishCommand {
                 "Detaillierte Strafen anzeigen");
         aktionen = aktionen.append(Component.text("  ")).append(
                 aktion("GUI", "/punish-gui " + ziel.name(), "PunishGUI öffnen"));
+        aktionen = aktionen.append(Component.text("  ")).append(
+                aktion("Dossier", "/punish-dossier " + ziel.name(), "Spieler-Dossier öffnen"));
         if (sender != null && sender.hatRecht(Permissions.PUNISH_ALTS.node())) {
             aktionen = aktionen.append(Component.text("  ")).append(
                     aktion("Alts", "/alts " + ziel.name(), "Alt-Accounts anzeigen"));

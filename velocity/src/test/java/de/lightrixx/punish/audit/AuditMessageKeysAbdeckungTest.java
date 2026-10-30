@@ -89,7 +89,13 @@ class AuditMessageKeysAbdeckungTest {
             Map.entry("alts", "2"),
             Map.entry("alt", "AltAccount"),
             Map.entry("warns", "1"),
-            Map.entry("label", "Status"));
+            Map.entry("label", "Status"),
+            Map.entry("zeitraum", "7d"),
+            Map.entry("staff", "ModA"),
+            Map.entry("reports", "3"),
+            Map.entry("pfad", "/plugins/PunishSystemVelocity/exports/backup.json"),
+            Map.entry("eintraege", "128"),
+            Map.entry("fehler", "Datei nicht schreibbar"));
 
     private static Map<String, Object> lade(String pfad) {
         try (InputStream in = AuditMessageKeysAbdeckungTest.class.getResourceAsStream(pfad)) {

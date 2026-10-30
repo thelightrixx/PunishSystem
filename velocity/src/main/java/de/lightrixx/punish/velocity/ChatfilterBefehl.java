@@ -24,7 +24,8 @@ public final class ChatfilterBefehl extends PunishCommand {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChatfilterBefehl.class);
 
-    private static final List<String> UNTERBEFEHLE = List.of("on", "off", "ai_on", "ai_off", "add", "sync");
+    private static final List<String> UNTERBEFEHLE =
+            List.of("on", "off", "ai_on", "ai_off", "add", "remove", "list", "test", "sync");
 
     private volatile BrueckenKanal brueckenKanal;
 
@@ -103,6 +104,9 @@ public final class ChatfilterBefehl extends PunishCommand {
                 messageService.senden(sender, MessageKeys.CHATFILTER_AI_AUS);
             }
             case "add" -> verarbeiteAdd(sender, kanal, args);
+            case "remove" -> verarbeiteRemove(sender, kanal, args);
+            case "list" -> verarbeiteListe(sender, kanal);
+            case "test" -> verarbeiteTest(sender, kanal, args);
             case "sync" -> {
                 boolean gestartet;
                 try {
@@ -147,6 +151,88 @@ public final class ChatfilterBefehl extends PunishCommand {
                 Map.of("wort", wort.get(), "server", "alle Server"));
     }
 
+    private void verarbeiteRemove(BefehlsSender sender, BrueckenKanal kanal, String[] args) {
+        if (args.length < 2) {
+            messageService.senden(sender, MessageKeys.CHATFILTER_SYNTAX);
+            return;
+        }
+        String roh = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).trim();
+        Optional<String> wort = WortlistenFilter.gueltigerEintrag(roh);
+        if (wort.isEmpty()) {
+            messageService.senden(sender, MessageKeys.CHATFILTER_WORT_UNGUELTIG);
+            return;
+        }
+        boolean entfernt;
+        try {
+            entfernt = kanal.textWortEntfernen(wort.get());
+        } catch (Exception e) {
+            LOG.warn("Chatfilter-Wort konnte nicht entfernt werden.", e);
+            entfernt = false;
+        }
+        messageService.senden(sender, entfernt
+                ? MessageKeys.CHATFILTER_REMOVE_ERFOLG
+                : MessageKeys.CHATFILTER_REMOVE_NICHT_GEFUNDEN,
+                Map.of("wort", wort.get()));
+    }
+
+    private void verarbeiteListe(BefehlsSender sender, BrueckenKanal kanal) {
+        List<String> woerter;
+        try {
+            woerter = kanal.textWoerter();
+        } catch (Exception e) {
+            LOG.warn("Wortliste konnte nicht gelesen werden.", e);
+            messageService.senden(sender, MessageKeys.RELOAD_FEHLER);
+            return;
+        }
+        List<net.kyori.adventure.text.Component> zeilen = new java.util.ArrayList<>();
+        zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.CHATFILTER_LISTE_KOPF,
+                Map.of("anzahl", String.valueOf(woerter.size()))));
+        if (woerter.isEmpty()) {
+            zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.CHATFILTER_LISTE_LEER, Map.of()));
+        } else {
+            for (String wort : woerter) {
+                zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.CHATFILTER_LISTE_EINTRAG,
+                        Map.of("wort", wort)));
+            }
+        }
+        messageService.sendeBlock(sender, zeilen);
+    }
+
+    private void verarbeiteTest(BefehlsSender sender, BrueckenKanal kanal, String[] args) {
+        if (args.length < 2) {
+            messageService.senden(sender, MessageKeys.CHATFILTER_SYNTAX);
+            return;
+        }
+        String text = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).trim();
+        List<String> woerter;
+        try {
+            woerter = kanal.textWoerter();
+        } catch (Exception e) {
+            LOG.warn("Wortliste für Chatfilter-Test nicht lesbar.", e);
+            messageService.senden(sender, MessageKeys.RELOAD_FEHLER);
+            return;
+        }
+        if (woerter.isEmpty()) {
+            messageService.senden(sender, MessageKeys.CHATFILTER_TEST_SAUBER, Map.of("text", text));
+            return;
+        }
+        Optional<String> treffer;
+        try {
+            treffer = new WortlistenFilter(woerter).ersterTreffer(text);
+        } catch (Exception e) {
+            LOG.warn("Chatfilter-Test konnte nicht ausgeführt werden.", e);
+            messageService.senden(sender, MessageKeys.RELOAD_FEHLER);
+            return;
+        }
+        if (treffer.isPresent()) {
+            messageService.senden(sender, MessageKeys.CHATFILTER_TEST_TREFFER, Map.of(
+                    "wort", treffer.get(),
+                    "text", text));
+        } else {
+            messageService.senden(sender, MessageKeys.CHATFILTER_TEST_SAUBER, Map.of("text", text));
+        }
+    }
+
     @Override
     public String tooltipFuer(String vorschlag, String[] args) {
         return "Unterbefehl";
@@ -157,6 +243,14 @@ public final class ChatfilterBefehl extends PunishCommand {
         if (args.length <= 1) {
             String prefix = args.length == 0 ? "" : args[0];
             return filtere(UNTERBEFEHLE, prefix);
+        }
+        if (args.length == 2 && args[0] != null
+                && "remove".equalsIgnoreCase(args[0].trim()) && brueckenKanal != null) {
+            try {
+                return filtere(brueckenKanal.textWoerter(), args[1] == null ? "" : args[1]);
+            } catch (Exception e) {
+                LOG.debug("Wort-Vorschläge konnten nicht geladen werden.", e);
+            }
         }
         return List.of();
     }

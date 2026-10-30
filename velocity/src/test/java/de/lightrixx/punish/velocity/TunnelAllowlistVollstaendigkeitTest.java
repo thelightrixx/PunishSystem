@@ -77,7 +77,7 @@ class TunnelAllowlistVollstaendigkeitTest {
     }
 
     private static final java.util.Set<String> LOKAL_NUR_BRIDGE = java.util.Set.of(
-            "punish-gui", "punish-diagnostics");
+            "punish-gui", "punish-dossier", "punish-diagnostics");
 
     private static void pruefeModul(String modul) {
         Map<String, BefehlEintrag> befehle = befehle(pluginYml(modul));

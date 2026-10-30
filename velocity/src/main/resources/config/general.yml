@@ -151,6 +151,10 @@ verstoesse:
 # Es lösen nur exakte Treffer aus (keine Doppel-Auslösung); Warns bleiben bestehen.
 # Beispiel: 3 Warns -> low-Verstoß, 4. Warn -> nichts, 5. Warn -> medium-Verstoß.
 warns:
+  # Gültigkeitsdauer einer Verwarnung (z. B. 30d, 90d). Abgelaufene Warns bleiben
+  # in der Historie, zählen aber nicht mehr für Eskalation/Status.
+  # 0 oder aus = unbegrenzt (Standard).
+  ablauf: 0
   eskalation:
     # false = keine automatischen Verstöße aus Warnungen
     aktiv: true
@@ -341,20 +345,20 @@ rang-buendel:
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
-    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.chatfilter", "punish.message.all-punishes"]
   manager: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
-    "punish.note", "punish.gui", "punish.allow-silent-syntax",
-    "punish.chatfilter", "punish.message.all-punishes"]
+    "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
+    "punish.stats", "punish.chatfilter", "punish.message.all-punishes"]
   richter: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
-    "punish.note", "punish.gui", "punish.allow-silent-syntax",
-    "punish.chatfilter", "punish.pardon", "punish.message.all-punishes"]
+    "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
+    "punish.stats", "punish.chatfilter", "punish.pardon", "punish.message.all-punishes"]
   admin: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
@@ -367,7 +371,8 @@ rang-buendel:
     "punish.muteall", "punish.unmuteall", "punish.timeoutall", "punish.untimeoutall",
     "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
     "punish.verstoss.edit", "punish.verstoss.clear",
-    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics"]
+    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
+    "punish.undo", "punish.stats", "punish.export"]
   p-admin: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
@@ -380,7 +385,8 @@ rang-buendel:
     "punish.muteall", "punish.unmuteall", "punish.timeoutall", "punish.untimeoutall",
     "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
     "punish.verstoss.edit", "punish.verstoss.clear",
-    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics"]
+    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
+    "punish.undo", "punish.stats", "punish.export"]
   developer: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.history", "punish.reload"]
   präsident: ["punish.*"]

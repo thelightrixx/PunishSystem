@@ -34,6 +34,13 @@ class AuditBridgeMessageKeysAbdeckungTest {
             "chatfilter-syntax", "chatfilter-an", "chatfilter-aus", "chatfilter-ai-an",
             "chatfilter-ai-aus", "chatfilter-add-erfolg", "chatfilter-wort-ungueltig",
             "chatfilter-sync-start", "chatfilter-sync-aus",
+            "chatfilter-liste-kopf", "chatfilter-liste-eintrag", "chatfilter-liste-leer",
+            "chatfilter-remove-erfolg", "chatfilter-remove-nicht-gefunden",
+            "chatfilter-test-treffer", "chatfilter-test-sauber",
+            "punish-undo-syntax", "punish-undo-keine", "punish-undo-nicht", "punish-undo-aktion",
+            "punish-stats-syntax", "punish-stats-kopf", "punish-stats-zeile",
+            "punish-stats-leer", "punish-stats-zeitraum-ungueltig",
+            "punish-export-syntax", "punish-export-erfolg", "punish-export-fehler",
             "pscheck-syntax", "pscheck-kopf", "pscheck-status", "pscheck-hinweis",
             "pscheck-link", "pscheck-unban-link", "alt-wache");
 

@@ -20,7 +20,7 @@ public final class GuiMenues {
 
     public enum Menue {
         HAUPT, SPIELER, AKTION, GRUND, DAUER, SCOPE, BESTAETIGEN, STATUS, HISTORY, REPORTS,
-        REPORT_DETAIL
+        REPORT_DETAIL, DOSSIER
     }
 
     public record GuiHolder(Menue menue) implements InventoryHolder {
@@ -322,6 +322,8 @@ public final class GuiMenues {
                 case "VERSTOSS" -> Material.REDSTONE;
                 case "WARN" -> Material.BOOK;
                 case "REPORT" -> Material.WRITABLE_BOOK;
+                case "DOSSIER_STATUS" -> Material.NETHER_STAR;
+                case "DOSSIER_AKTION" -> Material.LIME_DYE;
                 default -> Material.MAP;
             };
             List<String> lore = new ArrayList<>();
@@ -331,7 +333,11 @@ public final class GuiMenues {
                 }
             }
             if (!zeile.aktion().isBlank()) {
-                lore.add("<yellow>Klick: /" + escape(zeile.aktion()));
+                if (zeile.aktion().startsWith("gui:")) {
+                    lore.add("<yellow>Klick: Auswahl öffnen");
+                } else {
+                    lore.add("<yellow>Klick: /" + escape(zeile.aktion()));
+                }
             }
             inv.setItem(slot++, item(icon, "<white>" + escape(zeile.titel()), lore));
         }

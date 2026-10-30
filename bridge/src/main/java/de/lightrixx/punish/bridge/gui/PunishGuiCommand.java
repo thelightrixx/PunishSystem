@@ -17,14 +17,20 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
         de.lightrixx.punish.bridge.TunnelVorschlag {
 
     private final GuiManager manager;
+    private final boolean dossierModus;
 
     public PunishGuiCommand(GuiManager manager) {
+        this(manager, false);
+    }
+
+    public PunishGuiCommand(GuiManager manager, boolean dossierModus) {
         this.manager = Objects.requireNonNull(manager, "Der Manager darf nicht null sein.");
+        this.dossierModus = dossierModus;
     }
 
     @Override
     public String zielBefehl() {
-        return "punish-gui";
+        return dossierModus ? "punish-dossier" : "punish-gui";
     }
 
     @Override
@@ -91,6 +97,15 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
         }
         String startZiel = args != null && args.length >= 1 && args[0] != null && !args[0].isBlank()
                 ? args[0].trim() : null;
+        if (dossierModus) {
+            if (startZiel == null) {
+                spieler.sendMessage(prefixHinweis("Verwendung: /punish-dossier <Spieler>",
+                        NamedTextColor.RED));
+                return;
+            }
+            manager.oeffneDossier(spieler, startZiel, 1);
+            return;
+        }
         manager.starteNeu(spieler, startZiel);
     }
 

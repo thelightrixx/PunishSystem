@@ -153,6 +153,33 @@ public final class BrueckenKanal {
         }
     }
 
+    public List<String> textWoerter() {
+        TextVerteilung verteilung = textVerteilung;
+        if (verteilung == null) {
+            return List.of();
+        }
+        try {
+            return verteilung.woerter();
+        } catch (Exception e) {
+            logger.warn("Wortliste konnte nicht gelesen werden.", e);
+            return List.of();
+        }
+    }
+
+    public boolean textWortEntfernen(String wort) {
+        TextVerteilung verteilung = textVerteilung;
+        if (verteilung == null) {
+            logger.debug("Text-Wort-Entfernen ohne Dienst verworfen.");
+            return false;
+        }
+        try {
+            return verteilung.wortEntfernen(wort);
+        } catch (Exception e) {
+            logger.warn("Wort konnte nicht entfernt werden.", e);
+            return false;
+        }
+    }
+
     public void textNeuLadenAnAlle() {
         TextVerteilung verteilung = textVerteilung;
         if (verteilung == null) {
@@ -1144,6 +1171,9 @@ public final class BrueckenKanal {
             java.util.Map.entry("unban-all", "punish.pardonall"),
             java.util.Map.entry("warn", "punish.warn"),
             java.util.Map.entry("punish", "punish.templates"),
+            java.util.Map.entry("punish-undo", "punish.undo"),
+            java.util.Map.entry("punish-stats", "punish.stats"),
+            java.util.Map.entry("punish-export", "punish.export"),
             java.util.Map.entry("verstoss", "punish.verstoss"),
             java.util.Map.entry("verstoß", "punish.verstoss"),
             java.util.Map.entry("punish-note", "punish.note"),

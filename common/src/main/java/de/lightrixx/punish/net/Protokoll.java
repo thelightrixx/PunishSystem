@@ -201,6 +201,7 @@ public final class Protokoll {
     public static final String GUI_REPORTS = "REPORTS";
     public static final String GUI_REPORT_INFO = "REPORT_INFO";
     public static final String GUI_KATALOG = "KATALOG";
+    public static final String GUI_DOSSIER = "DOSSIER";
 
     public static final int MAX_GUI_ZEILEN = 54;
     public static final int MAX_GUI_TEXT = 1000;

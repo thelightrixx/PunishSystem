@@ -97,6 +97,7 @@ public final class GuiBrueckenDienst {
                 case Protokoll.GUI_REPORTS -> reports(anfrage);
                 case Protokoll.GUI_REPORT_INFO -> reportInfo(anfrage);
                 case Protokoll.GUI_KATALOG -> katalog(anfrage);
+                case Protokoll.GUI_DOSSIER -> dossier(anfrage);
                 default -> new Protokoll.GuiAntwort(anfrage.requestId(), false,
                         "Unbekannter GUI-Typ: " + anfrage.typ(), 1, 1, 0, List.of());
             };
@@ -448,6 +449,195 @@ public final class GuiBrueckenDienst {
                 gesamt == 0 ? java.util.List.of() : java.util.List.copyOf(quelle.subList(von, bis));
         return new Protokoll.GuiAntwort(anfrage.requestId(), true, "Katalog",
                 seite, seiten, gesamt, ausschnitt);
+    }
+
+    private Protokoll.GuiAntwort dossier(Protokoll.GuiAnfrage anfrage) {
+        Optional<CachedPlayer> ziel = loeseZiel(anfrage.ziel());
+        if (ziel.isEmpty()) {
+            return new Protokoll.GuiAntwort(anfrage.requestId(), false,
+                    "Spieler nicht gefunden: " + anfrage.ziel(), 1, 1, 0, List.of());
+        }
+        if (istGeschuetzt(ziel.get().uuid())) {
+            return new Protokoll.GuiAntwort(anfrage.requestId(), false,
+                    "Dieser Spieler ist geschützt.", 1, 1, 0, List.of());
+        }
+        UUID uuid = ziel.get().uuid();
+        String name = ziel.get().name();
+        long jetzt = System.currentTimeMillis();
+        List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
+
+        int banns = 0;
+        int mutes = 0;
+        int timeouts = 0;
+        int freezes = 0;
+        int verstoesse = 0;
+        int warns = 0;
+        long warnAblauf = 0L;
+        try {
+            warnAblauf = Math.max(0L, config.warnAblaufMillis());
+        } catch (Exception e) {
+            logger.debug("Warn-Ablauf für Dossier nicht lesbar.", e);
+        }
+        try {
+            for (var bann : banRepository.alleFuer(uuid)) {
+                if (bann != null && bann.istAktiv(jetzt)) {
+                    banns++;
+                    zeilen.add(new Protokoll.GuiZeile("BAN",
+                            "Bann [" + bann.scope().anzeige() + "]",
+                            "Grund: " + bann.grund() + "\nVon: " + bann.ausfuehrer()
+                                    + "\nAblauf: " + formatAblauf(bann.ablaufAm()),
+                            "pardon " + name, name));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Bans fehlgeschlagen.", e);
+        }
+        try {
+            for (var mute : muteRepository.alleFuer(uuid)) {
+                if (mute != null && mute.istAktiv(jetzt)) {
+                    mutes++;
+                    zeilen.add(new Protokoll.GuiZeile("MUTE",
+                            "Mute [" + mute.scope().anzeige() + "]",
+                            "Grund: " + mute.grund() + "\nVon: " + mute.ausfuehrer()
+                                    + "\nAblauf: " + formatAblauf(mute.ablaufAm()),
+                            "unmute " + name, name));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Mutes fehlgeschlagen.", e);
+        }
+        try {
+            for (var timeout : timeoutRepository.alleFuer(uuid)) {
+                if (timeout != null && timeout.istAktiv(jetzt)) {
+                    timeouts++;
+                    zeilen.add(new Protokoll.GuiZeile("TIMEOUT",
+                            "Timeout [" + timeout.scope().anzeige() + "]",
+                            "Grund: " + timeout.grund() + "\nVon: " + timeout.ausfuehrer()
+                                    + "\nAblauf: " + formatAblauf(timeout.ablaufAm()),
+                            "untimeout " + name, name));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Timeouts fehlgeschlagen.", e);
+        }
+        try {
+            FreezeRepository freezesRepo = freezeRepository;
+            if (freezesRepo != null) {
+                for (var freeze : freezesRepo.alleFuer(uuid)) {
+                    if (freeze != null && freeze.istAktiv(jetzt)) {
+                        freezes++;
+                        zeilen.add(new Protokoll.GuiZeile("FREEZE",
+                                "Freeze [" + freeze.scope().anzeige() + "]",
+                                "Grund: " + freeze.grund() + "\nVon: " + freeze.ausfuehrer()
+                                        + "\nAblauf: " + (freeze.istPermanent() ? "Permanent"
+                                                : formatAblauf(freeze.ablaufAm())),
+                                "unfreeze " + name, name));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Freezes fehlgeschlagen.", e);
+        }
+        try {
+            if (verstossRepository != null) {
+                for (var verstoss : verstossRepository.finden(uuid)) {
+                    if (verstoss != null) {
+                        verstoesse++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Verstöße fehlgeschlagen.", e);
+        }
+        try {
+            if (warnRepository != null) {
+                for (var warn : warnRepository.finden(uuid)) {
+                    if (warn == null) {
+                        continue;
+                    }
+                    boolean abgelaufen = warnAblauf > 0L
+                            && warn.erstelltAm() + warnAblauf <= jetzt;
+                    if (!abgelaufen) {
+                        warns++;
+                    }
+                    zeilen.add(new Protokoll.GuiZeile("WARN",
+                            "Warnung #" + warn.nummer() + (abgelaufen ? " (abgelaufen)" : ""),
+                            "Grund: " + warn.grund() + "\nVon: " + warn.ausfuehrer()
+                                    + "\nAm: " + formatZeitpunkt(warn.erstelltAm()),
+                            "warn list " + name, name));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Warns fehlgeschlagen.", e);
+        }
+
+        int offeneReports = 0;
+        try {
+            if (reportService != null) {
+                for (ReportRecord report : reportService.alle()) {
+                    if (report == null || !uuid.equals(report.zielUuid()) || !report.istOffen()) {
+                        continue;
+                    }
+                    offeneReports++;
+                    zeilen.add(new Protokoll.GuiZeile("REPORT",
+                            "Report #" + report.id() + " (" + report.status().name() + ")",
+                            "Von: " + report.reporterName() + "\nGrund: " + report.grund()
+                                    + "\nServer: " + report.server()
+                                    + "\nAm: " + formatZeitpunkt(report.erstelltAm()),
+                            "reports info " + report.id(), name));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-Reports fehlgeschlagen.", e);
+        }
+
+        List<Protokoll.GuiZeile> kopf = new ArrayList<>();
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_STATUS", "Spielerakte " + name,
+                "UUID: " + uuid
+                        + "\nAktiv: Bans " + banns + ", Mutes " + mutes
+                        + ", Timeouts " + timeouts + ", Freezes " + freezes
+                        + "\nVerstöße: " + verstoesse + " | Warns: " + warns
+                        + " | Offene Reports: " + offeneReports,
+                "", name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Bannen",
+                "Öffnet die GUI-Auswahl für einen Bann.", "gui:ban", name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Muten",
+                "Öffnet die GUI-Auswahl für einen Mute.", "gui:mute", name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Verwarnen",
+                "Öffnet die GUI-Auswahl für eine Verwarnung.", "gui:warn", name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Kicken",
+                "Öffnet die GUI-Auswahl für einen Kick.", "gui:kick", name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Strafen",
+                "Zeigt alle aktiven Strafen.", "punish-status " + name, name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Verlauf",
+                "Zeigt /punish-history im Chat.", "punish-history " + name, name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Notizen",
+                "Zeigt Notizen im Chat.", "punish-note list " + name, name));
+        kopf.add(new Protokoll.GuiZeile("DOSSIER_AKTION", "Reports",
+                "Öffnet die offene Report-Liste.", "reports", name));
+
+        try {
+            if (historyService != null) {
+                List<HistoryEntry> verlauf = historyService.findeSpielerHistory(uuid, 10);
+                for (HistoryEntry eintrag : verlauf) {
+                    if (eintrag == null) {
+                        continue;
+                    }
+                    String aktion = klickFuerHistory(eintrag);
+                    zeilen.add(new Protokoll.GuiZeile("HISTORY",
+                            eintrag.typ().anzeigename() + " [" + eintrag.scope() + "]",
+                            "Grund: " + eintrag.grund() + "\nVon: " + eintrag.ausfuehrer()
+                                    + "\nAm: " + formatZeitpunkt(eintrag.zeitstempel()),
+                            aktion == null ? "" : aktion, name));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Dossier-History fehlgeschlagen.", e);
+        }
+
+        List<Protokoll.GuiZeile> alle = new ArrayList<>(kopf);
+        alle.addAll(zeilen);
+        return paginieren(anfrage, alle, "Dossier für " + name);
     }
 
     private Protokoll.GuiAntwort paginieren(Protokoll.GuiAnfrage anfrage, List<Protokoll.GuiZeile> alle, String kopf) {

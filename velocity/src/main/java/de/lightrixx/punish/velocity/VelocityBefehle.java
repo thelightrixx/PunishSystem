@@ -29,6 +29,9 @@ import de.lightrixx.punish.command.PsCheckCommand;
 import de.lightrixx.punish.command.PunishHelpCommand;
 import de.lightrixx.punish.command.PunishVersionCommand;
 import de.lightrixx.punish.command.PunishVorlageCommand;
+import de.lightrixx.punish.command.PunishUndoCommand;
+import de.lightrixx.punish.command.PunishStatsCommand;
+import de.lightrixx.punish.command.PunishExportCommand;
 import de.lightrixx.punish.command.PunishCommand;
 import de.lightrixx.punish.command.PunishEditCommand;
 import de.lightrixx.punish.command.ReportCommand;
@@ -122,7 +125,7 @@ public final class VelocityBefehle {
                 timeParser, planer, verzeichnis, banRepository, ipBanRepository, muteRepository,
                 timeoutRepository, freezeRepository, verstossRepository, noteRepository, warnRepository,
                 reportRepository, historyRepository, ipMuteRepository, ipTimeoutRepository,
-                kanal, ioExecutor, null);
+                kanal, ioExecutor, null, null);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -147,7 +150,8 @@ public final class VelocityBefehle {
                                  HistoryRepository historyRepository,
                                  IpMuteRepository ipMuteRepository,
                                  IpTimeoutRepository ipTimeoutRepository,
-                                 BrueckenKanal kanal, IoExecutor ioExecutor, UpdateVerteilung updateVerteilung) {
+                                 BrueckenKanal kanal, IoExecutor ioExecutor, UpdateVerteilung updateVerteilung,
+                                 java.io.File datenOrdner) {
         CommandManager manager = proxy.getCommandManager();
         java.util.Map<String, PunishCommand> vorlagenZiele = new java.util.LinkedHashMap<>();
         BanCommand ban = new BanCommand(messageService, config, protectionService, playerCache,
@@ -162,9 +166,9 @@ public final class VelocityBefehle {
                 ipBanService, timeParser, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "ban-ip", List.of(), banIp);
         vorlagenZiele.put("ban-ip", banIp);
-        registrar(manager, plugin, proxy, messageService, "unban-ip", List.of(),
-                new UnbanIpCommand(messageService, config, protectionService, playerCache,
-                        ipBanService, ipBanRepository, planer, verzeichnis));
+        UnbanIpCommand unbanIp = new UnbanIpCommand(messageService, config, protectionService,
+                playerCache, ipBanService, ipBanRepository, planer, verzeichnis);
+        registrar(manager, plugin, proxy, messageService, "unban-ip", List.of(), unbanIp);
         BanAllCommand banAll = new BanAllCommand(messageService, config, protectionService, playerCache,
                 banService, timeParser, planer, verzeichnis);
         banAll.setIoExecutor(ioExecutor);
@@ -173,9 +177,9 @@ public final class VelocityBefehle {
                 muteService, timeParser, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "mute", List.of(), mute);
         vorlagenZiele.put("mute", mute);
-        registrar(manager, plugin, proxy, messageService, "unmute", List.of(),
-                new UnmuteCommand(messageService, config, protectionService, playerCache,
-                        muteService, verzeichnis));
+        UnmuteCommand unmute = new UnmuteCommand(messageService, config, protectionService,
+                playerCache, muteService, verzeichnis);
+        registrar(manager, plugin, proxy, messageService, "unmute", List.of(), unmute);
         MuteIpCommand muteIp = new MuteIpCommand(messageService, config, protectionService, playerCache,
                 ipMuteService, timeParser, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "mute-ip", List.of("muteip"), muteIp);
@@ -188,9 +192,10 @@ public final class VelocityBefehle {
                 muteService, planer, verzeichnis);
         unmuteAll.setIoExecutor(ioExecutor);
         registrar(manager, plugin, proxy, messageService, "unmute-all", List.of(), unmuteAll);
+        UnmuteIpCommand unmuteIp = new UnmuteIpCommand(messageService, config, protectionService,
+                playerCache, ipMuteService, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "unmute-ip", List.of("unmuteip"),
-                new UnmuteIpCommand(messageService, config, protectionService, playerCache,
-                        ipMuteService, verzeichnis));
+                unmuteIp);
         KickCommand kick = new KickCommand(messageService, config, protectionService, playerCache,
                 kickService, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "kick", List.of(), kick);
@@ -216,9 +221,9 @@ public final class VelocityBefehle {
                 timeoutService, timeParser, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "timeout", List.of(), timeout);
         vorlagenZiele.put("timeout", timeout);
-        registrar(manager, plugin, proxy, messageService, "untimeout", List.of(),
-                new UntimeoutCommand(messageService, config, protectionService, playerCache,
-                        timeoutService, verzeichnis));
+        UntimeoutCommand untimeout = new UntimeoutCommand(messageService, config,
+                protectionService, playerCache, timeoutService, verzeichnis);
+        registrar(manager, plugin, proxy, messageService, "untimeout", List.of(), untimeout);
         TimeoutIpCommand timeoutIp = new TimeoutIpCommand(messageService, config, protectionService, playerCache,
                 ipTimeoutService, timeParser, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "timeout-ip", List.of("timeoutip"), timeoutIp);
@@ -231,16 +236,17 @@ public final class VelocityBefehle {
                 playerCache, timeoutService, planer, verzeichnis);
         untimeoutAll.setIoExecutor(ioExecutor);
         registrar(manager, plugin, proxy, messageService, "untimeout-all", List.of(), untimeoutAll);
+        UntimeoutIpCommand untimeoutIp = new UntimeoutIpCommand(messageService, config,
+                protectionService, playerCache, ipTimeoutService, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "untimeout-ip", List.of("untimeoutip"),
-                new UntimeoutIpCommand(messageService, config, protectionService, playerCache,
-                        ipTimeoutService, verzeichnis));
+                untimeoutIp);
         FreezeCommand freeze = new FreezeCommand(messageService, config, protectionService, playerCache,
                 freezeService, timeParser, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "freeze", List.of(), freeze);
         vorlagenZiele.put("freeze", freeze);
-        registrar(manager, plugin, proxy, messageService, "unfreeze", List.of(),
-                new UnfreezeCommand(messageService, config, protectionService, playerCache,
-                        freezeService, verzeichnis));
+        UnfreezeCommand unfreeze = new UnfreezeCommand(messageService, config, protectionService,
+                playerCache, freezeService, verzeichnis);
+        registrar(manager, plugin, proxy, messageService, "unfreeze", List.of(), unfreeze);
         registrar(manager, plugin, proxy, messageService, "verstoss", List.of("verstoß"),
                 new VerstossCommand(messageService, config, protectionService, playerCache,
                         verstossService, planer, verzeichnis));
@@ -256,6 +262,27 @@ public final class VelocityBefehle {
                 warnService, planer, verzeichnis);
         registrar(manager, plugin, proxy, messageService, "warn", List.of("warnung", "verwarnung"), warn);
         vorlagenZiele.put("warn", warn);
+        java.util.Map<String, PunishCommand> undoZiele = new java.util.LinkedHashMap<>();
+        undoZiele.put("pardon", pardon);
+        undoZiele.put("unban-ip", unbanIp);
+        undoZiele.put("unmute", unmute);
+        undoZiele.put("unmute-ip", unmuteIp);
+        undoZiele.put("untimeout", untimeout);
+        undoZiele.put("untimeout-ip", untimeoutIp);
+        undoZiele.put("unfreeze", unfreeze);
+        undoZiele.put("warn", warn);
+        registrar(manager, plugin, proxy, messageService, "punish-undo", List.of("psundo"),
+                new PunishUndoCommand(messageService, config, protectionService, playerCache,
+                        verzeichnis, historyService, warnService, undoZiele));
+        registrar(manager, plugin, proxy, messageService, "punish-stats", List.of("psstats"),
+                new PunishStatsCommand(messageService, config, protectionService, playerCache,
+                        verzeichnis, historyService, reportService, timeParser));
+        if (datenOrdner != null) {
+            registrar(manager, plugin, proxy, messageService, "punish-export", List.of("psexport"),
+                    new PunishExportCommand(messageService, config, protectionService, playerCache,
+                            verzeichnis, planer, historyRepository, warnRepository, noteRepository,
+                            reportRepository, datenOrdner));
+        }
         registrar(manager, plugin, proxy, messageService, "report", List.of("melden"),
                 new ReportCommand(messageService, config, protectionService, playerCache,
                         reportService, verzeichnis));

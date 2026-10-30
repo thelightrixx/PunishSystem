@@ -144,4 +144,55 @@ class ChatfilterBefehlTest {
         befehl.ausfuehren(sender, new String[]{"sync"});
         verify(messageService).senden(sender, MessageKeys.CHATFILTER_SYNC_AUS);
     }
+
+    @Test
+    void liste_zeigtWoerter() {
+        when(kanal.textWoerter()).thenReturn(java.util.List.of("wortA", "wortB"));
+        befehl.ausfuehren(sender, new String[]{"list"});
+        verify(kanal).textWoerter();
+        verify(messageService).sendeBlock(eq(sender), any());
+    }
+
+    @Test
+    void liste_leer_meldetLeer() {
+        when(kanal.textWoerter()).thenReturn(java.util.List.of());
+        befehl.ausfuehren(sender, new String[]{"list"});
+        verify(messageService).sendeBlock(eq(sender), any());
+    }
+
+    @Test
+    void remove_entferntWort() {
+        when(kanal.textWortEntfernen("worta")).thenReturn(true);
+        befehl.ausfuehren(sender, new String[]{"remove", "WortA"});
+        verify(kanal).textWortEntfernen("worta");
+        verify(messageService).senden(eq(sender), eq(MessageKeys.CHATFILTER_REMOVE_ERFOLG), anyMap());
+    }
+
+    @Test
+    void remove_unbekannt_meldetNichtGefunden() {
+        when(kanal.textWortEntfernen("worta")).thenReturn(false);
+        befehl.ausfuehren(sender, new String[]{"remove", "wortA"});
+        verify(messageService).senden(eq(sender), eq(MessageKeys.CHATFILTER_REMOVE_NICHT_GEFUNDEN), anyMap());
+    }
+
+    @Test
+    void test_findetWortlistenTreffer() {
+        when(kanal.textWoerter()).thenReturn(java.util.List.of("arsch"));
+        befehl.ausfuehren(sender, new String[]{"test", "Du", "Arschloch"});
+        verify(messageService).senden(eq(sender), eq(MessageKeys.CHATFILTER_TEST_TREFFER), anyMap());
+    }
+
+    @Test
+    void test_ohneTreffer_meldetSauber() {
+        when(kanal.textWoerter()).thenReturn(java.util.List.of("arsch"));
+        befehl.ausfuehren(sender, new String[]{"test", "Hallo", "Welt"});
+        verify(messageService).senden(eq(sender), eq(MessageKeys.CHATFILTER_TEST_SAUBER), anyMap());
+    }
+
+    @Test
+    void tabComplete_removeBietetWoerter() {
+        when(kanal.textWoerter()).thenReturn(java.util.List.of("wortA", "wortB"));
+        var vorschlaege = befehl.vervollstaendigen(sender, new String[]{"remove", "wort"});
+        assertEquals(java.util.List.of("wortA", "wortB"), vorschlaege);
+    }
 }

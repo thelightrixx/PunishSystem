@@ -235,7 +235,7 @@ public final class PunishVelocity {
                 verstossService, noteService, warnService, reportService, historyService, broadcastService,
                 timeParser, planer, verzeichnis, banRepository, ipBanRepository, muteRepository,
                 timeoutRepository, freezeRepository, verstossRepository, noteRepository, warnRepository, reportRepository, historyRepository,
-                 ipMuteRepository, ipTimeoutRepository, kanal, ioExecutor, updateVerteilung);
+                 ipMuteRepository, ipTimeoutRepository, kanal, ioExecutor, updateVerteilung, ordner);
         starteUpdateAutoCheck(config);
 
         GuiBrueckenDienst guiDienst = new GuiBrueckenDienst(proxy, logger, config, playerCache,

@@ -33,6 +33,7 @@ public final class GuiManager {
     private final Map<UUID, Long> letzteAnfrage = new ConcurrentHashMap<>();
     private final Map<UUID, Long> sitzungZeit = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> listenSeiten = new ConcurrentHashMap<>();
+    private final Map<UUID, List<String>> dossierAktionen = new ConcurrentHashMap<>();
     private final Map<UUID, Long> reportIds = new ConcurrentHashMap<>();
     private static final long SITZUNG_TTL_MILLIS = 60L * 60L * 1000L;
     private static final long EINGABE_TTL_MILLIS = 60L * 1000L;
@@ -80,6 +81,7 @@ public final class GuiManager {
         sitzungZeit.remove(uuid);
         wartendeEingabeZeit.remove(uuid);
         listenSeiten.remove(uuid);
+        dossierAktionen.remove(uuid);
         reportIds.remove(uuid);
     }
 
@@ -256,6 +258,20 @@ public final class GuiManager {
         ladeUndOeffne(spieler, GuiMenues.Menue.REPORTS, "Reports", Protokoll.GUI_REPORTS, seite);
     }
 
+    public void oeffneDossier(Player spieler, int seite) {
+        ladeUndOeffne(spieler, GuiMenues.Menue.DOSSIER, "Dossier", Protokoll.GUI_DOSSIER, seite);
+    }
+
+    public void oeffneDossier(Player spieler, String ziel, int seite) {
+        if (spieler == null) {
+            return;
+        }
+        if (ziel != null && !ziel.isBlank()) {
+            sitzung(spieler).ziel(ziel.trim());
+        }
+        oeffneDossier(spieler, seite);
+    }
+
     public void oeffneReportInfo(Player spieler, long id) {
         if (spieler == null || id <= 0L) {
             return;
@@ -328,6 +344,15 @@ public final class GuiManager {
                     if (!(offenes instanceof GuiMenues.GuiHolder holder) || holder.menue() != menue) {
                         return;
                     }
+                    if (menue == GuiMenues.Menue.DOSSIER) {
+                        List<String> aktionen = new ArrayList<>();
+                        if (versand != null) {
+                            for (Protokoll.GuiZeile zeile : versand.eintraege()) {
+                                aktionen.add(zeile == null ? "" : zeile.aktion());
+                            }
+                        }
+                        dossierAktionen.put(uuid, List.copyOf(aktionen));
+                    }
                     Inventory inv = menue == GuiMenues.Menue.REPORT_DETAIL
                             ? GuiMenues.reportDetail(versand, detailIdKopie)
                             : GuiMenues.liste(menue, kopf + " " + (zielKopie.isBlank() ? "" : zielKopie), versand);
@@ -390,6 +415,7 @@ public final class GuiManager {
             case HISTORY -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.HISTORY);
             case REPORTS -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.REPORTS);
             case REPORT_DETAIL -> klickReportDetail(spieler, sitzung, slot);
+            case DOSSIER -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.DOSSIER);
         };
     }
 
@@ -709,6 +735,8 @@ public final class GuiManager {
                 oeffneStatus(spieler, seite);
             } else if (menue == GuiMenues.Menue.HISTORY) {
                 oeffneHistory(spieler, seite);
+            } else if (menue == GuiMenues.Menue.DOSSIER) {
+                oeffneDossier(spieler, seite);
             } else {
                 oeffneReports(spieler, seite);
             }
@@ -732,13 +760,28 @@ public final class GuiManager {
                 oeffneStatus(spieler, neu);
             } else if (menue == GuiMenues.Menue.HISTORY) {
                 oeffneHistory(spieler, neu);
+            } else if (menue == GuiMenues.Menue.DOSSIER) {
+                oeffneDossier(spieler, neu);
             } else {
                 oeffneReports(spieler, neu);
             }
             return true;
         }
         if (slot >= 0 && slot < 45) {
-            String aktion = aktionAusLore(spieler, slot);
+            String aktion = null;
+            if (menue == GuiMenues.Menue.DOSSIER) {
+                List<String> zwischen = dossierAktionen.get(spieler.getUniqueId());
+                if (zwischen != null && slot < zwischen.size()) {
+                    aktion = zwischen.get(slot);
+                }
+            }
+            if (aktion == null || aktion.isBlank()) {
+                aktion = aktionAusLore(spieler, slot);
+            }
+            if (aktion != null && aktion.startsWith("gui:") && menue == GuiMenues.Menue.DOSSIER) {
+                dossierAktion(spieler, sitzung, aktion);
+                return true;
+            }
             if (aktion != null && !aktion.isBlank()) {
                 if (menue == GuiMenues.Menue.REPORTS && aktion.startsWith("reports info ")) {
                     String idRoh = aktion.substring("reports info ".length()).trim();
@@ -759,6 +802,8 @@ public final class GuiManager {
                         oeffneHistory(spieler, sitzung.seite());
                     } else if (menue == GuiMenues.Menue.REPORTS) {
                         oeffneReports(spieler, sitzung.seite());
+                    } else if (menue == GuiMenues.Menue.DOSSIER) {
+                        oeffneDossier(spieler, sitzung.seite());
                     }
                 } catch (Exception e) {
                     spieler.sendMessage(prefixHinweis("Proxy nicht erreichbar.", NamedTextColor.RED));
@@ -767,6 +812,42 @@ public final class GuiManager {
             return true;
         }
         return true;
+    }
+
+    private void dossierAktion(Player spieler, GuiSitzung sitzung, String aktion) {
+        String befehl = aktion.substring("gui:".length()).trim().toLowerCase(java.util.Locale.ROOT);
+        GuiSitzung.Aktion ziel = null;
+        for (GuiSitzung.Aktion kandidat : GuiSitzung.Aktion.values()) {
+            if (kandidat.befehl().equals(befehl)) {
+                ziel = kandidat;
+                break;
+            }
+        }
+        if (ziel == null) {
+            return;
+        }
+        if (!RangBuendel.gewaehrt(spieler::hasPermission, ziel.permission())) {
+            spieler.sendMessage(prefixHinweis(
+                    "Dazu fehlt dir das Recht " + ziel.permission() + ".", NamedTextColor.RED));
+            return;
+        }
+        if (sitzung.ziel().isBlank()) {
+            spieler.sendMessage(prefixHinweis("Erst einen Spieler wählen.", NamedTextColor.YELLOW));
+            return;
+        }
+        sitzung.aktion(ziel);
+        sitzung.grund("");
+        sitzung.dauer("");
+        sitzung.stufe("medium");
+        sitzung.schritt(ziel.brauchtGrund() ? GuiSitzung.Schritt.GRUND
+                : ziel.brauchtDauer() ? GuiSitzung.Schritt.DAUER : GuiSitzung.Schritt.SCOPE);
+        if (ziel.brauchtGrund()) {
+            oeffneGrund(spieler);
+        } else if (ziel.brauchtDauer()) {
+            oeffneDauer(spieler);
+        } else {
+            oeffneScope(spieler);
+        }
     }
 
     private boolean klickReportDetail(Player spieler, GuiSitzung sitzung, int slot) {

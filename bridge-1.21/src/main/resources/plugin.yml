@@ -16,6 +16,30 @@ commands:
     aliases: [psgui]
     permission: punish.gui
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-dossier:
+    description: Öffnet das Spieler-Dossier mit Status, Historie, Warns und Aktionen.
+    usage: /punish-dossier <Spieler>
+    aliases: [psdossier]
+    permission: punish.gui
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-undo:
+    description: Nimmt die letzte eigene Strafaktion zurück (wird an den Proxy weitergeleitet).
+    usage: /punish-undo [Spieler]
+    aliases: [psundo]
+    permission: punish.undo
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-stats:
+    description: Zeigt die Team-Statistik (wird an den Proxy weitergeleitet).
+    usage: /punish-stats [7d|30d|all] [Staff]
+    aliases: [psstats]
+    permission: punish.stats
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-export:
+    description: Schreibt ein JSON-Backup der Strafdaten (wird an den Proxy weitergeleitet).
+    usage: /punish-export
+    aliases: [psexport]
+    permission: punish.export
+    permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
   punish:
     description: Führt eine Straf-Vorlage aus (wird an den Proxy weitergeleitet).
     usage: /punish <Spieler> <Vorlage> [Text]
@@ -238,6 +262,9 @@ commands:
 permissions:
   punish.gui: { description: PunishGUI öffnen., default: false }
   punish.templates: { description: Straf-Vorlagen per /punish ausführen (via Proxy)., default: false }
+  punish.undo: { description: Letzte eigene Strafaktion zurücknehmen (via Proxy)., default: false }
+  punish.stats: { description: Team-Statistik einsehen (via Proxy)., default: false }
+  punish.export: { description: JSON-Backup der Strafdaten schreiben (via Proxy)., default: false }
   punish.allow-silent-syntax: { description: Stille Strafen mit -s ausführen (GUI-Toggle + Tunnel)., default: false }
   punish.mute: { description: Spieler muten (via Proxy)., default: false }
   punish.muteall: { description: Alle Spieler muten (via Proxy)., default: false }

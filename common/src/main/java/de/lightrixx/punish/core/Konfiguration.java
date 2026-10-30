@@ -65,6 +65,13 @@ public interface Konfiguration {
         return false;
     }
 
+    /**
+     * Gültigkeitsdauer einer Verwarnung in Millisekunden. 0 bedeutet unbegrenzt.
+     */
+    default long warnAblaufMillis() {
+        return 0L;
+    }
+
     default Map<Integer, VerstossStufe> warnEskalationsSchwellen() {
         return Map.of();
     }

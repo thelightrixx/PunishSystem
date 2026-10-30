@@ -231,6 +231,9 @@ public final class PunishBridge extends JavaPlugin {
         brigadierEintraege.add(tunnel("punish-version", new BridgeBefehlWeiterleitung(kanalClient, "punish-version", "punish.version", false, config)));
         brigadierEintraege.add(tunnel("punish-help", new BridgeBefehlWeiterleitung(kanalClient, "punish-help", "punish.help", false, config)));
         brigadierEintraege.add(tunnel("chatfilter", new BridgeBefehlWeiterleitung(kanalClient, "chatfilter", "punish.chatfilter", false, config)));
+        brigadierEintraege.add(tunnel("punish-undo", new BridgeBefehlWeiterleitung(kanalClient, "punish-undo", "punish.undo", false, config)));
+        brigadierEintraege.add(tunnel("punish-stats", new BridgeBefehlWeiterleitung(kanalClient, "punish-stats", "punish.stats", false, config)));
+        brigadierEintraege.add(tunnel("punish-export", new BridgeBefehlWeiterleitung(kanalClient, "punish-export", "punish.export", false, config)));
         registriereDiagnose(config, kanalClient, muteCache);
         try {
             var datenDienst = new de.lightrixx.punish.bridge.gui.GuiDatenDienst(kanalClient, config);
@@ -244,6 +247,15 @@ public final class PunishBridge extends JavaPlugin {
                 LOG.warn("Der Befehl 'punish-gui' ist nicht in der plugin.yml definiert.");
             }
             brigadierEintraege.add(eintragFuer("punish-gui", guiBefehl, false));
+            var dossierBefehl = new de.lightrixx.punish.bridge.gui.PunishGuiCommand(guiManager, true);
+            PluginCommand dossier = getCommand("punish-dossier");
+            if (dossier != null) {
+                dossier.setExecutor(dossierBefehl);
+                dossier.setTabCompleter(dossierBefehl);
+            } else {
+                LOG.warn("Der Befehl 'punish-dossier' ist nicht in der plugin.yml definiert.");
+            }
+            brigadierEintraege.add(eintragFuer("punish-dossier", dossierBefehl, false));
             getServer().getPluginManager().registerEvents(
                     new de.lightrixx.punish.bridge.gui.GuiListener(guiManager), this);
         } catch (Exception e) {

@@ -209,6 +209,10 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             case "punish-version", "psversion" -> List.of();
             case "punish-help", "pshelp" -> List.of();
             case "chatfilter" -> chatfilter(args, aktuell);
+            case "punish-stats", "psstats" -> args.length <= 1
+                    ? TabHinweis.filtere(List.of("7d", "30d", "90d", "all"), aktuell)
+                    : spielerVorschlag(sender, aktuell);
+            case "punish-export", "psexport" -> List.of();
             default -> args.length <= 2 ? spielerVorschlag(sender, aktuell) : endFlags(sender, aktuell);
         };
     }
@@ -272,6 +276,9 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             }
             case "permabann", "kick" -> position <= 1 ? "Spieler" : "Grund";
             case "punish" -> position <= 1 ? "Spieler" : position == 2 ? "Vorlage" : "Text";
+            case "punish-undo", "psundo" -> "Spieler";
+            case "punish-stats", "psstats" -> position <= 1 ? "Zeitraum" : "Staff";
+            case "punish-export", "psexport" -> "";
             case "kick-ip" -> position <= 1 ? "Spieler oder IP" : "Grund";
             case "ban-all", "mute-all", "timeout-all" -> position <= 1 ? "Dauer" : "Grund";
             case "kick-all", "pardon-all", "unmute-all", "untimeout-all" -> "Grund";

@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -328,6 +329,61 @@ public final class TextVerteilung {
             return true;
         } catch (Exception e) {
             logger.warn("Wort konnte nicht in die zentrale Wortliste aufgenommen werden.", e);
+            return false;
+        }
+    }
+
+    public List<String> woerter() {
+        File wortliste = new File(chatfilterOrdner, "wortliste.txt");
+        byte[] roh = leseStill(wortliste);
+        if (roh == null) {
+            return List.of();
+        }
+        List<String> ergebnis = new ArrayList<>();
+        for (String linie : new String(roh, StandardCharsets.UTF_8).split("\\R")) {
+            String getrimmt = linie.trim();
+            if (getrimmt.isEmpty() || getrimmt.startsWith("#")) {
+                continue;
+            }
+            ergebnis.add(getrimmt);
+        }
+        return List.copyOf(ergebnis);
+    }
+
+    public boolean wortEntfernen(String wort) {
+        Optional<String> gueltig = WortlistenFilter.gueltigerEintrag(wort);
+        if (gueltig.isEmpty()) {
+            return false;
+        }
+        try {
+            File wortliste = new File(chatfilterOrdner, "wortliste.txt");
+            byte[] roh = leseStill(wortliste);
+            if (roh == null) {
+                return false;
+            }
+            String gesucht = gueltig.get();
+            List<String> zeilen = new ArrayList<>();
+            boolean entfernt = false;
+            for (String linie : new String(roh, StandardCharsets.UTF_8).split("\\R")) {
+                if (!linie.trim().startsWith("#") && linie.trim().equalsIgnoreCase(gesucht)) {
+                    entfernt = true;
+                    continue;
+                }
+                zeilen.add(linie);
+            }
+            if (!entfernt) {
+                return false;
+            }
+            String neu = String.join("\n", zeilen);
+            if (!neu.endsWith("\n")) {
+                neu += "\n";
+            }
+            Files.writeString(wortliste.toPath(), neu, StandardCharsets.UTF_8);
+            laden();
+            syncAnAlle();
+            return true;
+        } catch (Exception e) {
+            logger.warn("Wort konnte nicht aus der zentralen Wortliste entfernt werden.", e);
             return false;
         }
     }

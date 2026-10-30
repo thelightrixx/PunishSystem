@@ -105,4 +105,19 @@ class PermissionsKonsistenzTest {
     void punishTemplatesInAllenQuellen() {
         pruefeDreiQuellen("punish.templates");
     }
+
+    @Test
+    void punishUndoInAllenQuellen() {
+        pruefeDreiQuellen("punish.undo");
+    }
+
+    @Test
+    void punishStatsInAllenQuellen() {
+        pruefeDreiQuellen("punish.stats");
+    }
+
+    @Test
+    void punishExportInAllenQuellen() {
+        pruefeDreiQuellen("punish.export");
+    }
 }
