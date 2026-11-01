@@ -217,7 +217,7 @@ class VerstossVerfallTest {
         umgebung.repository().laden();
         List<VerstossRecord> gefunden = umgebung.repository().finden(uuid);
         assertEquals(1, gefunden.size(),
-                "Altbestand ohne stufe-Schlüssel (EA-Upgrade) darf nicht in die Quarantäne.");
+                "Altbestand ohne stufe-Schlüssel darf nicht in die Quarantäne.");
         assertEquals(VerstossStufe.standard(), gefunden.getFirst().stufe());
     }
 

@@ -48,16 +48,6 @@ public final class PluginVersion {
                 throw new IllegalArgumentException("Leere Buildnummer nach '+' in '" + eingabe + "'.");
             }
             BuildNumber build = BuildNumber.parse(buildTeil);
-            if (!build.istDatum()) {
-                int major = majorAus(basisTeil);
-                int minor = minorAus(basisTeil);
-                String erwartet = BuildNumber.trainFuer(major, minor);
-                if (!build.train().equals(erwartet)) {
-                    throw new IllegalArgumentException("Build '" + build + "' passt nicht zu Basis '" + basisTeil
-                            + "' (Train " + build.train() + " = Version " + build.trainMajor() + "." + build.trainMinor()
-                            + ", erwartet " + erwartet + " fuer " + major + "." + minor + ").");
-                }
-            }
             return new PluginVersion(basisTeil, build);
         }
         return new PluginVersion(basisTeil, null);
@@ -118,10 +108,6 @@ public final class PluginVersion {
         return minorAus(basis);
     }
 
-    public String erwarteterTrain() {
-        return BuildNumber.trainFuer(major(), minor());
-    }
-
     public BuildNumber build() {
         return build;
     }
@@ -163,10 +149,7 @@ public final class PluginVersion {
     }
 
     public String logZeile() {
-        if (build == null || build.stabilitaet() == null) {
-            return voll();
-        }
-        return voll() + " (" + build.stabilitaet().beschreibung() + ")";
+        return voll();
     }
 
     @Override

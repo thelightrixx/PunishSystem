@@ -320,14 +320,14 @@ class FixPaketRegressionTest {
     // D-006 Downgrade
     @Test
     void d006_downgradeErkannt() {
-        assertTrue(Konfiguration.istDowngrade("EA99z"));
-        assertFalse(Konfiguration.istDowngrade("EA01a"));
+        assertTrue(Konfiguration.istDowngrade("2026-11-02"));
+        assertFalse(Konfiguration.istDowngrade("2026-10-31"));
         assertFalse(Konfiguration.istDowngrade(Konfiguration.AKTUELLE_CONFIG_VERSION));
         assertFalse(Konfiguration.istDowngrade(null));
         assertFalse(Konfiguration.istDowngrade("unbekannt"));
-        assertTrue(Konfiguration.istConfigNeuerAlsJar("EA26a", "EA25b"));
-        assertFalse(Konfiguration.istConfigNeuerAlsJar("EA25b", "EA25b"));
-        assertTrue(Konfiguration.istConfigNeuerAlsJar("EA26", "EA25b"));
-        assertFalse(Konfiguration.istConfigNeuerAlsJar("EA25b", "EA26"));
+        assertTrue(Konfiguration.istConfigNeuerAlsJar("2026-11-02", "2026-11-01"));
+        assertFalse(Konfiguration.istConfigNeuerAlsJar("2026-11-01", "2026-11-01"));
+        assertTrue(Konfiguration.istConfigNeuerAlsJar("2026-11-01", "2026-10-31"));
+        assertFalse(Konfiguration.istConfigNeuerAlsJar("2026-10-31", "2026-11-01"));
     }
 }

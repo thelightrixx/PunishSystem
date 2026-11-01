@@ -12,9 +12,9 @@
 # Nach Änderungen: Proxy neustarten oder /punish-reload nutzen.
 # =========================================================
 
-# Schema-Version dieser Config (EA26). Bei Downgrade (neuere Config auf älterer Jar)
+# Schema-Version dieser Config (2026-11-01). Bei Downgrade (neuere Config auf älterer Jar)
 # Warnung im Log, kein Abbruch. Bitte nach Update /punish-reload nutzen.
-config-version: "EA26"
+config-version: "2026-11-01"
 
 prefix: "<dark_gray>[<red>PunishSystem<dark_gray>]"
 

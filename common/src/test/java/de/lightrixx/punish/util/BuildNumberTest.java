@@ -11,77 +11,33 @@ import static org.junit.jupiter.api.Assertions.*;
 class BuildNumberTest {
 
     @Test
-    void parseGueltig() {
-        BuildNumber nummer = BuildNumber.parse("AB12b");
-        assertEquals("AB", nummer.train());
-        assertEquals(12, nummer.nummer());
-        assertEquals(BuildNumber.Stabilitaet.B, nummer.stabilitaet());
-        assertEquals("AB12b", nummer.toString());
-        assertEquals("AB12b (Release Candidate – fast final)", nummer.beschreibung());
+    void parseDatumMitMinute() {
+        BuildNumber nummer = BuildNumber.parse("011126-1853");
+        assertEquals("011126-1853", nummer.toString());
+        assertEquals(LocalDateTime.of(2026, 11, 1, 18, 53), nummer.zeitpunkt().orElseThrow());
+        assertEquals("011126-1853 (Build vom 01.11.2026, 18:53 Uhr)", nummer.beschreibung());
     }
 
     @Test
-    void parsePlatzhalter() {
-
-        BuildNumber nummer = BuildNumber.parse("XX00a");
-        assertEquals("XX", nummer.train());
-        assertEquals(0, nummer.nummer());
-        assertEquals("00", nummer.nummerFormatiert());
+    void parseAlteStundenangabeBleibtLesbar() {
+        BuildNumber nummer = BuildNumber.parse("011126-18");
+        assertEquals("011126-1800", nummer.toString());
+        assertEquals(LocalDateTime.of(2026, 11, 1, 18, 0), nummer.zeitpunkt().orElseThrow());
+        assertEquals(nummer, BuildNumber.parse("011126-1800"));
     }
 
     @Test
-    void parseNormalisiertGrossUndKlein() {
-        assertEquals("AB12b", BuildNumber.parse("ab12B").toString());
-        assertEquals("AA01a", BuildNumber.parse("AA01a").toString());
-        assertEquals("AA01z", BuildNumber.parse("AA01Z").toString());
-    }
-
-    @Test
-    void parseDatum() {
-        BuildNumber nummer = BuildNumber.parse("011126-19");
-        assertTrue(nummer.istDatum());
-        assertEquals("011126-19", nummer.toString());
-        assertEquals(LocalDateTime.of(2026, 11, 1, 19, 0), nummer.zeitpunkt().orElseThrow());
-        assertEquals("011126-19 (Build vom 01.11.2026, 19 Uhr)", nummer.beschreibung());
-    }
-
-    @Test
-    void datumFabrikNormalisiertAufStunde() {
+    void datumFabrikNormalisiertAufMinute() {
         BuildNumber nummer = BuildNumber.datum(LocalDateTime.of(2026, 11, 1, 19, 45, 30));
-        assertEquals("011126-19", nummer.toString());
-        assertEquals(LocalDateTime.of(2026, 11, 1, 19, 0), nummer.zeitpunkt().orElseThrow());
-    }
-
-    @Test
-    void parseOhneStufenbuchstabeIstFreigabe() {
-        BuildNumber nummer = BuildNumber.parse("EA26");
-        assertEquals("EA", nummer.train());
-        assertEquals(26, nummer.nummer());
-        assertNull(nummer.stabilitaet());
-        assertEquals("EA26", nummer.toString());
-        assertEquals("EA26 (Freigabe – ohne Stufenbuchstabe)", nummer.beschreibung());
-        assertTrue(nummer.istMindestens(BuildNumber.Stabilitaet.B));
-        assertEquals("EA27", nummer.naechsterBuild().toString());
-        assertNull(nummer.naechsterBuild().stabilitaet());
-    }
-
-    @Test
-    void parseVergleichMitUndOhneBuchstabe() {
-        BuildNumber freigabe = BuildNumber.parse("EA26");
-        BuildNumber rcAlt = BuildNumber.parse("EA26b");
-        BuildNumber beta = BuildNumber.parse("EA26c");
-        assertTrue(freigabe.compareTo(rcAlt) < 0);
-        assertTrue(rcAlt.compareTo(beta) < 0);
-        assertTrue(freigabe.compareTo(beta) < 0);
-        assertEquals(0, freigabe.compareTo(BuildNumber.parse("EA26")));
-        assertEquals("EA26", BuildNumber.von("EA", 26).toString());
+        assertEquals("011126-1945", nummer.toString());
+        assertEquals(LocalDateTime.of(2026, 11, 1, 19, 45), nummer.zeitpunkt().orElseThrow());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", " ", "A12b", "ABC12b", "AB1b", "AB123b",
-            "AB121", "AB12-", "AB12!", "12ABb", "AB-b", "AB12bb", "AB 12b",
-            "011126-24", "320126-12", "011326-12", "290226-12", "011126-9",
-            "011126", "011126-19-1", "011126_19"})
+    @ValueSource(strings = {"", " ", "A12b", "AB12b",
+            "011126-24", "011126-1860", "320126-1200", "011326-1200", "290226-1200",
+            "011126-9", "011126", "011126-1853-1", "011126_1853", "011126-18-53",
+            "011126-185", "011126-18533"})
     void parseUngueltig(String eingabe) {
         assertTrue(BuildNumber.tryParse(eingabe).isEmpty(), eingabe);
         assertFalse(BuildNumber.istGueltig(eingabe));
@@ -95,97 +51,53 @@ class BuildNumberTest {
     }
 
     @Test
-    void stabilitaetAufloesung() {
-        assertEquals(BuildNumber.Stabilitaet.A, BuildNumber.Stabilitaet.vonCode('a'));
-        assertEquals(BuildNumber.Stabilitaet.Z, BuildNumber.Stabilitaet.vonCode('Z'));
-        assertEquals(BuildNumber.Stabilitaet.G, BuildNumber.Stabilitaet.vonCode('g'));
-        assertThrows(IllegalArgumentException.class, () -> BuildNumber.Stabilitaet.vonCode('1'));
-        assertThrows(IllegalArgumentException.class, () -> BuildNumber.Stabilitaet.vonCode('-'));
-    }
-
-    @Test
-    void aIstStabilsteStufe() {
-
-        assertTrue(BuildNumber.Stabilitaet.A.featureFertig());
-        assertTrue(BuildNumber.Stabilitaet.B.featureFertig());
-        assertTrue(BuildNumber.Stabilitaet.C.featureFertig());
-        assertFalse(BuildNumber.Stabilitaet.D.featureFertig());
-        assertFalse(BuildNumber.Stabilitaet.E.featureFertig());
-        assertFalse(BuildNumber.Stabilitaet.Z.featureFertig());
-        assertEquals("Final – stabilste Stufe, Release-reif",
-                BuildNumber.Stabilitaet.A.beschreibung());
-        assertTrue(BuildNumber.parse("AA01a").istMindestens(BuildNumber.Stabilitaet.B));
-        assertTrue(BuildNumber.parse("AA01b").istMindestens(BuildNumber.Stabilitaet.B));
-        assertFalse(BuildNumber.parse("AA01c").istMindestens(BuildNumber.Stabilitaet.B));
-        assertFalse(BuildNumber.parse("AA01z").istMindestens(BuildNumber.Stabilitaet.B));
-    }
-
-    @Test
     void vergleichAufsteigend() {
-        BuildNumber a = BuildNumber.parse("AA01a");
-        BuildNumber b = BuildNumber.parse("AA01b");
-        BuildNumber c = BuildNumber.parse("AA02a");
-        BuildNumber d = BuildNumber.parse("AB01a");
-        BuildNumber z = BuildNumber.parse("AA01z");
+        BuildNumber a = BuildNumber.parse("011126-1853");
+        BuildNumber b = BuildNumber.parse("011126-1854");
+        BuildNumber c = BuildNumber.parse("011126-1900");
+        BuildNumber d = BuildNumber.parse("021126-0000");
         assertTrue(a.compareTo(b) < 0);
         assertTrue(b.compareTo(c) < 0);
         assertTrue(c.compareTo(d) < 0);
-        assertTrue(b.compareTo(z) < 0);
-        assertEquals(0, b.compareTo(BuildNumber.parse("AA01b")));
-    }
-
-    @Test
-    void datumBuildVergleich() {
-        assertTrue(BuildNumber.parse("011126-18").compareTo(BuildNumber.parse("011126-19")) < 0);
-        assertTrue(BuildNumber.parse("311226-23").compareTo(BuildNumber.parse("010127-00")) < 0);
-        assertTrue(BuildNumber.parse("011126-19").compareTo(BuildNumber.parse("EA99z")) > 0);
-        assertEquals("021126-00", BuildNumber.parse("011126-23").naechsterBuild().toString());
-    }
-
-    @Test
-    void ersterBuildIstAlpha() {
-        assertEquals("AB01d", BuildNumber.erster("AB").toString());
-    }
-
-    @Test
-    void trainAusVersion() {
-
-        assertEquals("EA", BuildNumber.trainFuer(4, 0));
-        assertEquals("AA", BuildNumber.trainFuer(0, 0));
-        assertEquals("BV", BuildNumber.trainFuer(1, 21));
-        assertEquals("ZZ", BuildNumber.trainFuer(25, 25));
-        assertThrows(IllegalArgumentException.class, () -> BuildNumber.trainFuer(26, 0));
-        assertThrows(IllegalArgumentException.class, () -> BuildNumber.trainFuer(4, -1));
-        assertEquals("EA01d", BuildNumber.ersterFuerVersion(4, 0).toString());
-        assertEquals(4, BuildNumber.parse("EA01c").trainMajor());
-        assertEquals(0, BuildNumber.parse("EA01c").trainMinor());
+        assertEquals(0, a.compareTo(BuildNumber.parse("011126-1853")));
+        assertTrue(a.compareTo(null) > 0);
     }
 
     @Test
     void naechsterBuild() {
-        assertEquals("AA02b", BuildNumber.parse("AA01b").naechsterBuild().toString());
-        assertEquals("XX01a", BuildNumber.parse("XX00a").naechsterBuild().toString());
-        assertThrows(IllegalStateException.class, () -> BuildNumber.parse("AA99b").naechsterBuild());
+        assertEquals("011126-1854", BuildNumber.parse("011126-1853").naechsterBuild().toString());
+        assertEquals("010127-0000", BuildNumber.parse("311226-2359").naechsterBuild().toString());
     }
 
     @Test
-    void pluginVersionReleaseCandidateOhneBuchstabe() {
-        PluginVersion rc = PluginVersion.parse("v4.0-RC+EA26");
+    void equalsUndHashCode() {
+        BuildNumber a = BuildNumber.parse("011126-1853");
+        BuildNumber b = BuildNumber.parse("011126-1853");
+        BuildNumber c = BuildNumber.parse("011126-1854");
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        assertNotEquals(a, c);
+        assertNotEquals(a, BuildNumber.parse("011126-18"));
+    }
+
+    @Test
+    void pluginVersionReleaseCandidate() {
+        PluginVersion rc = PluginVersion.parse("v4.0-RC+011126-1853");
         assertEquals("v4.0-RC", rc.basis());
         assertEquals(4, rc.major());
         assertEquals(0, rc.minor());
-        assertEquals("EA26", rc.build().toString());
+        assertEquals("011126-1853", rc.build().toString());
         assertTrue(rc.hatBuild());
         assertFalse(rc.istBeta());
         assertTrue(rc.istReleaseCandidate());
-        assertEquals("v4.0-RC+EA26", rc.voll());
-        assertEquals("v4.0-RC+EA26", rc.logZeile());
+        assertEquals("v4.0-RC+011126-1853", rc.voll());
+        assertEquals("v4.0-RC+011126-1853", rc.logZeile());
 
-        PluginVersion beta = PluginVersion.parse("v4.0-beta+EA26c");
+        PluginVersion beta = PluginVersion.parse("v4.0-beta+011126-1854");
         assertTrue(beta.istBeta());
         assertFalse(beta.istReleaseCandidate());
 
-        PluginVersion fin = PluginVersion.parse("v4.0+EA26");
+        PluginVersion fin = PluginVersion.parse("v4.0+011126-1855");
         assertFalse(fin.istBeta());
         assertFalse(fin.istReleaseCandidate());
         assertEquals(2, fin.kanalRang());
@@ -193,56 +105,45 @@ class BuildNumberTest {
         assertEquals(0, beta.kanalRang());
 
         assertTrue(PluginVersion.istGueltig("v4.0-RC"));
-        assertTrue(PluginVersion.istGueltig("v4.0-rc+EA26"));
-        assertFalse(PluginVersion.istGueltig("v4.0-gamma+EA12c"));
+        assertTrue(PluginVersion.istGueltig("v4.0-rc+011126-1853"));
+        assertFalse(PluginVersion.istGueltig("v4.0-gamma+011126-1853"));
     }
 
     @Test
     void pluginVersionMitUndOhneBuild() {
-        PluginVersion mit = PluginVersion.parse("v4.0-beta+EA01c");
+        PluginVersion mit = PluginVersion.parse("v4.0-beta+011126-1853");
         assertEquals("v4.0-beta", mit.basis());
         assertEquals(4, mit.major());
         assertEquals(0, mit.minor());
-        assertEquals("EA", mit.erwarteterTrain());
-        assertEquals("EA01c", mit.build().toString());
+        assertEquals("011126-1853", mit.build().toString());
         assertTrue(mit.hatBuild());
         assertTrue(mit.istBeta());
-        assertEquals("v4.0-beta+EA01c", mit.voll());
-        assertEquals("v4.0-beta+EA01c (Beta – feature-fertig, Testphase)", mit.logZeile());
+        assertEquals("v4.0-beta+011126-1853", mit.voll());
+        assertEquals("v4.0-beta+011126-1853", mit.logZeile());
 
         PluginVersion ohne = PluginVersion.parse("v4.0-beta");
         assertFalse(ohne.hatBuild());
         assertEquals("v4.0-beta", ohne.voll());
 
         assertEquals("v4.0", PluginVersion.parse("v4.0").voll());
-        assertEquals("v4.0.1-beta+EA00a", PluginVersion.parse("v4.0.1-beta+EA00a").voll());
-        assertEquals("v4.0-beta+EA12z", PluginVersion.parse("v4.0-beta+EA12z").voll());
-        assertEquals("v4.0-beta+EA01c", PluginVersion.parse("4.0-beta+EA01c").voll());
+        assertEquals("v4.0.1-beta+011126-1800", PluginVersion.parse("v4.0.1-beta+011126-1800").voll());
+        assertEquals("v4.0-beta+011126-1801", PluginVersion.parse("v4.0-beta+011126-1801").voll());
+        assertEquals("v4.0-beta+011126-1802", PluginVersion.parse("4.0-beta+011126-1802").voll());
         assertEquals("v4.0-beta", PluginVersion.parse("4.0-beta").voll());
     }
 
     @Test
     void pluginVersionDatumBuildOhneTrain() {
-        PluginVersion version = PluginVersion.parse("v4.0-beta+011126-19");
-        assertEquals("v4.0-beta+011126-19", version.voll());
+        PluginVersion version = PluginVersion.parse("v4.0-beta+011126-1853");
+        assertEquals("v4.0-beta+011126-1853", version.voll());
         assertTrue(version.hatBuild());
-        assertTrue(version.build().istDatum());
-        assertEquals("v4.0-beta+011126-19", version.logZeile());
-    }
-
-    @Test
-    void pluginVersionInkonsistenterTrainIstUngueltig() {
-
-        assertTrue(PluginVersion.tryParse("v4.0-beta+AB12c").isEmpty());
-        IllegalArgumentException fehler = assertThrows(IllegalArgumentException.class,
-                () -> PluginVersion.parse("v4.0-beta+AB12c"));
-        assertTrue(fehler.getMessage().contains("EA"), fehler.getMessage());
+        assertEquals("v4.0-beta+011126-1853", version.logZeile());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", " ", "v4.0-beta+", "v4.0-beta+EA121",
-            "beta", "4-beta", "v4.0-beta+EA12c+extra", "v4.0-beta+AB12c", "v4.0-gamma+EA12c",
-            "v4.0-beta+011126-24", "v4.0-beta+011126-9"})
+    @ValueSource(strings = {"", " ", "v4.0-beta+",
+            "beta", "4-beta", "v4.0-beta+011126-1853+extra", "v4.0-beta+011126-24",
+            "v4.0-beta+011126-9", "v4.0-beta+011126-1860"})
     void pluginVersionUngueltig(String eingabe) {
         assertTrue(PluginVersion.tryParse(eingabe).isEmpty(), eingabe);
         assertFalse(PluginVersion.istGueltig(eingabe));

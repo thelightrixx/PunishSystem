@@ -5,8 +5,8 @@ rem  Baut Velocity + Bridge (26.x) + Bridge-1.21 mit GLEICHER Version.
 rem
 rem  Ablauf (Standard):
 rem    1. Falls eine Buildnummer vorhanden ist, diese auf das aktuelle
-rem       lokale Datum und die aktuelle Stunde setzen (DDMMYY-HH,
-rem       z. B. 011126-19; Logik aus scripts\bump-build.ps1).
+rem       lokale Datum und die aktuelle Minute setzen (DDMMYY-HHMM,
+rem       z. B. 011126-1853; Logik aus scripts\bump-build.ps1).
 rem       Versionen ohne Buildnummer (z. B. 4.0 oder 4.0-beta) werden
 rem       nicht auf einen Datums-Build gesetzt.
 rem    2. Neue Version in alle Modul-poms + PunishVelocity.java

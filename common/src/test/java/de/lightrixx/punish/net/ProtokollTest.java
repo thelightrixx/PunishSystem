@@ -40,11 +40,11 @@ class ProtokollTest {
 
     @Test
     void helloEnthaeltPluginVersion() throws Exception {
-        byte[] paket = Protokoll.hello("lobby", "v4.0-beta+EA16c");
+        byte[] paket = Protokoll.hello("lobby", "v4.0-beta+011126-1853");
         Protokoll.Hello hello = Protokoll.leseHello(Protokoll.paket(paket).nutzdaten());
         assertEquals(Protokoll.VERSION, hello.protokollVersion());
         assertEquals("lobby", hello.serverName());
-        assertEquals("v4.0-beta+EA16c", hello.pluginVersion());
+        assertEquals("v4.0-beta+011126-1853", hello.pluginVersion());
         assertTrue(!hello.sessionId().isBlank(), "HELLO v7 enthält eine Session-ID");
     }
 
@@ -63,10 +63,10 @@ class ProtokollTest {
 
     @Test
     void helloAckEnthaeltProxyPluginVersion() throws Exception {
-        byte[] paket = Protokoll.helloAck(Protokoll.VERSION, "Lobby", "v4.0-beta+EA16c");
+        byte[] paket = Protokoll.helloAck(Protokoll.VERSION, "Lobby", "v4.0-beta+011126-1853");
         Protokoll.HelloAck ack = Protokoll.leseHelloAckMitName(Protokoll.paket(paket).nutzdaten());
         assertEquals("Lobby", ack.kanonischerServerName());
-        assertEquals("v4.0-beta+EA16c", ack.proxyPluginVersion());
+        assertEquals("v4.0-beta+011126-1853", ack.proxyPluginVersion());
     }
 
     @Test

@@ -159,7 +159,7 @@ class AuditFixV11RegressionTest {
         VerstossRepository repository = new VerstossRepository(ordner, speicher, executor);
         repository.laden();
         assertEquals(1, repository.anzahl(uuid),
-                "Ein Verstoß ohne stufe-Schlüssel (alter EA-Bestand) darf nicht in die Quarantäne.");
+                "Ein Verstoß ohne stufe-Schlüssel (Altbestand) darf nicht in die Quarantäne.");
         assertEquals(VerstossStufe.standard(), repository.finden(uuid).get(0).stufe());
         idle();
     }

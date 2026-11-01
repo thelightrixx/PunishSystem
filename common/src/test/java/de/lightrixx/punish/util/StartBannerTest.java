@@ -10,10 +10,10 @@ class StartBannerTest {
 
     @Test
     void enthaeltVersionPlattformUndAutor() {
-        List<String> zeilen = StartBanner.zeilen("v4.0-beta+EA10c", "Velocity");
+        List<String> zeilen = StartBanner.zeilen("v4.0-beta+011126-1853", "Velocity");
         assertEquals(6, zeilen.size());
         String gesamt = String.join("\n", zeilen);
-        assertTrue(gesamt.contains("PunishSystem v4.0-beta+EA10c"));
+        assertTrue(gesamt.contains("PunishSystem v4.0-beta+011126-1853"));
         assertTrue(gesamt.contains("by lightrixx"));
         assertTrue(gesamt.contains("Running on Velocity"));
         assertTrue(zeilen.get(zeilen.size() - 1).isEmpty());

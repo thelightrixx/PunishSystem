@@ -19,7 +19,7 @@ class HangarEchteApiTest {
 
     private static final String ECHTES_VERSIONS_JSON = "{\"createdAt\":\"2026-10-08T13:42:39.251141Z\",\"id\":31499,\"projectId\":31,\"name\":\"5.12.1\",\"visibility\":\"public\",\"description\":\"See [GitHub](https://github.com/ViaVersion/ViaVersion) for release notes.\",\"stats\":{\"totalDownloads\":8332,\"platformDownloads\":{\"PAPER\":7619,\"VELOCITY\":713}},\"author\":\"kennytv\",\"reviewState\":\"reviewed\",\"channel\":{\"createdAt\":\"2022-12-31T20:04:25.916259Z\",\"name\":\"Release\",\"description\":null,\"color\":\"#14b8a6\",\"flags\":[\"SENDS_NOTIFICATIONS\",\"PINNED\",\"FROZEN\"]},\"pinnedStatus\":\"CHANNEL\",\"downloads\":{\"PAPER\":{\"fileInfo\":{\"name\":\"ViaVersion-5.12.1.jar\",\"sizeBytes\":6503216,\"sha256Hash\":\"bab94b846e1d2bf516c070562d0271b32382afd41870bf0d3a7993b73a36f791\"},\"externalUrl\":null,\"downloadUrl\":\"https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.12.1/PAPER/ViaVersion-5.12.1.jar\"},\"VELOCITY\":{\"fileInfo\":{\"name\":\"ViaVersion-5.12.1.jar\",\"sizeBytes\":6503216,\"sha256Hash\":\"bab94b846e1d2bf516c070562d0271b32382afd41870bf0d3a7993b73a36f791\"},\"externalUrl\":null,\"downloadUrl\":\"https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/5.12.1/PAPER/ViaVersion-5.12.1.jar\"}},\"pluginDependencies\":{\"PAPER\":[{\"name\":\"ViaBackwards\",\"projectId\":12,\"required\":false,\"externalUrl\":null,\"platform\":\"PAPER\"}],\"memberNames\":null}";
 
-    private static final String PAARUNG_JSON = "{\"name\":\"4.0+EA01\",\"channel\":{\"name\":\"Release\"},"
+    private static final String PAARUNG_JSON = "{\"name\":\"4.0+011126-1853\",\"channel\":{\"name\":\"Release\"},"
             + "\"downloads\":{\"PAPER\":{\"fileInfo\":{\"name\":\"a.jar\",\"sizeBytes\":1,\"sha256Hash\":\""
             + "1111111111111111111111111111111111111111111111111111111111111111\"},"
             + "\"externalUrl\":null,\"downloadUrl\":\"https://hangarcdn.papermc.io/a.jar\"},"
@@ -72,7 +72,7 @@ class HangarEchteApiTest {
     @Test
     void hashUndPlattformBleibenDemRichtigenArtefaktZugeordnet() {
         List<HangarUpdateService.Artefakt> artefakte = HangarUpdateService.parseDownloads(
-                PAARUNG_JSON, "autor", "slug", "4.0+EA01");
+                PAARUNG_JSON, "autor", "slug", "4.0+011126-1853");
         assertEquals(2, artefakte.size());
         assertEquals("PAPER", artefakte.get(0).plattform());
         assertEquals("1111111111111111111111111111111111111111111111111111111111111111",

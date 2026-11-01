@@ -41,7 +41,7 @@ class JarEmpfaengerTest {
 
     @Test
     void empfangsWhitelistVerwirftPfadFremdeNamen() {
-        assertTrue(JarEmpfaenger.istEmpfangsZulaessig("bridge", "4.0-RC+EA29"));
+        assertTrue(JarEmpfaenger.istEmpfangsZulaessig("bridge", "4.0-RC+011126-1853"));
         assertTrue(JarEmpfaenger.istEmpfangsZulaessig("Bridge-1.21", "1.0.0_beides"));
         assertTrue(JarEmpfaenger.istEmpfangsZulaessig(null, null));
         assertFalse(JarEmpfaenger.istEmpfangsZulaessig("bridge", "../../boese"));
@@ -51,8 +51,8 @@ class JarEmpfaengerTest {
 
     @Test
     void dateinameFuerErzeugtNurWhitelistZeichen() {
-        String name = JarEmpfaenger.dateinameFuer("bridge", "4.0-RC+EA29");
-        assertEquals("PunishSystem-4.0-RC+EA29-bridge.jar", name);
+        String name = JarEmpfaenger.dateinameFuer("bridge", "4.0-RC+011126-1853");
+        assertEquals("PunishSystem-4.0-RC+011126-1853-bridge.jar", name);
         assertTrue(name.matches("[A-Za-z0-9._+-]+\\.jar"));
     }
 
@@ -62,16 +62,16 @@ class JarEmpfaengerTest {
         String sha = sha256(inhalt);
         int chunk = 4096;
         int anzahl = 1;
-        empfaenger.empfangeMeta(new Protokoll.UpdateMeta("bridge", "4.0-RC+EA29",
+        empfaenger.empfangeMeta(new Protokoll.UpdateMeta("bridge", "4.0-RC+011126-1853",
                 inhalt.length, sha, chunk, anzahl));
         empfaenger.empfangeBlock(new Protokoll.UpdateBlock("bridge", 0, inhalt));
-        empfaenger.empfangeFertig(new Protokoll.UpdateFertig("bridge", "4.0-RC+EA29", sha, inhalt.length));
+        empfaenger.empfangeFertig(new Protokoll.UpdateFertig("bridge", "4.0-RC+011126-1853", sha, inhalt.length));
 
-        File ziel = new File(ordner, "PunishSystem-4.0-RC+EA29-bridge.jar");
+        File ziel = new File(ordner, "PunishSystem-4.0-RC+011126-1853-bridge.jar");
         assertTrue(ziel.isFile());
         assertArrayEquals(inhalt, java.nio.file.Files.readAllBytes(ziel.toPath()),
                 "Das geschriebene Jar muss bytegleich zum gesendeten Inhalt sein");
-        assertFalse(new File(ordner, "PunishSystem-4.0-RC+EA29-bridge.jar.part").exists(),
+        assertFalse(new File(ordner, "PunishSystem-4.0-RC+011126-1853-bridge.jar.part").exists(),
                 "Nach dem Abschluss darf keine .part-Datei zurückbleiben");
         assertEquals(1, quittungen.size());
         assertTrue(quittungen.get(0).erfolg());

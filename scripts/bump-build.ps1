@@ -1,20 +1,20 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Setzt die Buildnummer in pom.xml auf das aktuelle Datum und die aktuelle Stunde (DDMMYY-HH).
+    Setzt die Buildnummer in pom.xml auf das aktuelle Datum und die aktuelle Minute (DDMMYY-HHMM).
 
 .DESCRIPTION
-    Versionsschema: Basis+Build, z.B. 4.0-beta+011126-19.
-    Der Build ist das lokale Datum (TTMMJJ) und die Stunde (00-23).
+    Versionsschema: Basis+Build, z.B. 4.0-beta+011126-1853.
+    Der Build ist das lokale Datum (TTMMJJ), die Stunde (00-23) und die Minute (00-59).
     Maven-Version ohne fuehrendes 'v' (Konvention); das Anzeige-'v'
     ergaenzen StartBanner und PluginVersion automatisch.
-    Mehrere Builds in derselben Stunde tragen dieselbe Nummer.
+    Mehrere Builds in derselben Minute tragen dieselbe Nummer.
     Datei ist bewusst ASCII-only (keine Umlaute), damit
     Windows PowerShell 5.1 sie auch ohne BOM korrekt liest.
 
 .PARAMETER Build
-    Buildnummer explizit setzen (DDMMYY-HH, z.B. "011126-19").
-    Ohne Angabe wird das aktuelle lokale Datum und die aktuelle Stunde verwendet.
+    Buildnummer explizit setzen (DDMMYY-HHMM, z.B. "011126-1853").
+    Ohne Angabe wird das aktuelle lokale Datum und die aktuelle Minute verwendet.
 
 .PARAMETER Base
     Basis-Version aendern (z.B. "v4.0-RC", "v4.0", "v4.1-beta").
@@ -22,7 +22,7 @@
 
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1
-    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Build 011126-19
+    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Build 011126-1853
     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Base "v4.0-RC"
 #>
 [CmdletBinding()]
@@ -82,23 +82,24 @@ if ([string]::IsNullOrWhiteSpace($AltBuild) -and
 }
 
 if ([string]::IsNullOrWhiteSpace($Build)) {
-    $Build = Get-Date -Format "ddMMyy-HH"
+    $Build = Get-Date -Format "ddMMyy-HHmm"
 } else {
     $Build = $Build.Trim()
 }
-if ($Build -notmatch '^[0-9]{6}-[0-9]{2}$') {
-    throw "Build '$Build' ungueltig (erwartet DDMMYY-HH, z.B. 011126-19)."
+if ($Build -notmatch '^[0-9]{6}-[0-9]{4}$') {
+    throw "Build '$Build' ungueltig (erwartet DDMMYY-HHMM, z.B. 011126-1853)."
 }
 $Tag = [int]($Build.Substring(0, 2))
 $Monat = [int]($Build.Substring(2, 2))
 $Jahr = 2000 + [int]($Build.Substring(4, 2))
 $Stunde = [int]($Build.Substring(7, 2))
+$Minute = [int]($Build.Substring(9, 2))
 try {
-    $Zeitpunkt = [datetime]::new($Jahr, $Monat, $Tag, $Stunde, 0, 0)
+    $Zeitpunkt = [datetime]::new($Jahr, $Monat, $Tag, $Stunde, $Minute, 0)
 } catch {
-    throw "Build '$Build' enthaelt kein gueltiges Datum oder keine gueltige Stunde (DDMMYY-HH)."
+    throw "Build '$Build' enthaelt kein gueltiges Datum, keine gueltige Stunde oder keine gueltige Minute (DDMMYY-HHMM)."
 }
-$Build = $Zeitpunkt.ToString("ddMMyy-HH")
+$Build = $Zeitpunkt.ToString("ddMMyy-HHmm")
 
 $Neu = "$Basis+$Build"
 if ($Neu -eq $Aktuell) {

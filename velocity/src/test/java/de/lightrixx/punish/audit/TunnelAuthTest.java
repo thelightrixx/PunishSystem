@@ -45,7 +45,7 @@ class TunnelAuthTest {
     void ohneSecretFailClosed() throws Exception {
         BrueckenKanal kanal = kanal();
         RegisteredServer server = server("lobby");
-        byte[] paket = Protokoll.hello("lobby", "4.0-beta+EA25b", "bridge");
+        byte[] paket = Protokoll.hello("lobby", "4.0-beta+011126-1853", "bridge");
         assertNull(kanal.eingehendPruefen(server, paket),
                 "Ohne Secret muss der Tunnel fail-closed abweisen (B-001)");
     }
@@ -55,7 +55,7 @@ class TunnelAuthTest {
         BrueckenKanal kanal = kanal();
         kanal.setBridgeSecrets(Map.of("lobby", "geheim-123"));
         RegisteredServer server = server("lobby");
-        byte[] paket = Protokoll.hello("lobby", "4.0-beta+EA25b", "bridge");
+        byte[] paket = Protokoll.hello("lobby", "4.0-beta+011126-1853", "bridge");
         assertNull(kanal.eingehendPruefen(server, paket),
                 "Unsigniertes HELLO muss bei gesetztem Secret abgewiesen werden");
     }
@@ -65,7 +65,7 @@ class TunnelAuthTest {
         BrueckenKanal kanal = kanal();
         kanal.setBridgeSecrets(Map.of("lobby", "geheim-123"));
         RegisteredServer server = server("lobby");
-        byte[] paket = Protokoll.hello("lobby", "4.0-beta+EA25b", "bridge");
+        byte[] paket = Protokoll.hello("lobby", "4.0-beta+011126-1853", "bridge");
         byte[] versand = TunnelSignatur.signieren(paket,
                 TunnelSignatur.schluesselAus("geheim-123",
                         TunnelSignatur.Richtung.BRIDGE_ZU_PROXY));

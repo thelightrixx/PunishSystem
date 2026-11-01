@@ -20,7 +20,7 @@ class TunnelSignaturTest {
     @Test
     void signierenUndPruefenRoundtrip() throws Exception {
         byte[] schluessel = TunnelSignatur.schluesselAus("geheim-123", HIN);
-        byte[] paket = Protokoll.hello("lobby", "4.0-beta+EA25b", "bridge");
+        byte[] paket = Protokoll.hello("lobby", "4.0-beta+011126-1853", "bridge");
         byte[] versand = TunnelSignatur.signieren(paket, schluessel);
         assertTrue(versand.length == paket.length + TunnelSignatur.LAENGE);
         assertArrayEquals(paket, TunnelSignatur.pruefenUndAbziehen(versand, schluessel));
@@ -29,7 +29,7 @@ class TunnelSignaturTest {
     @Test
     void manipulationWirdErkannt() throws Exception {
         byte[] schluessel = TunnelSignatur.schluesselAus("geheim-123", HIN);
-        byte[] paket = Protokoll.hello("lobby", "4.0-beta+EA25b", "bridge");
+        byte[] paket = Protokoll.hello("lobby", "4.0-beta+011126-1853", "bridge");
         byte[] versand = TunnelSignatur.signieren(paket, schluessel);
         versand[5] ^= 0x01;
         assertThrows(IOException.class,
@@ -39,7 +39,7 @@ class TunnelSignaturTest {
     @Test
     void manipulationsAnSignaturWirdErkannt() throws Exception {
         byte[] schluessel = TunnelSignatur.schluesselAus("geheim-123", HIN);
-        byte[] paket = Protokoll.hello("lobby", "4.0-beta+EA25b", "bridge");
+        byte[] paket = Protokoll.hello("lobby", "4.0-beta+011126-1853", "bridge");
         byte[] versand = TunnelSignatur.signieren(paket, schluessel);
         versand[versand.length - 1] ^= 0x01;
         assertThrows(IOException.class,

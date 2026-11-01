@@ -239,12 +239,12 @@ class ReleaseVorbereitungRegressionTest {
     // F-015: gemischte Suffix-Schreibweisen werden akzeptiert und richtig einsortiert
     @Test
     void pluginVersionAkzeptiertGemischteSuffixSchreibweisen() {
-        assertEquals(0, PluginVersion.parse("v4.0-Beta+EA01a").kanalRang());
+        assertEquals(0, PluginVersion.parse("v4.0-Beta+011126-1853").kanalRang());
         assertEquals(0, PluginVersion.parse("4.0-ALPHA").kanalRang());
         assertEquals(1, PluginVersion.parse("4.0-Rc").kanalRang());
         assertEquals(1, PluginVersion.parse("4.0-RC").kanalRang());
         assertEquals(2, PluginVersion.parse("4.0").kanalRang());
-        assertTrue(PluginVersion.parse("4.0-Beta+EA01a").istBeta());
+        assertTrue(PluginVersion.parse("4.0-Beta+011126-1853").istBeta());
         assertTrue(PluginVersion.parse("4.0-Rc").istReleaseCandidate());
     }
 

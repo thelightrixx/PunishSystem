@@ -11,100 +11,21 @@ import java.util.regex.Pattern;
 
 public final class BuildNumber implements Comparable<BuildNumber> {
 
-    private static final Pattern MUSTER_LEGACY =
-            Pattern.compile("^([A-Za-z]{2})([0-9]{2})([A-Za-z])?$");
-    private static final Pattern MUSTER_DATUM =
+    private static final Pattern MUSTER_MINUTE =
+            Pattern.compile("^([0-9]{2})([0-9]{2})([0-9]{2})-([0-9]{2})([0-9]{2})$");
+    private static final Pattern MUSTER_STUNDE =
             Pattern.compile("^([0-9]{2})([0-9]{2})([0-9]{2})-([0-9]{2})$");
     private static final DateTimeFormatter DATUM_FORMAT =
-            DateTimeFormatter.ofPattern("ddMMyy-HH", Locale.ROOT);
+            DateTimeFormatter.ofPattern("ddMMyy-HHmm", Locale.ROOT);
     private static final DateTimeFormatter DATUM_ANZEIGE =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy, HH 'Uhr'", Locale.GERMANY);
+            DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm 'Uhr'", Locale.GERMANY);
 
-    private final String train;
-    private final int nummer;
-    private final Stabilitaet stabilitaet;
     private final LocalDateTime zeitpunkt;
 
-    private BuildNumber(String train, int nummer, Stabilitaet stabilitaet) {
-        this.train = train;
-        this.nummer = nummer;
-        this.stabilitaet = stabilitaet;
-        this.zeitpunkt = null;
-    }
-
     private BuildNumber(LocalDateTime zeitpunkt) {
-        LocalDateTime normiert = Objects.requireNonNull(zeitpunkt, "zeitpunkt")
-                .withMinute(0)
+        this.zeitpunkt = Objects.requireNonNull(zeitpunkt, "zeitpunkt")
                 .withSecond(0)
                 .withNano(0);
-        this.train = "";
-        this.nummer = -1;
-        this.stabilitaet = null;
-        this.zeitpunkt = normiert;
-    }
-
-    public enum Stabilitaet {
-        A('a'), B('b'), C('c'), D('d'), E('e'), F('f'), G('g'), H('h'),
-        I('i'), J('j'), K('k'), L('l'), M('m'), N('n'), O('o'), P('p'),
-        Q('q'), R('r'), S('s'), T('t'), U('u'), V('v'), W('w'), X('x'),
-        Y('y'), Z('z');
-
-        private final char code;
-
-        Stabilitaet(char code) {
-            this.code = code;
-        }
-
-        public char code() {
-            return code;
-        }
-
-        public String beschreibung() {
-            return switch (code) {
-                case 'a' -> "Final – stabilste Stufe, Release-reif";
-                case 'b' -> "Release Candidate – fast final";
-                case 'c' -> "Beta – feature-fertig, Testphase";
-                case 'd' -> "Alpha – Features unfertig, instabil";
-                default -> "Experimentell (" + code + ") – nur fuer Entwickler";
-            };
-        }
-
-        public boolean featureFertig() {
-            return code <= 'c';
-        }
-
-        public static Stabilitaet vonCode(char code) {
-            char klein = Character.toLowerCase(code);
-            if (klein < 'a' || klein > 'z') {
-                throw new IllegalArgumentException("Unbekannte Stabilitaet '" + code + "' (erlaubt: a-z).");
-            }
-            return values()[klein - 'a'];
-        }
-    }
-
-    public static BuildNumber von(String train, int nummer, Stabilitaet stabilitaet) {
-        Objects.requireNonNull(train, "train");
-        Objects.requireNonNull(stabilitaet, "stabilitaet");
-        String normTrain = train.trim().toUpperCase(Locale.ROOT);
-        if (!normTrain.matches("[A-Z]{2}")) {
-            throw new IllegalArgumentException("Train muss genau 2 Buchstaben A-Z sein: '" + train + "'.");
-        }
-        if (nummer < 0 || nummer > 99) {
-            throw new IllegalArgumentException("Nummer muss 00-99 sein: " + nummer);
-        }
-        return new BuildNumber(normTrain, nummer, stabilitaet);
-    }
-
-    public static BuildNumber von(String train, int nummer) {
-        Objects.requireNonNull(train, "train");
-        String normTrain = train.trim().toUpperCase(Locale.ROOT);
-        if (!normTrain.matches("[A-Z]{2}")) {
-            throw new IllegalArgumentException("Train muss genau 2 Buchstaben A-Z sein: '" + train + "'.");
-        }
-        if (nummer < 0 || nummer > 99) {
-            throw new IllegalArgumentException("Nummer muss 00-99 sein: " + nummer);
-        }
-        return new BuildNumber(normTrain, nummer, null);
     }
 
     public static BuildNumber datum(LocalDateTime zeitpunkt) {
@@ -115,8 +36,7 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         BuildNumber nummer = tryParse(eingabe).orElse(null);
         if (nummer == null) {
             throw new IllegalArgumentException(
-                    "Ungueltige Buildnummer '" + eingabe + "' (erwartet LLNN/LLNNS wie EA26/EA01c "
-                            + "oder DDMMYY-HH wie 011126-19).");
+                    "Ungueltige Buildnummer '" + eingabe + "' (erwartet DDMMYY-HHMM, z. B. 011126-1853).");
         }
         return nummer;
     }
@@ -129,48 +49,32 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         if (eingabe == null) {
             return Optional.empty();
         }
-        String getrimmt = eingabe.trim();
-        Optional<BuildNumber> legacy = parseLegacy(getrimmt);
-        if (legacy.isPresent()) {
-            return legacy;
-        }
-        return parseDatum(getrimmt);
-    }
-
-    private static Optional<BuildNumber> parseLegacy(String getrimmt) {
-        Matcher matcher = MUSTER_LEGACY.matcher(getrimmt);
-        if (!matcher.matches()) {
-            return Optional.empty();
-        }
-        String train = matcher.group(1).toUpperCase(Locale.ROOT);
-        int nummer;
-        try {
-            nummer = Integer.parseInt(matcher.group(2), 10);
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
-        String stufenGruppe = matcher.group(3);
-        if (stufenGruppe == null || stufenGruppe.isEmpty()) {
-            return Optional.of(new BuildNumber(train, nummer, null));
-        }
-        char stufe = Character.toLowerCase(stufenGruppe.charAt(0));
-        if (stufe < 'a' || stufe > 'z') {
-            return Optional.empty();
-        }
-        return Optional.of(new BuildNumber(train, nummer, Stabilitaet.vonCode(stufe)));
+        return parseDatum(eingabe.trim());
     }
 
     private static Optional<BuildNumber> parseDatum(String getrimmt) {
-        Matcher matcher = MUSTER_DATUM.matcher(getrimmt);
-        if (!matcher.matches()) {
-            return Optional.empty();
+        Matcher matcher = MUSTER_MINUTE.matcher(getrimmt);
+        if (matcher.matches()) {
+            return baue(matcher.group(1), matcher.group(2), matcher.group(3),
+                    matcher.group(4), matcher.group(5));
         }
-        int tag = Integer.parseInt(matcher.group(1));
-        int monat = Integer.parseInt(matcher.group(2));
-        int jahr = 2000 + Integer.parseInt(matcher.group(3));
-        int stunde = Integer.parseInt(matcher.group(4));
+        matcher = MUSTER_STUNDE.matcher(getrimmt);
+        if (matcher.matches()) {
+            return baue(matcher.group(1), matcher.group(2), matcher.group(3),
+                    matcher.group(4), "00");
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<BuildNumber> baue(String tag, String monat, String jahr,
+                                              String stunde, String minute) {
+        int t = Integer.parseInt(tag);
+        int m = Integer.parseInt(monat);
+        int j = 2000 + Integer.parseInt(jahr);
+        int h = Integer.parseInt(stunde);
+        int min = Integer.parseInt(minute);
         try {
-            return Optional.of(new BuildNumber(LocalDateTime.of(jahr, monat, tag, stunde, 0)));
+            return Optional.of(new BuildNumber(LocalDateTime.of(j, m, t, h, min)));
         } catch (DateTimeException e) {
             return Optional.empty();
         }
@@ -180,92 +84,12 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         return tryParse(eingabe).isPresent();
     }
 
-    public static BuildNumber erster(String train) {
-        return von(train, 1, Stabilitaet.D);
-    }
-
-    public static String trainFuer(int major, int minor) {
-        return "" + buchstabeFuer(major, "Major") + buchstabeFuer(minor, "Minor");
-    }
-
-    private static char buchstabeFuer(int wert, String name) {
-        if (wert < 0 || wert > 25) {
-            throw new IllegalArgumentException(
-                    name + "-Version " + wert + " ist nicht als Buchstabe kodierbar (erlaubt: 0-25).");
-        }
-        return (char) ('A' + wert);
-    }
-
-    public static BuildNumber ersterFuerVersion(int major, int minor) {
-        return von(trainFuer(major, minor), 1, Stabilitaet.D);
-    }
-
-    public boolean istDatum() {
-        return zeitpunkt != null;
-    }
-
     public Optional<LocalDateTime> zeitpunkt() {
-        return Optional.ofNullable(zeitpunkt);
-    }
-
-    public String train() {
-        return train;
-    }
-
-    public int trainMajor() {
-        pruefeLegacy("trainMajor");
-        return train.charAt(0) - 'A';
-    }
-
-    public int trainMinor() {
-        pruefeLegacy("trainMinor");
-        return train.charAt(1) - 'A';
-    }
-
-    public int nummer() {
-        pruefeLegacy("nummer");
-        return nummer;
-    }
-
-    public String nummerFormatiert() {
-        pruefeLegacy("nummerFormatiert");
-        return String.format(Locale.ROOT, "%02d", nummer);
-    }
-
-    public Stabilitaet stabilitaet() {
-        return stabilitaet;
+        return Optional.of(zeitpunkt);
     }
 
     public BuildNumber naechsterBuild() {
-        if (istDatum()) {
-            return new BuildNumber(zeitpunkt.plusHours(1));
-        }
-        if (nummer >= 99) {
-            throw new IllegalStateException("Build-Zaehler am Limit (99), neue Minor-Version noetig.");
-        }
-        return new BuildNumber(train, nummer + 1, stabilitaet);
-    }
-
-    public BuildNumber mitStabilitaet(Stabilitaet neu) {
-        Objects.requireNonNull(neu, "neu");
-        if (istDatum()) {
-            throw new IllegalStateException("Datums-Build hat keine Stabilitaetsstufe.");
-        }
-        return new BuildNumber(train, nummer, neu);
-    }
-
-    public boolean istMindestens(Stabilitaet mindest) {
-        Objects.requireNonNull(mindest, "mindest");
-        if (stabilitaet == null) {
-            return true;
-        }
-        return stabilitaet.ordinal() <= mindest.ordinal();
-    }
-
-    private void pruefeLegacy(String aufruf) {
-        if (istDatum()) {
-            throw new IllegalStateException("Datums-Build hat keinen Train (" + aufruf + ").");
-        }
+        return new BuildNumber(zeitpunkt.plusMinutes(1));
     }
 
     @Override
@@ -273,48 +97,16 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         if (andere == null) {
             return 1;
         }
-        if (istDatum() || andere.istDatum()) {
-            if (istDatum() && andere.istDatum()) {
-                return zeitpunkt.compareTo(andere.zeitpunkt);
-            }
-            return istDatum() ? 1 : -1;
-        }
-        int cmp = train.compareTo(andere.train);
-        if (cmp != 0) {
-            return cmp;
-        }
-        cmp = Integer.compare(nummer, andere.nummer);
-        if (cmp != 0) {
-            return cmp;
-        }
-        // Bewusst umgekehrt zu UpdateVergleich: hier sortiert die Freigabe (null)
-        // unter die Beta-Stufen; UpdateVergleich behandelt die Freigabe als neueste.
-        return Integer.compare(stufenRang(stabilitaet), stufenRang(andere.stabilitaet));
-    }
-
-    private static int stufenRang(Stabilitaet stufe) {
-        return stufe == null ? -1 : stufe.ordinal();
+        return zeitpunkt.compareTo(andere.zeitpunkt);
     }
 
     @Override
     public String toString() {
-        if (istDatum()) {
-            return DATUM_FORMAT.format(zeitpunkt);
-        }
-        if (stabilitaet == null) {
-            return train + nummerFormatiert();
-        }
-        return train + nummerFormatiert() + stabilitaet.code();
+        return DATUM_FORMAT.format(zeitpunkt);
     }
 
     public String beschreibung() {
-        if (istDatum()) {
-            return toString() + " (Build vom " + DATUM_ANZEIGE.format(zeitpunkt) + ")";
-        }
-        if (stabilitaet == null) {
-            return toString() + " (Freigabe – ohne Stufenbuchstabe)";
-        }
-        return toString() + " (" + stabilitaet.beschreibung() + ")";
+        return toString() + " (Build vom " + DATUM_ANZEIGE.format(zeitpunkt) + ")";
     }
 
     @Override
@@ -322,19 +114,11 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof BuildNumber andere)) {
-            return false;
-        }
-        if (istDatum() || andere.istDatum()) {
-            return istDatum() && andere.istDatum() && zeitpunkt.equals(andere.zeitpunkt);
-        }
-        return nummer == andere.nummer
-                && train.equals(andere.train)
-                && stabilitaet == andere.stabilitaet;
+        return o instanceof BuildNumber andere && zeitpunkt.equals(andere.zeitpunkt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(train, nummer, stabilitaet, zeitpunkt);
+        return zeitpunkt.hashCode();
     }
 }

@@ -2,7 +2,10 @@ package de.lightrixx.punish.core;
 
 import de.lightrixx.punish.model.VerstossStufe;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,24 +13,26 @@ import java.util.Optional;
 
 public interface Konfiguration {
 
-    String AKTUELLE_CONFIG_VERSION = "EA26";
+    String AKTUELLE_CONFIG_VERSION = "2026-11-01";
 
-    static java.util.Optional<de.lightrixx.punish.util.BuildNumber> parseConfigVersion(String roh) {
+    static Optional<LocalDate> parseConfigVersion(String roh) {
         if (roh == null || roh.isBlank()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
-        return de.lightrixx.punish.util.BuildNumber.tryParse(roh.trim());
+        try {
+            return Optional.of(LocalDate.parse(roh.trim(), DateTimeFormatter.ISO_LOCAL_DATE));
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
     }
 
     static boolean istConfigNeuerAlsJar(String configVersion, String jarVersion) {
-        java.util.Optional<de.lightrixx.punish.util.BuildNumber> config =
-                parseConfigVersion(configVersion);
-        java.util.Optional<de.lightrixx.punish.util.BuildNumber> jar =
-                parseConfigVersion(jarVersion);
+        Optional<LocalDate> config = parseConfigVersion(configVersion);
+        Optional<LocalDate> jar = parseConfigVersion(jarVersion);
         if (config.isEmpty() || jar.isEmpty()) {
             return false;
         }
-        return config.get().compareTo(jar.get()) > 0;
+        return config.get().isAfter(jar.get());
     }
 
     static boolean istDowngrade(String configVersion) {

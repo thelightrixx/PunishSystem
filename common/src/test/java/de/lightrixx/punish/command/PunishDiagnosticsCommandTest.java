@@ -101,9 +101,9 @@ class PunishDiagnosticsCommandTest {
 
     @Test
     void diagnose_warntBeiAbweichenderBridgeVersion() {
-        var kontext = new PunishDiagnosticsCommand.Kontext("Velocity", "v4.0-beta+EA16c", "mysql", true,
+        var kontext = new PunishDiagnosticsCommand.Kontext("Velocity", "v4.0-beta+011126-1853", "mysql", true,
                 "MySQL aktiv", 1, true, "Kanal registriert", true, false, "deaktiviert", false,
-                "ABWEICHUNG (Proxy=v4.0-beta+EA16c, lobby=v4.0-beta+EA15c)");
+                "ABWEICHUNG (Proxy=v4.0-beta+011126-1853, lobby=v4.0-beta+011126-1852)");
         var cmd = befehl(gesundeConfig(), kontext);
         var zeilen = cmd.pruefe(kontext);
         assertTrue(zeilen.stream().anyMatch(z -> z.name().contains("Plugin-Versionen") && !z.ok()));

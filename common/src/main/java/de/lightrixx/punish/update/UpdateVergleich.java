@@ -56,22 +56,7 @@ public final class UpdateVergleich {
         if (bb == null) {
             return 1;
         }
-        if (ba.istDatum() || bb.istDatum()) {
-            return ba.compareTo(bb);
-        }
-        // Beta-Buchstabe (z. B. EA26c) ist aelter als derselbe Build ohne
-        // Buchstabe (Freigabe, z. B. EA26). Altschreibweisen mit a/b/c/d
-        // bleiben lesbar: EA25c -> EA25b -> EA25a ist weiterhin Fortschritt.
-        cmp = Integer.compare(ba.nummer(), bb.nummer());
-        if (cmp != 0) {
-            return cmp;
-        }
-        return Integer.compare(stufenRang(bb), stufenRang(ba));
-    }
-
-    private static int stufenRang(BuildNumber build) {
-        BuildNumber.Stabilitaet stufe = build.stabilitaet();
-        return stufe == null ? -1 : stufe.ordinal();
+        return ba.compareTo(bb);
     }
 
     private static int patchAus(String basis) {

@@ -19,8 +19,8 @@
 #   gui.yml        - PunishGUI-Titel + Fallbacks (gui.*)
 # =========================================================
 
-# Schema-Version dieser Config (EA26). Bei Downgrade Warnung im Log, kein Abbruch.
-config-version: "EA26"
+# Schema-Version dieser Config (2026-11-01). Bei Downgrade Warnung im Log, kein Abbruch.
+config-version: "2026-11-01"
 
 # --- Netzwerk (Zero-Config) ---
 # server-name: leer lassen = Auto (Proxy meldet kanonischen Namen via HELLO_ACK).
