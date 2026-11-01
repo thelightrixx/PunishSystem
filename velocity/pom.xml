@@ -7,7 +7,7 @@
     <parent>
         <groupId>de.lightrixx</groupId>
         <artifactId>punish-parent</artifactId>
-        <version>4.0-beta+011126-1914</version>
+        <version>4.0.0-beta+011126-1933</version>
     </parent>
 
     <artifactId>punish-velocity</artifactId>

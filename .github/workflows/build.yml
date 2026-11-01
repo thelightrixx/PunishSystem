@@ -36,11 +36,18 @@ jobs:
         run: |
           set -euo pipefail
           V=$(grep -m1 -oP '(?<=<version>)[^<]+' pom.xml)
+          BASE="${V%%+*}"
+          BUILD="${V#*+}"
+          if [ "$BASE" = "$V" ]; then
+            BUILD=""
+          else
+            BUILD="+${BUILD//-/_}"
+          fi
           echo "Version: ${V}"
           mkdir -p dist
-          cp velocity/target/PunishSystem-[0-9]*-velocity.jar        "dist/PunishSystem-v${V}-velocity.jar"
-          cp bridge/target/PunishSystem-[0-9]*-bridge.jar            "dist/PunishSystem-v${V}-bridge.jar"
-          cp bridge-1.21/target/PunishSystem-[0-9]*-bridge-1.21.jar  "dist/PunishSystem-v${V}-bridge-1.21.jar"
+          cp velocity/target/PunishSystem-[0-9]*-velocity.jar        "dist/PunishSystem-v${BASE}-(velocity)${BUILD}.jar"
+          cp bridge/target/PunishSystem-[0-9]*-bridge.jar            "dist/PunishSystem-v${BASE}-(bridge)${BUILD}.jar"
+          cp bridge-1.21/target/PunishSystem-[0-9]*-bridge-1.21.jar  "dist/PunishSystem-v${BASE}-(bridge-1.21)${BUILD}.jar"
           (cd dist && sha256sum *.jar > SHA256SUMS.txt)
           ls -l dist
 

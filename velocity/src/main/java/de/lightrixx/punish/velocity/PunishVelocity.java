@@ -59,7 +59,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0-beta+011126-1914",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-beta+011126-1933",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
