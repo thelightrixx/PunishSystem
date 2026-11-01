@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BuildNumberTest {
@@ -35,6 +37,22 @@ class BuildNumberTest {
     }
 
     @Test
+    void parseDatum() {
+        BuildNumber nummer = BuildNumber.parse("011126-19");
+        assertTrue(nummer.istDatum());
+        assertEquals("011126-19", nummer.toString());
+        assertEquals(LocalDateTime.of(2026, 11, 1, 19, 0), nummer.zeitpunkt().orElseThrow());
+        assertEquals("011126-19 (Build vom 01.11.2026, 19 Uhr)", nummer.beschreibung());
+    }
+
+    @Test
+    void datumFabrikNormalisiertAufStunde() {
+        BuildNumber nummer = BuildNumber.datum(LocalDateTime.of(2026, 11, 1, 19, 45, 30));
+        assertEquals("011126-19", nummer.toString());
+        assertEquals(LocalDateTime.of(2026, 11, 1, 19, 0), nummer.zeitpunkt().orElseThrow());
+    }
+
+    @Test
     void parseOhneStufenbuchstabeIstFreigabe() {
         BuildNumber nummer = BuildNumber.parse("EA26");
         assertEquals("EA", nummer.train());
@@ -61,7 +79,9 @@ class BuildNumberTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "A12b", "ABC12b", "AB1b", "AB123b",
-            "AB121", "AB12-", "AB12!", "12ABb", "AB-b", "AB12bb", "AB 12b"})
+            "AB121", "AB12-", "AB12!", "12ABb", "AB-b", "AB12bb", "AB 12b",
+            "011126-24", "320126-12", "011326-12", "290226-12", "011126-9",
+            "011126", "011126-19-1", "011126_19"})
     void parseUngueltig(String eingabe) {
         assertTrue(BuildNumber.tryParse(eingabe).isEmpty(), eingabe);
         assertFalse(BuildNumber.istGueltig(eingabe));
@@ -112,6 +132,14 @@ class BuildNumberTest {
         assertTrue(c.compareTo(d) < 0);
         assertTrue(b.compareTo(z) < 0);
         assertEquals(0, b.compareTo(BuildNumber.parse("AA01b")));
+    }
+
+    @Test
+    void datumBuildVergleich() {
+        assertTrue(BuildNumber.parse("011126-18").compareTo(BuildNumber.parse("011126-19")) < 0);
+        assertTrue(BuildNumber.parse("311226-23").compareTo(BuildNumber.parse("010127-00")) < 0);
+        assertTrue(BuildNumber.parse("011126-19").compareTo(BuildNumber.parse("EA99z")) > 0);
+        assertEquals("021126-00", BuildNumber.parse("011126-23").naechsterBuild().toString());
     }
 
     @Test
@@ -194,6 +222,15 @@ class BuildNumberTest {
     }
 
     @Test
+    void pluginVersionDatumBuildOhneTrain() {
+        PluginVersion version = PluginVersion.parse("v4.0-beta+011126-19");
+        assertEquals("v4.0-beta+011126-19", version.voll());
+        assertTrue(version.hatBuild());
+        assertTrue(version.build().istDatum());
+        assertEquals("v4.0-beta+011126-19", version.logZeile());
+    }
+
+    @Test
     void pluginVersionInkonsistenterTrainIstUngueltig() {
 
         assertTrue(PluginVersion.tryParse("v4.0-beta+AB12c").isEmpty());
@@ -204,7 +241,8 @@ class BuildNumberTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "v4.0-beta+", "v4.0-beta+EA121",
-            "beta", "4-beta", "v4.0-beta+EA12c+extra", "v4.0-beta+AB12c", "v4.0-gamma+EA12c"})
+            "beta", "4-beta", "v4.0-beta+EA12c+extra", "v4.0-beta+AB12c", "v4.0-gamma+EA12c",
+            "v4.0-beta+011126-24", "v4.0-beta+011126-9"})
     void pluginVersionUngueltig(String eingabe) {
         assertTrue(PluginVersion.tryParse(eingabe).isEmpty(), eingabe);
         assertFalse(PluginVersion.istGueltig(eingabe));

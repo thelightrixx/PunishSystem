@@ -4,22 +4,22 @@ rem  PunishSystem - build_all_jars.bat
 rem  Baut Velocity + Bridge (26.x) + Bridge-1.21 mit GLEICHER Version.
 rem
 rem  Ablauf (Standard):
-rem    1. Falls eine Buildnummer vorhanden ist, diese EINMAL um +1
-rem       erhoehen (nur die Ziffern, z. B. EA06c -> EA07c). Train (EA)
-rem       und Stufe (c) bleiben unangetastet (Logik aus
-rem       scripts\bump-build.ps1, LLNNS). Versionen ohne Buildnummer
-rem       (z. B. 4.0 oder 4.0-beta) werden nicht gebumpt.
-rem    2. Neue Version in alle Modul-poms + velocity-plugin.json +
-rem       PunishVelocity.java synchronisieren.
+rem    1. Falls eine Buildnummer vorhanden ist, diese auf das aktuelle
+rem       lokale Datum und die aktuelle Stunde setzen (DDMMYY-HH,
+rem       z. B. 011126-19; Logik aus scripts\bump-build.ps1).
+rem       Versionen ohne Buildnummer (z. B. 4.0 oder 4.0-beta) werden
+rem       nicht auf einen Datums-Build gesetzt.
+rem    2. Neue Version in alle Modul-poms + PunishVelocity.java
+rem       synchronisieren (velocity-plugin.json nutzt ${project.version}).
 rem    3. Alle Plattform-Module mit Maven bauen
 rem       (mvn -pl velocity,bridge,bridge-1.21 -am clean package).
 rem    4. Alle drei Jars als PunishSystem-...-velocity/-bridge/-bridge-1.21-...jar
 rem       ins Hauptverzeichnis kopieren (gleiche Versionsnummer).
 rem
 rem  Aufruf:
-rem    build_all_jars.bat                  Bump (falls Buildnummer vorhanden) + Build (mit Tests)
+rem    build_all_jars.bat                  Datums-Build (falls Buildnummer vorhanden) + Build (mit Tests)
 rem    build_all_jars.bat nobump           nur bauen, Version bleibt
-rem    build_all_jars.bat skiptests        Bump (falls Buildnummer vorhanden) + Build ohne Tests
+rem    build_all_jars.bat skiptests        Datums-Build (falls Buildnummer vorhanden) + Build ohne Tests
 rem    build_all_jars.bat nobump skiptests nur bauen ohne Tests
 rem ================================================================
 chcp 65001 >nul
@@ -74,12 +74,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path -LiteralPa
 :mvn_ok
 echo [INFO] Maven: %MVN_CMD%
 
-rem --- 2. Version bestimmen, EINMAL um +1 (fuer alle drei Jars) ---
+rem --- 2. Version bestimmen, Buildnummer auf aktuelles Datum/Uhrzeit setzen ---
 if "%SKIP_BUMP%"=="1" goto :ohne_bump
-rem Version ohne Buildnummer (final z. B. 4.0 oder Beta z. B. 4.0-beta) wird nicht gebumpt.
+rem Version ohne Buildnummer (final z. B. 4.0 oder Beta z. B. 4.0-beta) wird nicht auf einen Datums-Build gesetzt.
 powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; if ($x.project.version.Trim() -notmatch '\+') { exit 3 }"
 if errorlevel 3 goto :final_ohne_bump
-echo [INFO] Erhoehe Buildnummer um +1 (einmalig fuer beide Jars) ...
+echo [INFO] Setze Buildnummer auf aktuelles Datum/Uhrzeit ...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim() | Out-File -Encoding ascii ($env:TEMP + '\punish_old_version.txt')"
 set /p OLD_VERSION=<"%TEMP%\punish_old_version.txt"
 del "%TEMP%\punish_old_version.txt"
@@ -100,7 +100,7 @@ echo [INFO] Version: %NEW_VERSION%
 goto :bauen
 
 :final_ohne_bump
-echo [INFO] Version ohne Buildnummer erkannt - kein Bump.
+echo [INFO] Version ohne Buildnummer erkannt - kein Datums-Build.
 powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim() | Out-File -Encoding ascii ($env:TEMP + '\punish_new_version.txt')"
 set /p NEW_VERSION=<"%TEMP%\punish_new_version.txt"
 del "%TEMP%\punish_new_version.txt"
@@ -110,7 +110,7 @@ goto :bauen
 rem --- 3. Neue Version in alle Modul-poms + Velocity-Dateien spiegeln ---
 :sync_version
 echo [INFO] Synchronisiere Version in Module ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $o='!OLD_VERSION!'; $n='!NEW_VERSION!'; if ([string]::IsNullOrWhiteSpace($o) -or [string]::IsNullOrWhiteSpace($n)) { Write-Error 'Leere Version (OLD/NEW).'; exit 1 }; if ($o -eq $n) { exit 0 }; $files=@('common\pom.xml','velocity\pom.xml','bridge\pom.xml','bridge-1.21\pom.xml','velocity\src\main\resources\velocity-plugin.json','velocity\src\main\java\de\lightrixx\punish\velocity\PunishVelocity.java'); $enc=New-Object Text.UTF8Encoding($false); $fehl=0; foreach ($f in $files) { if (-not (Test-Path -LiteralPath $f)) { Write-Error ('Datei fehlt: ' + $f); $fehl=1; continue }; $t=[IO.File]::ReadAllText($f, [Text.Encoding]::UTF8); $q=[char]34; $vor=$t; $t=$t.Replace('<version>'+ $o +'</version>', '<version>'+ $n +'</version>').Replace($q+'version'+$q+': '+$q+$o+$q, $q+'version'+$q+': '+$q+$n+$q).Replace('version = '+$q+$o+$q, 'version = '+$q+$n+$q); if ($t -ne $vor) { [IO.File]::WriteAllText($f, $t, $enc); Write-Host ('sync: ' + $f) } else { Write-Error ('Versionsstring fehlt in ' + $f + ' - Build stoppt, bitte Version manuell angleichen.'); $fehl=1 } }; if ($fehl -ne 0) { exit 1 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $n='!NEW_VERSION!'; if ([string]::IsNullOrWhiteSpace($n)) { Write-Error 'Leere Version (NEW).'; exit 1 }; $enc=New-Object Text.UTF8Encoding($false); $fehl=0; $poms=@('common\pom.xml','velocity\pom.xml','bridge\pom.xml','bridge-1.21\pom.xml'); foreach ($f in $poms) { if (-not (Test-Path -LiteralPath $f)) { Write-Error ('Datei fehlt: ' + $f); $fehl=1; continue }; $t=[IO.File]::ReadAllText($f, [Text.Encoding]::UTF8); $rx=[regex]'<version>[0-9A-Za-z._+-]+</version>'; $m=$rx.Match($t); if (-not $m.Success) { Write-Error ('Parent-Version fehlt in ' + $f); $fehl=1; continue }; if ($m.Value -eq ('<version>'+$n+'</version>')) { Write-Host ('ok: ' + $f); continue }; $t=$rx.Replace($t, '<version>'+$n+'</version>', 1); [IO.File]::WriteAllText($f, $t, $enc); Write-Host ('sync: ' + $f) }; $jf='velocity\src\main\java\de\lightrixx\punish\velocity\PunishVelocity.java'; if (-not (Test-Path -LiteralPath $jf)) { Write-Error ('Datei fehlt: ' + $jf); $fehl=1 } else { $t=[IO.File]::ReadAllText($jf, [Text.Encoding]::UTF8); $q=[char]34; $rx=[regex]('version\s*=\s*'+$q+'[A-Za-z0-9._+-]*'+$q); $m=$rx.Match($t); if (-not $m.Success) { Write-Error ('Versionsstring fehlt in ' + $jf); $fehl=1 } elseif ($m.Value -eq ('version = '+$q+$n+$q)) { Write-Host ('ok: ' + $jf) } else { $t=$rx.Replace($t, 'version = '+$q+$n+$q, 1); [IO.File]::WriteAllText($jf, $t, $enc); Write-Host ('sync: ' + $jf) } }; if ($fehl -ne 0) { exit 1 }"
 if errorlevel 1 goto :sync_fehler
 
 rem --- 4. Alle Plattform-Module in EINEM Maven-Lauf bauen (gleiche Version) ---
@@ -142,7 +142,7 @@ if "%CI_MODE%"=="1" exit /b 1
 pause
 exit /b 1
 :bump_fehler
-echo [FEHLER] Buildnummer konnte nicht erhoeht werden. Siehe Meldung oben.
+echo [FEHLER] Buildnummer konnte nicht gesetzt werden. Siehe Meldung oben.
 if "%CI_MODE%"=="1" exit /b 1
 pause
 exit /b 1

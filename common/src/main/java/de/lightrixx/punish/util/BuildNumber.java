@@ -1,5 +1,8 @@
 package de.lightrixx.punish.util;
 
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -8,17 +11,36 @@ import java.util.regex.Pattern;
 
 public final class BuildNumber implements Comparable<BuildNumber> {
 
-    private static final Pattern MUSTER =
+    private static final Pattern MUSTER_LEGACY =
             Pattern.compile("^([A-Za-z]{2})([0-9]{2})([A-Za-z])?$");
+    private static final Pattern MUSTER_DATUM =
+            Pattern.compile("^([0-9]{2})([0-9]{2})([0-9]{2})-([0-9]{2})$");
+    private static final DateTimeFormatter DATUM_FORMAT =
+            DateTimeFormatter.ofPattern("ddMMyy-HH", Locale.ROOT);
+    private static final DateTimeFormatter DATUM_ANZEIGE =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy, HH 'Uhr'", Locale.GERMANY);
 
     private final String train;
     private final int nummer;
     private final Stabilitaet stabilitaet;
+    private final LocalDateTime zeitpunkt;
 
     private BuildNumber(String train, int nummer, Stabilitaet stabilitaet) {
         this.train = train;
         this.nummer = nummer;
         this.stabilitaet = stabilitaet;
+        this.zeitpunkt = null;
+    }
+
+    private BuildNumber(LocalDateTime zeitpunkt) {
+        LocalDateTime normiert = Objects.requireNonNull(zeitpunkt, "zeitpunkt")
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+        this.train = "";
+        this.nummer = -1;
+        this.stabilitaet = null;
+        this.zeitpunkt = normiert;
     }
 
     public enum Stabilitaet {
@@ -85,11 +107,16 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         return new BuildNumber(normTrain, nummer, null);
     }
 
+    public static BuildNumber datum(LocalDateTime zeitpunkt) {
+        return new BuildNumber(zeitpunkt);
+    }
+
     public static BuildNumber parse(String eingabe) {
         BuildNumber nummer = tryParse(eingabe).orElse(null);
         if (nummer == null) {
             throw new IllegalArgumentException(
-                    "Ungueltige Buildnummer '" + eingabe + "' (erwartet LLNN oder LLNNS, z. B. EA26 oder EA01c).");
+                    "Ungueltige Buildnummer '" + eingabe + "' (erwartet LLNN/LLNNS wie EA26/EA01c "
+                            + "oder DDMMYY-HH wie 011126-19).");
         }
         return nummer;
     }
@@ -103,7 +130,15 @@ public final class BuildNumber implements Comparable<BuildNumber> {
             return Optional.empty();
         }
         String getrimmt = eingabe.trim();
-        Matcher matcher = MUSTER.matcher(getrimmt);
+        Optional<BuildNumber> legacy = parseLegacy(getrimmt);
+        if (legacy.isPresent()) {
+            return legacy;
+        }
+        return parseDatum(getrimmt);
+    }
+
+    private static Optional<BuildNumber> parseLegacy(String getrimmt) {
+        Matcher matcher = MUSTER_LEGACY.matcher(getrimmt);
         if (!matcher.matches()) {
             return Optional.empty();
         }
@@ -123,6 +158,22 @@ public final class BuildNumber implements Comparable<BuildNumber> {
             return Optional.empty();
         }
         return Optional.of(new BuildNumber(train, nummer, Stabilitaet.vonCode(stufe)));
+    }
+
+    private static Optional<BuildNumber> parseDatum(String getrimmt) {
+        Matcher matcher = MUSTER_DATUM.matcher(getrimmt);
+        if (!matcher.matches()) {
+            return Optional.empty();
+        }
+        int tag = Integer.parseInt(matcher.group(1));
+        int monat = Integer.parseInt(matcher.group(2));
+        int jahr = 2000 + Integer.parseInt(matcher.group(3));
+        int stunde = Integer.parseInt(matcher.group(4));
+        try {
+            return Optional.of(new BuildNumber(LocalDateTime.of(jahr, monat, tag, stunde, 0)));
+        } catch (DateTimeException e) {
+            return Optional.empty();
+        }
     }
 
     public static boolean istGueltig(String eingabe) {
@@ -149,23 +200,35 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         return von(trainFuer(major, minor), 1, Stabilitaet.D);
     }
 
+    public boolean istDatum() {
+        return zeitpunkt != null;
+    }
+
+    public Optional<LocalDateTime> zeitpunkt() {
+        return Optional.ofNullable(zeitpunkt);
+    }
+
     public String train() {
         return train;
     }
 
     public int trainMajor() {
+        pruefeLegacy("trainMajor");
         return train.charAt(0) - 'A';
     }
 
     public int trainMinor() {
+        pruefeLegacy("trainMinor");
         return train.charAt(1) - 'A';
     }
 
     public int nummer() {
+        pruefeLegacy("nummer");
         return nummer;
     }
 
     public String nummerFormatiert() {
+        pruefeLegacy("nummerFormatiert");
         return String.format(Locale.ROOT, "%02d", nummer);
     }
 
@@ -174,6 +237,9 @@ public final class BuildNumber implements Comparable<BuildNumber> {
     }
 
     public BuildNumber naechsterBuild() {
+        if (istDatum()) {
+            return new BuildNumber(zeitpunkt.plusHours(1));
+        }
         if (nummer >= 99) {
             throw new IllegalStateException("Build-Zaehler am Limit (99), neue Minor-Version noetig.");
         }
@@ -182,6 +248,9 @@ public final class BuildNumber implements Comparable<BuildNumber> {
 
     public BuildNumber mitStabilitaet(Stabilitaet neu) {
         Objects.requireNonNull(neu, "neu");
+        if (istDatum()) {
+            throw new IllegalStateException("Datums-Build hat keine Stabilitaetsstufe.");
+        }
         return new BuildNumber(train, nummer, neu);
     }
 
@@ -193,10 +262,22 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         return stabilitaet.ordinal() <= mindest.ordinal();
     }
 
+    private void pruefeLegacy(String aufruf) {
+        if (istDatum()) {
+            throw new IllegalStateException("Datums-Build hat keinen Train (" + aufruf + ").");
+        }
+    }
+
     @Override
     public int compareTo(BuildNumber andere) {
         if (andere == null) {
             return 1;
+        }
+        if (istDatum() || andere.istDatum()) {
+            if (istDatum() && andere.istDatum()) {
+                return zeitpunkt.compareTo(andere.zeitpunkt);
+            }
+            return istDatum() ? 1 : -1;
         }
         int cmp = train.compareTo(andere.train);
         if (cmp != 0) {
@@ -217,6 +298,9 @@ public final class BuildNumber implements Comparable<BuildNumber> {
 
     @Override
     public String toString() {
+        if (istDatum()) {
+            return DATUM_FORMAT.format(zeitpunkt);
+        }
         if (stabilitaet == null) {
             return train + nummerFormatiert();
         }
@@ -224,6 +308,9 @@ public final class BuildNumber implements Comparable<BuildNumber> {
     }
 
     public String beschreibung() {
+        if (istDatum()) {
+            return toString() + " (Build vom " + DATUM_ANZEIGE.format(zeitpunkt) + ")";
+        }
         if (stabilitaet == null) {
             return toString() + " (Freigabe – ohne Stufenbuchstabe)";
         }
@@ -238,6 +325,9 @@ public final class BuildNumber implements Comparable<BuildNumber> {
         if (!(o instanceof BuildNumber andere)) {
             return false;
         }
+        if (istDatum() || andere.istDatum()) {
+            return istDatum() && andere.istDatum() && zeitpunkt.equals(andere.zeitpunkt);
+        }
         return nummer == andere.nummer
                 && train.equals(andere.train)
                 && stabilitaet == andere.stabilitaet;
@@ -245,6 +335,6 @@ public final class BuildNumber implements Comparable<BuildNumber> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(train, nummer, stabilitaet);
+        return Objects.hash(train, nummer, stabilitaet, zeitpunkt);
     }
 }

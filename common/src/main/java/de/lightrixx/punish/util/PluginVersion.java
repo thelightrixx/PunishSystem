@@ -48,13 +48,15 @@ public final class PluginVersion {
                 throw new IllegalArgumentException("Leere Buildnummer nach '+' in '" + eingabe + "'.");
             }
             BuildNumber build = BuildNumber.parse(buildTeil);
-            int major = majorAus(basisTeil);
-            int minor = minorAus(basisTeil);
-            String erwartet = BuildNumber.trainFuer(major, minor);
-            if (!build.train().equals(erwartet)) {
-                throw new IllegalArgumentException("Build '" + build + "' passt nicht zu Basis '" + basisTeil
-                        + "' (Train " + build.train() + " = Version " + build.trainMajor() + "." + build.trainMinor()
-                        + ", erwartet " + erwartet + " fuer " + major + "." + minor + ").");
+            if (!build.istDatum()) {
+                int major = majorAus(basisTeil);
+                int minor = minorAus(basisTeil);
+                String erwartet = BuildNumber.trainFuer(major, minor);
+                if (!build.train().equals(erwartet)) {
+                    throw new IllegalArgumentException("Build '" + build + "' passt nicht zu Basis '" + basisTeil
+                            + "' (Train " + build.train() + " = Version " + build.trainMajor() + "." + build.trainMinor()
+                            + ", erwartet " + erwartet + " fuer " + major + "." + minor + ").");
+                }
             }
             return new PluginVersion(basisTeil, build);
         }

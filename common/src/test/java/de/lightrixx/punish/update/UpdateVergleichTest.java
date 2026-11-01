@@ -92,6 +92,16 @@ class UpdateVergleichTest {
     }
 
     @Test
+    void datumsBuildWirdChronologischVerglichen() {
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0-beta+011126-18", "4.0-beta+011126-19"));
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0-beta+011126-19", "4.0-beta+011126-18"));
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0-beta+311226-23", "4.0-beta+010127-00"));
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0-beta+EA99z", "4.0-beta+011126-19"),
+                "Datums-Build ist neuer als alte EA-Builds");
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0-beta+011126-19", "4.0-beta+EA99z"));
+    }
+
+    @Test
     void unparbareVersionWirdNichtAlsUpdateEmpfohlen() {
         assertFalse(UpdateVergleich.neuerVerfuegbar("4.0-beta+EA25b", "2027.1-irgendwas"));
         assertFalse(UpdateVergleich.neuerVerfuegbar("2027.1-irgendwas", "4.0-beta+EA25b"));

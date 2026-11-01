@@ -56,6 +56,9 @@ public final class UpdateVergleich {
         if (bb == null) {
             return 1;
         }
+        if (ba.istDatum() || bb.istDatum()) {
+            return ba.compareTo(bb);
+        }
         // Beta-Buchstabe (z. B. EA26c) ist aelter als derselbe Build ohne
         // Buchstabe (Freigabe, z. B. EA26). Altschreibweisen mit a/b/c/d
         // bleiben lesbar: EA25c -> EA25b -> EA25a ist weiterhin Fortschritt.
