@@ -49,6 +49,14 @@ public final class ProtectionService {
         return selbstbestrafungErlaubt;
     }
 
+    public boolean istErlaubteSelbstbestrafung(BefehlsSender sender, UUID zielUuid) {
+        return selbstbestrafungErlaubt
+                && zielUuid != null
+                && sender != null
+                && sender.istSpieler()
+                && zielUuid.equals(sender.spielerUuid());
+    }
+
     public enum SchutzErgebnis {
         NICHT_GESCHUETZT,
         GESCHUETZT,

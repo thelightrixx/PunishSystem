@@ -137,7 +137,8 @@ public final class FreezeCommand extends PunishCommand {
     private void freezeFehlerSenden(BefehlsSender sender, CachedPlayer spieler,
                                     de.lightrixx.punish.model.ServerScope scope) {
         try {
-            if (schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.FREEZE))) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())
+                    && schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.FREEZE))) {
                 return;
             }
         } catch (Exception e) {

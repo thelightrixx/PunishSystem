@@ -83,7 +83,8 @@ public final class MuteIpCommand extends PunishCommand {
                 LOG.debug("Rang-Hierarchie-Check übersprungen (/muteip).", e);
             }
             try {
-                if (protectionService.istGeschuetzt(spielerZiel.uuid(), ProtectionService.IgnoreTyp.MUTE)) {
+                if (!protectionService.istErlaubteSelbstbestrafung(sender, spielerZiel.uuid())
+                        && protectionService.istGeschuetzt(spielerZiel.uuid(), ProtectionService.IgnoreTyp.MUTE)) {
                     messageService.senden(sender, MessageKeys.GESCHUETZT);
                     return;
                 }

@@ -112,7 +112,8 @@ public final class MuteCommand extends PunishCommand {
                     scope, herkunftVon(sender), silent);
             if (!erfolg) {
                 try {
-                    if (schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.MUTE))) {
+                    if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())
+                            && schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.MUTE))) {
                         return;
                     }
                 } catch (Exception e) {

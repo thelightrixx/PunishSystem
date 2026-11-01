@@ -263,6 +263,10 @@ public abstract class PunishCommand {
             messageService.senden(sender, MessageKeys.SELBSTBESTRAFUNG);
             return;
         }
+        if (protectionService.istErlaubteSelbstbestrafung(sender, ziel.uuid())) {
+            fortsetzung.run();
+            return;
+        }
         try {
             if (protectionService.istRangBlockiert(sender, ziel.uuid())) {
                 messageService.senden(sender, MessageKeys.GESCHUETZT);

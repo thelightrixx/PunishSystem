@@ -80,7 +80,8 @@ public final class KickCommand extends PunishCommand {
         } catch (Exception e) {
             LOG.debug("Rang-Hierarchie-Check übersprungen.", e);
         }
-        if (protectionService.istGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
+        if (!protectionService.istErlaubteSelbstbestrafung(sender, online.uuid())
+                && protectionService.istGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
             messageService.senden(sender, MessageKeys.GESCHUETZT);
             return;
         }

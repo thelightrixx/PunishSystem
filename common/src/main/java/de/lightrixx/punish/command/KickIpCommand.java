@@ -84,7 +84,8 @@ public final class KickIpCommand extends PunishCommand {
                 LOG.debug("Rang-Hierarchie-Check übersprungen (/kickip).", e);
             }
             try {
-                if (protectionService.istGeschuetzt(ziel.get().uuid(), ProtectionService.IgnoreTyp.KICK)) {
+                if (!protectionService.istErlaubteSelbstbestrafung(sender, ziel.get().uuid())
+                        && protectionService.istGeschuetzt(ziel.get().uuid(), ProtectionService.IgnoreTyp.KICK)) {
                     messageService.senden(sender, MessageKeys.GESCHUETZT);
                     return;
                 }

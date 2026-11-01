@@ -133,10 +133,13 @@ class GranularSchutzTest {
         when(sender.spielerUuid()).thenReturn(uuid);
 
         assertFalse(schutz.istSelbstbestrafungErlaubt());
+        assertFalse(schutz.istErlaubteSelbstbestrafung(sender, uuid));
         assertTrue(schutz.istSelbstbestrafung(sender, uuid));
 
         schutz.setSelbstbestrafungErlaubt(true);
         assertTrue(schutz.istSelbstbestrafungErlaubt());
+        assertTrue(schutz.istErlaubteSelbstbestrafung(sender, uuid));
+        assertFalse(schutz.istErlaubteSelbstbestrafung(sender, UUID.randomUUID()));
         assertFalse(schutz.istSelbstbestrafung(sender, uuid));
     }
 }

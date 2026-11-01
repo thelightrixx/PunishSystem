@@ -83,7 +83,8 @@ public final class TimeoutIpCommand extends PunishCommand {
                 LOG.debug("Rang-Hierarchie-Check übersprungen (/timeoutip).", e);
             }
             try {
-                if (protectionService.istGeschuetzt(spielerZiel.uuid(), ProtectionService.IgnoreTyp.TIMEOUT)) {
+                if (!protectionService.istErlaubteSelbstbestrafung(sender, spielerZiel.uuid())
+                        && protectionService.istGeschuetzt(spielerZiel.uuid(), ProtectionService.IgnoreTyp.TIMEOUT)) {
                     messageService.senden(sender, MessageKeys.GESCHUETZT);
                     return;
                 }
