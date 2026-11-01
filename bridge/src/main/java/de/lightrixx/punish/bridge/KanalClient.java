@@ -215,12 +215,19 @@ public final class KanalClient implements PluginMessageListener {
     }
 
     public void sendeHello(String serverName) {
-        sendeSeq.set(0L);
-        empfangsPruefer.zuruecksetzen();
+        // Der Sendesequenz-Zaehler wird bewusst NICHT zurueckgesetzt: Der Proxy setzt
+        // seinen Empfangszaehler beim HELLO selbst zurueck (BrueckenKanal.sequenzPruefen)
+        // und akzeptiert danach jede Sequenz > 0. Ein Reset hier kollidiert mit parallel
+        // laufenden Sendern (Chatfilter-Treffer, GUI-Anfragen): Beide koennten dieselbe
+        // Sequenz vergeben, der Proxy verwirft das zweite Paket als Replay.
         syncStagingVerwerfenWennIdle();
         try {
             sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante));
             LOG.info("Bridge-HELLO als '{}' gesendet.", serverName);
+        } catch (IllegalStateException e) {
+            LOG.warn("HELLO konnte nicht gesendet werden: {}", e.getMessage());
+            LOG.debug("HELLO-Details.", e);
+            return;
         } catch (Exception e) {
             LOG.warn("HELLO konnte nicht gesendet werden (kein Spieler online?).");
             LOG.debug("HELLO-Details.", e);
