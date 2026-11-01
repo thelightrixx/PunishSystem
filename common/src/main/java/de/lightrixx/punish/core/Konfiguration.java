@@ -186,6 +186,13 @@ public interface Konfiguration {
 
     boolean schutzFailClosed();
 
+    /**
+     * Ob Spieler sich selbst bestrafen dürfen. Standard: false (Selbstbestrafung blockiert).
+     */
+    default boolean selbstbestrafungErlaubt() {
+        return false;
+    }
+
     boolean offlineAllowNeverSeen();
 
     ZoneId anzeigeZone();

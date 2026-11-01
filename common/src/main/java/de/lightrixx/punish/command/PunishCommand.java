@@ -477,7 +477,8 @@ public abstract class PunishCommand {
             if (name == null || name.isBlank()) {
                 continue;
             }
-            if (eigenerName != null && name.equalsIgnoreCase(eigenerName.trim())) {
+            if (eigenerName != null && !protectionService.istSelbstbestrafungErlaubt()
+                    && name.equalsIgnoreCase(eigenerName.trim())) {
                 continue;
             }
             ergebnis.add(name);

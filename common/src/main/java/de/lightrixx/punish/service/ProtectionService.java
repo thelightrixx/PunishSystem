@@ -18,6 +18,7 @@ public final class ProtectionService {
     private static final Logger LOG = LoggerFactory.getLogger(ProtectionService.class);
 
     private volatile boolean failClosed = true;
+    private volatile boolean selbstbestrafungErlaubt = false;
 
     private final SpielerVerzeichnis verzeichnis;
     private final OfflineVerzeichnis offlineVerzeichnis;
@@ -38,6 +39,14 @@ public final class ProtectionService {
 
     public boolean istFailClosed() {
         return failClosed;
+    }
+
+    public void setSelbstbestrafungErlaubt(boolean selbstbestrafungErlaubt) {
+        this.selbstbestrafungErlaubt = selbstbestrafungErlaubt;
+    }
+
+    public boolean istSelbstbestrafungErlaubt() {
+        return selbstbestrafungErlaubt;
     }
 
     public enum SchutzErgebnis {
@@ -411,8 +420,12 @@ public final class ProtectionService {
         return 0;
     }
 
-    public boolean istSelbstbestrafung(BefehlsSender sender, UUID zielUuid) {        Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
+    public boolean istSelbstbestrafung(BefehlsSender sender, UUID zielUuid) {
+        Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
 
+        if (selbstbestrafungErlaubt) {
+            return false;
+        }
         if (sender == null || !sender.istSpieler()) {
             return false;
         }

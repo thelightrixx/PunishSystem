@@ -67,6 +67,11 @@ anzeige-zone: "Europe/Berlin"
 # Online-Spieler sind davon unabhängig (OP und Rechte werden direkt geprüft).
 schutz:
   fail-closed: true
+  # Selbstbestrafung: false (Standard) = eigene Strafen auf den eigenen Namen
+  # werden abgelehnt (messages.selbstbestrafung). true = Bann/Mute/Timeout/
+  # Kick/Warn auf sich selbst sind erlaubt. Der Schutz gegen die eigene bzw.
+  # die Server-IP (SELBST_IP_BANN) bleibt unabhaengig davon aktiv.
+  selbstbestrafung-erlaubt: false
 
 # --- Offline-Auflösung / Vorab-Banns ---
 # allow-never-seen: false (empfohlen für Team-Server, Fail-Closed) – nie gesehene

@@ -1028,6 +1028,19 @@ public final class VelocityKonfiguration implements Konfiguration {
     }
 
     @Override
+    public boolean selbstbestrafungErlaubt() {
+        Object roh = holeRoh("schutz", "selbstbestrafung-erlaubt");
+        if (roh instanceof Boolean bool) {
+            return bool;
+        }
+        if (roh == null) {
+            return false;
+        }
+        LOG.warn("schutz.selbstbestrafung-erlaubt ist kein Boolean (Wert: '{}'), nutze false.", roh);
+        return false;
+    }
+
+    @Override
     public boolean offlineAllowNeverSeen() {
         Object roh = holeRoh("offline-resolution", "allow-never-seen");
         if (roh instanceof Boolean bool) {

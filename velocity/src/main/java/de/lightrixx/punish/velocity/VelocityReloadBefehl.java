@@ -301,6 +301,8 @@ public final class VelocityReloadBefehl extends PunishCommand {
                     taskScheduler.aufgabe(() -> {
                         try {
                             protectionService.setFailClosed(konfiguration.schutzFailClosed());
+                            protectionService.setSelbstbestrafungErlaubt(
+                                    konfiguration.selbstbestrafungErlaubt());
                         } catch (Exception e) {
                             teilfehler.add("Schutz");
                             LOG.warn("Schutz-Config konnte nach Reload nicht übernommen werden.", e);

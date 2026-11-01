@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-beta+011126-1933",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-beta+011126-2256",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
@@ -160,6 +160,7 @@ public final class PunishVelocity {
                 verzeichnis, verzeichnis, luckPermsZugang());
         try {
             protectionService.setFailClosed(config.schutzFailClosed());
+            protectionService.setSelbstbestrafungErlaubt(config.selbstbestrafungErlaubt());
             playerCache.setAllowNeverSeen(config.offlineAllowNeverSeen());
             ZeitFormat.setAnzeigeZone(config.anzeigeZone());
             if (!protectionService.istFailClosed()) {

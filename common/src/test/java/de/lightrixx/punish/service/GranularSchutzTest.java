@@ -1,5 +1,6 @@
 package de.lightrixx.punish.service;
 
+import de.lightrixx.punish.core.BefehlsSender;
 import de.lightrixx.punish.core.OfflineVerzeichnis;
 import de.lightrixx.punish.core.OnlineSpieler;
 import de.lightrixx.punish.core.Permissions;
@@ -121,5 +122,21 @@ class GranularSchutzTest {
                 schutz.pruefeSchutz(uuid, ProtectionService.IgnoreTyp.MUTE));
         assertEquals(ProtectionService.SchutzErgebnis.NICHT_GESCHUETZT,
                 schutz.pruefeSchutz(uuid, ProtectionService.IgnoreTyp.BAN));
+    }
+
+    @Test
+    void selbstbestrafungStandardBlockiertUndPerFlagErlaubt() {
+        UUID uuid = UUID.randomUUID();
+        ProtectionService schutz = schutzMitRechten(uuid, "Selbst", false);
+        BefehlsSender sender = mock(BefehlsSender.class);
+        when(sender.istSpieler()).thenReturn(true);
+        when(sender.spielerUuid()).thenReturn(uuid);
+
+        assertFalse(schutz.istSelbstbestrafungErlaubt());
+        assertTrue(schutz.istSelbstbestrafung(sender, uuid));
+
+        schutz.setSelbstbestrafungErlaubt(true);
+        assertTrue(schutz.istSelbstbestrafungErlaubt());
+        assertFalse(schutz.istSelbstbestrafung(sender, uuid));
     }
 }
