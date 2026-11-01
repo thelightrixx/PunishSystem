@@ -1,4 +1,4 @@
-# PunishSystem v4.0-beta
+# PunishSystem v4.0.0-beta
 
 **PunishSystem** ist ein hochperformantes, netzwerkweites Moderations- und Bestrafungssystem für Minecraft. Es wurde speziell für den Einsatz auf **Velocity-Proxies** mit **Paper/Purpur-Backend-Servern** entwickelt.
 
@@ -31,10 +31,10 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
 ## Installation & Schnellstart
 
 ### 1. Dateien platzieren
-- **`PunishSystem-v4.0-beta-velocity.jar`** in den `plugins/`-Ordner des **Velocity-Proxys** legen.
-- **`PunishSystem-v4.0-beta-bridge.jar`** (für Paper 26.1+) oder **`PunishSystem-v4.0-beta-bridge-1.21.jar`** (für Paper 1.21.x) in die `plugins/`-Ordner der **Backend-Server** legen.
+- **`PunishSystem-v4.0.0-beta-(velocity)+<Build>.jar`** in den `plugins/`-Ordner des **Velocity-Proxys** legen.
+- **`PunishSystem-v4.0.0-beta-(bridge)+<Build>.jar`** (für Paper 26.1+) oder **`PunishSystem-v4.0.0-beta-(bridge-1.21)+<Build>.jar`** (für Paper 1.21.x) in die `plugins/`-Ordner der **Backend-Server** legen.
 
-Alle drei Jars gehören zusammen und müssen auf derselben Version laufen.
+`<Build>` ist die Buildnummer aus dem Dateinamen, zum Beispiel `011126_1933`. Alle drei Jars gehören zusammen und müssen auf derselben Version und Buildnummer laufen.
 
 ### 2. Tunnel-Secrets konfigurieren
 1. Proxy und Backends einmal starten und stoppen.
@@ -51,8 +51,8 @@ Alle drei Jars gehören zusammen und müssen auf derselben Version laufen.
      server-name: "lobby"
      tunnel-secret: "<SECRET_NUR_FUER_LOBBY>"
    ```
-   Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
-4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy.
+   Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String([byte[]](1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
+4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy; `/punish-diagnostics` zeigt auf Proxy und Backends den Zustand.
 
 ### 3. Datenhaltung einrichten (vor dem ersten Start beachten)
 
