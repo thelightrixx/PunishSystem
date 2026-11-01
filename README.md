@@ -9,7 +9,7 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
 ## Highlights & Features
 
 - **Netzwerkweite Strafverwaltung**: Banns, Mutes, Timeouts, Freezes, Kicks, Verwarnungen, Verstoß-Punkte, Notizen und IP-Strafen.
-- **Server-Scopes**: Strafen können global oder auf spezifische Server (`--global`, `--server <name>`) angewendet werden.
+- **Server-Scopes**: Strafen können global oder auf spezifische Server (`--global`, `--<Servername>` oder `--server=<Name>`) angewendet werden.
 - **PunishGUI**: Interaktives In-Game-Menü für Moderatoren mit Live-Daten vom Proxy.
 - **Chatfilter**: Flexibler Wortlistenfilter mit optionaler KI-Toxizitätsprüfung (ONNX-Runtime) und automatischem Staffel-Eskalationssystem.
 - **Reports & Alt-Erkennung**: Report-System für Spieler und Alt-Account-Erkennung anhand von IP-Adressen.
@@ -52,13 +52,13 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
      tunnel-secret: "<SECRET_NUR_FUER_LOBBY>"
    ```
    Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String([byte[]](1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
-4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy; `/punish-diagnostics` zeigt auf Proxy und Backends den Zustand.
+4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy; `/punish-diagnostics` zeigt auf Proxy und Backends den Zustand. Danach erzeugt `/punish-setup secrets` auf dem Proxy fehlende Secrets, `/punish-setup check` prüft Speicher, Secrets und verbundene Bridges.
 
 ### 3. Datenhaltung einrichten (vor dem ersten Start beachten)
 
 Der Proxy speichert standardmäßig in **MySQL** (`config/general.yml`, Abschnitt `speicher`). Ist dort keine erreichbare Datenbank hinterlegt, deaktiviert sich das Proxy-Plugin beim Start (Fail-Closed) und der Proxy läuft ohne Strafverwaltung. Zwei Wege:
 
-- **MySQL (Standard für Netzwerke):** Datenbank und Benutzer anlegen und in `plugins/PunishSystemVelocity/config/general.yml` unter `speicher.mysql` eintragen (`host`, `port`, `datenbank`, `benutzer`, `passwort`). Vorhandene YAML-Daten werden beim ersten Start mit `migration-beim-start: true` einmalig übernommen.
+- **MySQL (Standard für Netzwerke):** Datenbank und Benutzer anlegen und in `plugins/PunishSystemVelocity/config/general.yml` unter `speicher.mysql` eintragen (`host`, `port`, `datenbank`, `benutzer`, `passwort`). Vorhandene YAML-Daten werden beim ersten Start mit `migration-beim-start: true` einmalig übernommen, aber nur wenn die Datenbank noch leer ist.
 - **YAML (Einzelserver):** in derselben Datei `speicher.typ: "yaml"` setzen; die Daten liegen dann unter `plugins/PunishSystemVelocity/data/`.
 
 Die Bridges speichern nichts selbst; sie erhalten alle Strafen per Sync vom Proxy.
@@ -69,9 +69,9 @@ Die Bridges speichern nichts selbst; sie erhalten alle Strafen per Sync vom Prox
 
 | Befehl | Beschreibung | Haupt-Permission |
 |---|---|---|
-| `/ban <Spieler> <Dauer> [Grund] [--global\|--server]` | Bannt einen Spieler | `punish.ban` |
-| `/mute <Spieler> <Dauer> [Grund] [--global\|--server]` | Mutet einen Spieler | `punish.mute` |
-| `/timeout <Spieler> <Dauer> [Grund] [--global\|--server]` | Versetzt einen Spieler in Timeout | `punish.timeout` |
+| `/ban <Spieler> <Dauer> [Grund] [--global\|--<Servername>\|--server=<Name>]` | Bannt einen Spieler | `punish.ban` |
+| `/mute <Spieler> <Dauer> [Grund] [--global\|--<Servername>\|--server=<Name>]` | Mutet einen Spieler | `punish.mute` |
+| `/timeout <Spieler> <Dauer> [Grund] [--global\|--<Servername>\|--server=<Name>]` | Versetzt einen Spieler in Timeout | `punish.timeout` |
 | `/freeze <Spieler> [Dauer] [Grund]` | Friert einen Spieler ein | `punish.freeze` |
 | `/kick <Spieler> [Grund]` | Kickt einen Spieler vom Netzwerk | `punish.kick` |
 | `/warn <Spieler> <Grund>` | Verwarnt einen Spieler | `punish.warn` |
@@ -81,7 +81,7 @@ Die Bridges speichern nichts selbst; sie erhalten alle Strafen per Sync vom Prox
 | `/alts <Spieler\|IP>` | Zeigt verknüpfte Zweitaccounts | `punish.alts` |
 | `/report <Spieler> <Grund>` | Meldet einen Spieler an das Team | `punish.report` |
 | `/reports` | Verwaltet offene Reports | `punish.reports` |
-| `/punish-update [check\|apply]` | Prüft und installiert Updates | `punish.update` |
+| `/punish-update [check\|status\|apply]` | Prüft und installiert Updates | `punish.update` |
 | `/punish-reload` | Lädt die Konfiguration neu | `punish.reload` |
 
 Vollständige Befehls-, Rechte- und Konfigurationsübersicht findest du in der mitgelieferten Dokumentation unter `docs/index.html`.
