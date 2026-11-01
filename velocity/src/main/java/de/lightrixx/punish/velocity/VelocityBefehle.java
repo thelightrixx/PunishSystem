@@ -353,6 +353,9 @@ public final class VelocityBefehle {
                 new de.lightrixx.punish.command.PunishDiagnosticsCommand(messageService, config,
                         protectionService, playerCache, verzeichnis,
                         () -> diagnoseKontext(proxy, config, kanal, ioExecutor)));
+        registrar(manager, plugin, proxy, messageService, "punish-setup", List.of("pssetup"),
+                new VelocitySetupBefehl(messageService, config, protectionService, playerCache,
+                        planer, proxy, kanal, datenOrdner, () -> proxyVersion(proxy)));
         ChatfilterBefehl chatfilter = new ChatfilterBefehl(messageService, config,
                 protectionService, playerCache, planer, verzeichnis, proxy);
         try {

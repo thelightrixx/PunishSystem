@@ -47,6 +47,7 @@ public enum Permissions {
     PUNISH_VERSION("punish.version"),
     PUNISH_HELP("punish.help"),
     PUNISH_DIAGNOSTICS("punish.diagnostics"),
+    PUNISH_SETUP("punish.setup"),
     PUNISH_DELETEIP("punish.deleteip"),
     PUNISH_CHATFILTER("punish.chatfilter"),
     PUNISH_CHATFILTER_SYNC("punish.chatfilter.sync"),

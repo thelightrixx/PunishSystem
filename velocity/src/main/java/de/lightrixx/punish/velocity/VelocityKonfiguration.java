@@ -1469,6 +1469,55 @@ public final class VelocityKonfiguration implements Konfiguration {
         }
     }
 
+    /**
+     * Schreibt netzwerk.bridge-secrets in die general.yml, ohne andere Zeilen
+     * oder Kommentare anzutasten, und lädt die Konfiguration neu.
+     */
+    public void speichereBrueckenSecrets(Map<String, String> secrets) {
+        Objects.requireNonNull(secrets, "Die Secrets dürfen nicht null sein.");
+        try {
+            String alt = java.nio.file.Files.readString(generalDatei.toPath(),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            String neu = ersetzeBridgeSecrets(alt, secrets);
+            java.nio.file.Files.writeString(generalDatei.toPath(), neu,
+                    java.nio.charset.StandardCharsets.UTF_8);
+            laden();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("general.yml konnte nicht geschrieben werden.", e);
+        }
+    }
+
+    static String ersetzeBridgeSecrets(String text, Map<String, String> secrets) {
+        String nl = text.contains("\r\n") ? "\r\n" : "\n";
+        StringBuilder block = new StringBuilder("  bridge-secrets:");
+        if (secrets == null || secrets.isEmpty()) {
+            block.append(" {}");
+        } else {
+            for (Map.Entry<String, String> eintrag : new java.util.TreeMap<>(secrets).entrySet()) {
+                String name = ServerScope.normalisiereServerName(eintrag.getKey());
+                if (name == null) {
+                    throw new IllegalArgumentException("Ungültiger Servername: " + eintrag.getKey());
+                }
+                String secret = eintrag.getValue() == null ? "" : eintrag.getValue().trim();
+                if (secret.isEmpty()) {
+                    throw new IllegalArgumentException("Leeres Secret für " + name);
+                }
+                block.append(nl).append("    \"").append(name).append("\": \"")
+                        .append(secret.replace("\\", "\\\\").replace("\"", "\\\""))
+                        .append("\"");
+            }
+        }
+        block.append(nl);
+        java.util.regex.Pattern muster = java.util.regex.Pattern.compile(
+                "(?m)^  bridge-secrets:[ \\t]*(?:\\{\\})?[ \\t]*(?:#.*)?"
+                        + "(?:\\R(?:    [^\\r\\n]*\\R?)*)?");
+        java.util.regex.Matcher treffer = muster.matcher(text);
+        if (!treffer.find()) {
+            throw new IllegalStateException("netzwerk.bridge-secrets fehlt in general.yml.");
+        }
+        return treffer.replaceFirst(java.util.regex.Matcher.quoteReplacement(block.toString()));
+    }
+
     @Override
     public List<String> bekannteServer() {
         List<String> normiert = new ArrayList<>();

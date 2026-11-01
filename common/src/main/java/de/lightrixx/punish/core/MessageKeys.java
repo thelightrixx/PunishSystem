@@ -48,6 +48,22 @@ public final class MessageKeys {
     public static final String UPDATE_PUSH_LAUFEND = "update-push-laufend";
     public static final String UPDATE_PUSH_FERTIG = "update-push-fertig";
     public static final String PUNISH_VERSION = "punish-version";
+
+    public static final String SETUP_CHECK_KOPF = "setup-check-kopf";
+    public static final String SETUP_CHECK_SPEICHER = "setup-check-speicher";
+    public static final String SETUP_CHECK_SECRETS = "setup-check-secrets";
+    public static final String SETUP_CHECK_SECRETS_FEHLT = "setup-check-secrets-fehlt";
+    public static final String SETUP_CHECK_BRUECKEN = "setup-check-bruecken";
+    public static final String SETUP_CHECK_FEHLER = "setup-check-fehler";
+    public static final String SETUP_SECRETS_ERZEUGT = "setup-secrets-erzeugt";
+    public static final String SETUP_SECRETS_KEINE = "setup-secrets-keine";
+    public static final String SETUP_KEINE_SERVER = "setup-keine-server";
+    public static final String SETUP_BRIDGE_DATEI = "setup-bridge-datei";
+    public static final String SETUP_BRIDGE_HINWEIS = "setup-bridge-hinweis";
+    public static final String SETUP_BRIDGE_KEIN_SECRET = "setup-bridge-kein-secret";
+    public static final String SETUP_SERVER_UNBEKANNT = "setup-server-unbekannt";
+    public static final String SETUP_UNBEKANNT = "setup-unbekannt";
+    public static final String SETUP_FEHLER = "setup-fehler";
     public static final String PUNISH_DIAGNOSTICS_KOPF = "punish-diagnostics-kopf";
     public static final String PUNISH_DIAGNOSTICS_ZEILE = "punish-diagnostics-zeile";
     public static final String PUNISH_DIAGNOSTICS_FUSS = "punish-diagnostics-fuss";

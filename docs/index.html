@@ -528,6 +528,7 @@ details>div{padding:12px 16px 4px}
     <li>Die Secrets erscheinen nie im Log. Sie gehören nicht in eine Dokumentation, ein Repository oder einen Screenshot.</li>
     <li>Ein globales <code>netzwerk.tunnel-secret</code> auf dem Proxy wird nicht mehr verwendet; dort zählt nur <code>bridge-secrets</code>.</li>
   </ul>
+  <p><strong>Schneller Weg:</strong> <code>/punish-setup secrets</code> erzeugt für alle in Velocity registrierten Server fehlende Secrets, schreibt sie in die Proxy-<code>general.yml</code> und legt je Bridge eine fertige Datei unter <code>plugins/PunishSystemVelocity/setup/</code> ab. <code>/punish-setup check</code> prüft danach Speicher, Secrets und verbundene Bridges. Die Dateien enthalten die Secrets und werden nach dem Übernehmen auf der Bridge gelöscht.</p>
   <div class="callout warn"><div><span class="ttl">Leeres Secret bedeutet stumm</span><p>Ohne Secret ist der Tunnel deaktiviert (Fail-Closed). Befehle werden nicht an den Proxy weitergeleitet, Nachrichten des Proxys weist die Bridge ab. Im Log steht dann „Tunnel-Signatur inaktiv“ beziehungsweise ein Hinweis auf <code>netzwerk.tunnel-secret</code>.</p></div></div>
 
   <h2>Schritt 5: Servernamen setzen</h2>
@@ -549,11 +550,13 @@ details>div{padding:12px 16px 4px}
   <p>Proxy und Backends starten. Danach mit einem berechtigten Account prüfen:</p>
   <pre data-lang="cmd">/punish-version
 /punish-help
-/punish-diagnostics</pre>
+/punish-diagnostics
+/punish-setup check</pre>
   <ul>
     <li><code>/punish-version</code> zeigt auf Proxy und Bridges dieselbe Version.</li>
     <li><code>/punish-help</code> listet die Befehle, für die die eigene Gruppe Rechte hat.</li>
     <li><code>/punish-diagnostics</code> meldet Speicher, Schutz-Einstellungen, Bridge-Verbindung und Versionen. WARN-Zeilen sind abzuarbeiten; auf jedem Backend ausführen.</li>
+    <li><code>/punish-setup check</code> prüft Speicher, Secrets und Bridges; fehlende Secrets erzeugt <code>/punish-setup secrets</code>.</li>
     <li>Im Proxy-Log darf keine Deaktivierung und keine Warnung zu Tunnel-Secrets stehen.</li>
   </ul>
   <p>Zum Abschluss auf einem Testserver eine Strafe setzen und wieder aufheben, zum Beispiel <code>/mute Testspieler 5m Test</code> und <code>/unmute Testspieler</code>. Erscheint die Meldung im Team-Chat und greift der Mute auf allen Servern, ist die Installation abgeschlossen.</p>
@@ -1014,6 +1017,7 @@ build_all_jars.bat nobump skiptests Version unverändert lassen, ohne Tests baue
       <tr><td><a href="#/befehle-system"><code>/punish-reload</code></a></td><td>Konfiguration neu laden (nur Proxy)</td><td><code>punish.reload</code></td></tr>
       <tr><td><a href="#/befehle-system"><code>/punish-update</code></a></td><td>Update prüfen und verteilen (<code>check</code>, <code>apply [confirm]</code>, <code>status</code>)</td><td><code>punish.update</code></td></tr>
       <tr><td><a href="#/befehle-system/punish-diagnostics"><code>/punish-diagnostics</code></a></td><td>System- und Config-Check für die Fehlersuche</td><td><code>punish.diagnostics</code></td></tr>
+      <tr><td><a href="#/befehle-system/punish-setup"><code>/punish-setup</code></a></td><td>Installation prüfen, Secrets erzeugen</td><td><code>punish.setup</code></td></tr>
       <tr><td><a href="#/befehle-system"><code>/punish-delete-ip</code></a></td><td>IP-Daten löschen</td><td><code>punish.deleteip</code></td></tr>
       <tr><td><a href="#/befehle-system"><code>/punish-version</code></a>, <code>/punish-help</code></td><td>Version und Hilfe anzeigen</td><td><code>punish.version</code>, <code>punish.help</code></td></tr>
     </tbody>
@@ -1036,6 +1040,7 @@ build_all_jars.bat nobump skiptests Version unverändert lassen, ohne Tests baue
       <tr><td><code>/punish-gui</code>, <code>/punish-dossier</code></td><td><code>/psgui</code>, <code>/psdossier</code></td></tr>
       <tr><td><code>/punish-undo</code>, <code>/punish-stats</code>, <code>/punish-export</code></td><td><code>/psundo</code>, <code>/psstats</code>, <code>/psexport</code></td></tr>
       <tr><td><code>/punish-diagnostics</code></td><td><code>/psdiagnostics</code></td></tr>
+      <tr><td><code>/punish-setup</code></td><td><code>/pssetup</code></td></tr>
       <tr><td><code>/punish-delete-ip</code></td><td><code>/psdelete-ip</code>, <code>/psdeleteip</code></td></tr>
     </tbody>
   </table></div>
@@ -1512,6 +1517,16 @@ build_all_jars.bat nobump skiptests Version unverändert lassen, ohne Tests baue
     <pre data-lang="cmd">/punish-diagnostics</pre>
   </article>
 
+  <article class="cmd-card" data-cmd="/punish-setup" data-alias="/pssetup" data-perm="punish.setup" data-scope="nein">
+    <p class="desc">Prüft die Installation und erzeugt fehlende Tunnel-Secrets. Läuft nur auf dem Proxy.</p>
+    <pre data-lang="cmd">/punish-setup check|secrets|bridge &lt;Server&gt;</pre>
+    <ul>
+      <li><code>check</code> prüft Speicher, Secrets und verbundene Bridges.</li>
+      <li><code>secrets</code> erzeugt fehlende Secrets für alle Velocity-Server, schreibt sie in die Proxy-<code>general.yml</code> und legt je Bridge eine Datei unter <code>plugins/PunishSystemVelocity/setup/</code> ab.</li>
+      <li><code>bridge &lt;Server&gt;</code> schreibt den Block für eine Bridge erneut.</li>
+    </ul>
+  </article>
+
   <article class="cmd-card" data-cmd="/punish-delete-ip" data-alias="/psdelete-ip, /psdeleteip" data-perm="punish.deleteip" data-scope="nein">
     <p class="desc">Löscht die gespeicherten IP-Daten eines Spielers oder einer IP. Gedacht für Datenschutzanfragen.</p>
     <pre data-lang="cmd">/punish-delete-ip &lt;Spieler|IP&gt; [confirm]</pre>
@@ -1607,6 +1622,7 @@ build_all_jars.bat nobump skiptests Version unverändert lassen, ohne Tests baue
       <tr><td><code>punish.allow-silent-syntax</code></td><td>Stille Strafen mit <code>-s</code>, auch der Schalter in der GUI</td></tr>
       <tr><td><code>punish.reload</code></td><td><code>/punish-reload</code></td></tr>
       <tr><td><code>punish.update</code></td><td><code>/punish-update</code> (Update prüfen, verteilen)</td></tr>
+      <tr><td><code>punish.setup</code></td><td><code>/punish-setup</code> (Installation prüfen, Secrets erzeugen)</td></tr>
       <tr><td><code>punish.deleteip</code></td><td><code>/punish-delete-ip</code></td></tr>
       <tr><td><code>punish.diagnostics</code></td><td><code>/punish-diagnostics</code></td></tr>
       <tr><td><code>punish.version</code>, <code>punish.help</code></td><td><code>/punish-version</code>, <code>/punish-help</code></td></tr>
