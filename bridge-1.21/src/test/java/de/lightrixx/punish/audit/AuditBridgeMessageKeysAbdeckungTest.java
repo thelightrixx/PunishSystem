@@ -42,7 +42,13 @@ class AuditBridgeMessageKeysAbdeckungTest {
             "punish-stats-leer", "punish-stats-zeitraum-ungueltig",
             "punish-export-syntax", "punish-export-erfolg", "punish-export-fehler",
             "pscheck-syntax", "pscheck-kopf", "pscheck-status", "pscheck-hinweis",
-            "pscheck-link", "pscheck-unban-link", "alt-wache");
+            "pscheck-link", "pscheck-unban-link",
+            "setup-check-kopf", "setup-check-speicher", "setup-check-secrets",
+            "setup-check-secrets-fehlt", "setup-check-bruecken", "setup-check-fehler",
+            "setup-secrets-erzeugt", "setup-secrets-keine", "setup-keine-server",
+            "setup-bridge-datei", "setup-bridge-hinweis", "setup-bridge-kein-secret",
+            "setup-server-unbekannt", "setup-unbekannt", "setup-fehler",
+            "alt-wache");
 
     private static final Set<String> PROXY_SYNC_DEFAULTS = Set.of(
             "ban-grund", "permabann-grund", "ban-ip-grund", "timeout-grund",
