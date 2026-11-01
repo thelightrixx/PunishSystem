@@ -9,6 +9,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import de.lightrixx.punish.core.OnlineSpieler;
 import de.lightrixx.punish.core.Permissions;
+import de.lightrixx.punish.hook.LuckPermsZugang;
 import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.service.AutoBannService;
 import de.lightrixx.punish.service.BanKickHelper;
@@ -30,6 +31,7 @@ import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.service.TimeoutService;
 import de.lightrixx.punish.service.VerstossService;
 import de.lightrixx.punish.storage.BanRepository;
+import de.lightrixx.punish.storage.DateiSicherung;
 import de.lightrixx.punish.storage.FreezeRepository;
 import de.lightrixx.punish.storage.HistoryRepository;
 import de.lightrixx.punish.storage.IoExecutor;
@@ -48,6 +50,8 @@ import de.lightrixx.punish.storage.mysql.MysqlSchema;
 import de.lightrixx.punish.storage.mysql.MysqlVerbindung;
 import de.lightrixx.punish.storage.mysql.SpeicherTyp;
 import de.lightrixx.punish.storage.mysql.YamlNachMysqlMigrator;
+import de.lightrixx.punish.update.HangarUpdateService;
+import de.lightrixx.punish.update.UpdateVergleich;
 import de.lightrixx.punish.util.MiniMessageUtil;
 import de.lightrixx.punish.util.StartBanner;
 import de.lightrixx.punish.util.TimeParser;
@@ -56,8 +60,12 @@ import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 @Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-beta+011126-1933",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
@@ -65,6 +73,7 @@ import java.util.concurrent.TimeUnit;
 public final class PunishVelocity {
 
     private static final long CLEANUP_MINUTEN = 5L;
+    private static final long CLEANUP_PERIODE_SEKUNDEN = CLEANUP_MINUTEN * 60L;
     private static final long SHUTDOWN_WARTEZEIT_SEKUNDEN = 15L;
     private static final long VERPASST_RETENTION_MILLIS = 90L * 24L * 60L * 60L * 1000L;
     public static final String DATENORDNER_NAME = "PunishSystemVelocity";
@@ -75,8 +84,7 @@ public final class PunishVelocity {
 
     // Dirty-Flag für den entprellten Sync-Push: Massenaktionen stoßen pro Spieler
     // einen Observer an, der Push läuft aber nur einmal je Intervall.
-    private final java.util.concurrent.atomic.AtomicBoolean muteSyncPushFaellig =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
+    private final AtomicBoolean muteSyncPushFaellig = new AtomicBoolean(false);
 
     private IoExecutor ioExecutor;
     private volatile boolean persistenzWarnungAktiv;
@@ -210,12 +218,14 @@ public final class PunishVelocity {
         try {
             kanal.setPluginVersion(liesPluginVersion());
         } catch (Exception e) {
-            logger.debug("Proxy-Version konnte nicht an den Brückenkanal gegeben werden.", e);
+            logger.warn("Proxy-Version konnte nicht an den Brückenkanal gegeben werden – Bridges "
+                    + "erhalten keine Versionsinformation und melden ggf. ein Versions-Mismatch.", e);
         }
         try {
             kanal.setBridgeSecrets(config.brueckenSecrets());
         } catch (Exception e) {
-            logger.debug("Tunnel-Secret konnte nicht an den Brückenkanal gegeben werden.", e);
+            logger.warn("Tunnel-Secret konnte nicht an den Brückenkanal gegeben werden – ohne "
+                    + "gültiges Secret bleibt der Tunnel fail-closed und keine Bridge verbindet.", e);
         }
         muteService.beobachterHinzufuegen(uuid -> muteSyncAnstossen());
         ipMuteService.beobachterHinzufuegen(() -> muteSyncAnstossen());
@@ -353,7 +363,7 @@ public final class PunishVelocity {
                 } catch (Exception e) {
                     logger.warn("Fehler beim periodischen Expiry-Cleanup.", e);
                 }
-            }, CLEANUP_MINUTEN * 60L * 20L, CLEANUP_MINUTEN * 60L * 20L);
+            }, CLEANUP_PERIODE_SEKUNDEN, CLEANUP_PERIODE_SEKUNDEN);
         } catch (IllegalStateException e) {
             logger.warn("Expiry-Cleanup konnte nicht geplant werden.", e);
         }
@@ -383,7 +393,7 @@ public final class PunishVelocity {
                 } catch (Exception e) {
                     logger.debug("Persistenz-Wächter fehlgeschlagen.", e);
                 }
-            }, CLEANUP_MINUTEN * 60L * 20L, CLEANUP_MINUTEN * 60L * 20L);
+            }, CLEANUP_PERIODE_SEKUNDEN, CLEANUP_PERIODE_SEKUNDEN);
         } catch (IllegalStateException e) {
             logger.warn("Persistenz-Wächter konnte nicht geplant werden.", e);
         }
@@ -547,11 +557,11 @@ public final class PunishVelocity {
             String channel = config.updateChannel();
             lokal.aufgabeAsync(() -> {
                 try {
-                    var dienst = new de.lightrixx.punish.update.HangarUpdateService(autor, slug, channel,
-                            de.lightrixx.punish.update.HangarUpdateService.standardAbruf());
+                    var dienst = new HangarUpdateService(autor, slug, channel,
+                            HangarUpdateService.standardAbruf());
                     var info = dienst.pruefe();
                     String aktuell = liesPluginVersion();
-                    if (de.lightrixx.punish.update.UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
+                    if (UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
                         logger.warn("PunishSystem-Update verfügbar: {} (installiert: {}, Channel: {}). /punish-update check",
                                 info.version(), aktuell, info.channel());
                     } else {
@@ -562,17 +572,17 @@ public final class PunishVelocity {
                 }
             });
             try {
-                de.lightrixx.punish.update.HangarUpdateService.planeHinweisIntervall(
+                HangarUpdateService.planeHinweisIntervall(
                         lokal, config::updateIntervallMinuten,
                         () -> {
                             try {
-                                var dienst = new de.lightrixx.punish.update.HangarUpdateService(
+                                var dienst = new HangarUpdateService(
                                         config.updateHangarAutor(), config.updateHangarSlug(),
                                         config.updateChannel(),
-                                        de.lightrixx.punish.update.HangarUpdateService.standardAbruf());
+                                        HangarUpdateService.standardAbruf());
                                 var info = dienst.pruefe();
                                 String aktuell = liesPluginVersion();
-                                if (de.lightrixx.punish.update.UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
+                                if (UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
                                     logger.warn("PunishSystem-Update verfügbar (Intervall-Check): {} (installiert: {}). Nur Hinweis, kein Download.",
                                             info.version(), aktuell);
                                 }
@@ -606,8 +616,8 @@ public final class PunishVelocity {
         }
         try {
             File datenUnterOrdner = new File(ordner, "data");
-            int snapshots = de.lightrixx.punish.storage.DateiSicherung.snapshotOrdnerFuerBoot(datenUnterOrdner);
-            snapshots += de.lightrixx.punish.storage.DateiSicherung.snapshotOrdnerFuerBoot(ordner);
+            int snapshots = DateiSicherung.snapshotOrdnerFuerBoot(datenUnterOrdner);
+            snapshots += DateiSicherung.snapshotOrdnerFuerBoot(ordner);
             if (snapshots > 0) {
                 logger.info("Boot-Backup: {} Datendatei(en) gesichert.", snapshots);
             }
@@ -765,8 +775,7 @@ public final class PunishVelocity {
                 return;
             }
             try {
-                java.nio.file.Files.move(alt.toPath(), effektiv,
-                        java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+                Files.move(alt.toPath(), effektiv, StandardCopyOption.ATOMIC_MOVE);
                 logger.info("Datenordner '{}' nach '{}' migriert.", alt.getName(), neu.getName());
             } catch (Exception moveFehler) {
                 logger.debug("Atomarer Move fehlgeschlagen, versuche Kopie.", moveFehler);
@@ -783,18 +792,18 @@ public final class PunishVelocity {
         }
     }
 
-    private static void kopiereOrdnerRekursiv(java.nio.file.Path quelle, java.nio.file.Path ziel) throws java.io.IOException {
-        try (java.util.stream.Stream<java.nio.file.Path> stream = java.nio.file.Files.walk(quelle)) {
-            for (java.nio.file.Path pfad : (Iterable<java.nio.file.Path>) stream::iterator) {
-                java.nio.file.Path relativ = quelle.relativize(pfad);
-                java.nio.file.Path zielPfad = ziel.resolve(relativ);
-                if (java.nio.file.Files.isDirectory(pfad)) {
-                    java.nio.file.Files.createDirectories(zielPfad);
+    private static void kopiereOrdnerRekursiv(Path quelle, Path ziel) throws java.io.IOException {
+        try (Stream<Path> stream = Files.walk(quelle)) {
+            for (Path pfad : (Iterable<Path>) stream::iterator) {
+                Path relativ = quelle.relativize(pfad);
+                Path zielPfad = ziel.resolve(relativ);
+                if (Files.isDirectory(pfad)) {
+                    Files.createDirectories(zielPfad);
                 } else {
                     if (zielPfad.getParent() != null) {
-                        java.nio.file.Files.createDirectories(zielPfad.getParent());
+                        Files.createDirectories(zielPfad.getParent());
                     }
-                    java.nio.file.Files.copy(pfad, zielPfad, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(pfad, zielPfad, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         }
@@ -813,8 +822,8 @@ public final class PunishVelocity {
         }
     }
 
-    private de.lightrixx.punish.hook.LuckPermsZugang luckPermsZugang() {
-        return new de.lightrixx.punish.hook.LuckPermsZugang(
+    private LuckPermsZugang luckPermsZugang() {
+        return new LuckPermsZugang(
                 () -> {
                     try {
                         return proxy.getPluginManager().getPlugin("luckperms").isPresent();
