@@ -164,7 +164,8 @@ public final class JarEmpfaenger {
             } catch (Exception e) {
                 Files.move(laufend.teilDatei.toPath(), ziel.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
-            LOG.info("Update-Datei übernommen ('{}', {} Bytes). Bitte Server neustarten.", ziel.getName(), laufend.groesse);
+            LOG.info("Update-Datei bereitgestellt ('{}', {} Bytes). Vor dem Neustart die bisherige Plugin-JAR "
+                    + "manuell durch diese Datei ersetzen.", ziel.getAbsolutePath(), laufend.groesse);
             meldeQuittung(variante, version, true);
             try {
                 rueckmeldung.standMelden();

@@ -110,11 +110,17 @@ public final class TimeoutService {
 
     public boolean timeoutVerhaengen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
                                      ServerScope scope, String herkunft, boolean silent) {
+        return timeoutVerhaengen(zielUuid, zielName, dauerMillis, grund, ausfuehrer, scope, herkunft, silent, null);
+    }
+
+    public boolean timeoutVerhaengen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
+                                     ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
         try {
-            if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.TIMEOUT)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.TIMEOUT)) {
                 LOG.warn("timeout für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 return false;
             }
@@ -158,7 +164,8 @@ public final class TimeoutService {
         platzhalter.put("herkunft", herkunftNorm);
 
         Runnable wirkung = () -> {
-            if (verzeichnis.onlineSpieler(zielUuid).isPresent()) {
+            if (verzeichnis.onlineSpieler(zielUuid).isPresent()
+                    && record.scope().giltFuer(verzeichnis.serverName(zielUuid))) {
                 try {
                     verzeichnis.trennen(zielUuid, baueTimeoutScreen(record, jetzt));
                 } catch (Exception e) {
@@ -468,7 +475,8 @@ public final class TimeoutService {
             if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                 continue;
             }
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.TIMEOUT)) {
+            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.TIMEOUT)
+                    || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                 continue;
             }
             try {
@@ -524,7 +532,9 @@ public final class TimeoutService {
                 "Anzahl: " + gesetzt.size() + ", Grund: " + grund, wirksam, herkunftNorm);
         for (TimeoutRecord record : gesetzt) {
             try {
-                verzeichnis.trennen(record.spielerUuid(), baueTimeoutScreen(record, jetzt));
+                if (record.scope().giltFuer(verzeichnis.serverName(record.spielerUuid()))) {
+                    verzeichnis.trennen(record.spielerUuid(), baueTimeoutScreen(record, jetzt));
+                }
             } catch (Exception e) {
                 LOG.warn("Kick für {} fehlgeschlagen (Timeout bleibt aktiv).", record.spielerName(), e);
             }
@@ -539,7 +549,8 @@ public final class TimeoutService {
             if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                 continue;
             }
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.TIMEOUT)) {
+            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.TIMEOUT)
+                    || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                 continue;
             }
             anzahl++;

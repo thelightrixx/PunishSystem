@@ -72,4 +72,26 @@ class SnakeYamlSpeicherV4Test {
         Map<String, Object> geladen = speicher.laden(datei);
         assertEquals("2", String.valueOf(geladen.get("a")));
     }
+    @Test
+    void frischesRepositoryNutztWiederhergestelltenBann() throws Exception {
+        var speicher = new SnakeYamlSpeicher();
+        var uuid = java.util.UUID.randomUUID();
+        File datei = new File(ordner, "bans.yml");
+        Map<String, Object> daten = Map.of(uuid + "|global", Map.of(
+                "spieler-name", "Steve", "grund", "Test", "ausfuehrer", "Mod",
+                "erstellt-am", 1L, "scope", "global"));
+        speicher.speichern(daten, datei);
+        speicher.speichern(daten, datei);
+        Files.writeString(datei.toPath(), "kaputt: [");
+        var io = new de.lightrixx.punish.storage.IoExecutor();
+        try {
+            var repository = new de.lightrixx.punish.storage.BanRepository(ordner, speicher, io);
+            repository.laden();
+            assertEquals("Steve", repository.finden(uuid,
+                    de.lightrixx.punish.model.ServerScope.global()).orElseThrow().spielerName());
+            assertFalse(speicher.ladenMitStatus(datei).fehler());
+        } finally {
+            io.herunterfahren(5, java.util.concurrent.TimeUnit.SECONDS);
+        }
+    }
 }

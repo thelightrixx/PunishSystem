@@ -208,7 +208,7 @@ public final class VerstossCommand extends PunishCommand {
             try {
                 record = verstossService.hinzufuegen(
                         spieler.uuid(), spieler.name(), grund, ausfuehrerName(sender),
-                        effektiveStufe, silent);
+                        effektiveStufe, silent, sender);
             } catch (VerstossService.ZielGeschuetztException e) {
                 messageService.senden(sender, MessageKeys.GESCHUETZT);
                 return;

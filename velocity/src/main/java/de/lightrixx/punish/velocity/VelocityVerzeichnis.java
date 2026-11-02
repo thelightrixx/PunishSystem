@@ -85,6 +85,14 @@ public final class VelocityVerzeichnis implements SpielerVerzeichnis, OfflineVer
     }
 
     @Override
+    public String serverName(UUID uuid) {
+        Objects.requireNonNull(uuid, "Die UUID darf nicht null sein.");
+        return proxy.getPlayer(uuid).flatMap(Player::getCurrentServer)
+                .map(server -> server.getServerInfo().getName())
+                .orElse(de.lightrixx.punish.model.ServerScope.UNBEKANNT_WERT);
+    }
+
+    @Override
     public void mitteilen(UUID uuid, Component nachricht) {
         Objects.requireNonNull(uuid, "Die UUID darf nicht null sein.");
         Objects.requireNonNull(nachricht, "Die Nachricht darf nicht null sein.");

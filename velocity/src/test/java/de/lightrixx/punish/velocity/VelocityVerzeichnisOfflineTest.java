@@ -66,4 +66,20 @@ class VelocityVerzeichnisOfflineTest {
         verzeichnis.mitPlayerCache(cache);
         assertTrue(verzeichnis.findeNachUuid(uuid).isEmpty(), "nie gesehen bleibt leer");
     }
+    @Test
+    void aktuellerServerWirdFuerScopeWirkungAufgeloest() {
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var player = mock(com.velocitypowered.api.proxy.Player.class);
+        var verbindung = mock(com.velocitypowered.api.proxy.ServerConnection.class);
+        var info = mock(com.velocitypowered.api.proxy.server.ServerInfo.class);
+        UUID uuid = UUID.randomUUID();
+        when(proxy.getPlayer(uuid)).thenReturn(Optional.of(player));
+        when(player.getCurrentServer()).thenReturn(Optional.of(verbindung));
+        when(verbindung.getServerInfo()).thenReturn(info);
+        when(info.getName()).thenReturn("survival");
+        var verzeichnis = new VelocityVerzeichnis(proxy);
+        assertEquals("survival", verzeichnis.serverName(uuid));
+        when(player.getCurrentServer()).thenReturn(Optional.empty());
+        assertEquals("unbekannt", verzeichnis.serverName(uuid));
+    }
 }

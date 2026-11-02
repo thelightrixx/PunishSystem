@@ -14,6 +14,10 @@ public interface SpielerVerzeichnis {
 
     Optional<OnlineSpieler> onlineSpielerNachName(String name);
 
+    default String serverName(UUID uuid) {
+        return de.lightrixx.punish.model.ServerScope.UNBEKANNT_WERT;
+    }
+
     void trennen(UUID uuid, Component grund);
 
     void mitteilen(UUID uuid, Component nachricht);

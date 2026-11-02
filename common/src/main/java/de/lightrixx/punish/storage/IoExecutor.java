@@ -24,6 +24,7 @@ public final class IoExecutor {
     private final java.util.concurrent.atomic.AtomicInteger fehlerZaehler = new java.util.concurrent.atomic.AtomicInteger(0);
     private volatile long letzterFehlerZeit = 0L;
     private volatile String letzterFehlerText = "";
+    private volatile boolean nichtGespeichert;
     private static final long GESUND_FENSTER_MILLIS = 30L * 60L * 1000L;
     public static final int UEBERLAST_SCHWELLE = 2000;
 
@@ -52,7 +53,7 @@ public final class IoExecutor {
     }
 
     public boolean istGesund() {
-        if (istUeberlastet()) {
+        if (nichtGespeichert || istUeberlastet()) {
             return false;
         }
         if (fehlerZaehler.get() == 0) {
@@ -123,35 +124,58 @@ public final class IoExecutor {
     private void entleereGeplante() {
         for (var eintrag : java.util.List.copyOf(geplanteNeueste.entrySet())) {
             if (geplanteNeueste.remove(eintrag.getKey(), eintrag.getValue())) {
+                ausstehend.incrementAndGet();
                 try {
-                    eintrag.getValue().run();
-                } catch (Throwable t) {
-                    fehlerZaehler.incrementAndGet();
-                    letzterFehlerZeit = System.currentTimeMillis();
-                    letzterFehlerText = String.valueOf(t.getMessage());
-                    LOG.error("Beim Ausführen einer asynchronen I/O-Aufgabe ist ein Fehler aufgetreten.", t);
+                    fuehreMitSqlWiederholungAus(eintrag.getValue());
+                } finally {
+                    ausstehend.decrementAndGet();
                 }
             }
         }
     }
 
     private void fuehreAusFallback(Runnable aufgabe) {
-        try {
-            aufgabe.run();
-        } catch (Throwable t) {
-            LOG.error("Beim Ausführen einer I/O-Aufgabe im Shutdown-Fallback ist ein Fehler aufgetreten.", t);
+        fuehreMitSqlWiederholungAus(aufgabe);
+    }
+
+    private void fuehreMitSqlWiederholungAus(Runnable aufgabe) {
+        while (true) {
+            try {
+                aufgabe.run();
+                return;
+            } catch (Throwable t) {
+                fehlerZaehler.incrementAndGet();
+                letzterFehlerZeit = System.currentTimeMillis();
+                letzterFehlerText = String.valueOf(t.getMessage());
+                LOG.error("I/O-Auftrag fehlgeschlagen; SQL-Aufträge werden vor nachfolgenden Aufträgen wiederholt.", t);
+                boolean sqlFehler = false;
+                for (Throwable ursache = t; ursache != null; ursache = ursache.getCause()) {
+                    if (ursache instanceof java.sql.SQLException) {
+                        sqlFehler = true;
+                        break;
+                    }
+                }
+                if (!sqlFehler || executor.isShutdown() || Thread.currentThread().isInterrupted()) {
+                    nichtGespeichert = true;
+                    LOG.error("I/O-Auftrag bleibt ungespeichert; Speicherstatus erfordert manuelle Prüfung.");
+                    return;
+                }
+                try {
+                    TimeUnit.SECONDS.sleep(1L);
+                } catch (InterruptedException e) {
+                    nichtGespeichert = true;
+                    Thread.currentThread().interrupt();
+                    LOG.error("Wiederholung eines SQL-Auftrags unterbrochen; Auftrag bleibt ungespeichert.", e);
+                    return;
+                }
+            }
         }
     }
 
     public void ausfuehren(Runnable aufgabe) {
         Objects.requireNonNull(aufgabe, "Die I/O-Aufgabe darf nicht null sein.");
         if (executor.isShutdown()) {
-
-            try {
-                aufgabe.run();
-            } catch (Throwable t) {
-                LOG.error("Beim Ausführen einer I/O-Aufgabe im Shutdown-Fallback ist ein Fehler aufgetreten.", t);
-            }
+            fuehreAusFallback(aufgabe);
             return;
         }
         try {
@@ -161,12 +185,7 @@ public final class IoExecutor {
             }
             executor.execute(() -> {
                 try {
-                    aufgabe.run();
-                } catch (Throwable t) {
-                    fehlerZaehler.incrementAndGet();
-                    letzterFehlerZeit = System.currentTimeMillis();
-                    letzterFehlerText = String.valueOf(t.getMessage());
-                    LOG.error("Beim Ausführen einer asynchronen I/O-Aufgabe ist ein Fehler aufgetreten.", t);
+                    fuehreMitSqlWiederholungAus(aufgabe);
                 } finally {
                     ausstehend.decrementAndGet();
                 }
@@ -174,18 +193,14 @@ public final class IoExecutor {
         } catch (RejectedExecutionException e) {
             ausstehend.decrementAndGet();
             LOG.warn("I/O-Aufgabe nach Shutdown – führe synchron aus statt zu verwerfen.", e);
-            try {
-                aufgabe.run();
-            } catch (Throwable t) {
-                LOG.error("Beim Ausführen einer I/O-Aufgabe im Rejected-Fallback ist ein Fehler aufgetreten.", t);
-            }
+            fuehreAusFallback(aufgabe);
         }
     }
 
     public boolean warteAufIdle(long wartezeit, TimeUnit einheit) {
         Objects.requireNonNull(einheit, "Die Zeiteinheit darf nicht null sein.");
         if (executor.isShutdown()) {
-            return true;
+            return !nichtGespeichert && anzahlAusstehend() == 0;
         }
 
         if (Thread.currentThread().getName().startsWith("PunishSystem-IO-")) {
@@ -200,7 +215,7 @@ public final class IoExecutor {
         }
         try {
             barriere.get(wartezeit, einheit);
-            return geplanteNeueste.isEmpty();
+            return !nichtGespeichert && geplanteNeueste.isEmpty();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
@@ -218,6 +233,10 @@ public final class IoExecutor {
                                 + "erzwinge Abbruch mit kurzer Grace statt doppelter Voll-Wartezeit.",
                         ausstehend.get());
                 java.util.List<Runnable> rest = executor.shutdownNow();
+                if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    LOG.error("Der I/O-Executor konnte auch nach erzwungenem Abbruch nicht beendet werden.");
+                    return false;
+                }
                 for (Runnable aufgabe : rest) {
                     try {
                         aufgabe.run();
@@ -226,13 +245,9 @@ public final class IoExecutor {
                     }
                 }
 
-                if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
-                    LOG.error("Der I/O-Executor konnte auch nach erzwungenem Abbruch nicht beendet werden.");
-                    return false;
-                }
-                return true;
+                return !nichtGespeichert;
             }
-            return true;
+            return !nichtGespeichert;
         } catch (InterruptedException e) {
             LOG.warn("Das Warten auf das Beenden des I/O-Executors wurde unterbrochen.");
             executor.shutdownNow();

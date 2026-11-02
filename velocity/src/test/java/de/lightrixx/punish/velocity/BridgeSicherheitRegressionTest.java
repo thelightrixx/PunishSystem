@@ -161,7 +161,11 @@ class BridgeSicherheitRegressionTest {
         for (byte[] roh : rahmen) {
             var paket = de.lightrixx.punish.net.Protokoll.paket(roh);
             switch (paket.typ()) {
-                case de.lightrixx.punish.net.Protokoll.SYNC_BEGIN -> beginn++;
+                case de.lightrixx.punish.net.Protokoll.SYNC_BEGIN -> {
+                    beginn++;
+                    gesendeteMutes.clear();
+                    gesendeteIpMutes.clear();
+                }
                 case de.lightrixx.punish.net.Protokoll.SYNC_END -> ende++;
                 case de.lightrixx.punish.net.Protokoll.MUTE_SETZEN -> gesendeteMutes.add(
                         de.lightrixx.punish.net.Protokoll.leseMute(paket.nutzdaten()).uuid());
@@ -186,5 +190,59 @@ class BridgeSicherheitRegressionTest {
                 "Ein vorhandener IP-Mute darf im Voll-Sync nicht verloren gehen");
         assertEquals(205, bannRahmen, "Jeder Bann muss einzeln im Rahmen stehen");
         assertTrue(rahmen.size() > 206, "Gechunkter Sync muss mehr Rahmen als Einträge senden");
+    }
+    private static StrafListener listener(com.velocitypowered.api.proxy.ProxyServer proxy,
+            de.lightrixx.punish.service.IpTimeoutService ipTimeout) {
+        return new StrafListener(proxy, mock(org.slf4j.Logger.class),
+                mock(de.lightrixx.punish.storage.PlayerCache.class),
+                mock(de.lightrixx.punish.service.BanService.class),
+                mock(de.lightrixx.punish.service.IpBanService.class),
+                mock(de.lightrixx.punish.service.TimeoutService.class),
+                mock(de.lightrixx.punish.service.MuteService.class), null, ipTimeout,
+                mock(de.lightrixx.punish.service.AutoBannService.class),
+                mock(VelocityKonfiguration.class), mock(de.lightrixx.punish.service.MessageService.class),
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                mock(de.lightrixx.punish.storage.BanRepository.class), mock(BrueckenKanal.class));
+    }
+
+    @Test
+    void serverIpTimeoutBlockiertNichtDenGesamtenProxyLogin() throws Exception {
+        var ipTimeout = mock(de.lightrixx.punish.service.IpTimeoutService.class);
+        long jetzt = System.currentTimeMillis();
+        var serverTimeout = new de.lightrixx.punish.model.IpTimeoutRecord(
+                "1.2.3.4", "Test", "Mod", jetzt - 1000L, jetzt + 60_000L,
+                de.lightrixx.punish.model.ServerScope.ausSpeicherwert("survival"));
+        when(ipTimeout.findeWirksamOhneCleanup("1.2.3.4", "unbekannt", jetzt))
+                .thenReturn(java.util.Optional.of(serverTimeout));
+        when(ipTimeout.baueIpTimeoutScreen(serverTimeout, jetzt))
+                .thenReturn(net.kyori.adventure.text.Component.text("Gesperrt"));
+        var listener = listener(mock(com.velocitypowered.api.proxy.ProxyServer.class), ipTimeout);
+        var pruefung = StrafListener.class.getDeclaredMethod("loginSperre",
+                java.util.UUID.class, String.class, String.class, long.class);
+        pruefung.setAccessible(true);
+        assertNull(pruefung.invoke(listener, java.util.UUID.randomUUID(), "Steve", "1.2.3.4", jetzt));
+        verify(ipTimeout).findeAbdeckend("1.2.3.4", de.lightrixx.punish.model.ServerScope.global());
+        org.mockito.Mockito.verify(ipTimeout, org.mockito.Mockito.never())
+                .findeWirksamOhneCleanup(any(), any(), org.mockito.ArgumentMatchers.anyLong());
+    }
+
+    @Test
+    void dossierBenoetigtRechteFuerAlleEnthaltenenDaten() throws Exception {
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var player = mock(com.velocitypowered.api.proxy.Player.class);
+        var uuid = java.util.UUID.randomUUID();
+        when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player));
+        var rechte = new java.util.HashSet<>(java.util.List.of(
+                "punish.gui", "punish.status", "punish.history", "punish.reports"));
+        when(player.hasPermission(any())).thenAnswer(inv -> rechte.contains(inv.getArgument(0)));
+        var listener = listener(proxy, null);
+        var pruefung = StrafListener.class.getDeclaredMethod("darfGuiSehen",
+                java.util.UUID.class, String.class, String.class);
+        pruefung.setAccessible(true);
+        assertEquals(true, pruefung.invoke(listener, uuid,
+                de.lightrixx.punish.net.Protokoll.GUI_DOSSIER, "Steve"));
+        rechte.remove("punish.reports");
+        assertEquals(false, pruefung.invoke(listener, uuid,
+                de.lightrixx.punish.net.Protokoll.GUI_DOSSIER, "Steve"));
     }
 }

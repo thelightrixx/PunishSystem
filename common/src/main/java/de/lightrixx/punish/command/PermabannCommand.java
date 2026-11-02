@@ -69,7 +69,7 @@ public final class PermabannCommand extends PunishCommand {
                     spieler.name(),
                     grund,
                     ausfuehrerName(sender),
-                    wirksam, herkunftVon(sender), silent);
+                    wirksam, herkunftVon(sender), silent, sender);
             if (!erfolg) {
                 try {
                     if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())

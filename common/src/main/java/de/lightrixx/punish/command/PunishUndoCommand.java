@@ -146,14 +146,15 @@ public final class PunishUndoCommand extends PunishCommand {
         if (ziel == null || ziel.isBlank()) {
             return null;
         }
+        String scope = "--" + eintrag.scopeAlsObjekt().speicherwert();
         return switch (eintrag.typ()) {
-            case BAN, PERMABANN, AUTO_BANN -> new Delegation("pardon", new String[]{ziel});
-            case MUTE -> new Delegation("unmute", new String[]{ziel});
-            case TIMEOUT -> new Delegation("untimeout", new String[]{ziel});
-            case FREEZE -> new Delegation("unfreeze", new String[]{ziel});
-            case BAN_IP -> new Delegation("unban-ip", new String[]{ziel});
-            case IP_MUTE -> new Delegation("unmute-ip", new String[]{ziel});
-            case IP_TIMEOUT -> new Delegation("untimeout-ip", new String[]{ziel});
+            case BAN, PERMABANN, AUTO_BANN -> new Delegation("pardon", new String[]{ziel, scope});
+            case MUTE -> new Delegation("unmute", new String[]{ziel, scope});
+            case TIMEOUT -> new Delegation("untimeout", new String[]{ziel, scope});
+            case FREEZE -> new Delegation("unfreeze", new String[]{ziel, scope});
+            case BAN_IP -> new Delegation("unban-ip", new String[]{ziel, scope});
+            case IP_MUTE -> new Delegation("unmute-ip", new String[]{ziel, scope});
+            case IP_TIMEOUT -> new Delegation("untimeout-ip", new String[]{ziel, scope});
             case WARN_ADD -> warnDelegation(eintrag);
             default -> null;
         };

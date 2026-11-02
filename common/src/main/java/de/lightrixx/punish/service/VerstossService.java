@@ -82,8 +82,14 @@ public final class VerstossService {
 
     public VerstossRecord hinzufuegen(UUID zielUuid, String zielName, String grund, String ausfuehrer,
                                       VerstossStufe stufe, boolean silent) {
+        return hinzufuegen(zielUuid, zielName, grund, ausfuehrer, stufe, silent, null);
+    }
+
+    public VerstossRecord hinzufuegen(UUID zielUuid, String zielName, String grund, String ausfuehrer,
+                                      VerstossStufe stufe, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         try {
-            if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.VERSTOSS)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.VERSTOSS)) {
                 LOG.warn("verstoss-hinzufuegen für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 throw new ZielGeschuetztException("Verstoß-Add für geschütztes Ziel ist nicht erlaubt.");
             }

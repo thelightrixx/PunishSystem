@@ -231,6 +231,7 @@ public final class PunishVelocity {
         muteService.beobachterHinzufuegen(uuid -> muteSyncAnstossen());
         ipMuteService.beobachterHinzufuegen(() -> muteSyncAnstossen());
         banService.beobachterHinzufuegen(() -> muteSyncAnstossen());
+        autoBannService.beobachterHinzufuegen(() -> muteSyncAnstossen());
         timeoutService.beobachterHinzufuegen(() -> muteSyncAnstossen());
         freezeService.beobachterHinzufuegen(uuid -> muteSyncAnstossen());
         kanal.registrieren();
@@ -293,6 +294,7 @@ public final class PunishVelocity {
         this.luckPermsKontext = lpKontext;
         muteService.beobachterHinzufuegen(uuid -> lpKontext.signalUpdate());
         banService.beobachterHinzufuegen(() -> lpKontext.signalUpdate());
+        autoBannService.beobachterHinzufuegen(() -> lpKontext.signalUpdate());
         timeoutService.beobachterHinzufuegen(() -> lpKontext.signalUpdate());
         freezeService.beobachterHinzufuegen(uuid -> lpKontext.signalUpdate());
 

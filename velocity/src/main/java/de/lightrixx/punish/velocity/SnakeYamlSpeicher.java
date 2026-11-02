@@ -86,7 +86,7 @@ public final class SnakeYamlSpeicher implements YamlSpeicher {
             backupErstellen(datei);
             Map<String, Object> wiederhergestellt = versucheWiederherstellungAusBackup(datei);
             if (wiederhergestellt != null) {
-                return new LadeStatus(wiederhergestellt, true, true);
+                return new LadeStatus(wiederhergestellt, true, false);
             }
             return new LadeStatus(Map.of(), true, true);
         }
@@ -96,7 +96,7 @@ public final class SnakeYamlSpeicher implements YamlSpeicher {
             backupErstellen(datei);
             Map<String, Object> wiederhergestellt = versucheWiederherstellungAusBackup(datei);
             if (wiederhergestellt != null) {
-                return new LadeStatus(wiederhergestellt, true, true);
+                return new LadeStatus(wiederhergestellt, true, false);
             }
             return new LadeStatus(Map.of(), true, true);
         }
@@ -112,7 +112,7 @@ public final class SnakeYamlSpeicher implements YamlSpeicher {
             backupErstellen(datei);
             Map<String, Object> wiederhergestellt = versucheWiederherstellungAusBackup(datei);
             if (wiederhergestellt != null) {
-                return new LadeStatus(wiederhergestellt, true, true);
+                return new LadeStatus(wiederhergestellt, true, false);
             }
             return new LadeStatus(Map.of(), true, true);
         }

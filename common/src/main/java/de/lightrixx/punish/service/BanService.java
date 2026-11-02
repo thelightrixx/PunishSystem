@@ -93,12 +93,18 @@ public final class BanService {
 
     public boolean bannen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
                           ServerScope scope, String herkunft, boolean silent) {
+        return bannen(zielUuid, zielName, dauerMillis, grund, ausfuehrer, scope, herkunft, silent, null);
+    }
+
+    public boolean bannen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
+                          ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
 
         try {
-            if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
                 LOG.warn("bannen für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 return false;
             }
@@ -167,11 +173,17 @@ public final class BanService {
 
     public boolean permabann(UUID zielUuid, String zielName, String grund, String ausfuehrer,
                              ServerScope scope, String herkunft, boolean silent) {
+        return permabann(zielUuid, zielName, grund, ausfuehrer, scope, herkunft, silent, null);
+    }
+
+    public boolean permabann(UUID zielUuid, String zielName, String grund, String ausfuehrer,
+                             ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
         try {
-            if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
                 LOG.warn("permabann für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 return false;
             }
@@ -485,7 +497,8 @@ public final class BanService {
             if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                 continue;
             }
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.BAN)) {
+            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.BAN)
+                    || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                 continue;
             }
             try {
@@ -562,7 +575,8 @@ public final class BanService {
             if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                 continue;
             }
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.BAN)) {
+            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.BAN)
+                    || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                 continue;
             }
             anzahl++;

@@ -179,7 +179,7 @@ public final class WarnCommand extends PunishCommand {
             WarnRecord record;
             try {
                 record = warnService.hinzufuegen(
-                        spieler.uuid(), spieler.name(), grund, ausfuehrerName(sender), silent);
+                        spieler.uuid(), spieler.name(), grund, ausfuehrerName(sender), silent, sender);
             } catch (IllegalArgumentException e) {
                 LOG.warn("Warn-Add für {} abgewiesen: {}", spieler.uuid(), e.getMessage());
                 messageService.senden(sender, MessageKeys.KEIN_GRUND);
@@ -212,7 +212,7 @@ public final class WarnCommand extends PunishCommand {
             WarnRecord record;
             try {
                 record = warnService.hinzufuegen(
-                        spieler.uuid(), spieler.name(), grund, ausfuehrerName(sender), silent);
+                        spieler.uuid(), spieler.name(), grund, ausfuehrerName(sender), silent, sender);
             } catch (IllegalArgumentException e) {
                 LOG.warn("Warn-Add für {} abgewiesen: {}", spieler.uuid(), e.getMessage());
                 messageService.senden(sender, MessageKeys.KEIN_GRUND);

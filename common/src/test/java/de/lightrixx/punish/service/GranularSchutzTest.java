@@ -142,4 +142,54 @@ class GranularSchutzTest {
         assertFalse(schutz.istErlaubteSelbstbestrafung(sender, UUID.randomUUID()));
         assertFalse(schutz.istSelbstbestrafung(sender, uuid));
     }
+    @Test
+    void erlaubteSelbstbestrafungErreichtAuchServiceTrotzIgnoreRecht() {
+        UUID uuid = UUID.randomUUID();
+        ProtectionService schutz = schutzMitRechten(uuid, "Selbst", true);
+        var sender = mock(BefehlsSender.class);
+        when(sender.istSpieler()).thenReturn(true);
+        when(sender.spielerUuid()).thenReturn(uuid);
+        var repository = mock(de.lightrixx.punish.storage.MuteRepository.class);
+        when(repository.mutenWennFrei(any())).thenReturn(true);
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        when(verzeichnis.darfDirektAusfuehren()).thenReturn(true);
+        var service = new MuteService(repository, mock(HistoryService.class), mock(BroadcastService.class),
+                mock(de.lightrixx.punish.storage.LogWriter.class), mock(MessageService.class),
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class), schutz, verzeichnis);
+        var scope = de.lightrixx.punish.model.ServerScope.global();
+        assertFalse(service.muten(uuid, "Selbst", 60_000L, "Test", "Selbst", scope, "lobby", false, sender));
+        schutz.setSelbstbestrafungErlaubt(true);
+        assertTrue(service.muten(uuid, "Selbst", 60_000L, "Test", "Selbst", scope, "lobby", false, sender));
+        assertFalse(service.muten(uuid, "Selbst", 60_000L, "Test", "Selbst", scope, "lobby", false));
+        when(sender.spielerUuid()).thenReturn(UUID.randomUUID());
+        assertFalse(service.muten(uuid, "Selbst", 60_000L, "Test", "Selbst", scope, "lobby", false, sender));
+        org.mockito.Mockito.verify(repository).mutenWennFrei(any());
+    }
+    @Test
+    void banBefehlUebermitteltIdentitaetFuerErlaubteSelbstbestrafung() {
+        UUID uuid = UUID.randomUUID();
+        var schutz = schutzMitRechten(uuid, "Selbst", true);
+        schutz.setSelbstbestrafungErlaubt(true);
+        var sender = mock(BefehlsSender.class);
+        when(sender.istSpieler()).thenReturn(true);
+        when(sender.spielerUuid()).thenReturn(uuid);
+        when(sender.name()).thenReturn("Selbst");
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        when(verzeichnis.onlineSpielerNachName("Selbst")).thenReturn(Optional.of(
+                new OnlineSpieler(uuid, "Selbst", "1.2.3.4", false)));
+        var config = mock(de.lightrixx.punish.core.Konfiguration.class);
+        when(config.standardScope()).thenReturn(de.lightrixx.punish.model.ServerScope.global());
+        when(config.banMaxMinuten()).thenReturn(60L);
+        var repository = mock(de.lightrixx.punish.storage.BanRepository.class);
+        when(repository.bannenWennFrei(any())).thenReturn(true);
+        var service = new BanService(repository, mock(HistoryService.class), mock(BroadcastService.class),
+                mock(de.lightrixx.punish.storage.LogWriter.class), schutz, mock(BanKickHelper.class), verzeichnis);
+        var befehl = new de.lightrixx.punish.command.BanCommand(mock(MessageService.class), config, schutz,
+                mock(de.lightrixx.punish.storage.PlayerCache.class), service,
+                new de.lightrixx.punish.util.TimeParser(), mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                verzeichnis);
+        befehl.ausfuehren(sender, new String[]{"Selbst", "1m", "Test", "--global"});
+        org.mockito.Mockito.verify(repository).bannenWennFrei(org.mockito.ArgumentMatchers.argThat(
+                bann -> bann.spielerUuid().equals(uuid) && bann.grund().equals("Test")));
+    }
 }

@@ -330,4 +330,70 @@ class FixPaketRegressionTest {
         assertTrue(Konfiguration.istConfigNeuerAlsJar("2026-11-01", "2026-10-31"));
         assertFalse(Konfiguration.istConfigNeuerAlsJar("2026-10-31", "2026-11-01"));
     }
+    @Test
+    void serverBannTrenntNurSpielerAufBetroffenemServer() {
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        UUID uuid = UUID.randomUUID();
+        when(verzeichnis.darfDirektAusfuehren()).thenReturn(true);
+        when(verzeichnis.onlineSpieler(uuid)).thenReturn(Optional.of(
+                new OnlineSpieler(uuid, "Steve", "1.2.3.4", false)));
+        when(verzeichnis.serverName(uuid)).thenReturn("lobby");
+        var config = mock(Konfiguration.class);
+        when(config.screen(any())).thenReturn("Gesperrt");
+        var helper = new de.lightrixx.punish.service.BanKickHelper(
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class), config,
+                mock(ProtectionService.class), verzeichnis);
+        helper.spielerKicken(uuid, "bann", Map.of("scope", "survival"));
+        org.mockito.Mockito.verify(verzeichnis, org.mockito.Mockito.never()).trennen(any(), any());
+        helper.spielerKicken(uuid, "bann", Map.of("scope", "lobby"));
+        helper.spielerKicken(uuid, "bann", Map.of("scope", "global"));
+        org.mockito.Mockito.verify(verzeichnis, org.mockito.Mockito.times(2)).trennen(eq(uuid), any());
+    }
+
+    @Test
+    void manuellesAutoPardonWirdNichtSofortRueckgaengigGemacht() {
+        var cache = mock(PlayerCache.class);
+        UUID uuid = UUID.randomUUID();
+        when(cache.findenNachName("Steve")).thenReturn(Optional.of(
+                new CachedPlayer(uuid, "Steve", "1.2.3.4", 1L)));
+        when(cache.istFrischeNamensZuordnung("Steve")).thenReturn(true);
+        var ban = mock(de.lightrixx.punish.service.BanService.class);
+        var scope = de.lightrixx.punish.model.ServerScope.global();
+        when(ban.finden(uuid, scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.BanRecord(
+                uuid, "Steve", "Auto", "System", 1L, System.currentTimeMillis() + 60_000L, true, scope)));
+        when(ban.entbannen(eq(uuid), eq("Steve"), any(), eq(scope), any(), any(Boolean.class)))
+                .thenReturn(true);
+        var config = mock(Konfiguration.class);
+        when(config.standardScope()).thenReturn(scope);
+        var befehl = new de.lightrixx.punish.command.PardonCommand(mock(de.lightrixx.punish.service.MessageService.class),
+                config, mock(ProtectionService.class), cache, ban,
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class), mock(SpielerVerzeichnis.class));
+        var verstoesse = mock(de.lightrixx.punish.service.VerstossService.class);
+        befehl.setVerstossService(verstoesse);
+        var sender = mock(BefehlsSender.class);
+        when(sender.name()).thenReturn("Mod");
+        befehl.ausfuehren(sender, new String[]{"Steve", "--global"});
+        org.mockito.Mockito.verify(ban).entbannen(eq(uuid), eq("Steve"), any(), eq(scope), any(), eq(false));
+        org.mockito.Mockito.verify(verstoesse, org.mockito.Mockito.never()).autoBannErneutPruefen(any(), any(), any());
+    }
+    @Test
+    void ipStrafeTrenntNurSpielerImScopeAuchBeiGleicherIp() {
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        var lobby = new OnlineSpieler(UUID.randomUUID(), "Lobby", "1.2.3.4", false);
+        var survival = new OnlineSpieler(UUID.randomUUID(), "Survival", "1.2.3.4", false);
+        when(verzeichnis.darfDirektAusfuehren()).thenReturn(true);
+        when(verzeichnis.onlineSpieler()).thenReturn(List.of(lobby, survival));
+        when(verzeichnis.serverName(lobby.uuid())).thenReturn("lobby");
+        when(verzeichnis.serverName(survival.uuid())).thenReturn("survival");
+        var config = mock(Konfiguration.class);
+        when(config.screen(any())).thenReturn("Gesperrt");
+        var helper = new de.lightrixx.punish.service.BanKickHelper(
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class), config,
+                mock(ProtectionService.class), verzeichnis);
+        helper.onlineSpielerMitIpKickenMitScreen("1.2.3.4", "Test", "Mod", 60_000L,
+                System.currentTimeMillis() + 60_000L, "ip-timeout", ProtectionService.IgnoreTyp.TIMEOUT,
+                de.lightrixx.punish.model.ServerScope.ausSpeicherwert("survival"));
+        org.mockito.Mockito.verify(verzeichnis, org.mockito.Mockito.never()).trennen(eq(lobby.uuid()), any());
+        org.mockito.Mockito.verify(verzeichnis).trennen(eq(survival.uuid()), any());
+    }
 }

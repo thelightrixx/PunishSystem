@@ -10,6 +10,7 @@ import de.lightrixx.punish.model.VerstossStufe;
 import de.lightrixx.punish.model.WarnRecord;
 import de.lightrixx.punish.storage.LogWriter;
 import de.lightrixx.punish.storage.WarnRepository;
+import de.lightrixx.punish.storage.StoreLock;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +66,11 @@ public final class WarnService {
 
     public WarnRecord hinzufuegen(UUID zielUuid, String zielName, String grund, String ausfuehrer,
                                    boolean silent) {
+        return hinzufuegen(zielUuid, zielName, grund, ausfuehrer, silent, null);
+    }
+
+    public WarnRecord hinzufuegen(UUID zielUuid, String zielName, String grund, String ausfuehrer,
+                                   boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
         Objects.requireNonNull(zielName, "Der Zielname darf nicht null sein.");
         Objects.requireNonNull(grund, "Der Grund darf nicht null sein.");
@@ -72,7 +78,8 @@ public final class WarnService {
         ProtectionService schutz = this.protectionService;
         if (schutz != null) {
             try {
-                if (schutz.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.WARN)) {
+                if (!schutz.istErlaubteSelbstbestrafung(sender, zielUuid)
+                        && schutz.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.WARN)) {
                     LOG.warn("warn-hinzufuegen für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                     throw new IllegalStateException("Warn für geschütztes Ziel ist nicht erlaubt.");
                 }
@@ -83,9 +90,15 @@ public final class WarnService {
                 throw new IllegalStateException("Warn bei unsicherem Schutzstatus ist nicht erlaubt.");
             }
         }
-        WarnRepository.HinzufuegeErgebnis ergebnis = warnRepository.hinzufuegenMitAnzahl(zielUuid, zielName, grund, ausfuehrer);
-        WarnRecord record = ergebnis.record();
-        int neueAnzahl = aktiveAnzahl(zielUuid);
+        WarnRecord record;
+        int neueAnzahl;
+        StoreLock.LOCK.writeLock().lock();
+        try {
+            record = warnRepository.hinzufuegenMitAnzahl(zielUuid, zielName, grund, ausfuehrer).record();
+            neueAnzahl = aktiveAnzahl(zielUuid);
+        } finally {
+            StoreLock.LOCK.writeLock().unlock();
+        }
 
         Map<String, String> platzhalter = new HashMap<>();
         platzhalter.put("spieler", zielName);

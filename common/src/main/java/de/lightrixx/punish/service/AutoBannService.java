@@ -43,6 +43,22 @@ public final class AutoBannService {
     private final BanKickHelper kickHelper;
     private final SpielerVerzeichnis verzeichnis;
     private final ConcurrentHashMap<UUID, GeplanteAufgabe> autoBannTasks = new ConcurrentHashMap<>();
+    private final java.util.concurrent.CopyOnWriteArrayList<BanService.BanBeobachter> beobachter =
+            new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void beobachterHinzufuegen(BanService.BanBeobachter eintrag) {
+        beobachter.add(Objects.requireNonNull(eintrag, "Der Beobachter darf nicht null sein."));
+    }
+
+    private void benachrichtige() {
+        for (var eintrag : beobachter) {
+            try {
+                eintrag.banGeaendert();
+            } catch (Exception e) {
+                LOG.warn("Auto-Bann-Beobachter fehlgeschlagen.", e);
+            }
+        }
+    }
 
     public AutoBannService(AuftragsPlaner taskScheduler,
                            BanRepository banRepository,
@@ -133,6 +149,7 @@ public final class AutoBannService {
             LOG.info("autoBann für {} verworfen: bereits aktiv gebannt (kein Override).", zielUuid);
             return false;
         }
+        benachrichtige();
 
         Map<String, String> platzhalter = BanKickHelper.platzhalter(
                 zielName, ausfuehrer, grund,
@@ -166,6 +183,8 @@ public final class AutoBannService {
         }
 
         abbrechenAutoBannTask(zielUuid);
+
+        benachrichtige();
 
         String effektiverName = zielName != null ? zielName : entfernt.get().spielerName();
         Map<String, String> platzhalter = BanKickHelper.platzhalter(effektiverName, ausfuehrer, "", "", "", "", null);
@@ -220,7 +239,7 @@ public final class AutoBannService {
                     .filter(b -> b != null && b.autoBann() && b.istAbgelaufen(jetzt))
                     .toList();
         } catch (Exception e) {
-            LOG.warn("Auto-Bann-Scan für Cleanup fehlgeschlagen, falle auf stillen Cleanup zurück.", e);
+            LOG.warn("Auto-Bann-Scan für Cleanup fehlgeschlagen.", e);
             abgelaufeneAutos = List.of();
         }
         int zeremonie = 0;
@@ -239,18 +258,12 @@ public final class AutoBannService {
                 LOG.warn("Auto-Bann-Cleanup für {} fehlgeschlagen.", b.spielerUuid(), e);
             }
         }
-        int still = 0;
-        try {
-            still = banRepository.entferneAbgelaufene(jetzt);
-        } catch (Exception e) {
-            LOG.warn("Stiller Ban-Cleanup fehlgeschlagen.", e);
-        }
         for (UUID uuid : List.copyOf(autoBannTasks.keySet())) {
             if (banRepository.alleFuer(uuid).stream().noneMatch(b -> b != null && b.autoBann())) {
                 abbrechenAutoBannTask(uuid);
             }
         }
-        return zeremonie + still;
+        return zeremonie;
     }
 
     public void behandleAutoBannAblauf(UUID zielUuid, String zielName) {
@@ -290,6 +303,7 @@ public final class AutoBannService {
         }
 
         boolean resetOk = true;
+        benachrichtige();
         java.util.List<de.lightrixx.punish.model.VerstossRecord> zurueckgesetzteVerstoesse =
                 java.util.List.of();
         try {

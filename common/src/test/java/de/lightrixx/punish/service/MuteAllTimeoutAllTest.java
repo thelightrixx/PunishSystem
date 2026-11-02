@@ -148,4 +148,44 @@ class MuteAllTimeoutAllTest {
         TimeoutService service = timeoutService(setup, repository);
         assertEquals(1, service.timeoutAufhebenAlle("Fehler", "Konsole", ServerScope.UNBEKANNT_WERT));
     }
+    @Test
+    void hoeherrangigeSpielerWerdenBeiMassenaktionenUndVorschauUebersprungen() {
+        UUID mod = UUID.randomUUID();
+        UUID admin = UUID.randomUUID();
+        SpielerVerzeichnis verzeichnis = mock(SpielerVerzeichnis.class);
+        when(verzeichnis.onlineSpieler()).thenReturn(List.of(
+                new OnlineSpieler(mod, "Mod", "1.1.1.1", false),
+                new OnlineSpieler(admin, "Admin", "1.1.1.2", false)));
+        when(verzeichnis.darfDirektAusfuehren()).thenReturn(true);
+        ProtectionService schutz = mock(ProtectionService.class);
+        when(schutz.istRanghoeher(mod, admin)).thenReturn(true);
+        Setup setup = new Setup(verzeichnis, schutz, mod, admin, admin);
+        var muteRepo = mock(MuteRepository.class);
+        var timeoutRepo = mock(TimeoutRepository.class);
+        when(muteRepo.mutenAlleWennFrei(any())).thenAnswer(inv -> List.copyOf(inv.getArgument(0)));
+        when(timeoutRepo.timeoutAlleWennFrei(any())).thenAnswer(inv -> List.copyOf(inv.getArgument(0)));
+        var mute = muteService(setup, muteRepo);
+        var timeout = timeoutService(setup, timeoutRepo);
+        var ban = new BanService(mock(de.lightrixx.punish.storage.BanRepository.class),
+                mock(HistoryService.class), mock(BroadcastService.class), mock(LogWriter.class),
+                schutz, mock(BanKickHelper.class), verzeichnis);
+        var config = mock(de.lightrixx.punish.core.Konfiguration.class);
+        when(config.standardScope()).thenReturn(ServerScope.global());
+        var kick = new KickService(config,
+                mock(HistoryService.class), mock(BroadcastService.class), mock(LogWriter.class),
+                schutz, verzeichnis);
+        assertEquals(0, mute.zaehleMuteAlleKandidaten(mod));
+        assertEquals(0, timeout.zaehleTimeoutAlleKandidaten(mod));
+        assertEquals(0, ban.zaehleBanAlleKandidaten(mod));
+        assertEquals(0, kick.zaehleKickAlleKandidaten(mod));
+        assertEquals(0, mute.muteAlle(60_000L, "Test", "Mod", mod,
+                ServerScope.global(), "lobby").anzahl());
+        assertEquals(0, timeout.timeoutAlle(60_000L, "Test", "Mod", mod,
+                ServerScope.global(), "lobby").anzahl());
+        assertEquals(0, kick.kickenAlle("Test", "Mod", mod).size());
+        org.mockito.Mockito.verify(muteRepo).mutenAlleWennFrei(org.mockito.ArgumentMatchers.argThat(
+                java.util.Collection::isEmpty));
+        org.mockito.Mockito.verify(timeoutRepo).timeoutAlleWennFrei(org.mockito.ArgumentMatchers.argThat(
+                java.util.Collection::isEmpty));
+    }
 }

@@ -297,6 +297,10 @@ class ReportServiceTest {
                 () -> service.schliessen(id, ReportStatus.ABGELEHNT, "Mod", "doch nicht"));
         assertEquals(ReportStatus.ERLEDIGT, fehler.status());
         assertEquals(ReportStatus.ERLEDIGT, service.findenNachId(id).orElseThrow().status());
+        assertThrows(ReportService.BereitsGeschlossen.class,
+                () -> service.schliessen(id, ReportStatus.ANGENOMMEN, "AndererMod", "erneut"));
+        assertEquals(0, service.anzahlOffen());
+        assertEquals(ReportStatus.ERLEDIGT, service.findenNachId(id).orElseThrow().status());
     }
 
     @Test

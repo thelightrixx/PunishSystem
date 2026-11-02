@@ -84,7 +84,8 @@ messages:
   update-fehler: "<red>Update fehlgeschlagen: <white>%detail%"
   update-laeuft-bereits: "<yellow>Es läuft bereits ein Update – bitte kurz warten."
   update-bestaetigung-noetig: "<yellow>Update auf <white>%version% <yellow>erfordert Bestätigung: <white>/punish-update apply confirm"
-  update-erfolgreich-neustart: "<green>Update <white>%version% <green>bereit. Proxy + Backends neustarten, damit es aktiv wird."
+  update-erfolgreich-neustart: "<green>Update <white>%version% <green>bereitgestellt. <yellow>Vor dem Neustart die bisherigen Plugin-JARs durch die Dateien aus update-pending ersetzen (Proxy: plugins/update-pending, Backends: plugins/PunishSystemBridge/update-pending)."
+  update-bereitgestellt: "<green>Update <white>%version% <green>bereitgestellt. <yellow>Vor dem Neustart die bisherigen Plugin-JARs durch die Dateien aus update-pending ersetzen (Proxy: plugins/update-pending, Backends: plugins/PunishSystemBridge/update-pending)."
   update-push-laufend: "<gray>Bridge-Update <white>%version% <gray>wird an alle Server verteilt …"
   update-push-fertig: "<gray>Update-Status: Remote <white>%version% <gray>%detail%"
 

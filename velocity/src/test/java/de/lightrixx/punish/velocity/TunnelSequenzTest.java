@@ -109,6 +109,7 @@ class TunnelSequenzTest {
         assertNull(kanal.sequenzPruefen(server, klar.clone()),
                 "Wiederholter Empfang derselben Nachricht ist ein Replay (B-003)");
 
+        assertNotNull(kanal.sequenzPruefen(server, Protokoll.hello("lobby", "1.0", "bridge")));
         kanal.sendeAn(server, Protokoll.befehlAusfuehren(null, "mute Notch 10m X"));
         var zweiterFang = org.mockito.ArgumentCaptor.forClass(byte[].class);
         org.mockito.Mockito.verify(server, org.mockito.Mockito.atLeast(2))

@@ -23,7 +23,7 @@
     <velocity.version>3.4.0</velocity.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <hikari.version>6.2.1</hikari.version>
-    <mysql.version>9.2.0</mysql.version>
+    <mysql.version>9.7.0</mysql.version>
     <onnx.version>1.30.0</onnx.version>
   </properties>
   <repositories>

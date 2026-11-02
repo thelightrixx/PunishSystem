@@ -55,4 +55,37 @@ class WarnAblaufTest {
         assertEquals(2, service.anzahl(ziel));
         assertEquals(2, service.aktiveWarns(ziel).size());
     }
+    @Test
+    void platzhalterUndStatusGuiZeigenNurAktiveWarnsUndBehaltenBanScope() {
+        mitWarns(31, 30 * TAG);
+        var cache = Mockito.mock(de.lightrixx.punish.storage.PlayerCache.class);
+        when(cache.findenNachName("Steve")).thenReturn(java.util.Optional.of(
+                new de.lightrixx.punish.model.CachedPlayer(ziel, "Steve", "1.2.3.4", 1L)));
+        var bans = Mockito.mock(de.lightrixx.punish.storage.BanRepository.class);
+        when(bans.alleFuer(ziel)).thenReturn(List.of(new de.lightrixx.punish.model.BanRecord(
+                ziel, "Steve", "Test", "Mod", 1L, null, false,
+                de.lightrixx.punish.model.ServerScope.ausSpeicherwert("survival"))));
+        var mutes = Mockito.mock(de.lightrixx.punish.storage.MuteRepository.class);
+        var timeouts = Mockito.mock(de.lightrixx.punish.storage.TimeoutRepository.class);
+        var logger = Mockito.mock(org.slf4j.Logger.class);
+        var platzhalter = new PlatzhalterDienst(logger, config, cache, bans, mutes, timeouts,
+                Mockito.mock(de.lightrixx.punish.storage.VerstossRepository.class), repository, null);
+        var papi = platzhalter.beantworte(new de.lightrixx.punish.net.Protokoll.PlatzhalterAnfrage(
+                1L, ziel, "Steve"));
+        assertEquals(1, papi.warns());
+        assertEquals("Neu", papi.warnsLetzterGrund());
+        var gui = new GuiBrueckenDienst(Mockito.mock(com.velocitypowered.api.proxy.ProxyServer.class),
+                logger, config, cache, bans, mutes, timeouts, null, null, null, null, repository, null, null);
+        for (String typ : List.of(de.lightrixx.punish.net.Protokoll.GUI_STATUS,
+                de.lightrixx.punish.net.Protokoll.GUI_DOSSIER)) {
+            var antwort = gui.beantworte(new de.lightrixx.punish.net.Protokoll.GuiAnfrage(
+                    2L, ziel, typ, "Steve", "", 1, ""));
+            org.junit.jupiter.api.Assertions.assertTrue(antwort.erfolg());
+            org.junit.jupiter.api.Assertions.assertTrue(antwort.eintraege().stream()
+                    .anyMatch(z -> "pardon Steve --survival".equals(z.aktion())));
+            if (typ.equals(de.lightrixx.punish.net.Protokoll.GUI_STATUS)) {
+                assertEquals(1, antwort.eintraege().stream().filter(z -> z.typ().equals("WARN")).count());
+            }
+        }
+    }
 }

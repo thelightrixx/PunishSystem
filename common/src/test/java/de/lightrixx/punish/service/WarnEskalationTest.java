@@ -291,4 +291,37 @@ class WarnEskalationTest {
         assertEquals(Map.of(), Konfiguration.normiereWarnSchwellen(null));
         assertEquals(Map.of(), Konfiguration.normiereWarnSchwellen(List.of()));
     }
+    @Test
+    void paralleleWarnsUeberspringenKeineEskalationsschwelle(@TempDir File ordner) throws Exception {
+        var service = new WarnService(repository(ordner));
+        var verstoesse = mock(VerstossService.class);
+        when(verstoesse.hinzufuegen(any(), any(), any(), any(), any(VerstossStufe.class), eq(true)))
+                .thenReturn(new VerstossRecord(1, "Steve", "Auto", "Mod", 1L, VerstossStufe.LOW));
+        service.mitEskalation(eskalationsConfig(Map.of(
+                3, VerstossStufe.LOW, 5, VerstossStufe.MEDIUM, 10, VerstossStufe.HIGH)), verstoesse);
+        var start = new java.util.concurrent.CountDownLatch(1);
+        var uuid = UUID.randomUUID();
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(10)) {
+            var aufgaben = new ArrayList<java.util.concurrent.Future<?>>();
+            for (int i = 0; i < 10; i++) {
+                aufgaben.add(pool.submit(() -> {
+                    try {
+                        start.await();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IllegalStateException(e);
+                    }
+                    service.hinzufuegen(uuid, "Steve", "Test", "Mod");
+                }));
+            }
+            start.countDown();
+            for (var aufgabe : aufgaben) {
+                aufgabe.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            }
+        }
+        assertEquals(10, service.anzahl(uuid));
+        for (var stufe : List.of(VerstossStufe.LOW, VerstossStufe.MEDIUM, VerstossStufe.HIGH)) {
+            verify(verstoesse).hinzufuegen(eq(uuid), eq("Steve"), anyString(), eq("Mod"), eq(stufe), eq(true));
+        }
+    }
 }

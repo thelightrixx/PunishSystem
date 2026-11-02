@@ -165,7 +165,7 @@ public final class GuiBrueckenDienst {
                             "Bann [" + bann.scope().anzeige() + "]",
                             "Grund: " + bann.grund() + "\nVon: " + bann.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(bann.ablaufAm()),
-                            "pardon " + name, name));
+                            "pardon " + name + " --" + bann.scope().speicherwert(), name));
                 }
             }
         } catch (Exception e) {
@@ -178,7 +178,7 @@ public final class GuiBrueckenDienst {
                             "Mute [" + mute.scope().anzeige() + "]",
                             "Grund: " + mute.grund() + "\nVon: " + mute.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(mute.ablaufAm()),
-                            "unmute " + name, name));
+                            "unmute " + name + " --" + mute.scope().speicherwert(), name));
                 }
             }
         } catch (Exception e) {
@@ -191,7 +191,7 @@ public final class GuiBrueckenDienst {
                             "Timeout [" + timeout.scope().anzeige() + "]",
                             "Grund: " + timeout.grund() + "\nVon: " + timeout.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(timeout.ablaufAm()),
-                            "untimeout " + name, name));
+                            "untimeout " + name + " --" + timeout.scope().speicherwert(), name));
                 }
             }
         } catch (Exception e) {
@@ -207,7 +207,7 @@ public final class GuiBrueckenDienst {
                                 "Grund: " + freeze.grund() + "\nVon: " + freeze.ausfuehrer()
                                         + "\nAblauf: " + (freeze.istPermanent() ? "Permanent"
                                                 : formatAblauf(freeze.ablaufAm())),
-                                "unfreeze " + name, name));
+                                "unfreeze " + name + " --" + freeze.scope().speicherwert(), name));
                     }
                 }
             }
@@ -231,8 +231,9 @@ public final class GuiBrueckenDienst {
         }
         try {
             if (warnRepository != null) {
+                long warnAblauf = Math.max(0L, config.warnAblaufMillis());
                 for (var warn : warnRepository.finden(uuid)) {
-                    if (warn != null) {
+                    if (warn != null && (warnAblauf <= 0L || warn.erstelltAm() + warnAblauf > jetzt)) {
                         zeilen.add(new Protokoll.GuiZeile("WARN",
                                 "Warnung #" + warn.nummer(),
                                 "Grund: " + warn.grund() + "\nVon: " + warn.ausfuehrer()
@@ -292,14 +293,15 @@ public final class GuiBrueckenDienst {
         if (ziel == null || ziel.isBlank()) {
             return null;
         }
+        String scope = " --" + eintrag.scopeAlsObjekt().speicherwert();
         return switch (eintrag.typ()) {
-            case BAN, BAN_EDIT, PERMABANN, AUTO_BANN -> "pardon " + ziel;
-            case MUTE, MUTE_EDIT -> "unmute " + ziel;
-            case TIMEOUT, TIMEOUT_EDIT -> "untimeout " + ziel;
-            case FREEZE -> "unfreeze " + ziel;
-            case BAN_IP, IP_BAN_EDIT -> "unban-ip " + ziel;
-            case IP_MUTE, IP_MUTE_EDIT -> "unmute-ip " + ziel;
-            case IP_TIMEOUT, IP_TIMEOUT_EDIT -> "untimeout-ip " + ziel;
+            case BAN, BAN_EDIT, PERMABANN, AUTO_BANN -> "pardon " + ziel + scope;
+            case MUTE, MUTE_EDIT -> "unmute " + ziel + scope;
+            case TIMEOUT, TIMEOUT_EDIT -> "untimeout " + ziel + scope;
+            case FREEZE -> "unfreeze " + ziel + scope;
+            case BAN_IP, IP_BAN_EDIT -> "unban-ip " + ziel + scope;
+            case IP_MUTE, IP_MUTE_EDIT -> "unmute-ip " + ziel + scope;
+            case IP_TIMEOUT, IP_TIMEOUT_EDIT -> "untimeout-ip " + ziel + scope;
             default -> null;
         };
     }
@@ -486,7 +488,7 @@ public final class GuiBrueckenDienst {
                             "Bann [" + bann.scope().anzeige() + "]",
                             "Grund: " + bann.grund() + "\nVon: " + bann.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(bann.ablaufAm()),
-                            "pardon " + name, name));
+                            "pardon " + name + " --" + bann.scope().speicherwert(), name));
                 }
             }
         } catch (Exception e) {
@@ -500,7 +502,7 @@ public final class GuiBrueckenDienst {
                             "Mute [" + mute.scope().anzeige() + "]",
                             "Grund: " + mute.grund() + "\nVon: " + mute.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(mute.ablaufAm()),
-                            "unmute " + name, name));
+                            "unmute " + name + " --" + mute.scope().speicherwert(), name));
                 }
             }
         } catch (Exception e) {
@@ -514,7 +516,7 @@ public final class GuiBrueckenDienst {
                             "Timeout [" + timeout.scope().anzeige() + "]",
                             "Grund: " + timeout.grund() + "\nVon: " + timeout.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(timeout.ablaufAm()),
-                            "untimeout " + name, name));
+                            "untimeout " + name + " --" + timeout.scope().speicherwert(), name));
                 }
             }
         } catch (Exception e) {
@@ -531,7 +533,7 @@ public final class GuiBrueckenDienst {
                                 "Grund: " + freeze.grund() + "\nVon: " + freeze.ausfuehrer()
                                         + "\nAblauf: " + (freeze.istPermanent() ? "Permanent"
                                                 : formatAblauf(freeze.ablaufAm())),
-                                "unfreeze " + name, name));
+                                "unfreeze " + name + " --" + freeze.scope().speicherwert(), name));
                     }
                 }
             }

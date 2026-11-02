@@ -250,12 +250,16 @@ public final class ReportService {
         String saubererGrund = grund == null ? "" : grund.trim();
         if (status == ReportStatus.ANGENOMMEN) {
             Optional<ReportRecord> geschlossen = reportRepository.statusSetzenWenn(id, status,
-                    bearbeiter, saubererGrund, alt -> istClaimFrei(alt, bearbeiter));
+                    bearbeiter, saubererGrund,
+                    alt -> !istAbgeschlossen(alt.status()) && istClaimFrei(alt, bearbeiter));
             if (geschlossen.isPresent()) {
                 nachSchliessen(geschlossen.get(), id, bearbeiter, grund, silent);
                 return geschlossen;
             }
             Optional<ReportRecord> aktuell = reportRepository.findenNachId(id);
+            if (aktuell.isPresent() && istAbgeschlossen(aktuell.get().status())) {
+                throw new BereitsGeschlossen(aktuell.get().status());
+            }
             if (aktuell.isPresent() && aktuell.get().status() == ReportStatus.ANGENOMMEN) {
                 String halter = aktuell.get().bearbeiter();
                 if (halter != null && !halter.isBlank() && !halter.equals(bearbeiter)) {
@@ -269,8 +273,15 @@ public final class ReportService {
                 && aktuell.get().status() != status) {
             throw new BereitsGeschlossen(aktuell.get().status());
         }
-        Optional<ReportRecord> geschlossen = reportRepository.statusSetzen(id, status, bearbeiter,
-                saubererGrund);
+        Optional<ReportRecord> geschlossen = reportRepository.statusSetzenWenn(id, status, bearbeiter,
+                saubererGrund, alt -> !istAbgeschlossen(alt.status()) || alt.status() == status);
+        if (geschlossen.isEmpty()) {
+            Optional<ReportRecord> inzwischen = reportRepository.findenNachId(id);
+            if (inzwischen.isPresent() && istAbgeschlossen(inzwischen.get().status())
+                    && inzwischen.get().status() != status) {
+                throw new BereitsGeschlossen(inzwischen.get().status());
+            }
+        }
         geschlossen.ifPresent(record -> nachSchliessen(record, id, bearbeiter, grund, silent));
         return geschlossen;
     }

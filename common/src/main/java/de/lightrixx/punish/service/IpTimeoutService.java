@@ -140,7 +140,7 @@ public final class IpTimeoutService {
         Runnable wirkung = () -> {
             kickHelper.onlineSpielerMitIpKickenMitScreen(kanonisch, grund, ausfuehrer,
                     dauerMillis, ablaufFuerWirkung, MessageKeys.SCREEN_IP_TIMEOUT,
-                    ProtectionService.IgnoreTyp.TIMEOUT);
+                    ProtectionService.IgnoreTyp.TIMEOUT, record.scope());
             try {
                 historyService.hinzufuegen(HistoryType.IP_TIMEOUT, ausfuehrer, kanonisch, grund, ablaufFuerWirkung,
                         wirksam, herkunftNorm);
@@ -276,12 +276,12 @@ public final class IpTimeoutService {
         if (verzeichnis.darfDirektAusfuehren()) {
             kickHelper.onlineSpielerMitIpKickenMitScreen(kanonisch, neu.grund(), ausfuehrer,
                     dauerMillis, ablaufAm, MessageKeys.SCREEN_IP_TIMEOUT,
-                    ProtectionService.IgnoreTyp.TIMEOUT);
+                    ProtectionService.IgnoreTyp.TIMEOUT, neu.scope());
         } else if (taskScheduler != null && !taskScheduler.istGeschlossen()) {
             try {
                 taskScheduler.aufgabe(() -> kickHelper.onlineSpielerMitIpKickenMitScreen(
                         kanonisch, neu.grund(), ausfuehrer, dauerMillis, ablaufAm,
-                        MessageKeys.SCREEN_IP_TIMEOUT, ProtectionService.IgnoreTyp.TIMEOUT));
+                        MessageKeys.SCREEN_IP_TIMEOUT, ProtectionService.IgnoreTyp.TIMEOUT, neu.scope()));
             } catch (IllegalStateException e) {
                 LOG.warn("IP-Timeout-Edit-Kick für {} konnte nach Shutdown nicht geplant werden.", kanonisch);
             }

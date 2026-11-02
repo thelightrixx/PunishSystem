@@ -96,11 +96,17 @@ public final class MuteService {
 
     public boolean muten(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
                          ServerScope scope, String herkunft, boolean silent) {
+        return muten(zielUuid, zielName, dauerMillis, grund, ausfuehrer, scope, herkunft, silent, null);
+    }
+
+    public boolean muten(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
+                         ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
         try {
-            if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.MUTE)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.MUTE)) {
                 LOG.warn("muten für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 return false;
             }
@@ -318,7 +324,8 @@ public final class MuteService {
             if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                 continue;
             }
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.MUTE)) {
+            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.MUTE)
+                    || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                 continue;
             }
             try {
@@ -387,7 +394,8 @@ public final class MuteService {
             if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                 continue;
             }
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.MUTE)) {
+            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.MUTE)
+                    || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                 continue;
             }
             anzahl++;

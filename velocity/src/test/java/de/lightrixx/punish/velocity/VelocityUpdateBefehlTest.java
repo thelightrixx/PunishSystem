@@ -83,4 +83,13 @@ class VelocityUpdateBefehlTest {
         assertTrue(zuweisung < register, "UpdateVerteilung muss vor dem Befehls-Register "
                 + "erzeugt werden, sonst erhält der Update-Befehl null (toter Update-Push).");
     }
+    @Test
+    void fehlgeschlageneBereitstellungWirdAnAufruferGemeldet() throws Exception {
+        var methode = VelocityUpdateBefehl.class.getDeclaredMethod("ersetzeEigeneJar", byte[].class, String.class);
+        methode.setAccessible(true);
+        var fehler = assertThrows(java.lang.reflect.InvocationTargetException.class,
+                () -> methode.invoke(baueBefehl(), (Object) null, "4.0"));
+        org.junit.jupiter.api.Assertions.assertInstanceOf(IllegalStateException.class, fehler.getCause());
+        assertTrue(fehler.getCause().getMessage().contains("nicht bereitgestellt"));
+    }
 }

@@ -119,8 +119,10 @@ class MysqlBanRepositoryTest {
         repository.bannenWennFrei(new BanRecord(UUID.randomUUID(), "Alex",
                 "Hacking", "Konsole", System.currentTimeMillis(), null, false, ServerScope.global()));
 
-        assertTrue(io.warteAufIdle(5, TimeUnit.SECONDS));
-        assertEquals(1, io.anzahlFehler());
+        org.junit.jupiter.api.Assertions.assertFalse(io.warteAufIdle(200, TimeUnit.MILLISECONDS));
+        assertTrue(io.anzahlFehler() >= 1);
+        org.junit.jupiter.api.Assertions.assertFalse(io.istGesund());
+        org.junit.jupiter.api.Assertions.assertFalse(io.herunterfahren(0, TimeUnit.SECONDS));
     }
 
     @Test
@@ -129,5 +131,34 @@ class MysqlBanRepositoryTest {
         assertThrows(NullPointerException.class, () -> repository.migrationImport(null));
         List<BanRecord> leer = List.of();
         assertEquals(0, repository.migrationImport(leer));
+    }
+    @Test
+    void voruebergehenderSqlFehlerWirdVorSpaetererAufhebungWiederholt() throws Exception {
+        var loeschen = mock(PreparedStatement.class);
+        when(verbindung.prepareStatement(anyString())).thenAnswer(inv ->
+                inv.<String>getArgument(0).startsWith("DELETE") ? loeschen : prepared);
+        var reihenfolge = new java.util.concurrent.CopyOnWriteArrayList<String>();
+        var versuche = new java.util.concurrent.atomic.AtomicInteger();
+        when(prepared.executeUpdate()).thenAnswer(inv -> {
+            if (versuche.incrementAndGet() == 1) {
+                throw new java.sql.SQLException("Vorübergehend nicht erreichbar", "08006");
+            }
+            reihenfolge.add("bannen");
+            return 1;
+        });
+        when(loeschen.executeUpdate()).thenAnswer(inv -> {
+            reihenfolge.add("entbannen");
+            return 1;
+        });
+        var repository = new BanRepository(mysql, io);
+        var uuid = UUID.randomUUID();
+        assertTrue(repository.bannenWennFrei(new BanRecord(uuid, "Steve", "Test", "Mod",
+                1L, null, false, ServerScope.global())));
+        assertTrue(repository.entbannen(uuid, ServerScope.global()).isPresent());
+        assertTrue(io.warteAufIdle(5, TimeUnit.SECONDS));
+        assertEquals(List.of("bannen", "entbannen"), reihenfolge);
+        assertEquals(2, versuche.get());
+        assertEquals(1, io.anzahlFehler());
+        assertTrue(repository.finden(uuid, ServerScope.global()).isEmpty());
     }
 }

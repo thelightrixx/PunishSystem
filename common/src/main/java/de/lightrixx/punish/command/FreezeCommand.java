@@ -101,7 +101,7 @@ public final class FreezeCommand extends PunishCommand {
                         vorabMillis,
                         grund,
                         ausfuehrerName(sender),
-                        scope, herkunftVon(sender), silent);
+                        scope, herkunftVon(sender), silent, sender);
                 if (!erfolg) {
                     freezeFehlerSenden(sender, spieler, scope);
                 }
@@ -128,7 +128,7 @@ public final class FreezeCommand extends PunishCommand {
                 spieler.name(),
                 grund,
                 ausfuehrerName(sender),
-                scope, herkunftVon(sender), silent);
+                scope, herkunftVon(sender), silent, sender);
         if (!erfolg) {
             freezeFehlerSenden(sender, spieler, scope);
         }

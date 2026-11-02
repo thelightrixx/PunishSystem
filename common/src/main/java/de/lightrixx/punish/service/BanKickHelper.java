@@ -51,6 +51,11 @@ public final class BanKickHelper {
             return;
         }
         try {
+            if (platzhalter != null && platzhalter.containsKey("scope")
+                    && !de.lightrixx.punish.model.ServerScope.ausSpeicherwert(platzhalter.get("scope"))
+                            .giltFuer(verzeichnis.serverName(zielUuid))) {
+                return;
+            }
             Component screen = baueScreen(screenTyp, platzhalter);
             verzeichnis.trennen(zielUuid, screen);
         } catch (Exception e) {
@@ -87,12 +92,21 @@ public final class BanKickHelper {
     public void onlineSpielerMitIpKickenMitScreen(String ip, String grund, String ausfuehrer,
                                                   Long dauerMillis, Long ablaufAm, String screenTyp,
                                                   ProtectionService.IgnoreTyp typ) {
+        onlineSpielerMitIpKickenMitScreen(ip, grund, ausfuehrer, dauerMillis, ablaufAm, screenTyp,
+                typ, de.lightrixx.punish.model.ServerScope.unbekannt());
+    }
+
+    public void onlineSpielerMitIpKickenMitScreen(String ip, String grund, String ausfuehrer,
+                                                  Long dauerMillis, Long ablaufAm, String screenTyp,
+                                                  ProtectionService.IgnoreTyp typ,
+                                                  de.lightrixx.punish.model.ServerScope scope) {
+        Objects.requireNonNull(scope, "Der Scope darf nicht null sein.");
         if (!verzeichnis.darfDirektAusfuehren()) {
             Long dauerKopie = dauerMillis;
             Long ablaufKopie = ablaufAm;
             try {
                 taskScheduler.aufgabe(() -> onlineSpielerMitIpKickenMitScreen(
-                        ip, grund, ausfuehrer, dauerKopie, ablaufKopie, screenTyp, typ));
+                        ip, grund, ausfuehrer, dauerKopie, ablaufKopie, screenTyp, typ, scope));
             } catch (IllegalStateException e) {
                 LOG.debug("IP-Kick nach Shutdown verworfen für {}", ip);
             }
@@ -113,6 +127,7 @@ public final class BanKickHelper {
                 : "Permanent";
         Map<String, String> platzhalter = platzhalter(
                 "", ausfuehrer, grund, dauerText, dauerText, ablaufText, kanonischeIp);
+        platzhalter.put("scope", scope.anzeige());
         Component screen = baueScreen(screenTyp, platzhalter);
 
         for (OnlineSpieler spieler : verzeichnis.onlineSpieler()) {
@@ -142,7 +157,9 @@ public final class BanKickHelper {
             }
             if (kanonisiert.equals(kanonischeIp)) {
                 try {
-                    verzeichnis.trennen(spieler.uuid(), screen);
+                    if (scope.giltFuer(verzeichnis.serverName(spieler.uuid()))) {
+                        verzeichnis.trennen(spieler.uuid(), screen);
+                    }
                 } catch (Exception e) {
                     LOG.warn("IP-Kick für {} fehlgeschlagen, fahre mit Rest fort.", spieler.name(), e);
                 }

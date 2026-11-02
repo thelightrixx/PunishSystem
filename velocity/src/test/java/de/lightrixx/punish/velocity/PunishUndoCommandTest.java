@@ -82,7 +82,7 @@ class PunishUndoCommandTest {
         befehl.ausfuehren(sender, new String[0]);
 
         verify(pardon).ausfuehren(eq(sender),
-                AdditionalMatchers.aryEq(new String[]{"Steve"}));
+                AdditionalMatchers.aryEq(new String[]{"Steve", "--unbekannt"}));
         verify(warn, never()).ausfuehren(any(), any());
     }
 
@@ -129,7 +129,7 @@ class PunishUndoCommandTest {
         befehl.ausfuehren(sender, new String[0]);
 
         verify(unmute).ausfuehren(eq(sender),
-                AdditionalMatchers.aryEq(new String[]{"Alex"}));
+                AdditionalMatchers.aryEq(new String[]{"Alex", "--unbekannt"}));
     }
 
     @Test
@@ -141,6 +141,15 @@ class PunishUndoCommandTest {
         befehl.ausfuehren(sender, new String[]{"Steve"});
 
         verify(pardon).ausfuehren(eq(sender),
-                AdditionalMatchers.aryEq(new String[]{"Steve"}));
+                AdditionalMatchers.aryEq(new String[]{"Steve", "--unbekannt"}));
+    }
+    @Test
+    void undoBehaeltUrspruenglichenServerScope() {
+        when(historyService.findeAlle()).thenReturn(List.of(new HistoryEntry(
+                1L, HistoryType.BAN, "ModA", "Steve", "Test", System.currentTimeMillis(),
+                null, true, "survival", "lobby")));
+        befehl.ausfuehren(sender, new String[0]);
+        verify(pardon).ausfuehren(eq(sender),
+                AdditionalMatchers.aryEq(new String[]{"Steve", "--survival"}));
     }
 }

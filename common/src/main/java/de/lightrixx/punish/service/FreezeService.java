@@ -93,7 +93,13 @@ public final class FreezeService {
 
     public boolean freezen(UUID zielUuid, String zielName, String grund, String ausfuehrer,
                            ServerScope scope, String herkunft, boolean silent) {
-        return freezen(zielUuid, zielName, 0L, true, grund, ausfuehrer, scope, herkunft, silent);
+        return freezen(zielUuid, zielName, grund, ausfuehrer, scope, herkunft, silent, null);
+    }
+
+    public boolean freezen(UUID zielUuid, String zielName, String grund, String ausfuehrer,
+                           ServerScope scope, String herkunft, boolean silent,
+                           de.lightrixx.punish.core.BefehlsSender sender) {
+        return freezen(zielUuid, zielName, 0L, true, grund, ausfuehrer, scope, herkunft, silent, sender);
     }
 
     public boolean freezen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer) {
@@ -108,17 +114,25 @@ public final class FreezeService {
 
     public boolean freezen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
                            ServerScope scope, String herkunft, boolean silent) {
-        return freezen(zielUuid, zielName, dauerMillis, false, grund, ausfuehrer, scope, herkunft, silent);
+        return freezen(zielUuid, zielName, dauerMillis, grund, ausfuehrer, scope, herkunft, silent, null);
+    }
+
+    public boolean freezen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
+                           ServerScope scope, String herkunft, boolean silent,
+                           de.lightrixx.punish.core.BefehlsSender sender) {
+        return freezen(zielUuid, zielName, dauerMillis, false, grund, ausfuehrer, scope, herkunft, silent, sender);
     }
 
     private boolean freezen(UUID zielUuid, String zielName, long dauerMillis, boolean permanent,
                             String grund, String ausfuehrer,
-                            ServerScope scope, String herkunft, boolean silent) {
+                            ServerScope scope, String herkunft, boolean silent,
+                            de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
         try {
-            if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.FREEZE)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.FREEZE)) {
                 LOG.warn("freezen für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 return false;
             }

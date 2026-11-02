@@ -120,7 +120,7 @@ public final class BanCommand extends PunishCommand {
                         dauerMillis,
                         grund,
                         ausfuehrerName(sender),
-                        scope, herkunft, silent);
+                        scope, herkunft, silent, sender);
                 if (!erfolg) {
 
                     try {

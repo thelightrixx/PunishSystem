@@ -104,7 +104,7 @@ public final class PardonCommand extends PunishCommand {
         }
         try {
             de.lightrixx.punish.service.VerstossService verstoesse = verstossService;
-            if (verstoesse != null) {
+            if (verstoesse != null && !warAutoBann) {
                 verstoesse.autoBannErneutPruefen(spieler.uuid(), spieler.name(), ausfuehrerName(sender));
             }
         } catch (Exception e) {

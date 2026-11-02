@@ -105,8 +105,8 @@ public final class IpBanService {
                 } catch (Exception e) {
                     LOG.warn("IP-Bann-Eskalations-History für {} konnte nicht geschrieben werden.", ip, e);
                 }
-                kickHelper.onlineSpielerMitIpKicken(neu.ip(), grund, ausfuehrer,
-                        ProtectionService.IgnoreTyp.BAN);
+                kickHelper.onlineSpielerMitIpKickenMitScreen(neu.ip(), grund, ausfuehrer,
+                        null, null, MessageKeys.SCREEN_IP_BANN, ProtectionService.IgnoreTyp.BAN, neu.scope());
                 broadcastService.senden(MessageKeys.BROADCAST_BAN_IP, editPlatzhalter, silent);
                 logWriter.schreiben(HistoryType.IP_BAN_EDIT, ausfuehrer, neu.ip(),
                         "Auf permanent eskaliert. Vorheriger Grund: " + vorher.get().grund(),
@@ -133,8 +133,8 @@ public final class IpBanService {
         } catch (Exception e) {
             LOG.warn("Perm-IP-Bann-History für {} konnte nicht geschrieben werden (Bann bleibt aktiv).", ip, e);
         }
-        kickHelper.onlineSpielerMitIpKicken(record.ip(), grund, ausfuehrer,
-                ProtectionService.IgnoreTyp.BAN);
+        kickHelper.onlineSpielerMitIpKickenMitScreen(record.ip(), grund, ausfuehrer,
+                null, null, MessageKeys.SCREEN_IP_BANN, ProtectionService.IgnoreTyp.BAN, record.scope());
         broadcastService.senden(MessageKeys.BROADCAST_BAN_IP, platzhalter, silent);
         logWriter.schreiben(HistoryType.BAN_IP, ausfuehrer, record.ip(), "Grund: " + grund,
                 wirksam, herkunftNorm);
@@ -198,8 +198,8 @@ public final class IpBanService {
         } catch (Exception e) {
             LOG.warn("Temp-IP-Bann-History für {} konnte nicht geschrieben werden (Bann bleibt aktiv).", ip, e);
         }
-        kickHelper.onlineSpielerMitIpKicken(record.ip(), grund, ausfuehrer, dauerMillis, ablaufAm,
-                ProtectionService.IgnoreTyp.BAN);
+        kickHelper.onlineSpielerMitIpKickenMitScreen(record.ip(), grund, ausfuehrer, dauerMillis, ablaufAm,
+                MessageKeys.SCREEN_IP_BANN, ProtectionService.IgnoreTyp.BAN, record.scope());
         broadcastService.senden(MessageKeys.BROADCAST_BAN_IP, platzhalter, silent);
         logWriter.schreiben(HistoryType.BAN_IP, ausfuehrer, record.ip(),
                 "Grund: " + grund + ", Dauer: " + ZeitFormat.formatRestzeit(dauerMillis)
@@ -269,8 +269,8 @@ public final class IpBanService {
         } catch (Exception e) {
             LOG.warn("IP-Bann-Edit-History für {} konnte nicht geschrieben werden (Bann bleibt aktiv).", ip, e);
         }
-        kickHelper.onlineSpielerMitIpKicken(neu.ip(), neu.grund(), ausfuehrer, dauerMillis, ablaufAm,
-                ProtectionService.IgnoreTyp.BAN);
+        kickHelper.onlineSpielerMitIpKickenMitScreen(neu.ip(), neu.grund(), ausfuehrer, dauerMillis, ablaufAm,
+                MessageKeys.SCREEN_IP_BANN, ProtectionService.IgnoreTyp.BAN, neu.scope());
         broadcastService.senden(MessageKeys.BROADCAST_BAN_IP, platzhalter, silent);
         logWriter.schreiben(HistoryType.IP_BAN_EDIT, ausfuehrer, neu.ip(),
                 "Grund: " + neu.grund() + ", Dauer: " + dauerText + ", Ablauf: " + ablaufText

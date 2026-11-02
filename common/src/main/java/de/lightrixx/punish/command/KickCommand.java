@@ -90,7 +90,7 @@ public final class KickCommand extends PunishCommand {
         String ausfuehrer = ausfuehrerName(sender);
 
         boolean erfolg = kickService.kickenSpieler(online.uuid(), online.name(), grund, ausfuehrer,
-                silent);
+                silent, sender);
         if (!erfolg) {
             messageService.senden(sender, MessageKeys.SPIELER_NICHT_ONLINE, Map.of("spieler", online.name()));
             return;

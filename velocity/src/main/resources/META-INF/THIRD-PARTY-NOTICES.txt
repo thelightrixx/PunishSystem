@@ -10,7 +10,7 @@ Lizenztexte liegen diesem Jar bei.
    Umbenannt/relocatet nach: de.lightrixx.punish.lib.zaxxer
    Copyright: Brett Wooldridge und Mitwirkende
 
-2. MySQL Connector/J 9.2.0 (com.mysql:mysql-connector-j)
+2. MySQL Connector/J 9.7.0 (com.mysql:mysql-connector-j)
    Lizenz: GNU General Public License, Version 2, mit FOSS-Exception
    Lizenztext und Hinweise: LICENSE, README, INFO_BIN, INFO_SRC im
    Wurzelverzeichnis dieses Jars (unverändert aus dem Original-Jar)

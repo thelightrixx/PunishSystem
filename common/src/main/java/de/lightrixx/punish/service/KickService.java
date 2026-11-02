@@ -62,10 +62,15 @@ public final class KickService {
 
     public boolean kickenSpieler(UUID zielUuid, String zielName, String grund, String ausfuehrer,
                                  boolean silent) {
+        return kickenSpieler(zielUuid, zielName, grund, ausfuehrer, silent, null);
+    }
+
+    public boolean kickenSpieler(UUID zielUuid, String zielName, String grund, String ausfuehrer,
+                                 boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         if (!verzeichnis.darfDirektAusfuehren()) {
             if (taskScheduler != null && !taskScheduler.istGeschlossen()) {
                 try {
-                    taskScheduler.aufgabe(() -> kickenSpieler(zielUuid, zielName, grund, ausfuehrer, silent));
+                    taskScheduler.aufgabe(() -> kickenSpieler(zielUuid, zielName, grund, ausfuehrer, silent, sender));
                 } catch (IllegalStateException e) {
                     LOG.warn("Kick für {} konnte nach Shutdown nicht geplant werden.", zielUuid);
                 }
@@ -79,7 +84,8 @@ public final class KickService {
         }
 
         try {
-            if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
+            if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
+                    && protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
                 LOG.warn("kickenSpieler für {} abgewiesen: Ziel ist geschützt.", zielUuid);
                 return false;
             }
@@ -167,7 +173,8 @@ public final class KickService {
                 if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                     continue;
                 }
-                if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
+                if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)
+                        || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                     continue;
                 }
             } catch (Exception e) {
@@ -257,7 +264,8 @@ public final class KickService {
                 if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                     continue;
                 }
-                if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
+                if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)
+                        || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                     continue;
                 }
             } catch (Exception e) {
@@ -318,7 +326,8 @@ public final class KickService {
                     if (ausfuehrerUuid != null && online.uuid().equals(ausfuehrerUuid)) {
                         continue;
                     }
-                    if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)) {
+                    if (protectionService.istOnlineGeschuetzt(online, ProtectionService.IgnoreTyp.KICK)
+                            || (ausfuehrerUuid != null && protectionService.istRanghoeher(ausfuehrerUuid, online.uuid()))) {
                         continue;
                     }
                 } catch (Exception e) {

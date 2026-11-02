@@ -226,7 +226,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                         }
                     }
                     String installiert = info.version();
-                    taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_ERFOLGREICH_NEUSTART,
+                    taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_BEREITGESTELLT,
                             Map.of("version", installiert)));
                 } catch (Exception e) {
                     LOG.warn("Update-Apply fehlgeschlagen.", e);
@@ -351,21 +351,18 @@ public final class VelocityUpdateBefehl extends PunishCommand {
         try {
             var quelle = VelocityUpdateBefehl.class.getProtectionDomain().getCodeSource();
             if (quelle == null || quelle.getLocation() == null) {
-                LOG.warn("Eigene JAR-Position unbekannt, Velocity-Update {} nicht bereitgestellt "
-                        + "(Bridges trotzdem verteilt).", version);
-                return;
+                throw new IllegalStateException("Eigene JAR-Position unbekannt, Update nicht bereitgestellt.");
             }
             java.nio.file.Path jar = java.nio.file.Paths.get(quelle.getLocation().toURI());
             java.nio.file.Path ordner = jar.getParent();
             if (ordner == null) {
-                LOG.warn("Plugin-Ordner unbekannt, Velocity-Update {} nicht bereitgestellt.", version);
-                return;
+                throw new IllegalStateException("Plugin-Ordner unbekannt, Update nicht bereitgestellt.");
             }
             java.nio.file.Path bereit = legeUpdateBereit(ordner, daten, version);
-            LOG.warn("Velocity-Update {} bereitgestellt ({}), aktiv nach Proxy-Neustart "
-                    + "(laufende JAR wird nicht ersetzt).", version, bereit.getFileName());
+            LOG.warn("Velocity-Update {} bereitgestellt ({}). Vor dem Neustart die bisherige Plugin-JAR "
+                    + "manuell durch diese Datei ersetzen.", version, bereit);
         } catch (Exception e) {
-            LOG.warn("Velocity-Update konnte nicht bereitgestellt werden (Bridges trotzdem verteilt).", e);
+            throw new IllegalStateException("Velocity-Update konnte nicht bereitgestellt werden.", e);
         }
     }
 

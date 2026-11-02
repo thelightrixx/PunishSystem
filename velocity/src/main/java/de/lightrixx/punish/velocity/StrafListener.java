@@ -490,10 +490,7 @@ public final class StrafListener {
         if (ipTimeoutService != null && !"unbekannt".equals(ip)) {
             Optional<IpTimeoutRecord> ipTimeout;
             try {
-                ipTimeout = ipTimeoutService.findeWirksamOhneCleanup(ip, "unbekannt", jetzt);
-                if (ipTimeout.isEmpty()) {
-                    ipTimeout = ipTimeoutService.findeAbdeckend(ip, ServerScope.global());
-                }
+                ipTimeout = ipTimeoutService.findeAbdeckend(ip, ServerScope.global());
             } catch (Exception e) {
                 throw new IllegalStateException("IP-Timeout-Lookup (Login) fehlgeschlagen.", e);
             }
@@ -1265,6 +1262,10 @@ public final class StrafListener {
                     ? (hatRecht(absender, "punish.own") || hatRecht(absender, "punish.history"))
                     : hatRecht(absender, "punish.history");
             case Protokoll.GUI_REPORTS, Protokoll.GUI_REPORT_INFO -> hatRecht(absender, "punish.reports");
+            case Protokoll.GUI_DOSSIER -> hatRecht(absender, "punish.gui")
+                    && hatRecht(absender, "punish.status")
+                    && hatRecht(absender, "punish.history")
+                    && hatRecht(absender, "punish.reports");
             default -> false;
         };
     }

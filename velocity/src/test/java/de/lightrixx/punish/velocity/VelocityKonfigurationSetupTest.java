@@ -53,4 +53,20 @@ class VelocityKonfigurationSetupTest {
 
         assertTrue(neu.contains("  bridge-secrets: {}\n# x\n"), neu);
     }
+    @Test
+    void bestehendeKonfigurationErhaeltNeuenHinweisZurManuellenUpdateInstallation(
+            @org.junit.jupiter.api.io.TempDir java.io.File ordner) throws Exception {
+        var config = new VelocityKonfiguration(org.mockito.Mockito.mock(
+                com.velocitypowered.api.proxy.ProxyServer.class), ordner);
+        config.sicherstellen();
+        java.nio.file.Files.writeString(ordner.toPath().resolve("config/messages.yml"),
+                "messages:\n  update-erfolgreich-neustart: 'Nur neustarten'\n");
+        config.laden();
+        org.junit.jupiter.api.Assertions.assertEquals("Nur neustarten", config.nachricht(
+                de.lightrixx.punish.core.MessageKeys.UPDATE_ERFOLGREICH_NEUSTART));
+        String hinweis = config.nachricht(de.lightrixx.punish.core.MessageKeys.UPDATE_BEREITGESTELLT);
+        assertTrue(hinweis.contains("Vor dem Neustart"));
+        assertTrue(hinweis.contains("ersetzen"));
+        assertTrue(hinweis.contains("update-pending"));
+    }
 }

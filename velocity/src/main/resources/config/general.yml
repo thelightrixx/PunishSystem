@@ -309,7 +309,9 @@ bann-unban-antrag:
 # auto-check-beim-start: meldet beim Start im Log, falls ein Update verfügbar ist.
 # intervall-minuten: steuert den periodischen Hinweis-Check im Proxy (kein Auto-Download).
 # bestaetigung-fuer-apply: true = /punish-update apply verlangt ... apply confirm.
-# Nach apply: Proxy + alle Backends neustarten (JARs werden erst dann aktiv).
+# Nach apply: bisherige Plugin-JARs manuell durch die bereitgestellten Dateien ersetzen,
+# danach Proxy + Backends neustarten. Ein Neustart allein installiert das Update nicht.
+#   Proxy: plugins/update-pending/.
 #   Bridges legen die Datei unter plugins/PunishSystemBridge/update-pending/ ab.
 update:
   hangar-author: "thelightrixx"

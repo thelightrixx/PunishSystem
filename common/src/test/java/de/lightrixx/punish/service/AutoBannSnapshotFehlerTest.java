@@ -30,17 +30,21 @@ class AutoBannSnapshotFehlerTest {
     private AutoBannService service;
     private BanRepository banRepository;
     private VerstossRepository verstossRepository;
+    private Konfiguration config;
+    private AuftragsPlaner planer;
 
     @BeforeEach
     void setup() {
         banRepository = mock(BanRepository.class);
         verstossRepository = mock(VerstossRepository.class);
+        config = mock(Konfiguration.class);
+        planer = mock(AuftragsPlaner.class);
         when(banRepository.alleFuer(any())).thenReturn(List.of());
         service = new AutoBannService(
-                mock(AuftragsPlaner.class),
+                planer,
                 banRepository,
-                mock(Konfiguration.class),
-                mock(TimeParser.class),
+                config,
+                new TimeParser(),
                 mock(HistoryService.class),
                 mock(BroadcastService.class),
                 mock(LogWriter.class),
@@ -78,5 +82,40 @@ class AutoBannSnapshotFehlerTest {
 
         verify(verstossRepository).zuruecksetzenNur(ziel, java.util.Set.of(7));
         verify(verstossRepository, never()).zuruecksetzen(any());
+    }
+    @Test
+    void cleanupLaesstManuelleBannsFuerRegulaereAblaufhistorieBestehen() {
+        var bann = new BanRecord(UUID.randomUUID(), "Steve", "Manuell", "Mod", 1L, 2L, false);
+        when(banRepository.alle()).thenReturn(List.of(bann));
+        org.junit.jupiter.api.Assertions.assertEquals(0,
+                service.bereinigeAbgelaufeneMitZeremonie(System.currentTimeMillis()));
+        verify(banRepository, never()).entferneAbgelaufene(org.mockito.ArgumentMatchers.anyLong());
+        verify(banRepository, never()).entbannenWenn(any(), any(), any());
+    }
+
+    @Test
+    void autoPardonUndAblaufMeldenZustandsaenderung() {
+        var beobachter = mock(BanService.BanBeobachter.class);
+        service.beobachterHinzufuegen(beobachter);
+        UUID uuid = UUID.randomUUID();
+        var bann = new BanRecord(uuid, "Steve", "Auto", "System", 1L, 2L, true);
+        when(banRepository.entbannenWenn(any(), any(), any())).thenReturn(Optional.of(bann));
+        when(verstossRepository.finden(uuid)).thenReturn(List.of());
+        when(verstossRepository.zuruecksetzenNur(any(), any())).thenReturn(List.of());
+        service.autoPardonAufheben(uuid, "Steve", "Mod");
+        service.behandleAutoBannAblauf(uuid, "Steve");
+        verify(beobachter, org.mockito.Mockito.times(2)).banGeaendert();
+    }
+    @Test
+    void neuerAutoBannMeldetZustandsaenderung() {
+        when(config.limitSnapshot()).thenReturn(new Konfiguration.LimitSnapshot(6, "7d"));
+        when(config.standardGrund(any())).thenReturn("Auto");
+        when(banRepository.bannenWennFrei(any())).thenReturn(true);
+        when(planer.spaeter(any(), org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(mock(de.lightrixx.punish.core.GeplanteAufgabe.class));
+        var beobachter = mock(BanService.BanBeobachter.class);
+        service.beobachterHinzufuegen(beobachter);
+        org.junit.jupiter.api.Assertions.assertTrue(service.autoBann(UUID.randomUUID(), "Steve", "System", 6, 6));
+        verify(beobachter).banGeaendert();
     }
 }

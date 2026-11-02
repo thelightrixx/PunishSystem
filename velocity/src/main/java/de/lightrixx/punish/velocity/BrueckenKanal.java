@@ -385,7 +385,7 @@ public final class BrueckenKanal {
     /**
      * B-003/B-012: Replay- und Hello-Gating nach der Signaturprüfung. Gibt das
      * entrahmente Paket oder {@code null} bei Drop zurück. HELLO setzt die
-     * Zähler beider Richtungen zurück; Nicht-HELLO vor dem ersten HELLO wird
+     * Empfangszähler zurück; Nicht-HELLO vor dem ersten HELLO wird
      * verworfen (Re-HELLO kommt via Join-/Refresh-Heilung der Bridge).
      */
     public byte[] sequenzPruefen(RegisteredServer server, byte[] klar) {
@@ -424,8 +424,6 @@ public final class BrueckenKanal {
             }
             empfangsPruefer.computeIfAbsent(schluessel,
                     k -> new Protokoll.SequenzPruefer()).zuruecksetzen();
-            sendeSeq.computeIfAbsent(schluessel,
-                    k -> new java.util.concurrent.atomic.AtomicLong()).set(0L);
             return paket;
         }
         if (!helloBekannt.contains(schluessel)) {
@@ -666,8 +664,6 @@ public final class BrueckenKanal {
     }
 
     private boolean sendeBanTimeoutFreezeSync(RegisteredServer server, boolean mutesEingeschlossen) {
-        // Mutes/IP-Mutes wurden von mutePushAn bereits gesendet (Bulk- oder Einzel-Sync);
-        // sie nur dann erneut mitsenden, wenn sie oben wegen der Chunk-Grenze ausgelassen wurden.
         List<Protokoll.BanEintrag> banns;
         List<Protokoll.TimeoutEintrag> timeouts;
         List<Protokoll.FreezeEintrag> freezes;
@@ -677,10 +673,8 @@ public final class BrueckenKanal {
             banns = aktiveBanns();
             timeouts = aktiveTimeouts();
             freezes = aktiveFreezes();
-            if (!mutesEingeschlossen) {
-                mutes = aktiveMutes();
-                ipMutes = aktiveIpMutes();
-            }
+            mutes = aktiveMutes();
+            ipMutes = aktiveIpMutes();
         } catch (RuntimeException e) {
             logger.warn("Ban/Timeout/Freeze-Sync abgebrochen (Repository nicht lesbar), "
                     + "Bridge-Caches bleiben unverändert.", e);

@@ -76,16 +76,6 @@ public final class PardonAllCommand extends PunishCommand {
         int anzahl = banService.entbannenAlle(grund, ausfuehrerName(sender), herkunftVon(sender), filter,
                 silent);
         messageService.senden(sender, MessageKeys.BESTAETIGUNG_ERFOLGREICH, Map.of("anzahl", String.valueOf(anzahl)));
-        if (anzahl > 0) {
-            try {
-                de.lightrixx.punish.service.VerstossService verstoesse = verstossService;
-                if (verstoesse != null) {
-                    verstoesse.autoBannErneutPruefenFuerAlle(ausfuehrerName(sender));
-                }
-            } catch (Exception e) {
-                LOG.debug("Auto-Bann-Re-Evaluierung nach Pardon-All fehlgeschlagen.", e);
-            }
-        }
     }
 
     @Override

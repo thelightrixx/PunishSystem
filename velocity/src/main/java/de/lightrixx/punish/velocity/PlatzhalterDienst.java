@@ -191,9 +191,13 @@ public final class PlatzhalterDienst {
             int warns = 0;
             String warnsLetzterGrund = "";
             try {
-                warns = warnRepository.anzahl(uuid);
+                long warnAblauf = Math.max(0L, config.warnAblaufMillis());
                 int maxNummer = -1;
                 for (var warn : warnRepository.finden(uuid)) {
+                    if (warn == null || (warnAblauf > 0L && warn.erstelltAm() + warnAblauf <= jetzt)) {
+                        continue;
+                    }
+                    warns++;
                     if (warn != null && warn.nummer() > maxNummer) {
                         maxNummer = warn.nummer();
                         warnsLetzterGrund = text(warn.grund());
