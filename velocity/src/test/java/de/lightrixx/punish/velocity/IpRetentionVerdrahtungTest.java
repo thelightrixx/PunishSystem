@@ -11,8 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * AT05-1: belegt die Verdrahtung der IP-Aufbewahrungsfrist an Start und Reload.
  * Die Prüfung liest den Quelltext, weil die Verdrahtung in den großen
  * Start-/Reload-Klassen liegt und ein Verhaltenstest den kompletten Proxy
- * aufbauen müsste. Der Sweep selbst ist in
- * {@code common/.../audit/...FixPaketRegressionTest} verhaltensbasiert abgedeckt.
+ * aufbauen müsste.
  */
 class IpRetentionVerdrahtungTest {
 

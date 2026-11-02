@@ -4,7 +4,6 @@ target/
 .vscode/
 .opencode/
 .freebuff/
-/audit/
 velocity/dependency-reduced-pom.xml
 AGENTS.md
 *.log

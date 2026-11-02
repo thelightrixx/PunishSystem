@@ -1765,7 +1765,6 @@ public final class Protokoll {
         // ohne Freeze, 29 Bytes mit Freeze. Eine abgeschnittene Sektion
         // (Versions-Schieflage) degradiert auf v1-Werte (frozen=false,
         // fehlende Zähler 0), statt den ganzen Frame zu verwerfen.
-        // Verhalten gepinnt in AuditCodecFuzzTest.cS81.
         boolean frozen = false;
         long freezeAblauf = PlatzhalterAntwort.INAKTIV;
         boolean unvollstaendig = false;

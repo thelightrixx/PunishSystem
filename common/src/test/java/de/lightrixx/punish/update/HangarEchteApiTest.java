@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Gegen die am 2026-10-24 von hangar.papermc.io abgerufene reale API-Antwort
- * (GET /api/v1/projects/ViaVersion/ViaVersion/versions/5.12.1, ungekuerzt in
- * audit/logs/010-hangar-fixture.json). /latestrelease liefert text/plain.
+ * (GET /api/v1/projects/ViaVersion/ViaVersion/versions/5.12.1).
+ * /latestrelease liefert text/plain.
  */
 class HangarEchteApiTest {
 
