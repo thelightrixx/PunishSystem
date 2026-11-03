@@ -202,6 +202,7 @@ public final class Protokoll {
     public static final String GUI_REPORT_INFO = "REPORT_INFO";
     public static final String GUI_KATALOG = "KATALOG";
     public static final String GUI_DOSSIER = "DOSSIER";
+    public static final String GUI_RECHTE = "RECHTE";
 
     public static final int MAX_GUI_ZEILEN = 54;
     public static final int MAX_GUI_TEXT = 1000;
@@ -1839,16 +1840,23 @@ public final class Protokoll {
     }
 
     public static byte[] helloAck(int proxyVersion, String kanonischerServerName, String proxyPluginVersion) throws IOException {
+        return helloAck(proxyVersion, kanonischerServerName, proxyPluginVersion, "");
+    }
+
+    public static byte[] helloAck(int proxyVersion, String kanonischerServerName,
+                                  String proxyPluginVersion, String sessionId) throws IOException {
         String name = kanonischerServerName == null ? "" : kanonischerServerName.trim();
         if (name.length() > 32) {
             name = name.substring(0, 32);
         }
         String finalName = name;
         String finalVersion = kuerzeVersion(proxyPluginVersion);
+        String finalSession = kuerzeVersion(sessionId);
         return nachricht(HELLO_ACK, out -> {
             out.writeInt(proxyVersion);
             out.writeUTF(finalName);
             out.writeUTF(finalVersion);
+            out.writeUTF(finalSession);
         });
     }
 
@@ -1862,7 +1870,12 @@ public final class Protokoll {
         return version;
     }
 
-    public record HelloAck(int proxyVersion, String kanonischerServerName, String proxyPluginVersion) {
+    public record HelloAck(int proxyVersion, String kanonischerServerName, String proxyPluginVersion,
+                           String sessionId) {
+
+        public HelloAck(int proxyVersion, String kanonischerServerName, String proxyPluginVersion) {
+            this(proxyVersion, kanonischerServerName, proxyPluginVersion, "");
+        }
 
         public HelloAck(int proxyVersion, String kanonischerServerName) {
             this(proxyVersion, kanonischerServerName, "");
@@ -1883,8 +1896,14 @@ public final class Protokoll {
         } catch (Exception e) {
             LOG.debug("HELLO_ACK ohne Plugin-Version (Legacy-Format toleriert).", e);
         }
+        String sessionId = "";
+        try {
+            sessionId = in.readUTF();
+        } catch (java.io.EOFException e) {
+            LOG.debug("HELLO_ACK ohne Session-ID (Legacy-Format toleriert).", e);
+        }
         return new HelloAck(version, name == null ? "" : name.trim(),
-                pluginVersion == null ? "" : pluginVersion.trim());
+                pluginVersion == null ? "" : pluginVersion.trim(), sessionId.trim());
     }
 
     public static byte[] syncBegin(long generation) throws IOException {

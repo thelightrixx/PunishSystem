@@ -1,6 +1,5 @@
 package de.lightrixx.punish.bridge.gui;
 
-import de.lightrixx.punish.core.RangBuendel;
 import de.lightrixx.punish.net.Protokoll;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -185,8 +184,7 @@ public final class GuiMenues {
                 Material.MAP, Material.MILK_BUCKET, Material.GREEN_DYE, Material.LIME_DYE, Material.TORCH};
         for (int i = 0; i < alle.length && i < 13; i++) {
             var a = alle[i];
-            boolean darf = sender == null
-                    || RangBuendel.gewaehrt(sender::hasPermission, a.permission());
+            boolean darf = GuiDatenDienst.hatRecht(sender, a.permission());
             inv.setItem(7 + i > 26 ? i : 7 + i,
                     item(darf ? icons[i % icons.length] : Material.GRAY_STAINED_GLASS,
                             (darf ? "<white>" : "<gray>") + a.befehl(),

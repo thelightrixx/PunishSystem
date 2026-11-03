@@ -319,6 +319,7 @@ public final class VelocityBefehle {
                 timeoutRepository, verstossRepository, noteRepository, warnRepository, reportRepository, historyRepository, autoBannService,
                 muteService, timeoutService, ipBanService, ipMuteRepository, ipTimeoutRepository,
                 ipMuteService, ipTimeoutService);
+        reload.setFreezeRepository(freezeRepository);
         try {
             reload.setBrueckenKanal(kanal);
         } catch (Exception e) {
@@ -393,8 +394,20 @@ public final class VelocityBefehle {
         } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(VelocityBefehle.class).debug("Serverlisten-Lookup fehlgeschlagen.", e);
         }
-        boolean bridgeOk = kanal != null;
-        String bridgeDetail = bridgeOk ? serverAnzahl + " Server verbunden, Kanal registriert" : "kein Brückenkanal";
+        boolean bridgeOk = false;
+        String bridgeDetail = "kein Brückenkanal";
+        if (kanal != null) {
+            var gemeldet = kanal.bridgeVersionen();
+            var secrets = config.brueckenSecrets();
+            var server = proxy.getAllServers();
+            long helloAnzahl = server.stream().filter(s -> gemeldet.containsKey(
+                    s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT))).count();
+            boolean secretsVollstaendig = server.stream().allMatch(s -> secrets.containsKey(
+                    s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT)));
+            bridgeOk = serverAnzahl > 0 && helloAnzahl == serverAnzahl && secretsVollstaendig;
+            bridgeDetail = helloAnzahl + "/" + serverAnzahl + " Bridges per HELLO gemeldet; "
+                    + (secretsVollstaendig ? "Secrets vollständig" : "Bridge-Secrets fehlen");
+        }
         boolean luckPerms = false;
         try {
             luckPerms = proxy.getPluginManager().getPlugin("luckperms").isPresent();

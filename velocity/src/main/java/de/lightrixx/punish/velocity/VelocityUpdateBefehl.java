@@ -95,8 +95,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
         try {
             taskScheduler.aufgabeAsync(() -> {
                 try {
-                    HangarUpdateService dienst = dienstAusConfig();
-                    HangarUpdateService.ReleaseInfo info = dienst.pruefe();
+                    HangarUpdateService.ReleaseInfo info = pruefeGithub(konfiguration, httpAbruf);
                     letzteRemoteVersion = info.version();
                     letzterChannel = info.channel();
                     letztePruefungMillis = System.currentTimeMillis();
@@ -144,8 +143,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
             taskScheduler.aufgabeAsync(() -> {
                 try {
                     taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_START));
-                    HangarUpdateService dienst = dienstAusConfig();
-                    HangarUpdateService.ReleaseInfo info = dienst.pruefe();
+                    HangarUpdateService.ReleaseInfo info = pruefeGithub(konfiguration, httpAbruf);
                     letzteRemoteVersion = info.version();
                     letzterChannel = info.channel();
                     letztePruefungMillis = System.currentTimeMillis();
@@ -167,10 +165,9 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                         }
                         if (artefakt.sha256() == null || artefakt.sha256().isBlank()) {
                             throw new IllegalStateException("Update abgelehnt: kein SHA-256 für "
-                                    + dateiname + " (Hangar-Antwort unvollständig).");
+                                    + dateiname + " (GitHub-Antwort unvollständig).");
                         }
-                        byte[] daten = dienst.ladeArtefakt(new HangarUpdateService.Artefakt(
-                                artefakt.plattform(), artefakt.dateiname(), url, artefakt.sha256()), MAX_JAR_BYTES);
+                        byte[] daten = httpAbruf.ladeBytes(url, MAX_JAR_BYTES);
                         String hash = UpdateVerteilung.hashStill(daten);
                         if (!hash.equalsIgnoreCase(artefakt.sha256().trim())) {
                             throw new IllegalStateException("SHA-256 weicht ab (" + dateiname + ").");
@@ -201,10 +198,9 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                                     "Update abgelehnt: unbekanntes Artefakt.");
                         }
                     }
-                    if (bridge != null && bridge121 == null) {
+                    if (velocity == null || bridge == null || bridge121 == null) {
                         throw new IllegalStateException(
-                                "Update abgelehnt: zweites PAPER-Artefakt (bridge-1.21) fehlt in der "
-                                        + "Hangar-Antwort. Version nicht verteilt.");
+                                "Update abgelehnt: Das GitHub Release muss Velocity und beide Bridge-Varianten enthalten.");
                     }
                     if (velocity != null) {
                         ersetzeEigeneJar(velocity, info.version());
@@ -291,10 +287,96 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                 Map.of("version", remote, "detail", detail.toString()));
     }
 
-    private HangarUpdateService dienstAusConfig() {
-        String autor = konfiguration.updateHangarAutor();
-        String slug = konfiguration.updateHangarSlug();
-        return new HangarUpdateService(autor, slug, konfiguration.updateChannel(), httpAbruf);
+    static HangarUpdateService.ReleaseInfo pruefeGithub(VelocityKonfiguration config,
+                                                        HangarUpdateService.HttpAbruf http) throws Exception {
+        String repository = config.updateGithubRepository();
+        if (repository == null || !repository.matches("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")) {
+            throw new IllegalArgumentException("update.github-repository muss Besitzer/Repository enthalten.");
+        }
+        boolean vorab = !"Release".equalsIgnoreCase(config.updateChannel());
+        String api = "https://api.github.com/repos/" + repository + "/releases";
+        var optionen = new org.yaml.snakeyaml.LoaderOptions();
+        Object roh = new org.yaml.snakeyaml.Yaml(new org.yaml.snakeyaml.constructor.SafeConstructor(optionen))
+                .load(http.leseText(vorab ? api + "?per_page=30" : api + "/latest"));
+        if (roh == null) {
+            throw new IllegalStateException("Leere GitHub-Antwort.");
+        }
+        java.util.List<?> releases = roh instanceof java.util.List<?> liste ? liste : java.util.List.of(roh);
+        java.util.Map<?, ?> gewaehlt = null;
+        String version = "";
+        for (Object kandidat : releases) {
+            if (!(kandidat instanceof java.util.Map<?, ?> release)
+                    || Boolean.TRUE.equals(release.get("draft"))
+                    || (!vorab && Boolean.TRUE.equals(release.get("prerelease")))) {
+                continue;
+            }
+            String tag = String.valueOf(release.get("tag_name"));
+            if (!tag.matches("[vV]?[0-9]+(\\.[0-9]+)+([-+][A-Za-z0-9]+(\\.[A-Za-z0-9]+)*)*")) {
+                continue;
+            }
+            String kandidatVersion = tag.replaceFirst("^[vV]", "");
+            if (gewaehlt == null || UpdateVergleich.neuerVerfuegbar(version, kandidatVersion)) {
+                gewaehlt = release;
+                version = kandidatVersion;
+            }
+        }
+        if (gewaehlt == null || !(gewaehlt.get("assets") instanceof java.util.List<?> assets)) {
+            throw new IllegalStateException("Kein passendes GitHub Release gefunden.");
+        }
+        String tag = String.valueOf(gewaehlt.get("tag_name"));
+        java.util.Map<String, java.util.Map<?, ?>> dateien = new java.util.LinkedHashMap<>();
+        for (Object objekt : assets) {
+            if (objekt instanceof java.util.Map<?, ?> asset && asset.get("name") instanceof String name) {
+                if (dateien.putIfAbsent(name, asset) != null) {
+                    throw new IllegalStateException("Doppeltes Release-Artefakt: " + name);
+                }
+            }
+        }
+        var summenDatei = dateien.get("SHA256SUMS.txt");
+        if (summenDatei == null) {
+            throw new IllegalStateException("SHA256SUMS.txt fehlt im GitHub Release.");
+        }
+        java.util.Map<String, String> summen = new java.util.HashMap<>();
+        for (String zeile : http.leseText(githubDownloadUrl(summenDatei, repository, tag)).lines().toList()) {
+            var matcher = java.util.regex.Pattern.compile("^([0-9a-fA-F]{64}) [ *](.+)$").matcher(zeile);
+            if (matcher.matches() && summen.putIfAbsent(matcher.group(2), matcher.group(1)) != null) {
+                throw new IllegalStateException("Doppelte Prüfsumme: " + matcher.group(2));
+            }
+        }
+        java.util.List<HangarUpdateService.Artefakt> downloads = new java.util.ArrayList<>();
+        String[] teile = version.split("\\+", 2);
+        for (String variante : java.util.List.of("velocity", "bridge", "bridge-1.21")) {
+            String name = "PunishSystem-v" + teile[0] + "-(" + variante + ")"
+                    + (teile.length == 2 ? "+" + teile[1].replace('-', '_') : "") + ".jar";
+            if (!dateien.containsKey(name)) {
+                name = "PunishSystem-v" + version + "-" + variante + ".jar";
+            }
+            var asset = dateien.get(name);
+            String hash = summen.get(name);
+            if (asset == null || hash == null) {
+                throw new IllegalStateException("Artefakt oder SHA-256 fehlt im GitHub Release: " + name);
+            }
+            Object digest = asset.get("digest");
+            if (digest instanceof String text && !text.equalsIgnoreCase("sha256:" + hash)) {
+                throw new IllegalStateException("Widersprüchliche SHA-256-Prüfsumme: " + name);
+            }
+            downloads.add(new HangarUpdateService.Artefakt(variante.toUpperCase(Locale.ROOT), name,
+                    githubDownloadUrl(asset, repository, tag), hash));
+        }
+        return new HangarUpdateService.ReleaseInfo(version,
+                Boolean.TRUE.equals(gewaehlt.get("prerelease")) ? "Beta" : "Release", downloads);
+    }
+
+    private static String githubDownloadUrl(java.util.Map<?, ?> asset, String repository, String tag) {
+        String url = String.valueOf(asset.get("browser_download_url"));
+        java.net.URI uri = java.net.URI.create(url);
+        if (!"https".equalsIgnoreCase(uri.getScheme()) || !"github.com".equalsIgnoreCase(uri.getHost())
+                || uri.getUserInfo() != null || (uri.getPort() != -1 && uri.getPort() != 443)
+                || !("/" + repository + "/releases/download/" + tag + "/" + asset.get("name"))
+                        .equals(uri.getPath())) {
+            throw new IllegalArgumentException("Release-Download liegt außerhalb des gewählten GitHub Releases.");
+        }
+        return url;
     }
 
     private String aktuelleVersion() {
@@ -317,14 +399,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
         }
     }
 
-    /**
-     * B-011: strikte Artefakt-Zuordnung anhand der Hangar-API-Plattform, keine
-     * Dateiname-Heuristik. VELOCITY gilt für velocity, das erste PAPER für
-     * bridge, ein zweites PAPER für bridge-1.21. Unbekannte Plattformen
-     * brechen mit Fehler ab statt auf bridge zurückzufallen.
-     */
     static final class ArtefaktZuordnung {
-        private boolean paperVergeben;
 
         String nimm(HangarUpdateService.Artefakt artefakt) {
             if (artefakt == null) {
@@ -335,12 +410,8 @@ public final class VelocityUpdateBefehl extends PunishCommand {
             if ("VELOCITY".equals(plattform)) {
                 return "velocity";
             }
-            if ("PAPER".equals(plattform)) {
-                if (!paperVergeben) {
-                    paperVergeben = true;
-                    return "bridge";
-                }
-                return "bridge-1.21";
+            if ("BRIDGE".equals(plattform) || "BRIDGE-1.21".equals(plattform)) {
+                return plattform.toLowerCase(Locale.ROOT);
             }
             throw new IllegalStateException("Update abgelehnt: unbekannte Plattform '"
                     + (artefakt.plattform() == null ? "" : artefakt.plattform().trim()) + "'.");

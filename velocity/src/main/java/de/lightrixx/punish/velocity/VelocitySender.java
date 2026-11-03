@@ -33,10 +33,17 @@ public final class VelocitySender implements BefehlsSender {
 
     @Override
     public boolean hatRecht(String knoten) {
-        if (knoten == null || knoten.isBlank()) {
+        return hatRecht(quelle, knoten);
+    }
+
+    static boolean hatRecht(com.velocitypowered.api.permission.PermissionSubject quelle, String knoten) {
+        if (quelle == null || knoten == null || knoten.isBlank()) {
             return false;
         }
         try {
+            if (quelle.getPermissionValue(knoten) == com.velocitypowered.api.permission.Tristate.FALSE) {
+                return false;
+            }
             return RangBuendel.gewaehrt(quelle::hasPermission, knoten);
         } catch (Exception e) {
             return false;

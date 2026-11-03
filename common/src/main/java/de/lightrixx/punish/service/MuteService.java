@@ -647,8 +647,9 @@ public final class MuteService {
                 if (aktuell.isEmpty() || !aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
                     continue;
                 }
-                Optional<MuteRecord> entfernt = muteRepository.entmuten(
-                        kandidat.spielerUuid(), kandidat.scope());
+                Optional<MuteRecord> entfernt = muteRepository.entmutenWenn(
+                        kandidat.spielerUuid(), kandidat.scope(),
+                        m -> m.equals(aktuell.get()) && m.istAbgelaufen(System.currentTimeMillis()));
                 if (entfernt.isEmpty()) {
                     continue;
                 }

@@ -303,6 +303,7 @@ public final class PunishVelocity {
                 autoBann, config, messageService, planer,
                 banRepository, kanal, guiDienst);
         strafListener.setPlatzhalterDienst(platzhalterDienst);
+        strafListener.setFreezeService(freezeService);
         try {
             strafListener.setChatfilterStaffel(
                     new ChatfilterStaffelService(config, warnService, muteService, broadcastService));
@@ -547,10 +548,8 @@ public final class PunishVelocity {
             if (config == null || !config.updateAutoCheckBeimStart()) {
                 return;
             }
-            String autor = config.updateHangarAutor();
-            String slug = config.updateHangarSlug();
-            if (autor.isBlank() || slug.isBlank()) {
-                logger.debug("Update-Auto-Check übersprungen (update.hangar-author/slug leer).");
+            if (config.updateGithubRepository().isBlank()) {
+                logger.debug("Update-Auto-Check übersprungen (update.github-repository leer).");
                 return;
             }
             VelocityAuftragsPlaner lokal = planer;
@@ -560,9 +559,7 @@ public final class PunishVelocity {
             String channel = config.updateChannel();
             lokal.aufgabeAsync(() -> {
                 try {
-                    var dienst = new HangarUpdateService(autor, slug, channel,
-                            HangarUpdateService.standardAbruf());
-                    var info = dienst.pruefe();
+                    var info = VelocityUpdateBefehl.pruefeGithub(config, HangarUpdateService.standardAbruf());
                     String aktuell = liesPluginVersion();
                     if (UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
                         logger.warn("PunishSystem-Update verfügbar: {} (installiert: {}, Channel: {}). /punish-update check",
@@ -579,11 +576,7 @@ public final class PunishVelocity {
                         lokal, config::updateIntervallMinuten,
                         () -> {
                             try {
-                                var dienst = new HangarUpdateService(
-                                        config.updateHangarAutor(), config.updateHangarSlug(),
-                                        config.updateChannel(),
-                                        HangarUpdateService.standardAbruf());
-                                var info = dienst.pruefe();
+                                var info = VelocityUpdateBefehl.pruefeGithub(config, HangarUpdateService.standardAbruf());
                                 String aktuell = liesPluginVersion();
                                 if (UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
                                     logger.warn("PunishSystem-Update verfügbar (Intervall-Check): {} (installiert: {}). Nur Hinweis, kein Download.",

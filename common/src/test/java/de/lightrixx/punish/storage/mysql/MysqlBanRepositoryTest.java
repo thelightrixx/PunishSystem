@@ -132,6 +132,33 @@ class MysqlBanRepositoryTest {
         List<BanRecord> leer = List.of();
         assertEquals(0, repository.migrationImport(leer));
     }
+
+    @Test
+    void commitAbbruchWirdZurueckgerolltUndVorAufhebungWiederholt() throws Exception {
+        var commits = new java.util.concurrent.atomic.AtomicInteger();
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (commits.incrementAndGet() == 1) {
+                throw new java.sql.SQLException("Verbindung beim Commit getrennt", "08006");
+            }
+            return null;
+        }).when(verbindung).commit();
+        var repository = new BanRepository(mysql, io);
+        var uuid = UUID.randomUUID();
+        assertTrue(repository.bannenWennFrei(new BanRecord(uuid, "Spieler", "Grund", "Mod",
+                1L, null, false, ServerScope.global())));
+        assertTrue(repository.entbannen(uuid, ServerScope.global()).isPresent());
+        assertTrue(io.warteAufIdle(5, TimeUnit.SECONDS));
+        var reihenfolge = org.mockito.Mockito.inOrder(verbindung, prepared);
+        reihenfolge.verify(prepared).executeUpdate();
+        reihenfolge.verify(verbindung).commit();
+        reihenfolge.verify(verbindung).rollback();
+        reihenfolge.verify(verbindung).close();
+        reihenfolge.verify(prepared).executeUpdate();
+        reihenfolge.verify(verbindung).commit();
+        reihenfolge.verify(prepared).executeUpdate();
+        assertEquals(2, commits.get());
+        assertEquals(1, io.anzahlFehler());
+    }
     @Test
     void voruebergehenderSqlFehlerWirdVorSpaetererAufhebungWiederholt() throws Exception {
         var loeschen = mock(PreparedStatement.class);

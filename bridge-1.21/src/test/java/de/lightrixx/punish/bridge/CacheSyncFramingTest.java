@@ -11,6 +11,98 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CacheSyncFramingTest {
 
+    private record ModellEintrag(UUID uuid, String scope, long ende, String grund) {
+    }
+
+    @Test
+    void zufaelligeAblaufeEntsprechenUnabhaengigemStrafmodell() {
+        for (long seed : new long[]{17L, 731L, 20261103L}) {
+            var zufall = new java.util.Random(seed);
+            var mutes = new MuteCache();
+            var banns = new BanCache();
+            var timeouts = new TimeoutCache();
+            var freezes = new FreezeCache();
+            var ips = new IpMuteCache();
+            java.util.Map<String, ModellEintrag> sichtbar = new java.util.HashMap<>();
+            java.util.Map<String, ModellEintrag> offen = null;
+            long generation = 0L;
+            long naechsteGeneration = 0L;
+            long jetzt = 1_700_000_000_000L;
+            for (int schritt = 0; schritt < 2000; schritt++) {
+                var uuid = new UUID(0L, 1L + zufall.nextInt(8));
+                String ip = "10.0.0." + uuid.getLeastSignificantBits();
+                switch (zufall.nextInt(8)) {
+                    case 0 -> {
+                        generation = ++naechsteGeneration;
+                        offen = new java.util.HashMap<>();
+                        mutes.syncBeginn(generation); banns.syncBeginn(generation);
+                        timeouts.syncBeginn(generation); freezes.syncBeginn(generation); ips.syncBeginn(generation);
+                    }
+                    case 1 -> {
+                        if (offen != null) {
+                            mutes.syncBeginn(generation); banns.syncBeginn(generation);
+                            timeouts.syncBeginn(generation); freezes.syncBeginn(generation); ips.syncBeginn(generation);
+                        }
+                    }
+                    case 2 -> {
+                        long endeGeneration = zufall.nextBoolean() ? generation : naechsteGeneration + 100L;
+                        mutes.syncEnde(endeGeneration); banns.syncEnde(endeGeneration);
+                        timeouts.syncEnde(endeGeneration); freezes.syncEnde(endeGeneration); ips.syncEnde(endeGeneration);
+                        if (offen != null && endeGeneration == generation) {
+                            sichtbar = offen;
+                            offen = null;
+                            generation = 0L;
+                        }
+                    }
+                    case 3 -> {
+                        mutes.syncVerwerfen(); banns.syncVerwerfen();
+                        timeouts.syncVerwerfen(); freezes.syncVerwerfen(); ips.syncVerwerfen();
+                        offen = null;
+                        generation = 0L;
+                    }
+                    case 4, 5 -> {
+                        String scope = new String[]{"global", "lobby", "survival"}[zufall.nextInt(3)];
+                        long ende = jetzt + zufall.nextInt(2001) - 500L;
+                        String grund = "Stand-" + schritt;
+                        var eintrag = new ModellEintrag(uuid, scope, ende, grund);
+                        (offen == null ? sichtbar : offen).put(uuid + "|" + scope, eintrag);
+                        mutes.setze(new Protokoll.MuteEintrag(uuid, "Spieler", grund, "Mod", 1L, ende, scope));
+                        banns.setze(new Protokoll.BanEintrag(uuid, "Spieler", grund, "Mod", 1L, ende, scope));
+                        timeouts.setze(new Protokoll.TimeoutEintrag(uuid, "Spieler", grund, "Mod", 1L, ende, scope));
+                        freezes.setze(new Protokoll.FreezeEintrag(uuid, "Spieler", grund, "Mod", 1L, ende, scope));
+                        ips.setze(new Protokoll.IpMuteEintrag(ip, grund, "Mod", 1L, ende, scope));
+                    }
+                    case 6 -> {
+                        if (offen == null) {
+                            sichtbar.values().removeIf(e -> e.uuid().equals(uuid));
+                            mutes.entferne(List.of(uuid)); banns.entferne(List.of(uuid));
+                            timeouts.entferne(List.of(uuid)); freezes.entferne(List.of(uuid)); ips.entferne(List.of(ip));
+                        }
+                    }
+                    case 7 -> jetzt += zufall.nextInt(300);
+                    default -> throw new AssertionError();
+                }
+                for (long id = 1L; id <= 8L; id++) {
+                    var ziel = new UUID(0L, id);
+                    for (String server : List.of("lobby", "survival")) {
+                        ModellEintrag erwartet = sichtbar.get(ziel + "|global");
+                        if (erwartet == null || erwartet.ende() <= jetzt) {
+                            erwartet = sichtbar.get(ziel + "|" + server);
+                        }
+                        String grund = erwartet != null && erwartet.ende() > jetzt ? erwartet.grund() : "";
+                        String kontext = "seed=" + seed + ", Schritt=" + schritt + ", Ziel=" + id + ", Server=" + server;
+                        assertEquals(grund, mutes.findeAktiv(ziel, server, jetzt).map(Protokoll.MuteEintrag::grund).orElse(""), kontext);
+                        assertEquals(grund, banns.findeAktiv(ziel, server, jetzt).map(Protokoll.BanEintrag::grund).orElse(""), kontext);
+                        assertEquals(grund, timeouts.findeAktiv(ziel, server, jetzt).map(Protokoll.TimeoutEintrag::grund).orElse(""), kontext);
+                        assertEquals(grund, freezes.findeAktiv(ziel, server, jetzt).map(Protokoll.FreezeEintrag::grund).orElse(""), kontext);
+                        assertEquals(grund, ips.findeAktiv("10.0.0." + id, server, jetzt).map(Protokoll.IpMuteEintrag::grund).orElse(""), kontext);
+                    }
+                }
+            }
+        }
+    }
+
+
     private static Protokoll.BanEintrag ban(UUID uuid, String scope) {
         return new Protokoll.BanEintrag(uuid, "Steve", "Hack", "Admin",
                 System.currentTimeMillis(), Long.MAX_VALUE, scope);

@@ -101,4 +101,52 @@ class JarEmpfaengerTest {
         return HexFormat.of().formatHex(
                 MessageDigest.getInstance("SHA-256").digest(daten));
     }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"hash", "luecke", "doppelt", "abbruch", "version", "ziel"})
+    void ungueltigerTransferErhaeltBereitsBereitgestellteJar(String fehler) throws Exception {
+        byte[] alt = "vorherige-gepruefte-version".getBytes(StandardCharsets.UTF_8);
+        byte[] neu = new byte[5000];
+        new java.util.Random(731L).nextBytes(neu);
+        String version = "4.1.0";
+        String hash = sha256(neu);
+        var ziel = ordner.toPath().resolve(JarEmpfaenger.dateinameFuer("bridge", version));
+        if ("ziel".equals(fehler)) {
+            java.nio.file.Files.createDirectories(ziel);
+            java.nio.file.Files.write(ziel.resolve("vorher"), alt);
+        } else {
+            java.nio.file.Files.write(ziel, alt);
+        }
+        empfaenger.empfangeMeta(new Protokoll.UpdateMeta("bridge", version, neu.length, hash, 4096, 2));
+        byte[] erster = java.util.Arrays.copyOfRange(neu, 0, 4096);
+        if ("hash".equals(fehler)) {
+            erster[0] ^= 1;
+        }
+        empfaenger.empfangeBlock(new Protokoll.UpdateBlock("bridge", 0, erster));
+        if ("abbruch".equals(fehler)) {
+            empfaenger.abbrechen();
+        } else {
+            empfaenger.empfangeBlock(new Protokoll.UpdateBlock("bridge",
+                    "luecke".equals(fehler) ? 2 : "doppelt".equals(fehler) ? 0 : 1,
+                    java.util.Arrays.copyOfRange(neu, 4096, neu.length)));
+            empfaenger.empfangeFertig(new Protokoll.UpdateFertig("bridge",
+                    "version".equals(fehler) ? "alte-version" : version, hash, neu.length));
+        }
+        assertTrue(quittungen.stream().noneMatch(Protokoll.UpdateQuittung::erfolg));
+        if (!"abbruch".equals(fehler)) {
+            assertTrue(quittungen.stream().anyMatch(q -> !q.erfolg()));
+        }
+        assertArrayEquals(alt, java.nio.file.Files.readAllBytes("ziel".equals(fehler) ? ziel.resolve("vorher") : ziel));
+        assertFalse(java.nio.file.Files.exists(ziel.resolveSibling(ziel.getFileName() + ".part")));
+        if ("ziel".equals(fehler)) {
+            java.nio.file.Files.delete(ziel.resolve("vorher"));
+            java.nio.file.Files.delete(ziel);
+        }
+        empfaenger.empfangeMeta(new Protokoll.UpdateMeta("bridge", version, neu.length, hash, 4096, 2));
+        empfaenger.empfangeBlock(new Protokoll.UpdateBlock("bridge", 0, java.util.Arrays.copyOfRange(neu, 0, 4096)));
+        empfaenger.empfangeBlock(new Protokoll.UpdateBlock("bridge", 1, java.util.Arrays.copyOfRange(neu, 4096, neu.length)));
+        empfaenger.empfangeFertig(new Protokoll.UpdateFertig("bridge", version, hash, neu.length));
+        assertTrue(quittungen.getLast().erfolg());
+        assertArrayEquals(neu, java.nio.file.Files.readAllBytes(ziel));
+    }
 }

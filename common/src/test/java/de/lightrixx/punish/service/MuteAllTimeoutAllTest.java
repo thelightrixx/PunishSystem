@@ -188,4 +188,161 @@ class MuteAllTimeoutAllTest {
         org.mockito.Mockito.verify(timeoutRepo).timeoutAlleWennFrei(org.mockito.ArgumentMatchers.argThat(
                 java.util.Collection::isEmpty));
     }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void muteCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert) {
+        var uuid = UUID.randomUUID();
+        var scope = ServerScope.server("survival");
+        long jetzt = System.currentTimeMillis();
+        var alt = new MuteRecord(uuid, "Steve", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);
+        var neu = new MuteRecord(uuid, "Steve", "Test", "Mod", jetzt, jetzt + 60_000L, scope);
+        var repository = org.mockito.Mockito.spy(new MuteRepository(
+                mock(de.lightrixx.punish.storage.mysql.MysqlVerbindung.class),
+                mock(de.lightrixx.punish.storage.IoExecutor.class)));
+        repository.mutenWennFrei(alt);
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn(uuid, scope, alt::equals, neu);
+            }
+            return Optional.of(alt);
+        }).doCallRealMethod().when(repository).finden(uuid, scope);
+        var service = muteService(setupMit(false), repository);
+
+        int entfernt = service.bereinigeAbgelaufeneMitHistory("System");
+
+        assertEquals(verlaengert ? 0 : 1, entfernt);
+        assertEquals(verlaengert ? Optional.of(neu) : Optional.empty(), repository.finden(uuid, scope));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"false, false", "false, true", "true, false", "true, true"})
+    void timeoutCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert, boolean einzeln) {
+        var uuid = UUID.randomUUID();
+        var scope = ServerScope.server("survival");
+        long jetzt = System.currentTimeMillis();
+        var alt = new TimeoutRecord(uuid, "Steve", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);
+        var neu = new TimeoutRecord(uuid, "Steve", "Test", "Mod", jetzt, jetzt + 60_000L, scope);
+        var repository = org.mockito.Mockito.spy(new TimeoutRepository(
+                mock(de.lightrixx.punish.storage.mysql.MysqlVerbindung.class),
+                mock(de.lightrixx.punish.storage.IoExecutor.class)));
+        repository.timeoutVerhaengenWennFrei(alt);
+        if (einzeln) {
+            org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn(uuid, scope, alt::equals, neu);
+            }
+                return List.of(alt);
+            }).doCallRealMethod().when(repository).alleFuer(uuid);
+        } else {
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn(uuid, scope, alt::equals, neu);
+            }
+            return Optional.of(alt);
+        }).doCallRealMethod().when(repository).finden(uuid, scope);
+        }
+        var service = timeoutService(setupMit(false), repository);
+
+        int entfernt = einzeln ? service.bereinigeAbgelaufeneFuerUuid(uuid, "System")
+                : service.bereinigeAbgelaufeneMitHistory("System");
+
+        assertEquals(verlaengert ? 0 : 1, entfernt);
+        assertEquals(verlaengert ? Optional.of(neu) : Optional.empty(), repository.finden(uuid, scope));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void freezeCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert) {
+        var uuid = UUID.randomUUID();
+        var scope = ServerScope.server("survival");
+        long jetzt = System.currentTimeMillis();
+        var alt = new de.lightrixx.punish.model.FreezeRecord(uuid, "Steve", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);
+        var neu = new de.lightrixx.punish.model.FreezeRecord(uuid, "Steve", "Test", "Mod", jetzt, jetzt + 60_000L, scope);
+        var repository = org.mockito.Mockito.spy(new de.lightrixx.punish.storage.FreezeRepository(
+                mock(de.lightrixx.punish.storage.mysql.MysqlVerbindung.class),
+                mock(de.lightrixx.punish.storage.IoExecutor.class)));
+        repository.freezenWennFrei(alt);
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn(uuid, scope, alt::equals, neu);
+            }
+            return Optional.of(alt);
+        }).doCallRealMethod().when(repository).finden(uuid, scope);
+        var service = new FreezeService(repository, mock(HistoryService.class), mock(BroadcastService.class),
+                mock(LogWriter.class), mock(MessageService.class), mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                mock(ProtectionService.class), mock(SpielerVerzeichnis.class));
+
+        int entfernt = service.bereinigeAbgelaufeneMitHistory("System");
+
+        assertEquals(verlaengert ? 0 : 1, entfernt);
+        assertEquals(verlaengert ? Optional.of(neu) : Optional.empty(), repository.finden(uuid, scope));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void ipMuteCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert) {
+        var uuid = UUID.randomUUID();
+        var scope = ServerScope.server("survival");
+        long jetzt = System.currentTimeMillis();
+        var alt = new de.lightrixx.punish.model.IpMuteRecord("1.2.3.4", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);
+        var neu = new de.lightrixx.punish.model.IpMuteRecord("1.2.3.4", "Test", "Mod", jetzt, jetzt + 60_000L, scope);
+        var repository = org.mockito.Mockito.spy(new de.lightrixx.punish.storage.IpMuteRepository(
+                mock(de.lightrixx.punish.storage.mysql.MysqlVerbindung.class),
+                mock(de.lightrixx.punish.storage.IoExecutor.class)));
+        repository.mutenWennFrei(alt);
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn("1.2.3.4", scope, alt::equals, neu);
+            }
+            return Optional.of(alt);
+        }).doCallRealMethod().when(repository).finden("1.2.3.4", scope);
+        var service = new IpMuteService(repository, mock(HistoryService.class), mock(BroadcastService.class),
+                mock(LogWriter.class), mock(MessageService.class), mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                mock(ProtectionService.class), mock(SpielerVerzeichnis.class));
+
+        int entfernt = service.bereinigeAbgelaufeneMitHistory("System");
+
+        assertEquals(verlaengert ? 0 : 1, entfernt);
+        assertEquals(verlaengert ? Optional.of(neu) : Optional.empty(), repository.finden("1.2.3.4", scope));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"false, false", "false, true", "true, false", "true, true"})
+    void ipTimeoutCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert, boolean einzeln) {
+        var uuid = UUID.randomUUID();
+        var scope = ServerScope.server("survival");
+        long jetzt = System.currentTimeMillis();
+        var alt = new de.lightrixx.punish.model.IpTimeoutRecord("1.2.3.4", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);
+        var neu = new de.lightrixx.punish.model.IpTimeoutRecord("1.2.3.4", "Test", "Mod", jetzt, jetzt + 60_000L, scope);
+        var repository = org.mockito.Mockito.spy(new de.lightrixx.punish.storage.IpTimeoutRepository(
+                mock(de.lightrixx.punish.storage.mysql.MysqlVerbindung.class),
+                mock(de.lightrixx.punish.storage.IoExecutor.class)));
+        repository.timeoutVerhaengenWennFrei(alt);
+        if (einzeln) {
+            org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn("1.2.3.4", scope, alt::equals, neu);
+            }
+                return List.of(alt);
+            }).doCallRealMethod().when(repository).alleFuer("1.2.3.4");
+        } else {
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (verlaengert) {
+                repository.ersetzenWenn("1.2.3.4", scope, alt::equals, neu);
+            }
+            return Optional.of(alt);
+        }).doCallRealMethod().when(repository).finden("1.2.3.4", scope);
+        }
+        var service = new IpTimeoutService(repository, mock(de.lightrixx.punish.core.Konfiguration.class),
+                mock(HistoryService.class), mock(BroadcastService.class), mock(LogWriter.class),
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class), mock(ProtectionService.class),
+                mock(BanKickHelper.class), mock(SpielerVerzeichnis.class));
+
+        int entfernt = einzeln ? service.bereinigeAbgelaufeneFuerIp("1.2.3.4", "System")
+                : service.bereinigeAbgelaufeneMitHistory("System");
+
+        assertEquals(verlaengert ? 0 : 1, entfernt);
+        assertEquals(verlaengert ? Optional.of(neu) : Optional.empty(), repository.finden("1.2.3.4", scope));
+    }
 }

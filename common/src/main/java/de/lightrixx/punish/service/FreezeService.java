@@ -334,8 +334,9 @@ public final class FreezeService {
                 if (aktuell.isEmpty() || !aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
                     continue;
                 }
-                Optional<FreezeRecord> entfernt = freezeRepository.entfreezen(
-                        kandidat.spielerUuid(), kandidat.scope());
+                Optional<FreezeRecord> entfernt = freezeRepository.entfreezenWenn(
+                        kandidat.spielerUuid(), kandidat.scope(),
+                        f -> f.equals(aktuell.get()) && f.istAbgelaufen(System.currentTimeMillis()));
                 if (entfernt.isEmpty()) {
                     continue;
                 }

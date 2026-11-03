@@ -68,7 +68,7 @@ public final class UpdateVerteilung {
     }
 
     public void quittungEmpfangen(RegisteredServer server, Protokoll.UpdateQuittung quittung) {
-        if (quittung == null) {
+        if (server == null || quittung == null || !version.equals(quittung.version())) {
             return;
         }
         String name = server == null ? "?" : serverName(server);
@@ -97,22 +97,9 @@ public final class UpdateVerteilung {
             } catch (Exception e) {
                 variante = "";
             }
-            if (variante.isBlank()) {
-                pushBeide(server, kanonisch);
-            } else {
-                pushAn(server, kanonisch, variante);
-            }
+            pushAn(server, kanonisch, variante);
         }
         logger.info("Update-Push an alle Bridges angestoßen (Version {}).", version);
-    }
-
-    private void pushBeide(RegisteredServer server, String kanonisch) {
-        if (bridgeBytes != null) {
-            sendeVariante(server, kanonisch, "bridge", bridgeBytes, bridgeHash);
-        }
-        if (bridge121Bytes != null) {
-            sendeVariante(server, kanonisch, "bridge-1.21", bridge121Bytes, bridge121Hash);
-        }
     }
 
     public void pushAn(RegisteredServer server, String kanonisch, String variante) {
@@ -121,17 +108,20 @@ public final class UpdateVerteilung {
         }
         String name = kanonisch == null || kanonisch.isBlank() ? serverName(server) : kanonisch;
         if (variante == null || variante.isBlank()) {
-            pushBeide(server, name);
+            logger.debug("Update-Push an '{}' wartet auf die Bridge-Variante im HELLO.", name);
         } else {
             pushVarianteAn(server, variante);
         }
     }
 
-    public void pushVarianteAn(RegisteredServer server, String variante) {
+    public synchronized void pushVarianteAn(RegisteredServer server, String variante) {
         if (server == null || !bereit() || variante == null) {
             return;
         }
         String v = variante.trim().toLowerCase(java.util.Locale.ROOT);
+        if (Boolean.TRUE.equals(quittungen.get(serverName(server)))) {
+            return;
+        }
         if ("bridge".equals(v) && bridgeBytes != null) {
             sendeVariante(server, serverName(server), v, bridgeBytes, bridgeHash);
         } else if ("bridge-1.21".equals(v) && bridge121Bytes != null) {
@@ -140,7 +130,7 @@ public final class UpdateVerteilung {
     }
 
     private void sendeVariante(RegisteredServer server, String name, String variante, byte[] daten, String hash) {
-        String schluessel = name + "|" + variante;
+        String schluessel = name;
         if (!laufend.add(schluessel)) {
             logger.debug("Update-Push an '{}' ({}) läuft bereits.", name, variante);
             return;

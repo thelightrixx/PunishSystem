@@ -94,6 +94,7 @@ public final class HangarUpdateService {
             for (int sprung = 0; sprung <= MAX_UMLEITUNGEN; sprung++) {
                 var request = java.net.http.HttpRequest.newBuilder(ziel)
                         .timeout(Duration.ofMinutes(10))
+                        .header("User-Agent", "PunishSystem-Update (https://github.com/thelightrixx/PunishSystem)")
                         .GET()
                         .build();
                 var response = client.send(request,
@@ -278,7 +279,8 @@ public final class HangarUpdateService {
 
     static final String ERLAUBTER_DOWNLOAD_HOST = "hangar.papermc.io";
     static final java.util.Set<String> ERLAUBTE_DOWNLOAD_HOSTS =
-            java.util.Set.of("hangar.papermc.io", "hangarcdn.papermc.io");
+            java.util.Set.of("hangar.papermc.io", "hangarcdn.papermc.io", "api.github.com",
+                    "github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com");
 
     static void pruefeHttpsNachRedirect(java.net.URI ziel) {
         if (ziel == null) {

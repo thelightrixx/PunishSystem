@@ -247,7 +247,8 @@ public final class MysqlSchema {
                     + " SELECT letzte_ip, uuid, name, zuletzt_gesehen FROM " + T_SPIELER
                     + " WHERE letzte_ip IS NOT NULL AND letzte_ip <> '' AND letzte_ip <> 'unbekannt'"
                     + " ON DUPLICATE KEY UPDATE name = VALUES(name),"
-                    + " zuletzt_gesehen = GREATEST(zuletzt_gesehen, VALUES(zuletzt_gesehen))");
+                    + " zuletzt_gesehen = GREATEST(" + T_IP_HISTORIE
+                    + ".zuletzt_gesehen, VALUES(zuletzt_gesehen))");
             LOG.info("IP-Historie aus bestehenden Spieler-Cache-Einträgen nachgefüllt ({} Zeilen aktualisiert).",
                     zeilen);
         }

@@ -685,7 +685,8 @@ public final class BridgeEnforcementListener implements Listener {
         }
         if (eingefroren) {
             try {
-                event.getVehicle().teleport(event.getFrom());
+                event.getVehicle().teleport(event.getFrom(),
+                        io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
             } catch (Exception e) {
                 LOG.debug("Freeze-Fahrzeug konnte nicht zurückgesetzt werden.", e);
             }
@@ -892,10 +893,10 @@ public final class BridgeEnforcementListener implements Listener {
         String vorlage = config.nachricht(de.lightrixx.punish.core.MessageKeys.FREEZE_BLOCKIERT);
         String ersetzt = MiniMessageUtil.ersetzen(vorlage, platzhalter);
         try {
-            spieler.sendMessage(mitPraefix(ersetzt));
+            sendeMitLeerzeilen(spieler, mitPraefix(ersetzt));
         } catch (Exception e) {
             try {
-                spieler.sendMessage(Component.text(ersetzt));
+                sendeMitLeerzeilen(spieler, Component.text(ersetzt));
             } catch (Exception fallbackFehler) {
                 LOG.debug("Fallback-Nachricht konnte nicht gesendet werden.", fallbackFehler);
             }
@@ -1034,10 +1035,10 @@ public final class BridgeEnforcementListener implements Listener {
         String vorlage = config.nachricht(de.lightrixx.punish.core.MessageKeys.MUTE_BLOCKIERT);
         String ersetzt = MiniMessageUtil.ersetzen(vorlage, platzhalter);
         try {
-            spieler.sendMessage(mitPraefix(ersetzt));
+            sendeMitLeerzeilen(spieler, mitPraefix(ersetzt));
         } catch (Exception e) {
             try {
-                spieler.sendMessage(Component.text(ersetzt));
+                sendeMitLeerzeilen(spieler, Component.text(ersetzt));
             } catch (Exception fallbackFehler) {
                 LOG.debug("Fallback-Nachricht konnte nicht gesendet werden.", fallbackFehler);
             }
@@ -1052,14 +1053,20 @@ public final class BridgeEnforcementListener implements Listener {
         String vorlage = config.nachricht(de.lightrixx.punish.core.MessageKeys.MUTE_BLOCKIERT);
         String ersetzt = MiniMessageUtil.ersetzen(vorlage, platzhalter);
         try {
-            spieler.sendMessage(mitPraefix(ersetzt));
+            sendeMitLeerzeilen(spieler, mitPraefix(ersetzt));
         } catch (Exception e) {
             try {
-                spieler.sendMessage(Component.text(ersetzt));
+                sendeMitLeerzeilen(spieler, Component.text(ersetzt));
             } catch (Exception fallbackFehler) {
                 LOG.debug("Fallback-Nachricht konnte nicht gesendet werden.", fallbackFehler);
             }
         }
+    }
+
+    private void sendeMitLeerzeilen(Player spieler, Component nachricht) {
+        spieler.sendMessage(Component.empty());
+        spieler.sendMessage(nachricht);
+        spieler.sendMessage(Component.empty());
     }
 
     private String extrahiereBefehl(String nachricht) {

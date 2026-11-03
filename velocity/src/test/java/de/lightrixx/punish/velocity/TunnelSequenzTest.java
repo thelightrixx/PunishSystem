@@ -37,6 +37,8 @@ class TunnelSequenzTest {
         ServerInfo info = mock(ServerInfo.class);
         when(server.getServerInfo()).thenReturn(info);
         when(info.getName()).thenReturn(name);
+        when(server.sendPluginMessage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(byte[].class)))
+                .thenReturn(true);
         return server;
     }
 
@@ -164,5 +166,80 @@ class TunnelSequenzTest {
                 Map.of("lobby", "eins", "survival", "zwei")).isEmpty());
         assertTrue(BrueckenKanal.doppelteSecretNamen(Map.of("lobby", " ")).isEmpty());
         assertTrue(BrueckenKanal.doppelteSecretNamen(null).isEmpty());
+    }
+
+    @Test
+    void helloAckEnthaeltDieAngefragteSession() throws Exception {
+        var kanal = kanal();
+        var server = server("lobby");
+        String session = java.util.UUID.randomUUID().toString();
+        kanal.beantworteHello(server, "lobby", Protokoll.VERSION, "4.0", "bridge", session);
+        var fang = org.mockito.ArgumentCaptor.forClass(byte[].class);
+        org.mockito.Mockito.verify(server, org.mockito.Mockito.atLeastOnce())
+                .sendPluginMessage(org.mockito.ArgumentMatchers.any(), fang.capture());
+        var schluessel = TunnelSignatur.schluesselAus(SECRET, TunnelSignatur.Richtung.PROXY_ZU_BRIDGE);
+        var ack = fang.getAllValues().stream().map(roh -> {
+            try {
+                return Protokoll.paket(Protokoll.entrahmeSequenz(
+                        TunnelSignatur.pruefenUndAbziehen(roh, schluessel)).paket());
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }
+        }).filter(p -> p.typ() == Protokoll.HELLO_ACK).findFirst().orElseThrow();
+        assertEquals(session, Protokoll.leseHelloAckMitName(ack.nutzdaten()).sessionId());
+    }
+
+    @Test
+    void bridgeNeustartUmgehtDieVollSyncDrosselung() throws Exception {
+        var kanal = kanal();
+        var server = server("lobby");
+        long jetzt = System.currentTimeMillis();
+        assertNotNull(kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
+                Protokoll.hello("lobby", "4.0", "bridge"), 1L)));
+        kanal.merkeVollSync("lobby", jetzt);
+        assertNotNull(kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
+                Protokoll.hello("lobby", "4.0", "bridge"), 5L)));
+        org.junit.jupiter.api.Assertions.assertFalse(kanal.vollSyncFaellig("lobby", jetzt + 1000L),
+                "Ein normaler HELLO-Refresh bleibt leichtgewichtig");
+        assertNotNull(kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
+                Protokoll.hello("lobby", "4.0", "bridge"), 1L)));
+        assertTrue(kanal.vollSyncFaellig("lobby", jetzt + 2000L),
+                "Nach Bridge-Neustart sind die Caches leer und brauchen sofort einen Voll-Sync");
+    }
+    @Test
+    void parallelerVersandHaeltDieSequenzreihenfolge() throws Exception {
+        var kanal = kanal();
+        var server = server("lobby");
+        kanal.beantworteHello(server, "lobby", Protokoll.VERSION, "1.0", "bridge");
+        var ersterVersand = new java.util.concurrent.CountDownLatch(1);
+        var zweiterVersand = new java.util.concurrent.CountDownLatch(1);
+        var nummer = new java.util.concurrent.atomic.AtomicInteger();
+        var reihenfolge = new java.util.concurrent.CopyOnWriteArrayList<Long>();
+        byte[] schluessel = TunnelSignatur.schluesselAus(SECRET, TunnelSignatur.Richtung.PROXY_ZU_BRIDGE);
+        when(server.sendPluginMessage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(byte[].class)))
+                .thenAnswer(inv -> {
+                    int nr = nummer.incrementAndGet();
+                    if (nr == 1) {
+                        ersterVersand.countDown();
+                        zweiterVersand.await(200, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    }
+                    byte[] klar = TunnelSignatur.pruefenUndAbziehen(inv.getArgument(1), schluessel);
+                    reihenfolge.add(Protokoll.entrahmeSequenz(klar).sequenz());
+                    if (nr == 2) {
+                        zweiterVersand.countDown();
+                    }
+                    return true;
+                });
+        byte[] paket = Protokoll.configReload();
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var erster = pool.submit(() -> kanal.sendeAn(server, paket));
+            assertTrue(ersterVersand.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            var zweiter = pool.submit(() -> kanal.sendeAn(server, paket));
+            erster.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            zweiter.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        assertEquals(2, reihenfolge.size());
+        assertTrue(reihenfolge.get(0) < reihenfolge.get(1),
+                "Parallelversand darf eine ältere Sequenz nicht hinter einer neueren zustellen: " + reihenfolge);
     }
 }

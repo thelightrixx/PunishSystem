@@ -15,6 +15,7 @@ public final class GuiDatenDienst {
 
     private static final long TIMEOUT_MILLIS = 4000L;
     private static final long KATALOG_TTL_MILLIS = 5L * 60L * 1000L;
+    private static final ConcurrentHashMap<UUID, java.util.Set<String>> proxyRechte = new ConcurrentHashMap<>();
 
     private final KanalClient kanal;
     private final BridgeKonfiguration config;
@@ -47,6 +48,29 @@ public final class GuiDatenDienst {
         long id = kanal.naechsteGuiId();
         var anfrage = new Protokoll.GuiAnfrage(id, alsUuid, typ, ziel, filter, seite, extra);
         return kanal.frageGuiAn(anfrage, TIMEOUT_MILLIS);
+    }
+
+    java.util.Set<String> ladeRechte(UUID uuid) {
+        var anfrage = new Protokoll.GuiAnfrage(kanal.naechsteGuiId(), uuid,
+                Protokoll.GUI_RECHTE, "", "", 1, "");
+        var antwort = kanal.frageGuiAn(anfrage, TIMEOUT_MILLIS);
+        if (antwort == null || !antwort.erfolg()) {
+            throw new IllegalStateException("GUI-Rechte konnten nicht vom Proxy bestätigt werden.");
+        }
+        return antwort.eintraege().stream().filter(z -> "RECHT".equals(z.typ()))
+                .map(Protokoll.GuiZeile::titel).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    static void setzeRechte(UUID uuid, java.util.Set<String> rechte) {
+        proxyRechte.put(uuid, java.util.Set.copyOf(rechte));
+    }
+
+    static boolean hatRecht(Player spieler, String knoten) {
+        return spieler != null && proxyRechte.getOrDefault(spieler.getUniqueId(), java.util.Set.of()).contains(knoten);
+    }
+
+    static void verwerfeRechte(UUID uuid) {
+        proxyRechte.remove(uuid);
     }
 
     public Katalog katalog(Player spieler) {

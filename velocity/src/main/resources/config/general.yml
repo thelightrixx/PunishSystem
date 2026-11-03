@@ -302,10 +302,9 @@ bann-unban-antrag:
   text: "<green>Unban beantragen"
 
 # --- Update (/punish-update, Proxy-only) ---
-# Prüft Hangar auf neue Versionen, lädt sie und verteilt Backend-JARs per Kanal.
-# hangar-author/slug: Hangar-Projekt (z. B. author: lightrixx, slug: punishsystem).
-#   Ohne beide Werte meldet /punish-update einen Konfigurationsfehler.
-# channel: Release (stabil), Beta oder Snapshot – passend zum Hangar-Channel.
+# Prüft GitHub Releases, lädt alle drei JARs mit SHA-256-Prüfung und verteilt Backend-JARs per Kanal.
+# github-repository: öffentliches GitHub-Repository im Format Besitzer/Repository.
+# channel: Release (nur stabile Releases), Beta oder Snapshot (auch Vorabversionen).
 # auto-check-beim-start: meldet beim Start im Log, falls ein Update verfügbar ist.
 # intervall-minuten: steuert den periodischen Hinweis-Check im Proxy (kein Auto-Download).
 # bestaetigung-fuer-apply: true = /punish-update apply verlangt ... apply confirm.
@@ -314,8 +313,7 @@ bann-unban-antrag:
 #   Proxy: plugins/update-pending/.
 #   Bridges legen die Datei unter plugins/PunishSystemBridge/update-pending/ ab.
 update:
-  hangar-author: "thelightrixx"
-  hangar-slug: "PunishSystem"
+  github-repository: "thelightrixx/PunishSystem"
   channel: "Release"
   auto-check-beim-start: true
   intervall-minuten: 60

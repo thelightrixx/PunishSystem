@@ -21,7 +21,8 @@ class KanalSequenzResetTest {
         Server server = mock(Server.class);
         when(plugin.getServer()).thenReturn(server);
         when(server.isPrimaryThread()).thenReturn(true);
-        when(server.getOnlinePlayers()).thenReturn(List.of());
+        var spieler = mock(org.bukkit.entity.Player.class);
+        org.mockito.Mockito.doReturn(List.of(spieler)).when(server).getOnlinePlayers();
 
         KanalClient client = new KanalClient(plugin, new MuteCache());
         client.setTunnelSecret("0123456789abcdef0123456789abcdef");
@@ -31,7 +32,7 @@ class KanalSequenzResetTest {
         client.sendeHello("lobby");
         long zweite = sendeSequenz(client);
 
-        assertEquals(erste + 1, zweite,
+        assertEquals(erste + 4, zweite,
                 "HELLO darf den Zähler nicht auf 0 zurücksetzen, sonst vergeben HELLO und "
                         + "ein paralleler Sender dieselbe Sequenz und der Proxy verwirft ein Paket.");
     }

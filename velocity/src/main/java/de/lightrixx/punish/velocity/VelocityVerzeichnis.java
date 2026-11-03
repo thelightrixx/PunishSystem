@@ -4,7 +4,6 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import de.lightrixx.punish.core.OfflineVerzeichnis;
 import de.lightrixx.punish.core.OnlineSpieler;
-import de.lightrixx.punish.core.RangBuendel;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.CachedPlayer;
 import de.lightrixx.punish.storage.PlayerCache;
@@ -118,7 +117,7 @@ public final class VelocityVerzeichnis implements SpielerVerzeichnis, OfflineVer
         try {
             return proxy.getPlayer(uuid).map(spieler -> {
                 try {
-                    return RangBuendel.gewaehrt(spieler::hasPermission, knoten);
+                    return VelocitySender.hatRecht(spieler, knoten);
                 } catch (Exception e) {
                     return false;
                 }

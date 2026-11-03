@@ -13,6 +13,29 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SnakeYamlSpeicherV4Test {
 
+    @Test
+    @org.junit.jupiter.api.condition.EnabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    void gesperrtesZielLaesstLetztenStandLesbarUndMeldetSchreibfehler() throws Exception {
+        var speicher = new SnakeYamlSpeicher();
+        var datei = new File(ordner, "bans.yml");
+        speicher.speichern(Map.of("stand", "alt"), datei);
+        var pfad = datei.toPath();
+        var original = Files.readAllBytes(pfad);
+        try (var sperre = java.nio.channels.FileChannel.open(pfad,
+                java.nio.file.StandardOpenOption.READ, java.nio.file.StandardOpenOption.WRITE,
+                com.sun.nio.file.ExtendedOpenOption.NOSHARE_DELETE);
+             var lock = sperre.lock()) {
+            assertThrows(IllegalStateException.class, () -> speicher.speichern(Map.of("stand", "neu"), datei));
+        }
+        assertArrayEquals(original, Files.readAllBytes(pfad));
+        assertEquals("alt", speicher.laden(datei).get("stand"));
+        try (var dateien = Files.list(ordner.toPath())) {
+            assertTrue(dateien.noneMatch(p -> p.getFileName().toString().endsWith(".tmp")));
+        }
+        speicher.speichern(Map.of("stand", "neu"), datei);
+        assertEquals("neu", speicher.laden(datei).get("stand"));
+    }
+
     @TempDir
     File ordner;
 

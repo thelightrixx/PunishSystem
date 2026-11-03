@@ -2,7 +2,6 @@ package de.lightrixx.punish.bridge.gui;
 
 import de.lightrixx.punish.bridge.BridgeKonfiguration;
 import de.lightrixx.punish.bridge.KanalClient;
-import de.lightrixx.punish.core.RangBuendel;
 import de.lightrixx.punish.net.Protokoll;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -34,6 +33,7 @@ public final class GuiManager {
     private final Map<UUID, Long> sitzungZeit = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> listenSeiten = new ConcurrentHashMap<>();
     private final Map<UUID, List<String>> dossierAktionen = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> rechteAnfragen = new ConcurrentHashMap<>();
     private final Map<UUID, Long> reportIds = new ConcurrentHashMap<>();
     private static final long SITZUNG_TTL_MILLIS = 60L * 60L * 1000L;
     private static final long EINGABE_TTL_MILLIS = 60L * 1000L;
@@ -83,11 +83,41 @@ public final class GuiManager {
         listenSeiten.remove(uuid);
         dossierAktionen.remove(uuid);
         reportIds.remove(uuid);
+        rechteAnfragen.remove(uuid);
+        GuiDatenDienst.verwerfeRechte(uuid);
     }
 
     public boolean darfOeffnen(Player spieler) {
-        return spieler != null
-                && RangBuendel.gewaehrt(spieler::hasPermission, "punish.gui");
+        return GuiDatenDienst.hatRecht(spieler, "punish.gui");
+    }
+
+    public void pruefeRechteUndOeffne(Player spieler, Runnable oeffnen) {
+        UUID uuid = spieler.getUniqueId();
+        long anfrage = kanal.naechsteGuiId();
+        if (rechteAnfragen.putIfAbsent(uuid, anfrage) != null) {
+            return;
+        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            java.util.Set<String> rechte;
+            try {
+                rechte = daten.ladeRechte(uuid);
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(GuiManager.class).debug("GUI-Rechteabfrage fehlgeschlagen.", e);
+                rechte = java.util.Set.of();
+            }
+            var bestaetigteRechte = rechte;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (!rechteAnfragen.remove(uuid, anfrage) || !spieler.isOnline()) {
+                    return;
+                }
+                GuiDatenDienst.setzeRechte(uuid, bestaetigteRechte);
+                if (!darfOeffnen(spieler)) {
+                    spieler.sendMessage(prefixHinweis("Keine GUI-Berechtigung vom Proxy bestätigt.", NamedTextColor.RED));
+                    return;
+                }
+                oeffnen.run();
+            });
+        });
     }
 
     public void oeffneHaupt(Player spieler) {
@@ -235,14 +265,14 @@ public final class GuiManager {
         if (spieler == null) {
             return false;
         }
-        return RangBuendel.gewaehrt(spieler::hasPermission, "punish.allow-silent-syntax");
+        return GuiDatenDienst.hatRecht(spieler, "punish.allow-silent-syntax");
     }
 
     public static boolean darfAlts(Player spieler) {
         if (spieler == null) {
             return false;
         }
-        return RangBuendel.gewaehrt(spieler::hasPermission, "punish.alts");
+        return GuiDatenDienst.hatRecht(spieler, "punish.alts");
     }
 
     public void oeffneStatus(Player spieler, int seite) {
@@ -378,7 +408,7 @@ public final class GuiManager {
     private boolean verweigertOhneGuiRecht(Player spieler) {
         boolean darf;
         try {
-            darf = spieler != null && RangBuendel.gewaehrt(spieler::hasPermission, "punish.gui");
+            darf = darfOeffnen(spieler);
         } catch (Exception e) {
             darf = false;
         }
@@ -523,7 +553,7 @@ public final class GuiManager {
             return true;
         }
         var aktion = alle[index];
-        if (!RangBuendel.gewaehrt(spieler::hasPermission, aktion.permission())) {
+        if (!GuiDatenDienst.hatRecht(spieler, aktion.permission())) {
             spieler.sendMessage(prefixHinweis(
                     "Dazu fehlt dir das Recht " + aktion.permission() + ".", NamedTextColor.RED));
             return true;
@@ -697,7 +727,7 @@ public final class GuiManager {
             }
             var pruefAktion = sitzung.aktion();
             if (pruefAktion != null
-                    && !RangBuendel.gewaehrt(spieler::hasPermission, pruefAktion.permission())) {
+                    && !GuiDatenDienst.hatRecht(spieler, pruefAktion.permission())) {
                 spieler.sendMessage(prefixHinweis(
                         "Dazu fehlt dir das Recht " + pruefAktion.permission() + ".", NamedTextColor.RED));
                 return true;
@@ -826,7 +856,7 @@ public final class GuiManager {
         if (ziel == null) {
             return;
         }
-        if (!RangBuendel.gewaehrt(spieler::hasPermission, ziel.permission())) {
+        if (!GuiDatenDienst.hatRecht(spieler, ziel.permission())) {
             spieler.sendMessage(prefixHinweis(
                     "Dazu fehlt dir das Recht " + ziel.permission() + ".", NamedTextColor.RED));
             return;

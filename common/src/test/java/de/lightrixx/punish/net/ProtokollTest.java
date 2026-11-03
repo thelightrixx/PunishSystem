@@ -70,6 +70,20 @@ class ProtokollTest {
     }
 
     @Test
+    void helloAckBestaetigtDieHelloSession() throws Exception {
+        String session = UUID.randomUUID().toString();
+        byte[] paket = Protokoll.helloAck(Protokoll.VERSION, "Lobby", "4.0", session);
+        var ack = Protokoll.leseHelloAckMitName(Protokoll.paket(paket).nutzdaten());
+        assertEquals(session, ack.sessionId());
+        byte[] alt = Protokoll.nachricht(Protokoll.HELLO_ACK, out -> {
+            out.writeInt(Protokoll.VERSION);
+            out.writeUTF("Lobby");
+            out.writeUTF("4.0");
+        });
+        assertEquals("", Protokoll.leseHelloAckMitName(Protokoll.paket(alt).nutzdaten()).sessionId());
+    }
+
+    @Test
     void helloAckAltOhnePluginVersionBleibtLesbar() throws Exception {
         byte[] paket = Protokoll.nachricht(Protokoll.HELLO_ACK, out -> {
             out.writeInt(Protokoll.VERSION);

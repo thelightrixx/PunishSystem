@@ -13,6 +13,34 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class OnnxToxicityServiceTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"14,29,false", "14,39,false", "14,40,true", "14,51,true", "15,0,true"})
+    void windowsRuntimeWirdVorDemNativenStartGeprueft(int haupt, int neben, boolean erlaubt,
+            @org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner) throws Exception {
+        var datei = ordner.resolve("msvcp140.dll");
+        var daten = java.nio.ByteBuffer.allocate(80).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        daten.putInt(8, 0xFEEF04BD);
+        daten.putInt(12, 0x00010000);
+        daten.putInt(16, (haupt << 16) | neben);
+        Files.write(datei, daten.array());
+        if (erlaubt) {
+            assertDoesNotThrow(() -> OnnxToxicityService.pruefeWindowsRuntime(datei));
+        } else {
+            var fehler = assertThrows(de.lightrixx.punish.chatfilter.ChatfilterAusfall.class,
+                    () -> OnnxToxicityService.pruefeWindowsRuntime(datei));
+            assertTrue(fehler.getMessage().contains("14.40"));
+        }
+    }
+
+    @Test
+    void unlesbareRuntimeWirdNichtNativGestartet(@org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner)
+            throws Exception {
+        var datei = ordner.resolve("msvcp140.dll");
+        Files.writeString(datei, "keine Versionsressource");
+        assertThrows(de.lightrixx.punish.chatfilter.ChatfilterAusfall.class,
+                () -> OnnxToxicityService.pruefeWindowsRuntime(datei));
+    }
+
     private static File modellDatei() {
         String pfad = System.getenv("PUNISH_CHATFILTER_MODELL");
         assumeTrue(pfad != null && !pfad.isBlank(), "Kein Modellpfad gesetzt (PUNISH_CHATFILTER_MODELL).");

@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,5 +25,22 @@ class KanalHelloTest {
         when(server.getOnlinePlayers()).thenReturn(List.of());
         KanalClient client = new KanalClient(plugin, new MuteCache());
         assertDoesNotThrow(() -> client.sendeHello("lobby"));
+    }
+
+    @Test
+    void nurAuthentifiziertesHelloAckBestaetigtProxyKontakt() throws Exception {
+        var client = new KanalClient(mock(Plugin.class), new MuteCache());
+        client.setTunnelSecret("test-bridge-secret");
+        byte[] ack = de.lightrixx.punish.net.Protokoll.helloAck(
+                de.lightrixx.punish.net.Protokoll.VERSION, "lobby", "4.0");
+        client.onPluginMessageReceived(de.lightrixx.punish.net.Protokoll.KANAL, (org.bukkit.entity.Player) null, ack);
+        assertEquals(0L, client.letzteProxyBestaetigungMillis());
+        byte[] signiert = de.lightrixx.punish.net.TunnelSignatur.signieren(
+                de.lightrixx.punish.net.Protokoll.rahmeMitSequenz(ack, 1L),
+                de.lightrixx.punish.net.TunnelSignatur.schluesselAus("test-bridge-secret",
+                        de.lightrixx.punish.net.TunnelSignatur.Richtung.PROXY_ZU_BRIDGE));
+        long vorher = System.currentTimeMillis();
+        client.onPluginMessageReceived(de.lightrixx.punish.net.Protokoll.KANAL, (org.bukkit.entity.Player) null, signiert);
+        assertTrue(client.letzteProxyBestaetigungMillis() >= vorher);
     }
 }

@@ -62,11 +62,11 @@ public final class VerpassteBroadcastsRepository {
             throw new IllegalArgumentException("Der Broadcast-Typ darf nicht leer sein.");
         }
         String sichererText = text == null ? "" : text;
-        long id = zaehler.incrementAndGet();
-        long jetzt = System.currentTimeMillis();
-        VerpassteNachricht eintrag = new VerpassteNachricht(id, typ.trim(), sichererText, jetzt);
+        VerpassteNachricht eintrag;
         StoreLock.LOCK.writeLock().lock();
         try {
+            long id = zaehler.incrementAndGet();
+            eintrag = new VerpassteNachricht(id, typ.trim(), sichererText, System.currentTimeMillis());
             eintraege.put(id, eintrag);
         } finally {
             StoreLock.LOCK.writeLock().unlock();

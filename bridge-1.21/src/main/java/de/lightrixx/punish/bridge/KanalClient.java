@@ -29,6 +29,8 @@ public final class KanalClient implements PluginMessageListener {
             new java.util.concurrent.ConcurrentHashMap<>();
     private final java.security.SecureRandom zufall = new java.security.SecureRandom();
     private volatile int proxyVersion = -1;
+    private volatile long letzteProxyBestaetigungMillis;
+    private String offeneHelloSession = "";
     private volatile String proxyPluginVersion = "";
     private volatile String pluginVersion = "";
     private volatile String gemeldeteProxyPluginVersion;
@@ -122,6 +124,10 @@ public final class KanalClient implements PluginMessageListener {
 
     public int proxyVersion() {
         return proxyVersion;
+    }
+
+    public long letzteProxyBestaetigungMillis() {
+        return letzteProxyBestaetigungMillis;
     }
 
     public String proxyPluginVersion() {
@@ -479,22 +485,9 @@ public final class KanalClient implements PluginMessageListener {
             throw new IllegalStateException("Tunnel-Versand ohne Secret blockiert "
                     + "(netzwerk.tunnel-secret fehlt).");
         }
-        byte[] versand = paket;
-        try {
-            long seq = sendeSeq.incrementAndGet();
-            if (seq <= 0) {
-                sendeSeq.set(1L);
-                seq = 1L;
-            }
-            versand = Protokoll.rahmeMitSequenz(paket, seq);
-            versand = de.lightrixx.punish.net.TunnelSignatur.signieren(versand, schluessel);
-        } catch (Exception e) {
-            LOG.warn("Tunnel-Paket konnte nicht signiert werden (nicht gesendet).", e);
-            throw new IllegalStateException("Tunnel-Paket konnte nicht signiert werden.", e);
-        }
         try {
             if (!plugin.getServer().isPrimaryThread()) {
-                final byte[] versandFinal = versand;
+                final byte[] versandFinal = paket;
                 final java.util.concurrent.CountDownLatch latch =
                         new java.util.concurrent.CountDownLatch(1);
                 final java.util.concurrent.atomic.AtomicReference<Throwable> fehler =
@@ -538,7 +531,7 @@ public final class KanalClient implements PluginMessageListener {
         } catch (Exception e) {
             LOG.debug("Main-Thread-Check fehlgeschlagen, versuche Direktversand.", e);
         }
-        sendeAnProxySync(versand);
+        sendeAnProxySync(paket);
     }
 
     private void sendeAnProxySync(byte[] paket) {
@@ -556,7 +549,22 @@ public final class KanalClient implements PluginMessageListener {
         if (traeger == null) {
             throw new IllegalStateException("Kein Online-Spieler als Nachrichten-Träger.");
         }
-        traeger.sendPluginMessage(plugin, Protokoll.KANAL, paket);
+        byte[] versand;
+        try {
+            if ((paket[0] & 0xFF) == Protokoll.HELLO) {
+                offeneHelloSession = Protokoll.leseHello(Protokoll.paket(paket).nutzdaten()).sessionId();
+            }
+            long seq = sendeSeq.incrementAndGet();
+            if (seq <= 0) {
+                sendeSeq.set(1L);
+                seq = 1L;
+            }
+            versand = Protokoll.rahmeMitSequenz(paket, seq);
+            versand = de.lightrixx.punish.net.TunnelSignatur.signieren(versand, bridgeZuProxySchluessel);
+        } catch (Exception e) {
+            throw new IllegalStateException("Tunnel-Paket konnte nicht signiert werden.", e);
+        }
+        traeger.sendPluginMessage(plugin, Protokoll.KANAL, versand);
     }
 
     @Override
@@ -631,6 +639,7 @@ public final class KanalClient implements PluginMessageListener {
                         return;
                     }
                     proxyVersion = version;
+                    letzteProxyBestaetigungMillis = System.currentTimeMillis();
                     proxyPluginVersion = ack.proxyPluginVersion() == null ? "" : ack.proxyPluginVersion().trim();
                     vergleichePluginVersion();
                     LOG.debug("Proxy-Protokoll v{} bestätigt.", version);
@@ -942,6 +951,15 @@ public final class KanalClient implements PluginMessageListener {
             LOG.warn("Tunnel-Nachricht ohne Sequenzrahmen verworfen (Protokoll v{} verlangt Sequenz).",
                     Protokoll.VERSION);
             return null;
+        }
+        if (rahmen.sequenz() > 0 && rahmen.paket().length > 0
+                && (rahmen.paket()[0] & 0xFF) == Protokoll.HELLO_ACK) {
+            var ack = Protokoll.leseHelloAckMitName(Protokoll.paket(rahmen.paket()).nutzdaten());
+            if (!offeneHelloSession.isEmpty() && offeneHelloSession.equals(ack.sessionId())
+                    && ack.proxyVersion() >= Protokoll.MIN_VERSION && ack.proxyVersion() <= Protokoll.VERSION) {
+                offeneHelloSession = "";
+                empfangsPruefer.zuruecksetzen();
+            }
         }
         if (empfangsPruefer.akzeptiere(rahmen.sequenz())) {
             return rahmen.paket();

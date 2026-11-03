@@ -40,14 +40,7 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
 
     @Override
     public boolean darfSehen(CommandSender sender) {
-        if (!(sender instanceof Player spieler)) {
-            return false;
-        }
-        try {
-            return manager.darfOeffnen(spieler);
-        } catch (Exception e) {
-            return false;
-        }
+        return sender instanceof Player;
     }
 
     @Override
@@ -82,10 +75,6 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
             sender.sendMessage(prefixHinweis("Dieser Befehl kann nur von einem Spieler ausgeführt werden.", NamedTextColor.RED));
             return true;
         }
-        if (!manager.darfOeffnen(spieler)) {
-            spieler.sendMessage(prefixHinweis("Dazu hast du keine Berechtigung.", NamedTextColor.RED));
-            return true;
-        }
         fuehreAus(sender, args);
         return true;
     }
@@ -103,10 +92,10 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
                         NamedTextColor.RED));
                 return;
             }
-            manager.oeffneDossier(spieler, startZiel, 1);
+            manager.pruefeRechteUndOeffne(spieler, () -> manager.oeffneDossier(spieler, startZiel, 1));
             return;
         }
-        manager.starteNeu(spieler, startZiel);
+        manager.pruefeRechteUndOeffne(spieler, () -> manager.starteNeu(spieler, startZiel));
     }
 
     @Override

@@ -20,10 +20,11 @@ class ArtefaktZuordnungTest {
     }
 
     @Test
-    void erstesPaperBridgeZweitesBridge121() {
+    void bridgeVarianteWirdExplizitUndUnabhaengigVonDerReihenfolgeZugeordnet() {
         var zuordnung = new VelocityUpdateBefehl.ArtefaktZuordnung();
-        assertEquals("bridge", zuordnung.nimm(artefakt("PAPER", "PunishSystem-4.1-paper.jar")));
-        assertEquals("bridge-1.21", zuordnung.nimm(artefakt("paper", "PunishSystem-4.1-paper.jar")));
+        assertEquals("bridge-1.21", zuordnung.nimm(artefakt("BRIDGE-1.21", "bridge121.jar")));
+        assertEquals("bridge", zuordnung.nimm(artefakt("BRIDGE", "bridge.jar")));
+        assertThrows(IllegalStateException.class, () -> zuordnung.nimm(artefakt("PAPER", "unbekannt.jar")));
     }
 
     @Test

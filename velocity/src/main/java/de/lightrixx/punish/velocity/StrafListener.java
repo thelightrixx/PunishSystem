@@ -1,6 +1,8 @@
 package de.lightrixx.punish.velocity;
 
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.PostOrder;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -12,7 +14,6 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import de.lightrixx.punish.core.AuftragsPlaner;
 import de.lightrixx.punish.core.Permissions;
-import de.lightrixx.punish.core.RangBuendel;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.BanRecord;
 import de.lightrixx.punish.model.CachedPlayer;
@@ -26,6 +27,7 @@ import de.lightrixx.punish.net.Protokoll;
 import de.lightrixx.punish.service.AutoBannService;
 import de.lightrixx.punish.service.BanService;
 import de.lightrixx.punish.service.BroadcastService;
+import de.lightrixx.punish.service.FreezeService;
 import de.lightrixx.punish.service.IpBanService;
 import de.lightrixx.punish.service.IpMuteService;
 import de.lightrixx.punish.service.IpTimeoutService;
@@ -77,6 +79,7 @@ public final class StrafListener {
     private volatile VerpassteBroadcastsRepository verpasstAblage;
     private volatile SpielerVerzeichnis verpasstVerzeichnis;
     private volatile BroadcastService verpasstBroadcast;
+    private volatile FreezeService freezeService;
     private final java.util.concurrent.ConcurrentHashMap<UUID, Long> loginBasis =
             new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.ConcurrentHashMap<String, TunnelRateBegrenzer> befehlTempo =
@@ -176,6 +179,10 @@ public final class StrafListener {
 
     public void setChatfilterStaffel(ChatfilterStaffelService chatfilterStaffel) {
         this.chatfilterStaffel = chatfilterStaffel;
+    }
+
+    public void setFreezeService(FreezeService freezeService) {
+        this.freezeService = freezeService;
     }
 
     public void setModellVerteilung(ModellVerteilung modellVerteilung) {
@@ -605,7 +612,62 @@ public final class StrafListener {
         return null;
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.LAST)
+    public void onCommand(CommandExecuteEvent event) {
+        if (!(event.getCommandSource() instanceof Player spieler)
+                || (!event.getResult().isAllowed() && !event.getResult().isForwardToServer())) {
+            return;
+        }
+        UUID uuid = spieler.getUniqueId();
+        String server = spieler.getCurrentServer()
+                .map(v -> v.getServerInfo().getName()).orElse(ServerScope.UNBEKANNT_WERT);
+        long jetzt = System.currentTimeMillis();
+        String schluessel;
+        Map<String, String> platzhalter;
+        FreezeService freezes = freezeService;
+        var freeze = freezes == null ? Optional.<de.lightrixx.punish.model.FreezeRecord>empty()
+                : freezes.findeAktivenFreezeFuer(uuid, jetzt, server);
+        if (freeze.isPresent()) {
+            var record = freeze.get();
+            schluessel = de.lightrixx.punish.core.MessageKeys.FREEZE_BLOCKIERT;
+            platzhalter = Map.of("grund", record.grund(), "verbleibend",
+                    de.lightrixx.punish.util.ZeitFormat.formatRestzeit(record.verbleibendeMillis(jetzt)));
+        } else {
+            String befehl = "/" + BrueckenKanal.tunnelBasisFuer(
+                    event.getResult().getCommand().orElse(event.getCommand()));
+            boolean blockiert = config.muteBlockierteBefehle().stream().anyMatch(eintrag ->
+                    eintrag.endsWith("*")
+                            ? befehl.startsWith(eintrag.substring(0, eintrag.length() - 1))
+                            : befehl.equals(eintrag));
+            if (!blockiert) {
+                return;
+            }
+            var mute = muteService.findeAktivenMuteFuer(uuid, jetzt, server);
+            if (mute.isPresent()) {
+                var record = mute.get();
+                platzhalter = Map.of("grund", record.grund(), "verbleibend",
+                        de.lightrixx.punish.util.ZeitFormat.formatRestzeit(record.verbleibendeMillis(jetzt)));
+            } else {
+                var ipMute = ipMuteService == null ? Optional.<de.lightrixx.punish.model.IpMuteRecord>empty()
+                        : ipMuteService.findeAktivenMuteFuer(ipVon(spieler), jetzt, server);
+                if (ipMute.isEmpty()) {
+                    return;
+                }
+                var record = ipMute.get();
+                platzhalter = Map.of("grund", record.grund(), "verbleibend",
+                        de.lightrixx.punish.util.ZeitFormat.formatRestzeit(record.verbleibendeMillis(jetzt)));
+            }
+            schluessel = de.lightrixx.punish.core.MessageKeys.MUTE_BLOCKIERT;
+        }
+        if (event.getInvocationInfo().signedState() == CommandExecuteEvent.SignedState.SIGNED_WITH_ARGS) {
+            event.setResult(CommandExecuteEvent.CommandResult.forwardToServer());
+            return;
+        }
+        event.setResult(CommandExecuteEvent.CommandResult.denied());
+        messageService.senden(new VelocitySender(spieler), schluessel, platzhalter);
+    }
+
+    @Subscribe(order = PostOrder.LAST)
     public void onPreConnect(ServerPreConnectEvent event) {
         Player spieler;
         UUID uuid;
@@ -617,7 +679,7 @@ public final class StrafListener {
         }
         RegisteredServer ziel;
         try {
-            ziel = event.getOriginalServer();
+            ziel = event.getResult().getServer().orElse(null);
         } catch (Exception e) {
             return;
         }
@@ -631,16 +693,7 @@ public final class StrafListener {
             return;
         }
         if (serverName == null || serverName.isBlank()) {
-            try {
-                spieler.disconnect(fallbackSperre());
-            } catch (Exception e) {
-                logger.debug("PreConnect-Disconnect bei leerem Servernamen fehlgeschlagen.", e);
-            }
-            try {
-                event.setResult(ServerPreConnectEvent.ServerResult.denied());
-            } catch (Exception e) {
-                logger.debug("PreConnect-Deny bei leerem Servernamen fehlgeschlagen.", e);
-            }
+            verweigereServerwechsel(event, spieler, fallbackSperre());
             return;
         }
         long jetzt = System.currentTimeMillis();
@@ -741,24 +794,20 @@ public final class StrafListener {
             }
         }
         if (sperre != null) {
-            // Wichtig: Nur deny() ohne Disconnect lässt Erst-Joiner in "Joining world" hängen,
-            // weil kein Fallback-Server existiert. Daher immer aktiv disconnecten mit Grund.
-            Component grund = sperre;
-            try {
+            verweigereServerwechsel(event, spieler, sperre);
+        }
+    }
+
+    private void verweigereServerwechsel(ServerPreConnectEvent event, Player spieler, Component grund) {
+        event.setResult(ServerPreConnectEvent.ServerResult.denied());
+        try {
+            if (event.getPreviousServer() == null) {
                 spieler.disconnect(grund);
-            } catch (Exception e) {
-                logger.debug("PreConnect-Disconnect fehlgeschlagen, versuche sendMessage+Deny.", e);
-                try {
-                    spieler.sendMessage(grund);
-                } catch (Exception ex) {
-                    logger.debug("PreConnect-sendMessage nach Disconnect-Fehlschlag fehlgeschlagen.", ex);
-                }
+            } else {
+                spieler.sendMessage(grund);
             }
-            try {
-                event.setResult(ServerPreConnectEvent.ServerResult.denied());
-            } catch (Exception e) {
-                logger.debug("PreConnect-Deny fehlgeschlagen.", e);
-            }
+        } catch (Exception e) {
+            logger.warn("Sperrhinweis beim verweigerten Serverwechsel fehlgeschlagen.", e);
         }
     }
 
@@ -858,22 +907,33 @@ public final class StrafListener {
                 return;
             }
             java.util.List<VerpassteNachricht> offen;
+            long stand = System.currentTimeMillis() - 1L;
+            long ab = seit;
             try {
-                offen = ablage.findeNach(seit, VerpassteBroadcastsRepository.MAX_ABRUF);
+                offen = ablage.momentaufnahme().stream()
+                        .filter(e -> e.zeitstempel() > ab && e.zeitstempel() <= stand).toList();
             } catch (Exception e) {
                 logger.debug("Missed-Abruf fehlgeschlagen.", e);
                 return;
             }
             if (!offen.isEmpty()) {
                 try {
-                    broadcast.liefereVerpassteNach(uuid, offen);
+                    for (int von = 0; von < offen.size(); von += VerpassteBroadcastsRepository.MAX_ABRUF) {
+                        broadcast.liefereVerpassteNach(uuid, offen.subList(von,
+                                Math.min(offen.size(), von + VerpassteBroadcastsRepository.MAX_ABRUF)));
+                    }
                 } catch (Exception e) {
                     logger.debug("Verpasst-Nachsendung fehlgeschlagen.", e);
                     return;
                 }
             }
+            if (proxy.getPlayer(uuid).isEmpty() || verzeichnis.onlineSpieler(uuid).isEmpty()
+                    || !verzeichnis.hatRecht(uuid, Permissions.BROADCAST_RECEIVE_ALL.node())
+                    || !config.verpassteBroadcastsAktiv()) {
+                return;
+            }
             try {
-                ablage.cursorSetzen(uuid, System.currentTimeMillis());
+                ablage.cursorSetzen(uuid, stand);
             } catch (Exception e) {
                 logger.debug("Missed-Cursor-Update fehlgeschlagen.", e);
             }
@@ -917,7 +977,7 @@ public final class StrafListener {
                 case Protokoll.HELLO -> {
                     Protokoll.Hello hello = Protokoll.leseHello(paket.nutzdaten());
                     kanal.beantworteHello(server, hello.serverName(), hello.protokollVersion(),
-                            hello.pluginVersion(), hello.variante());
+                            hello.pluginVersion(), hello.variante(), hello.sessionId());
                 }
                 case Protokoll.BEFEHL_AUSFUEHREN -> {
                     if (!befehlTempoErlaubt(serverNameFuer(server))) {
@@ -1211,7 +1271,7 @@ public final class StrafListener {
         try {
             return proxy.getPlayer(uuid).map(spieler -> {
                 try {
-                    return RangBuendel.gewaehrt(spieler::hasPermission, knoten);
+                    return VelocitySender.hatRecht(spieler, knoten);
                 } catch (Exception e) {
                     return false;
                 }
@@ -1247,7 +1307,7 @@ public final class StrafListener {
             return false;
         }
         String norm = typ.trim().toUpperCase(java.util.Locale.ROOT);
-        if (Protokoll.GUI_KATALOG.equals(norm)) {
+        if (Protokoll.GUI_KATALOG.equals(norm) || Protokoll.GUI_RECHTE.equals(norm)) {
             return absender != null && hatRecht(absender, "punish.gui");
         }
         if (absender == null) {

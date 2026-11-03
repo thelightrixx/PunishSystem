@@ -560,6 +560,10 @@ public final class VelocityKonfiguration implements Konfiguration {
         return Karten.text(abschnitt("update"), "hangar-slug", "").trim();
     }
 
+    public String updateGithubRepository() {
+        return Karten.text(abschnitt("update"), "github-repository", "thelightrixx/PunishSystem").trim();
+    }
+
     public String updateChannel() {
         String kanal = Karten.text(abschnitt("update"), "channel", "Release");
         return kanal == null || kanal.isBlank() ? "Release" : kanal.trim();

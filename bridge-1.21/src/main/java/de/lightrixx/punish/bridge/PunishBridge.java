@@ -241,6 +241,7 @@ public final class PunishBridge extends JavaPlugin {
             var guiBefehl = new de.lightrixx.punish.bridge.gui.PunishGuiCommand(guiManager);
             PluginCommand punish = getCommand("punish-gui");
             if (punish != null) {
+                punish.setPermission(null);
                 punish.setExecutor(guiBefehl);
                 punish.setTabCompleter(guiBefehl);
             } else {
@@ -250,6 +251,7 @@ public final class PunishBridge extends JavaPlugin {
             var dossierBefehl = new de.lightrixx.punish.bridge.gui.PunishGuiCommand(guiManager, true);
             PluginCommand dossier = getCommand("punish-dossier");
             if (dossier != null) {
+                dossier.setPermission(null);
                 dossier.setExecutor(dossierBefehl);
                 dossier.setTabCompleter(dossierBefehl);
             } else {
@@ -331,10 +333,11 @@ public final class PunishBridge extends JavaPlugin {
                 }
                 try {
                     if (muteCache.istJeSynchronisiert()) {
-                        long alter = System.currentTimeMillis() - muteCache.letzteSyncMillis();
-                        if (muteCache.letzteSyncMillis() > 0 && alter > 600000L) {
-                            LOG.warn("Bridge-Cache seit {} Min ohne Proxy-Sync (Proxy-Neustart?). "
-                                    + "Erzwinge Neu-Sync beim nächsten Spieler-Kontakt.",
+                        long kontakt = Math.max(muteCache.letzteSyncMillis(), kanalClient.letzteProxyBestaetigungMillis());
+                        long alter = System.currentTimeMillis() - kontakt;
+                        if (kontakt > 0 && alter > 600000L && !getServer().getOnlinePlayers().isEmpty()) {
+                            LOG.warn("Seit {} Min keine Proxy-Bestätigung oder Strafsynchronisation. "
+                                    + "Gecachte Strafen bleiben aktiv; Bridge-Verbindung prüfen.",
                                     alter / 60000L);
                         }
                     }
@@ -350,13 +353,11 @@ public final class PunishBridge extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
                 @EventHandler
                 public void beiJoin(PlayerJoinEvent event) {
-                    if (muteCache.istJeSynchronisiert()) {
-                        return;
-                    }
+                    long bestaetigungVorJoin = kanalClient.letzteProxyBestaetigungMillis();
                     for (long delay : new long[]{40L, 100L, 220L}) {
                         planerLokal.spaeterAsync(() -> {
                             try {
-                                if (muteCache.istJeSynchronisiert()) {
+                                if (kanalClient.letzteProxyBestaetigungMillis() != bestaetigungVorJoin) {
                                     return;
                                 }
                                 kanalClient.sendeHello(joinServer);

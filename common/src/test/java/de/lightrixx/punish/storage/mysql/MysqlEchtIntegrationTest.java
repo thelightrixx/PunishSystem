@@ -326,6 +326,41 @@ class MysqlEchtIntegrationTest {
         }
     }
 
+    @Test
+    void schemaUpgradeFuelltBestehendeIpHistorieOhneVerlustNach() throws Exception {
+        String erster = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+        String zweiter = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+        try (Connection verbindung = mysql.verbindung(); Statement statement = verbindung.createStatement()) {
+            MysqlSchema.metaSchreiben(verbindung, "schema_version", "1");
+            statement.executeUpdate("INSERT INTO " + MysqlSchema.T_SPIELER
+                    + " (uuid, name, letzte_ip, zuletzt_gesehen) VALUES ('" + erster
+                    + "', 'Erster', '1.2.3.4', 1000), ('" + zweiter
+                    + "', 'Zweiter', '1.2.3.5', 1000)");
+            statement.executeUpdate("INSERT INTO " + MysqlSchema.T_IP_HISTORIE
+                    + " (ip, uuid, name, zuletzt_gesehen) VALUES ('1.2.3.5', '" + zweiter
+                    + "', 'Zweiter', 2000), ('1.2.3.6', '" + erster + "', 'Erster', 500)");
+        }
+
+        MysqlSchema.initialisieren(mysql);
+        MysqlSchema.initialisieren(mysql);
+
+        assertEquals("2", metaWert("schema_version"));
+        try (Connection verbindung = mysql.verbindung(); Statement statement = verbindung.createStatement();
+             ResultSet ergebnis = statement.executeQuery("SELECT ip, zuletzt_gesehen FROM "
+                     + MysqlSchema.T_IP_HISTORIE + " ORDER BY ip")) {
+            assertTrue(ergebnis.next());
+            assertEquals("1.2.3.4", ergebnis.getString(1));
+            assertEquals(1000L, ergebnis.getLong(2));
+            assertTrue(ergebnis.next());
+            assertEquals("1.2.3.5", ergebnis.getString(1));
+            assertEquals(2000L, ergebnis.getLong(2));
+            assertTrue(ergebnis.next());
+            assertEquals("1.2.3.6", ergebnis.getString(1));
+            assertEquals(500L, ergebnis.getLong(2));
+            assertFalse(ergebnis.next());
+        }
+    }
+
     private static void schreibe(BanRepository repository, List<UUID> ids, CountDownLatch start,
                                  AtomicReference<Throwable> fehler) {
         try {
@@ -351,7 +386,8 @@ class MysqlEchtIntegrationTest {
              Statement statement = admin.createStatement();
              ResultSet ergebnis = statement.executeQuery(
                      "SELECT id FROM information_schema.processlist WHERE user = '"
-                             + konfiguration.benutzer().replace("'", "''") + "' AND id <> CONNECTION_ID()")) {
+                             + konfiguration.benutzer().replace("'", "''") + "' AND db = '"
+                             + konfiguration.datenbank().replace("'", "''") + "' AND id <> CONNECTION_ID()")) {
             List<Long> ids = new ArrayList<>();
             while (ergebnis.next()) {
                 ids.add(ergebnis.getLong(1));

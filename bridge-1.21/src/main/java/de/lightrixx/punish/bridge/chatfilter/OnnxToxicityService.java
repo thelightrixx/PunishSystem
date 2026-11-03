@@ -45,6 +45,15 @@ public final class OnnxToxicityService implements ToxizitaetsModell, AutoCloseab
         if (!modellDatei.isFile()) {
             throw new ChatfilterAusfall("Modelldatei fehlt: " + modellDatei.getAbsolutePath());
         }
+        if (System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows")) {
+            var runtime = java.nio.file.Path.of(System.getProperty("java.home"), "bin", "msvcp140.dll");
+            if (!java.nio.file.Files.isRegularFile(runtime) && System.getenv("SystemRoot") != null) {
+                runtime = java.nio.file.Path.of(System.getenv("SystemRoot"), "System32", "msvcp140.dll");
+            }
+            if (java.nio.file.Files.isRegularFile(runtime)) {
+                pruefeWindowsRuntime(runtime);
+            }
+        }
         long start = System.nanoTime();
         OrtEnvironment umgebung;
         try {
@@ -53,8 +62,8 @@ public final class OnnxToxicityService implements ToxizitaetsModell, AutoCloseab
             throw new ChatfilterAusfall("ONNX-Laufzeit konnte nicht gestartet werden.", e);
         }
         OrtSession sitzung;
-        try {
-            sitzung = umgebung.createSession(modellDatei.getAbsolutePath(), new OrtSession.SessionOptions());
+        try (var optionen = new OrtSession.SessionOptions()) {
+            sitzung = umgebung.createSession(modellDatei.getAbsolutePath(), optionen);
         } catch (Exception e) {
             throw new ChatfilterAusfall("Modell konnte nicht geladen werden: " + modellDatei.getName(), e);
         }
@@ -62,6 +71,34 @@ public final class OnnxToxicityService implements ToxizitaetsModell, AutoCloseab
                 modellDatei.getName(), modellDatei.length() / 1024L / 1024L,
                 (System.nanoTime() - start) / 1_000_000L);
         return new OnnxToxicityService(tokenizer, Math.max(50, maxZeichen), umgebung, sitzung);
+    }
+
+    static void pruefeWindowsRuntime(java.nio.file.Path datei) {
+        try {
+            if (java.nio.file.Files.size(datei) > 16L * 1024L * 1024L) {
+                throw new ChatfilterAusfall("C++-Laufzeitversion konnte nicht geprüft werden: " + datei);
+            }
+            var daten = java.nio.ByteBuffer.wrap(java.nio.file.Files.readAllBytes(datei))
+                    .order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            // VS_FIXEDFILEINFO enthält die Dateiversion. Ältere MSVC-Mutex-Implementierungen
+            // können ONNX nativ abstürzen lassen, bevor ein Java-catch greifen kann.
+            for (int i = 0; i <= daten.limit() - 52; i++) {
+                if (daten.getInt(i) == 0xFEEF04BD && daten.getInt(i + 4) == 0x00010000) {
+                    int version = daten.getInt(i + 8);
+                    int haupt = version >>> 16;
+                    int neben = version & 0xFFFF;
+                    if (haupt < 14 || (haupt == 14 && neben < 40)) {
+                        throw new ChatfilterAusfall("ONNX benötigt Microsoft-C++-Laufzeit 14.40 oder neuer; "
+                                + "gefunden " + haupt + "." + neben + " in " + datei
+                                + ". Java-Laufzeit aktualisieren; Wortliste bleibt verfügbar.");
+                    }
+                    return;
+                }
+            }
+            throw new ChatfilterAusfall("C++-Laufzeitversion konnte nicht geprüft werden: " + datei);
+        } catch (java.io.IOException e) {
+            throw new ChatfilterAusfall("C++-Laufzeit konnte nicht geprüft werden: " + datei, e);
+        }
     }
 
     @Override

@@ -26,6 +26,35 @@ import static org.mockito.Mockito.*;
 
 class FixRegressionTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"mute", "ipmute", "freeze"})
+    void blockierteMeldungenHabenLeerzeilen(String art) throws Exception {
+        var uuid = UUID.randomUUID();
+        var spieler = mock(Player.class);
+        when(spieler.getUniqueId()).thenReturn(uuid);
+        Object eintrag = switch (art) {
+            case "mute" -> new Protokoll.MuteEintrag(uuid, "Spieler", "Grund", "Mod", 1L, Long.MAX_VALUE, "global");
+            case "ipmute" -> new Protokoll.IpMuteEintrag("127.0.0.1", "Grund", "Mod", 1L, Long.MAX_VALUE, "global");
+            case "freeze" -> new Protokoll.FreezeEintrag(uuid, "Spieler", "Grund", "Mod", 1L, Long.MAX_VALUE, "global");
+            default -> throw new AssertionError(art);
+        };
+        String methode = switch (art) {
+            case "mute" -> "sendeBlockiert";
+            case "ipmute" -> "sendeIpBlockiert";
+            default -> "sendeFreezeBlockiert";
+        };
+        var listener = listenerMit(new MuteCache(), null, null);
+        var senden = BridgeEnforcementListener.class.getDeclaredMethod(methode, Player.class, eintrag.getClass());
+        senden.setAccessible(true);
+        senden.invoke(listener, spieler, eintrag);
+        var nachrichten = org.mockito.ArgumentCaptor.forClass(net.kyori.adventure.text.Component.class);
+        verify(spieler, times(3)).sendMessage(nachrichten.capture());
+        assertEquals(net.kyori.adventure.text.Component.empty(), nachrichten.getAllValues().getFirst());
+        assertEquals("[Punish] Blockiert", net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+                .plainText().serialize(nachrichten.getAllValues().get(1)));
+        assertEquals(net.kyori.adventure.text.Component.empty(), nachrichten.getAllValues().getLast());
+    }
+
     private BridgeEnforcementListener listenerMit(MuteCache muteCache, FreezeCache freezeCache,
             ChatfilterService chatfilter) {
         BridgeKonfiguration config = Mockito.mock(BridgeKonfiguration.class);
@@ -43,6 +72,23 @@ class FixRegressionTest {
                 config, kanal, MiniMessage.miniMessage(), playerCache);
         listener.setChatfilter(chatfilter);
         return listener;
+    }
+
+    @Test
+    void freezeSetztBesetztesFahrzeugMitPassagierenZurueck() {
+        UUID uuid = UUID.randomUUID();
+        var spieler = mock(Player.class);
+        when(spieler.getUniqueId()).thenReturn(uuid);
+        var freeze = new FreezeCache();
+        freeze.ersetzeAlle(List.of(new Protokoll.FreezeEintrag(uuid, "Frost", "Check", "Mod",
+                1L, Long.MAX_VALUE, "global")));
+        var fahrzeug = mock(org.bukkit.entity.Vehicle.class);
+        when(fahrzeug.getPassengers()).thenReturn(List.of(spieler));
+        var von = new org.bukkit.Location(mock(org.bukkit.World.class), 1, 64, 1);
+        var event = new org.bukkit.event.vehicle.VehicleMoveEvent(fahrzeug, von, von.clone().add(1, 0, 0));
+        listenerMit(new MuteCache(), freeze, null).beiFreezeFahrzeug(event);
+        verify(fahrzeug).teleport(von, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+        verify(fahrzeug, never()).teleport(von);
     }
 
     private ChatfilterService serviceMit(WortlistenFilter liste, double kiWert, Set<String> ausnahmen) {

@@ -361,7 +361,8 @@ public final class IpTimeoutService {
             if (kandidat == null || !kandidat.istAbgelaufen(System.currentTimeMillis())) {
                 continue;
             }
-            Optional<IpTimeoutRecord> entfernt = repository.timeoutAufheben(ip, kandidat.scope());
+            Optional<IpTimeoutRecord> entfernt = repository.timeoutAufhebenWenn(ip, kandidat.scope(),
+                    t -> t.equals(kandidat) && t.istAbgelaufen(System.currentTimeMillis()));
             if (entfernt.isEmpty()) {
                 continue;
             }
@@ -403,7 +404,8 @@ public final class IpTimeoutService {
                 if (aktuell.isEmpty() || !aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
                     continue;
                 }
-                Optional<IpTimeoutRecord> entfernt = repository.timeoutAufheben(kandidat.ip(), kandidat.scope());
+                Optional<IpTimeoutRecord> entfernt = repository.timeoutAufhebenWenn(kandidat.ip(), kandidat.scope(),
+                        t -> t.equals(aktuell.get()) && t.istAbgelaufen(System.currentTimeMillis()));
                 if (entfernt.isEmpty()) {
                     continue;
                 }

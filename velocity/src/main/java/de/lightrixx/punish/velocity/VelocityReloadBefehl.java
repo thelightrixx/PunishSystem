@@ -14,6 +14,7 @@ import de.lightrixx.punish.service.MuteService;
 import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.service.TimeoutService;
 import de.lightrixx.punish.storage.BanRepository;
+import de.lightrixx.punish.storage.FreezeRepository;
 import de.lightrixx.punish.storage.HistoryRepository;
 import de.lightrixx.punish.storage.IpBanRepository;
 import de.lightrixx.punish.storage.IpMuteRepository;
@@ -58,6 +59,7 @@ public final class VelocityReloadBefehl extends PunishCommand {
     private final IpTimeoutService ipTimeoutService;
     private final AtomicBoolean laeuft = new AtomicBoolean(false);
     private volatile BrueckenKanal brueckenKanal;
+    private volatile FreezeRepository freezeRepository;
     private volatile de.lightrixx.punish.storage.IoExecutor ioExecutor;
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -134,6 +136,10 @@ public final class VelocityReloadBefehl extends PunishCommand {
         this.brueckenKanal = kanal;
     }
 
+    public void setFreezeRepository(FreezeRepository freezeRepository) {
+        this.freezeRepository = freezeRepository;
+    }
+
     public void setIoExecutor(de.lightrixx.punish.storage.IoExecutor ioExecutor) {
         this.ioExecutor = ioExecutor;
     }
@@ -204,6 +210,10 @@ public final class VelocityReloadBefehl extends PunishCommand {
                     ladeRepo(teilfehler, "IP-Banns", ipBanRepository::laden);
                     ladeRepo(teilfehler, "Mutes", muteRepository::laden);
                     ladeRepo(teilfehler, "Timeouts", timeoutRepository::laden);
+                    FreezeRepository freezes = freezeRepository;
+                    if (freezes != null) {
+                        ladeRepo(teilfehler, "Freezes", freezes::laden);
+                    }
                     ladeRepo(teilfehler, "Verstöße", verstossRepository::laden);
                     if (noteRepository != null) {
                         ladeRepo(teilfehler, "Notizen", noteRepository::laden);

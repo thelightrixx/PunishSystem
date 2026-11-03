@@ -26,6 +26,35 @@ import static org.mockito.Mockito.*;
 
 class FixRegressionTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"mute", "ipmute", "freeze"})
+    void blockierteMeldungenHabenLeerzeilen(String art) throws Exception {
+        var uuid = UUID.randomUUID();
+        var spieler = mock(Player.class);
+        when(spieler.getUniqueId()).thenReturn(uuid);
+        Object eintrag = switch (art) {
+            case "mute" -> new Protokoll.MuteEintrag(uuid, "Spieler", "Grund", "Mod", 1L, Long.MAX_VALUE, "global");
+            case "ipmute" -> new Protokoll.IpMuteEintrag("127.0.0.1", "Grund", "Mod", 1L, Long.MAX_VALUE, "global");
+            case "freeze" -> new Protokoll.FreezeEintrag(uuid, "Spieler", "Grund", "Mod", 1L, Long.MAX_VALUE, "global");
+            default -> throw new AssertionError(art);
+        };
+        String methode = switch (art) {
+            case "mute" -> "sendeBlockiert";
+            case "ipmute" -> "sendeIpBlockiert";
+            default -> "sendeFreezeBlockiert";
+        };
+        var listener = listenerMit(new MuteCache(), null, null);
+        var senden = BridgeEnforcementListener.class.getDeclaredMethod(methode, Player.class, eintrag.getClass());
+        senden.setAccessible(true);
+        senden.invoke(listener, spieler, eintrag);
+        var nachrichten = org.mockito.ArgumentCaptor.forClass(net.kyori.adventure.text.Component.class);
+        verify(spieler, times(3)).sendMessage(nachrichten.capture());
+        assertEquals(net.kyori.adventure.text.Component.empty(), nachrichten.getAllValues().getFirst());
+        assertEquals("[Punish] Blockiert", net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
+                .plainText().serialize(nachrichten.getAllValues().get(1)));
+        assertEquals(net.kyori.adventure.text.Component.empty(), nachrichten.getAllValues().getLast());
+    }
+
     private BridgeEnforcementListener listenerMit(MuteCache muteCache, FreezeCache freezeCache,
             ChatfilterService chatfilter) {
         BridgeKonfiguration config = Mockito.mock(BridgeKonfiguration.class);

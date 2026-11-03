@@ -362,8 +362,9 @@ public final class TimeoutService {
             if (kandidat == null || !kandidat.istAbgelaufen(System.currentTimeMillis())) {
                 continue;
             }
-            Optional<TimeoutRecord> entfernt = timeoutRepository.timeoutAufheben(
-                    spielerUuid, kandidat.scope());
+            Optional<TimeoutRecord> entfernt = timeoutRepository.timeoutAufhebenWenn(
+                    spielerUuid, kandidat.scope(),
+                    t -> t.equals(kandidat) && t.istAbgelaufen(System.currentTimeMillis()));
             if (entfernt.isEmpty()) {
                 continue;
             }
@@ -744,8 +745,9 @@ public final class TimeoutService {
                 if (aktuell.isEmpty() || !aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
                     continue;
                 }
-                Optional<TimeoutRecord> entfernt = timeoutRepository.timeoutAufheben(
-                        kandidat.spielerUuid(), kandidat.scope());
+                Optional<TimeoutRecord> entfernt = timeoutRepository.timeoutAufhebenWenn(
+                        kandidat.spielerUuid(), kandidat.scope(),
+                        t -> t.equals(aktuell.get()) && t.istAbgelaufen(System.currentTimeMillis()));
                 if (entfernt.isEmpty()) {
                     continue;
                 }

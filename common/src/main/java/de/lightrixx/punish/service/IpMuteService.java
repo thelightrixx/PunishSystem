@@ -379,7 +379,8 @@ public final class IpMuteService {
                 if (aktuell.isEmpty() || !aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
                     continue;
                 }
-                Optional<IpMuteRecord> entfernt = repository.entmuten(kandidat.ip(), kandidat.scope());
+                Optional<IpMuteRecord> entfernt = repository.entmutenWenn(kandidat.ip(), kandidat.scope(),
+                        m -> m.equals(aktuell.get()) && m.istAbgelaufen(System.currentTimeMillis()));
                 if (entfernt.isEmpty()) {
                     continue;
                 }

@@ -6,7 +6,6 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import de.lightrixx.punish.core.MessageKeys;
-import de.lightrixx.punish.core.RangBuendel;
 import de.lightrixx.punish.model.IpMuteRecord;
 import de.lightrixx.punish.model.FreezeRecord;
 import de.lightrixx.punish.model.MuteRecord;
@@ -55,6 +54,8 @@ public final class BrueckenKanal {
     private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicLong> sendeSeq =
             new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.ConcurrentHashMap<String, Protokoll.SequenzPruefer> empfangsPruefer =
+            new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> letzteHelloSequenzen =
             new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.ConcurrentHashMap<String, Integer> protokollVersionen =
             new java.util.concurrent.ConcurrentHashMap<>();
@@ -278,21 +279,29 @@ public final class BrueckenKanal {
         BrueckenSchluessel paar = signaturSchluessel(server);
         if (paar == null) {
             versandOhneSecretBlockiert();
-            return;
+            throw new IllegalStateException("Tunnel-Versand ohne Bridge-Secret blockiert.");
         }
+        var sperre = sendeSeq.computeIfAbsent(schluesselFuer(server),
+                k -> new java.util.concurrent.atomic.AtomicLong());
+        synchronized (sperre) {
+            sendeSigniert(server, paket, paar);
+        }
+    }
+
+    private void sendeSigniert(RegisteredServer server, byte[] paket, BrueckenSchluessel paar) {
         byte[] versand = paket;
         try {
             versand = rahmeFuerVersand(server, paket);
             versand = de.lightrixx.punish.net.TunnelSignatur.signieren(versand, paar.proxyZuBridge());
         } catch (Exception e) {
-            logger.warn("Tunnel-Paket konnte nicht signiert werden (nicht gesendet).", e);
-            return;
+            throw new IllegalStateException("Tunnel-Paket konnte nicht signiert werden.", e);
         }
         try {
-            server.sendPluginMessage(kanalId, versand);
+            if (!server.sendPluginMessage(kanalId, versand)) {
+                throw new IllegalStateException("Keine Verbindung zur Bridge verfügbar.");
+            }
         } catch (Exception e) {
-            logger.debug("Tunnel-Versand an {} fehlgeschlagen.",
-                    server.getServerInfo().getName(), e);
+            throw new IllegalStateException("Tunnel-Versand an " + schluesselFuer(server) + " fehlgeschlagen.", e);
         }
     }
 
@@ -422,6 +431,12 @@ public final class BrueckenKanal {
                 logger.warn("HELLO-Replay von '{}' verworfen (Session bereits gesehen).", schluessel);
                 return null;
             }
+            if (rahmen.sequenziert()) {
+                Long vorher = letzteHelloSequenzen.put(schluessel, rahmen.sequenz());
+                if (vorher != null && rahmen.sequenz() <= vorher) {
+                    letzterVollSync.remove(syncSchluessel(schluessel));
+                }
+            }
             empfangsPruefer.computeIfAbsent(schluessel,
                     k -> new Protokoll.SequenzPruefer()).zuruecksetzen();
             return paket;
@@ -534,12 +549,14 @@ public final class BrueckenKanal {
         return generation <= 0 ? 1L : generation;
     }
 
-    private void sendeSyncRahmen(RegisteredServer server, long generation, boolean beginn) {
+    private boolean sendeSyncRahmen(RegisteredServer server, long generation, boolean beginn) {
         try {
             byte[] paket = beginn ? Protokoll.syncBegin(generation) : Protokoll.syncEnd(generation);
             sendeAn(server, paket);
+            return true;
         } catch (Exception e) {
             logger.debug("Sync-Rahmen konnte nicht gesendet werden.", e);
+            return false;
         }
     }
 
@@ -602,6 +619,14 @@ public final class BrueckenKanal {
         if (server == null) {
             return false;
         }
+        var sperre = sendeSeq.computeIfAbsent(schluesselFuer(server),
+                k -> new java.util.concurrent.atomic.AtomicLong());
+        synchronized (sperre) {
+            return mutePushAnGesperrt(server);
+        }
+    }
+
+    private boolean mutePushAnGesperrt(RegisteredServer server) {
         List<Protokoll.MuteEintrag> eintraege;
         List<Protokoll.IpMuteEintrag> ipEintraege;
         try {
@@ -634,7 +659,9 @@ public final class BrueckenKanal {
     private void sendeEinzelMutes(RegisteredServer server, List<Protokoll.MuteEintrag> mutes,
                                   List<Protokoll.IpMuteEintrag> ipMutes) {
         long generation = naechsteSyncGeneration();
-        sendeSyncRahmen(server, generation, true);
+        if (!sendeSyncRahmen(server, generation, true)) {
+            return;
+        }
         boolean abgebrochen = false;
         for (Protokoll.MuteEintrag eintrag : mutes) {
             try {
@@ -702,7 +729,9 @@ public final class BrueckenKanal {
             }
         }
         long generation = naechsteSyncGeneration();
-        sendeSyncRahmen(server, generation, true);
+        if (!sendeSyncRahmen(server, generation, true)) {
+            return false;
+        }
         boolean abgebrochen = false;
         for (Protokoll.MuteEintrag eintrag : mutes) {
             try {
@@ -766,7 +795,7 @@ public final class BrueckenKanal {
             }
         }
         if (!abgebrochen) {
-            sendeSyncRahmen(server, generation, false);
+            abgebrochen = !sendeSyncRahmen(server, generation, false);
         }
         logger.info("Voll-Sync gechunkt an '{}' gesendet ({} Banns, {} Timeouts, {} Freezes, "
                 + "{} Mutes, {} IP-Mutes).",
@@ -1000,6 +1029,11 @@ public final class BrueckenKanal {
 
     public void beantworteHello(RegisteredServer server, String serverName, int version,
                                 String bridgePluginVersion, String variante) {
+        beantworteHello(server, serverName, version, bridgePluginVersion, variante, "");
+    }
+
+    public void beantworteHello(RegisteredServer server, String serverName, int version,
+                                String bridgePluginVersion, String variante, String sessionId) {
         boolean inkompatibel = version < Protokoll.MIN_VERSION || version > Protokoll.VERSION;
         String sauber = serverName == null ? "unbekannt" : serverName.replace('\r', ' ').replace('\n', ' ').replace('\u001B', ' ').trim();
         if (sauber.isBlank()) {
@@ -1041,7 +1075,7 @@ public final class BrueckenKanal {
         }
         if (server != null) {
             try {
-                sendeAn(server, Protokoll.helloAck(Protokoll.VERSION, kanonisch, pluginVersion));
+                sendeAn(server, Protokoll.helloAck(Protokoll.VERSION, kanonisch, pluginVersion, sessionId));
             } catch (Exception e) {
                 logger.debug("HELLO-ACK konnte nicht gesendet werden.", e);
             }
@@ -1248,7 +1282,7 @@ public final class BrueckenKanal {
             return false;
         }
         try {
-            if (RangBuendel.gewaehrt(ausfuehrer::hasPermission, benoetigt)) {
+            if (VelocitySender.hatRecht(ausfuehrer, benoetigt)) {
                 return true;
             }
         } catch (Exception e) {
@@ -1256,7 +1290,7 @@ public final class BrueckenKanal {
         }
         for (String alternative : tunnelAlternativRechte(basis)) {
             try {
-                if (RangBuendel.gewaehrt(ausfuehrer::hasPermission, alternative)) {
+                if (VelocitySender.hatRecht(ausfuehrer, alternative)) {
                     return true;
                 }
             } catch (Exception e) {

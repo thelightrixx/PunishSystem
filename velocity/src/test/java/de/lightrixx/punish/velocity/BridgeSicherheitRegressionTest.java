@@ -191,16 +191,58 @@ class BridgeSicherheitRegressionTest {
         assertEquals(205, bannRahmen, "Jeder Bann muss einzeln im Rahmen stehen");
         assertTrue(rahmen.size() > 206, "Gechunkter Sync muss mehr Rahmen als Einträge senden");
     }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {0, 1, 2, 206})
+    void fehlenderSyncRahmenWirdNichtAlsErfolgGemeldet(int fehlerBei) throws Exception {
+        var repo = mock(de.lightrixx.punish.storage.MuteRepository.class);
+        var mutes = new java.util.ArrayList<de.lightrixx.punish.model.MuteRecord>();
+        for (int i = 0; i < 205; i++) {
+            mutes.add(new de.lightrixx.punish.model.MuteRecord(java.util.UUID.randomUUID(),
+                    "Spieler" + i, "Grund", "Mod", 1L, Long.MAX_VALUE,
+                    de.lightrixx.punish.model.ServerScope.global()));
+        }
+        when(repo.alle()).thenReturn(mutes);
+        var kanal = new BrueckenKanal(mock(PunishVelocity.class),
+                mock(com.velocitypowered.api.proxy.ProxyServer.class), mock(org.slf4j.Logger.class), repo);
+        kanal.setBridgeSecrets(Map.of("lobby", "punish-test-secret-lange"));
+        var server = mock(com.velocitypowered.api.proxy.server.RegisteredServer.class);
+        var info = mock(com.velocitypowered.api.proxy.server.ServerInfo.class);
+        when(info.getName()).thenReturn("lobby");
+        when(server.getServerInfo()).thenReturn(info);
+        var nummer = new java.util.concurrent.atomic.AtomicInteger();
+        var gesendet = new java.util.ArrayList<Integer>();
+        when(server.sendPluginMessage(any(), any(byte[].class))).thenAnswer(inv -> {
+            int nr = nummer.getAndIncrement();
+            int typ = de.lightrixx.punish.net.Protokoll.paket(inv.getArgument(1, byte[].class)).typ();
+            if (nr == fehlerBei) {
+                return false;
+            }
+            gesendet.add(typ);
+            return true;
+        });
+        assertFalse(kanal.mutePushAn(server));
+        assertFalse(gesendet.contains(de.lightrixx.punish.net.Protokoll.SYNC_END),
+                "Ein unvollständiger Snapshot darf nicht übernommen werden");
+    }
+
     private static StrafListener listener(com.velocitypowered.api.proxy.ProxyServer proxy,
             de.lightrixx.punish.service.IpTimeoutService ipTimeout) {
+        return listener(proxy, ipTimeout, mock(de.lightrixx.punish.service.MuteService.class),
+                null, mock(VelocityKonfiguration.class));
+    }
+
+    private static StrafListener listener(com.velocitypowered.api.proxy.ProxyServer proxy,
+            de.lightrixx.punish.service.IpTimeoutService ipTimeout,
+            de.lightrixx.punish.service.MuteService mutes,
+            de.lightrixx.punish.service.IpMuteService ipMutes, VelocityKonfiguration config) {
         return new StrafListener(proxy, mock(org.slf4j.Logger.class),
                 mock(de.lightrixx.punish.storage.PlayerCache.class),
                 mock(de.lightrixx.punish.service.BanService.class),
                 mock(de.lightrixx.punish.service.IpBanService.class),
                 mock(de.lightrixx.punish.service.TimeoutService.class),
-                mock(de.lightrixx.punish.service.MuteService.class), null, ipTimeout,
+                mutes, ipMutes, ipTimeout,
                 mock(de.lightrixx.punish.service.AutoBannService.class),
-                mock(VelocityKonfiguration.class), mock(de.lightrixx.punish.service.MessageService.class),
+                config, mock(de.lightrixx.punish.service.MessageService.class),
                 mock(de.lightrixx.punish.core.AuftragsPlaner.class),
                 mock(de.lightrixx.punish.storage.BanRepository.class), mock(BrueckenKanal.class));
     }
@@ -244,5 +286,268 @@ class BridgeSicherheitRegressionTest {
         rechte.remove("punish.reports");
         assertEquals(false, pruefung.invoke(listener, uuid,
                 de.lightrixx.punish.net.Protokoll.GUI_DOSSIER, "Steve"));
+    }
+
+    @Test
+    void guiRechteWerdenVomProxyAufgeloestUndWiderrufen() {
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var player = mock(com.velocitypowered.api.proxy.Player.class);
+        var uuid = java.util.UUID.randomUUID();
+        when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player));
+        var rechte = new java.util.HashSet<>(java.util.List.of("punish.gui", "punish.mute"));
+        when(player.hasPermission(any())).thenAnswer(inv -> rechte.contains(inv.getArgument(0)));
+        var dienst = new GuiBrueckenDienst(proxy, mock(org.slf4j.Logger.class), mock(VelocityKonfiguration.class),
+                mock(de.lightrixx.punish.storage.PlayerCache.class),
+                mock(de.lightrixx.punish.storage.BanRepository.class),
+                mock(de.lightrixx.punish.storage.MuteRepository.class),
+                mock(de.lightrixx.punish.storage.TimeoutRepository.class),
+                null, null, null, null, null, null, null);
+        var anfrage = new de.lightrixx.punish.net.Protokoll.GuiAnfrage(7L, uuid,
+                de.lightrixx.punish.net.Protokoll.GUI_RECHTE, "", "", 1, "");
+        var antwort = dienst.beantworte(anfrage);
+        assertTrue(antwort.erfolg());
+        assertEquals(java.util.Set.of("punish.gui", "punish.mute"), antwort.eintraege().stream()
+                .map(de.lightrixx.punish.net.Protokoll.GuiZeile::titel).collect(java.util.stream.Collectors.toSet()));
+        rechte.clear();
+        assertFalse(dienst.beantworte(anfrage).erfolg());
+        assertTrue(dienst.beantworte(anfrage).eintraege().isEmpty());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(com.velocitypowered.api.permission.Tristate.class)
+    void ausdruecklichesNeinWirdNichtDurchWildcardUeberschrieben(
+            com.velocitypowered.api.permission.Tristate wert) {
+        var spieler = mock(com.velocitypowered.api.proxy.Player.class);
+        when(spieler.getPermissionValue("punish.gui")).thenReturn(wert);
+        when(spieler.hasPermission("punish.gui")).thenReturn(wert == com.velocitypowered.api.permission.Tristate.TRUE);
+        when(spieler.hasPermission("punish.*")).thenReturn(true);
+        assertEquals(wert != com.velocitypowered.api.permission.Tristate.FALSE,
+                new VelocitySender(spieler).hatRecht("punish.gui"));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void verpassteBroadcastsVerlierenWederDenRestNochBestaetigenSieEinenDisconnect(boolean getrennt) throws Exception {
+        var uuid = java.util.UUID.randomUUID();
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var player = mock(com.velocitypowered.api.proxy.Player.class);
+        when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player),
+                getrennt ? java.util.Optional.empty() : java.util.Optional.of(player));
+        var config = mock(VelocityKonfiguration.class);
+        when(config.verpassteBroadcastsAktiv()).thenReturn(true);
+        var listener = listener(proxy, null, mock(de.lightrixx.punish.service.MuteService.class), null, config);
+        var ablage = mock(de.lightrixx.punish.storage.VerpassteBroadcastsRepository.class);
+        var verzeichnis = mock(de.lightrixx.punish.core.SpielerVerzeichnis.class);
+        when(verzeichnis.hatRecht(org.mockito.ArgumentMatchers.eq(uuid), any())).thenReturn(true);
+        when(verzeichnis.onlineSpieler(uuid)).thenReturn(java.util.Optional.of(
+                new de.lightrixx.punish.core.OnlineSpieler(uuid, "Team", "127.0.0.1", false)));
+        when(ablage.cursorFuer(uuid)).thenReturn(java.util.Optional.of(1L));
+        var snapshot = java.util.stream.LongStream.rangeClosed(1, 5001)
+                .mapToObj(i -> new de.lightrixx.punish.model.VerpassteNachricht(i, "mute", "Eintrag " + i, 2L)).toList();
+        var leseZeit = new java.util.concurrent.atomic.AtomicLong();
+        when(ablage.momentaufnahme()).thenAnswer(inv -> {
+            leseZeit.set(System.currentTimeMillis());
+            return snapshot;
+        });
+        var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
+        var methode = StrafListener.class.getDeclaredMethod("liefereVerpasst", java.util.UUID.class,
+                de.lightrixx.punish.storage.VerpassteBroadcastsRepository.class,
+                de.lightrixx.punish.core.SpielerVerzeichnis.class, de.lightrixx.punish.service.BroadcastService.class);
+        methode.setAccessible(true);
+        methode.invoke(listener, uuid, ablage, verzeichnis, broadcast);
+        var teile = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
+        verify(broadcast, org.mockito.Mockito.times(2)).liefereVerpassteNach(
+                org.mockito.ArgumentMatchers.eq(uuid), teile.capture());
+        assertEquals(5001, teile.getAllValues().stream().mapToInt(java.util.List::size).sum());
+        if (getrennt) {
+            verify(ablage, org.mockito.Mockito.never()).cursorSetzen(any(), org.mockito.ArgumentMatchers.anyLong());
+        } else {
+            verify(ablage).cursorSetzen(org.mockito.ArgumentMatchers.eq(uuid),
+                    org.mockito.ArgumentMatchers.longThat(wert -> wert < leseZeit.get()));
+        }
+    }
+
+    @Test
+    void diagnoseBehauptetOhneHelloOderSecretsKeineBridgeAnbindung() throws Exception {
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var server = java.util.List.of(server("lobby"), server("survival"));
+        when(proxy.getAllServers()).thenReturn(server);
+        var config = mock(VelocityKonfiguration.class);
+        var kanal = mock(BrueckenKanal.class);
+        var methode = VelocityBefehle.class.getDeclaredMethod("diagnoseKontext",
+                com.velocitypowered.api.proxy.ProxyServer.class, VelocityKonfiguration.class,
+                BrueckenKanal.class, de.lightrixx.punish.storage.IoExecutor.class);
+        methode.setAccessible(true);
+        for (int anzahl = 0; anzahl <= 2; anzahl++) {
+            when(kanal.bridgeVersionen()).thenReturn(switch (anzahl) {
+                case 0 -> java.util.Map.of();
+                case 1 -> java.util.Map.of("lobby", "4.0");
+                default -> java.util.Map.of("lobby", "4.0", "survival", "4.0");
+            });
+            for (boolean secrets : java.util.List.of(false, true)) {
+                when(config.brueckenSecrets()).thenReturn(secrets
+                        ? java.util.Map.of("lobby", "test-lobby", "survival", "test-survival") : java.util.Map.of());
+                var kontext = (de.lightrixx.punish.command.PunishDiagnosticsCommand.Kontext)
+                        methode.invoke(null, proxy, config, kanal, null);
+                assertEquals(anzahl == 2 && secrets, kontext.bridgeOk());
+                assertTrue(kontext.bridgeDetail().contains(anzahl + "/2"));
+                assertFalse(kontext.bridgeDetail().contains("verbunden"));
+            }
+        }
+    }
+    private static com.velocitypowered.api.proxy.server.RegisteredServer server(String name) {
+        var server = mock(com.velocitypowered.api.proxy.server.RegisteredServer.class);
+        var info = mock(com.velocitypowered.api.proxy.server.ServerInfo.class);
+        when(info.getName()).thenReturn(name);
+        when(server.getServerInfo()).thenReturn(info);
+        return server;
+    }
+
+    private static StrafListener serverwechselListener(de.lightrixx.punish.service.TimeoutService timeouts) {
+        return new StrafListener(mock(com.velocitypowered.api.proxy.ProxyServer.class),
+                mock(org.slf4j.Logger.class), mock(de.lightrixx.punish.storage.PlayerCache.class),
+                mock(de.lightrixx.punish.service.BanService.class),
+                mock(de.lightrixx.punish.service.IpBanService.class), timeouts,
+                mock(de.lightrixx.punish.service.MuteService.class),
+                mock(de.lightrixx.punish.service.AutoBannService.class),
+                mock(VelocityKonfiguration.class), mock(de.lightrixx.punish.service.MessageService.class),
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                mock(de.lightrixx.punish.storage.BanRepository.class), mock(BrueckenKanal.class));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void serversperreTrenntNurBeimErstbeitritt(boolean bereitsVerbunden) {
+        var spieler = mock(com.velocitypowered.api.proxy.Player.class);
+        var uuid = java.util.UUID.randomUUID();
+        when(spieler.getUniqueId()).thenReturn(uuid);
+        var timeouts = mock(de.lightrixx.punish.service.TimeoutService.class);
+        long jetzt = System.currentTimeMillis();
+        var timeout = new de.lightrixx.punish.model.TimeoutRecord(uuid, "Steve", "Test", "Mod",
+                jetzt - 1000L, jetzt + 60_000L, de.lightrixx.punish.model.ServerScope.server("survival"));
+        when(timeouts.findeWirksamOhneCleanup(org.mockito.ArgumentMatchers.eq(uuid),
+                org.mockito.ArgumentMatchers.eq("survival"), org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(java.util.Optional.of(timeout));
+        var grund = net.kyori.adventure.text.Component.text("Gesperrt");
+        when(timeouts.baueTimeoutScreen(org.mockito.ArgumentMatchers.eq(timeout),
+                org.mockito.ArgumentMatchers.anyLong())).thenReturn(grund);
+        var event = new com.velocitypowered.api.event.player.ServerPreConnectEvent(
+                spieler, server("survival"), bereitsVerbunden ? server("lobby") : null);
+
+        serverwechselListener(timeouts).onPreConnect(event);
+
+        assertFalse(event.getResult().isAllowed());
+        if (bereitsVerbunden) {
+            verify(spieler, org.mockito.Mockito.never()).disconnect(any());
+            verify(spieler).sendMessage(grund);
+        } else {
+            verify(spieler).disconnect(grund);
+        }
+    }
+
+    @Test
+    void umgeleiteterZielserverWirdGeprueft() {
+        var spieler = mock(com.velocitypowered.api.proxy.Player.class);
+        var uuid = java.util.UUID.randomUUID();
+        when(spieler.getUniqueId()).thenReturn(uuid);
+        var timeouts = mock(de.lightrixx.punish.service.TimeoutService.class);
+        var ziel = server("survival");
+        var event = new com.velocitypowered.api.event.player.ServerPreConnectEvent(
+                spieler, server("lobby"), server("lobby"));
+        event.setResult(com.velocitypowered.api.event.player.ServerPreConnectEvent.ServerResult.allowed(ziel));
+
+        serverwechselListener(timeouts).onPreConnect(event);
+
+        verify(timeouts).findeWirksamOhneCleanup(org.mockito.ArgumentMatchers.eq(uuid),
+                org.mockito.ArgumentMatchers.eq("survival"), org.mockito.ArgumentMatchers.anyLong());
+    }
+
+    @Test
+    void bereitsVerweigerterServerwechselWirdNichtErneutGeprueft() {
+        var spieler = mock(com.velocitypowered.api.proxy.Player.class);
+        when(spieler.getUniqueId()).thenReturn(java.util.UUID.randomUUID());
+        var timeouts = mock(de.lightrixx.punish.service.TimeoutService.class);
+        var event = new com.velocitypowered.api.event.player.ServerPreConnectEvent(spieler, server("survival"));
+        event.setResult(com.velocitypowered.api.event.player.ServerPreConnectEvent.ServerResult.denied());
+
+        serverwechselListener(timeouts).onPreConnect(event);
+
+        org.mockito.Mockito.verifyNoInteractions(timeouts);
+        verify(spieler, org.mockito.Mockito.never()).disconnect(any());
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "mute, UNSIGNED", "mute, SIGNED_WITHOUT_ARGS", "mute, SIGNED_WITH_ARGS", "mute, UNSUPPORTED",
+            "ipmute, UNSIGNED", "ipmute, SIGNED_WITHOUT_ARGS", "ipmute, SIGNED_WITH_ARGS", "ipmute, UNSUPPORTED",
+            "freeze, UNSIGNED", "freeze, SIGNED_WITHOUT_ARGS", "freeze, SIGNED_WITH_ARGS", "freeze, UNSUPPORTED"
+    })
+    void proxyBefehleRespektierenStrafenUndSignaturen(String typ,
+            com.velocitypowered.api.event.command.CommandExecuteEvent.SignedState signatur) throws Exception {
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var spieler = mock(com.velocitypowered.api.proxy.Player.class);
+        var uuid = java.util.UUID.randomUUID();
+        when(spieler.getUniqueId()).thenReturn(uuid);
+        when(spieler.getRemoteAddress()).thenReturn(new java.net.InetSocketAddress("1.2.3.4", 12345));
+        var verbindung = mock(com.velocitypowered.api.proxy.ServerConnection.class);
+        var lobby = server("lobby");
+        var lobbyInfo = lobby.getServerInfo();
+        when(verbindung.getServerInfo()).thenReturn(lobbyInfo);
+        when(spieler.getCurrentServer()).thenReturn(java.util.Optional.of(verbindung));
+        var mutes = mock(de.lightrixx.punish.service.MuteService.class);
+        var ipMutes = mock(de.lightrixx.punish.service.IpMuteService.class);
+        var config = mock(VelocityKonfiguration.class);
+        var listener = listener(proxy, null, mutes, ipMutes, config);
+        when(config.muteBlockierteBefehle()).thenReturn(java.util.List.of("/msg", "/shout*"));
+        long jetzt = System.currentTimeMillis();
+        var scope = de.lightrixx.punish.model.ServerScope.server("lobby");
+        if (typ.equals("mute")) {
+            when(mutes.findeAktivenMuteFuer(org.mockito.ArgumentMatchers.eq(uuid),
+                    org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("lobby")))
+                    .thenReturn(java.util.Optional.of(new de.lightrixx.punish.model.MuteRecord(
+                            uuid, "Steve", "Test", "Mod", jetzt, jetzt + 60_000L, scope)));
+        } else if (typ.equals("ipmute")) {
+            when(ipMutes.findeAktivenMuteFuer(org.mockito.ArgumentMatchers.eq("1.2.3.4"),
+                    org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("lobby")))
+                    .thenReturn(java.util.Optional.of(new de.lightrixx.punish.model.IpMuteRecord(
+                            "1.2.3.4", "Test", "Mod", jetzt, jetzt + 60_000L, scope)));
+        } else {
+            var freezes = mock(de.lightrixx.punish.service.FreezeService.class);
+            when(freezes.findeAktivenFreezeFuer(org.mockito.ArgumentMatchers.eq(uuid),
+                    org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("lobby")))
+                    .thenReturn(java.util.Optional.of(new de.lightrixx.punish.model.FreezeRecord(
+                            uuid, "Steve", "Test", "Mod", jetzt, jetzt + 60_000L, scope)));
+            listener.setFreezeService(freezes);
+        }
+        String befehl = switch (typ) {
+            case "mute" -> "  essentials:MsG Steve Hallo";
+            case "ipmute" -> "shoutall Hallo";
+            default -> "server survival";
+        };
+        var event = new com.velocitypowered.api.event.command.CommandExecuteEvent(spieler, befehl,
+                new com.velocitypowered.api.event.command.CommandExecuteEvent.InvocationInfo(signatur,
+                        com.velocitypowered.api.event.command.CommandExecuteEvent.Source.PLAYER));
+
+        listener.onCommand(event);
+
+        if (signatur == com.velocitypowered.api.event.command.CommandExecuteEvent.SignedState.SIGNED_WITH_ARGS) {
+            assertTrue(event.getResult().isForwardToServer());
+        } else {
+            assertFalse(event.getResult().isAllowed());
+            assertFalse(event.getResult().isForwardToServer());
+        }
+        verify(spieler, org.mockito.Mockito.never()).disconnect(any());
+    }
+
+    @Test
+    void proxyBefehlOhneWirksameStrafeBleibtErlaubt() {
+        var listener = listener(mock(com.velocitypowered.api.proxy.ProxyServer.class), null);
+        var spieler = mock(com.velocitypowered.api.proxy.Player.class);
+        when(spieler.getUniqueId()).thenReturn(java.util.UUID.randomUUID());
+        var event = new com.velocitypowered.api.event.command.CommandExecuteEvent(spieler, "server lobby");
+
+        listener.onCommand(event);
+
+        assertTrue(event.getResult().isAllowed());
+        assertFalse(event.getResult().isForwardToServer());
     }
 }

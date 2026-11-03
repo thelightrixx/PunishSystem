@@ -98,6 +98,7 @@ public final class GuiBrueckenDienst {
                 case Protokoll.GUI_REPORT_INFO -> reportInfo(anfrage);
                 case Protokoll.GUI_KATALOG -> katalog(anfrage);
                 case Protokoll.GUI_DOSSIER -> dossier(anfrage);
+                case Protokoll.GUI_RECHTE -> rechte(anfrage);
                 default -> new Protokoll.GuiAntwort(anfrage.requestId(), false,
                         "Unbekannter GUI-Typ: " + anfrage.typ(), 1, 1, 0, List.of());
             };
@@ -106,6 +107,25 @@ public final class GuiBrueckenDienst {
             return new Protokoll.GuiAntwort(anfrage.requestId(), false,
                     "Fehler auf dem Proxy.", 1, 1, 0, List.of());
         }
+    }
+
+    private Protokoll.GuiAntwort rechte(Protokoll.GuiAnfrage anfrage) {
+        var spieler = anfrage.absenderUuid() == null ? Optional.<com.velocitypowered.api.proxy.Player>empty()
+                : proxy.getPlayer(anfrage.absenderUuid());
+        if (spieler.isEmpty() || !VelocitySender.hatRecht(spieler.get(), "punish.gui")) {
+            return new Protokoll.GuiAntwort(anfrage.requestId(), false,
+                    "Keine Berechtigung.", 1, 1, 0, List.of());
+        }
+        List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
+        for (String knoten : List.of("punish.gui", "punish.ban", "punish.permabann", "punish.mute",
+                "punish.kick", "punish.timeout", "punish.freeze", "punish.warn", "punish.verstoss",
+                "punish.note", "punish.unmute", "punish.pardon", "punish.untimeout", "punish.unfreeze",
+                "punish.allow-silent-syntax", "punish.alts", "punish.status", "punish.history", "punish.reports")) {
+            if (VelocitySender.hatRecht(spieler.get(), knoten)) {
+                zeilen.add(new Protokoll.GuiZeile("RECHT", knoten, "", "", ""));
+            }
+        }
+        return new Protokoll.GuiAntwort(anfrage.requestId(), true, "", 1, 1, zeilen.size(), zeilen);
     }
 
     private Optional<CachedPlayer> loeseZiel(String ziel) {
