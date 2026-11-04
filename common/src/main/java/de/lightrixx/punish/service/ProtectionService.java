@@ -395,7 +395,6 @@ public final class ProtectionService {
         try {
             Optional<OnlineSpieler> online = verzeichnis.onlineSpieler(uuid);
             if (online.isPresent()) {
-                OnlineSpieler spieler = online.get();
                 try {
                     java.util.function.Predicate<String> hat = knoten -> {
                         try {

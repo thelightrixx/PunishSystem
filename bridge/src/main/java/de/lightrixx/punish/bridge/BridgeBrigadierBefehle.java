@@ -65,9 +65,6 @@ public final class BridgeBrigadierBefehle {
                             } catch (Throwable t) {
                                 roh = "";
                             }
-                            if (roh == null) {
-                                roh = "";
-                            }
                             String[] teile = TabHinweis.teile(roh);
                             List<String> vorschlaege;
                             try {

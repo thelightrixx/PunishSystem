@@ -425,7 +425,6 @@ public final class FreezeRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = freezes.size();
             ConcurrentHashMap<StrafSchluessel, FreezeRecord> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

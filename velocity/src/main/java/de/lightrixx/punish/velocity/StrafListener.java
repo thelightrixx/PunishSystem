@@ -1,7 +1,6 @@
 package de.lightrixx.punish.velocity;
 
 import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -612,7 +611,7 @@ public final class StrafListener {
         return null;
     }
 
-    @Subscribe(order = PostOrder.LAST)
+    @Subscribe(priority = -32767)
     public void onCommand(CommandExecuteEvent event) {
         if (!(event.getCommandSource() instanceof Player spieler)
                 || (!event.getResult().isAllowed() && !event.getResult().isForwardToServer())) {
@@ -667,7 +666,7 @@ public final class StrafListener {
         messageService.senden(new VelocitySender(spieler), schluessel, platzhalter);
     }
 
-    @Subscribe(order = PostOrder.LAST)
+    @Subscribe(priority = -32767)
     public void onPreConnect(ServerPreConnectEvent event) {
         Player spieler;
         UUID uuid;

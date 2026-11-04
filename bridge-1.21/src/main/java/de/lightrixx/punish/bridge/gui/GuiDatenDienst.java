@@ -58,7 +58,7 @@ public final class GuiDatenDienst {
             throw new IllegalStateException("GUI-Rechte konnten nicht vom Proxy bestätigt werden.");
         }
         return antwort.eintraege().stream().filter(z -> "RECHT".equals(z.typ()))
-                .map(Protokoll.GuiZeile::titel).collect(java.util.stream.Collectors.toUnmodifiableSet());
+                .map(zeile -> zeile.titel()).collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
     static void setzeRechte(UUID uuid, java.util.Set<String> rechte) {

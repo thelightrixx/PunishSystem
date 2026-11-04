@@ -214,7 +214,6 @@ public final class VelocityBefehle {
         registrar(manager, plugin, proxy, messageService, "pardon", List.of("unban"), pardon);
         PardonAllCommand pardonAll = new PardonAllCommand(messageService, config, protectionService, playerCache,
                 banService, planer, verzeichnis);
-        pardonAll.setVerstossService(verstossService);
         pardonAll.setIoExecutor(ioExecutor);
         registrar(manager, plugin, proxy, messageService, "pardon-all", List.of("unban-all"), pardonAll);
         TimeoutCommand timeout = new TimeoutCommand(messageService, config, protectionService, playerCache,

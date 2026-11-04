@@ -511,7 +511,6 @@ public final class HistoryRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = eintraege.values().stream().filter(Objects::nonNull).mapToInt(List::size).sum();
             ConcurrentHashMap<UUID, List<HistoryEntry>> tmp = new ConcurrentHashMap<>();
             long maximaleId = 0L;
             try (Connection verbindung = mysql.verbindung();

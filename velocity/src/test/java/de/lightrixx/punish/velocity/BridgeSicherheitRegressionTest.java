@@ -307,7 +307,7 @@ class BridgeSicherheitRegressionTest {
         var antwort = dienst.beantworte(anfrage);
         assertTrue(antwort.erfolg());
         assertEquals(java.util.Set.of("punish.gui", "punish.mute"), antwort.eintraege().stream()
-                .map(de.lightrixx.punish.net.Protokoll.GuiZeile::titel).collect(java.util.stream.Collectors.toSet()));
+                .map(zeile -> zeile.titel()).collect(java.util.stream.Collectors.toSet()));
         rechte.clear();
         assertFalse(dienst.beantworte(anfrage).erfolg());
         assertTrue(dienst.beantworte(anfrage).eintraege().isEmpty());
@@ -331,8 +331,8 @@ class BridgeSicherheitRegressionTest {
         var uuid = java.util.UUID.randomUUID();
         var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
         var player = mock(com.velocitypowered.api.proxy.Player.class);
-        when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player),
-                getrennt ? java.util.Optional.empty() : java.util.Optional.of(player));
+        when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player))
+                .thenReturn(getrennt ? java.util.Optional.empty() : java.util.Optional.of(player));
         var config = mock(VelocityKonfiguration.class);
         when(config.verpassteBroadcastsAktiv()).thenReturn(true);
         var listener = listener(proxy, null, mock(de.lightrixx.punish.service.MuteService.class), null, config);
@@ -355,7 +355,8 @@ class BridgeSicherheitRegressionTest {
                 de.lightrixx.punish.core.SpielerVerzeichnis.class, de.lightrixx.punish.service.BroadcastService.class);
         methode.setAccessible(true);
         methode.invoke(listener, uuid, ablage, verzeichnis, broadcast);
-        var teile = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
+        org.mockito.ArgumentCaptor<java.util.List<de.lightrixx.punish.model.VerpassteNachricht>> teile =
+                org.mockito.ArgumentCaptor.captor();
         verify(broadcast, org.mockito.Mockito.times(2)).liefereVerpassteNach(
                 org.mockito.ArgumentMatchers.eq(uuid), teile.capture());
         assertEquals(5001, teile.getAllValues().stream().mapToInt(java.util.List::size).sum());

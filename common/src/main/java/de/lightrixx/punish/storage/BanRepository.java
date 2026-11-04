@@ -495,7 +495,6 @@ public final class BanRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = banns.size();
             ConcurrentHashMap<StrafSchluessel, BanRecord> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

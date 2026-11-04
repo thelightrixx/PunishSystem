@@ -286,7 +286,6 @@ public final class NoteRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = notizen.values().stream().filter(Objects::nonNull).mapToInt(List::size).sum();
             ConcurrentHashMap<UUID, List<NoteRecord>> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

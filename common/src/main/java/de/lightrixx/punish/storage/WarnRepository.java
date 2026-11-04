@@ -292,7 +292,6 @@ public final class WarnRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = warns.values().stream().filter(Objects::nonNull).mapToInt(List::size).sum();
             ConcurrentHashMap<UUID, List<WarnRecord>> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

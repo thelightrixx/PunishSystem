@@ -364,7 +364,6 @@ public final class ReportRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = reports.size();
             long alterZaehler = zaehler.get();
             ConcurrentHashMap<Long, ReportRecord> tmp = new ConcurrentHashMap<>();
             long maxId = 0L;

@@ -6,7 +6,6 @@ import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.BanRecord;
 import de.lightrixx.punish.model.CachedPlayer;
-import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.service.VerstossService;
@@ -22,12 +21,12 @@ import de.lightrixx.punish.storage.TimeoutRepository;
 import de.lightrixx.punish.storage.VerstossRepository;
 import de.lightrixx.punish.storage.WarnRepository;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -62,14 +63,15 @@ class PunishStatusPaginationTest {
     void aufbauen() {
         messages = mock(MessageService.class);
         bloecke = new ArrayList<>();
-        when(messages.komponente(anyString(), any(Map.class)))
+        when(messages.komponente(anyString(), anyMap()))
                 .thenAnswer(inv -> Component.text(String.valueOf((Object) inv.getArgument(0))));
-        when(messages.komponenteOhnePraefix(anyString(), any(Map.class)))
+        when(messages.komponenteOhnePraefix(anyString(), anyMap()))
                 .thenAnswer(inv -> Component.text(String.valueOf((Object) inv.getArgument(0))));
         org.mockito.Mockito.doAnswer(inv -> {
-            bloecke.add(new ArrayList<>(inv.getArgument(1, List.class)));
+            List<Component> seite = inv.getArgument(1);
+            bloecke.add(new ArrayList<>(seite));
             return null;
-        }).when(messages).sendeBlock(any(BefehlsSender.class), any(List.class));
+        }).when(messages).sendeBlock(any(BefehlsSender.class), anyList());
 
         config = mock(Konfiguration.class);
         when(config.historyEintraegeProSeite()).thenReturn(10);
@@ -129,8 +131,11 @@ class PunishStatusPaginationTest {
     }
 
     private static long eintraege(List<Component> block) {
-        return block.stream().filter(component -> component.clickEvent() != null
-                && component.clickEvent().value().contains("/pardon")).count();
+        return block.stream().filter(component -> {
+            ClickEvent event = component.clickEvent();
+            return event != null && event.payload() instanceof ClickEvent.Payload.Text text
+                    && text.value().contains("/pardon");
+        }).count();
     }
 
     @Test
@@ -160,7 +165,7 @@ class PunishStatusPaginationTest {
         befehl.ausfuehren(sender(), new String[]{"Ziel", "filter:kicks"});
 
         verify(messages).senden(any(BefehlsSender.class), eq(MessageKeys.PUNISH_STATUS_FILTER_UNGUELTIG),
-                any(Map.class));
+                anyMap());
         verify(messages).senden(any(BefehlsSender.class), eq(MessageKeys.PUNISH_STATUS_SYNTAX));
         assertTrue(bloecke.isEmpty(), "filter:kicks darf keine Statusansicht senden");
         verify(banRepository, never()).alleFuer(any(UUID.class));

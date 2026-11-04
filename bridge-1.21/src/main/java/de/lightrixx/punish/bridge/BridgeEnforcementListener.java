@@ -573,7 +573,6 @@ public final class BridgeEnforcementListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    @SuppressWarnings({"deprecation", "removal"})
     public void beiAmboss(PrepareAnvilEvent event) {
         if (!(event.getView().getPlayer() instanceof Player spieler)) {
             return;

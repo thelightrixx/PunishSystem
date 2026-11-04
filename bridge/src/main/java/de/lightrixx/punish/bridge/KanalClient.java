@@ -46,7 +46,6 @@ public final class KanalClient implements PluginMessageListener {
     private volatile String variante = "";
     private volatile de.lightrixx.punish.bridge.JarEmpfaenger updateEmpfaenger;
     private volatile String updateStandVersion = "";
-    private volatile Runnable updateStandSender;
     private volatile byte[] proxyZuBridgeSchluessel;
     private volatile byte[] bridgeZuProxySchluessel;
     private volatile long letzteAuthWarnung = 0L;
@@ -270,10 +269,6 @@ public final class KanalClient implements PluginMessageListener {
 
     public void setUpdateStand(String version) {
         this.updateStandVersion = version == null ? "" : version.trim();
-    }
-
-    public void mitUpdateStandSender(Runnable sender) {
-        this.updateStandSender = sender;
     }
 
     public void sendeUpdateStand() {

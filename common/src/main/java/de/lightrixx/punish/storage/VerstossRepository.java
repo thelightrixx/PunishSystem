@@ -417,7 +417,6 @@ public final class VerstossRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = verstoesse.values().stream().filter(Objects::nonNull).mapToInt(List::size).sum();
             ConcurrentHashMap<UUID, List<VerstossRecord>> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

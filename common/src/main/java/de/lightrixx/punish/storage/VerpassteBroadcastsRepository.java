@@ -426,7 +426,6 @@ public final class VerpassteBroadcastsRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = eintraege.size();
             ConcurrentSkipListMap<Long, VerpassteNachricht> tmp = new ConcurrentSkipListMap<>();
             ConcurrentHashMap<UUID, Long> tmpCursor = new ConcurrentHashMap<>();
             long maximaleId = 0L;

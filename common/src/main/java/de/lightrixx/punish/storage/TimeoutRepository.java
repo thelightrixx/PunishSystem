@@ -465,7 +465,6 @@ public final class TimeoutRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = timeouts.size();
             ConcurrentHashMap<StrafSchluessel, TimeoutRecord> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

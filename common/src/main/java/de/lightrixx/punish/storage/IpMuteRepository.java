@@ -397,7 +397,6 @@ public final class IpMuteRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = mutes.size();
             ConcurrentHashMap<IpStrafSchluessel, IpMuteRecord> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

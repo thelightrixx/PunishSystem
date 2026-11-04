@@ -21,11 +21,6 @@ import java.util.Objects;
 public final class PardonAllCommand extends PunishCommand {
     private static final String BESTAETIGUNGS_ARGUMENT = "confirm";
     private final BanService banService;
-    private volatile de.lightrixx.punish.service.VerstossService verstossService;
-
-    public void setVerstossService(de.lightrixx.punish.service.VerstossService verstossService) {
-        this.verstossService = verstossService;
-    }
 
     public PardonAllCommand(MessageService messageService,
                             Konfiguration configManager,

@@ -397,7 +397,6 @@ public final class IpTimeoutRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = timeouts.size();
             ConcurrentHashMap<IpStrafSchluessel, IpTimeoutRecord> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

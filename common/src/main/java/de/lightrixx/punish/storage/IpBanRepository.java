@@ -427,7 +427,6 @@ public final class IpBanRepository {
     private void ladeAusMysql() {
         StoreLock.LOCK.writeLock().lock();
         try {
-            int alteGroesse = ipBanns.size();
             ConcurrentHashMap<IpStrafSchluessel, IpBanRecord> tmp = new ConcurrentHashMap<>();
             try (Connection verbindung = mysql.verbindung();
                  Statement statement = verbindung.createStatement();

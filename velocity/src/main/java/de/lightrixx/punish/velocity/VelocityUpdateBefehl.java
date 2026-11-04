@@ -31,10 +31,6 @@ public final class VelocityUpdateBefehl extends PunishCommand {
     private volatile UpdateVerteilung updateVerteilung;
     private volatile HangarUpdateService.HttpAbruf httpAbruf = HangarUpdateService.standardAbruf();
     private volatile String letzteRemoteVersion = "";
-    private volatile String letzterChannel = "";
-    private volatile long letztePruefungMillis;
-    private volatile String ausstehendVersion = "";
-    private volatile long ausstehendZeit;
 
     public VelocityUpdateBefehl(MessageService messageService,
                                 VelocityKonfiguration konfiguration,
@@ -97,8 +93,6 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                 try {
                     HangarUpdateService.ReleaseInfo info = pruefeGithub(konfiguration, httpAbruf);
                     letzteRemoteVersion = info.version();
-                    letzterChannel = info.channel();
-                    letztePruefungMillis = System.currentTimeMillis();
                     String aktuell = aktuelleVersion();
                     if (UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
                         taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_VERFUEGBAR,
@@ -132,21 +126,16 @@ public final class VelocityUpdateBefehl extends PunishCommand {
         }
         if (bestaetigungNoetig() && !bestaetigt) {
             laeuft.set(false);
-            ausstehendVersion = letzteRemoteVersion;
-            ausstehendZeit = System.currentTimeMillis();
             messageService.senden(sender, MessageKeys.UPDATE_BESTAETIGUNG_NOETIG,
                     Map.of("version", letzteRemoteVersion.isBlank() ? "unbekannt" : letzteRemoteVersion));
             return;
         }
-        ausstehendVersion = "";
         try {
             taskScheduler.aufgabeAsync(() -> {
                 try {
                     taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_START));
                     HangarUpdateService.ReleaseInfo info = pruefeGithub(konfiguration, httpAbruf);
                     letzteRemoteVersion = info.version();
-                    letzterChannel = info.channel();
-                    letztePruefungMillis = System.currentTimeMillis();
                     String aktuell = aktuelleVersion();
                     if (!UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
                         taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_AKTUELL,
@@ -202,11 +191,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                         throw new IllegalStateException(
                                 "Update abgelehnt: Das GitHub Release muss Velocity und beide Bridge-Varianten enthalten.");
                     }
-                    if (velocity != null) {
-                        ersetzeEigeneJar(velocity, info.version());
-                    } else {
-                        LOG.warn("Update ohne Velocity-Artefakt (nur Bridges werden verteilt).");
-                    }
+                    ersetzeEigeneJar(velocity, info.version());
                     UpdateVerteilung verteilung = updateVerteilung;
                     BrueckenKanal kanal = brueckenKanal;
                     if (verteilung != null && (bridge != null || bridge121 != null)) {
