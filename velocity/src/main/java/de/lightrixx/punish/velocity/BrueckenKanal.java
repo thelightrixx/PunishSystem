@@ -50,6 +50,8 @@ public final class BrueckenKanal {
             java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final java.util.concurrent.ConcurrentHashMap<String, Long> letzterVollSync =
             new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Set<String> laufendeVollSyncs =
+            java.util.concurrent.ConcurrentHashMap.newKeySet();
     static final long VOLL_SYNC_INTERVALL_MILLIS = 30L * 60L * 1000L;
     private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicLong> sendeSeq =
             new java.util.concurrent.ConcurrentHashMap<>();
@@ -1034,6 +1036,12 @@ public final class BrueckenKanal {
 
     public void beantworteHello(RegisteredServer server, String serverName, int version,
                                 String bridgePluginVersion, String variante, String sessionId) {
+        beantworteHello(server, serverName, version, bridgePluginVersion, variante, sessionId, false);
+    }
+
+    public void beantworteHello(RegisteredServer server, String serverName, int version,
+                                String bridgePluginVersion, String variante, String sessionId,
+                                boolean vollSyncAngefordert) {
         boolean inkompatibel = version < Protokoll.MIN_VERSION || version > Protokoll.VERSION;
         String sauber = serverName == null ? "unbekannt" : serverName.replace('\r', ' ').replace('\n', ' ').replace('\u001B', ' ').trim();
         if (sauber.isBlank()) {
@@ -1080,38 +1088,41 @@ public final class BrueckenKanal {
                 logger.debug("HELLO-ACK konnte nicht gesendet werden.", e);
             }
         }
-        if (vollSyncFaellig(kanonisch, System.currentTimeMillis())) {
-            logger.info("Bridge-HELLO von '{}' (kanonisch '{}', Protokoll v{}).", sauber, kanonisch, version);
-            // Voll-Sync vom Netty-Thread verlagern: Bei großen Straflisten kostet der
-            // Versand Serialisierung + HMAC je Paket. Das sofortige Reservieren verhindert
-            // Doppel-Tasks bei parallelen HELLOs; bei Fehlschlag wird die Reservierung
-            // gelöst, damit der nächste HELLO es erneut versucht.
-            merkeVollSync(kanonisch, System.currentTimeMillis());
-            if (!planeVollSync(server, kanonisch) && !mutePushAn(server)) {
-                letzterVollSync.remove(syncSchluessel(kanonisch));
-                logger.warn("Voll-Sync für '{}' unvollständig – nächster HELLO versucht es erneut.", kanonisch);
-            }
-        } else {
+        String syncName = syncSchluessel(kanonisch);
+        if (!vollSyncAngefordert && !vollSyncFaellig(syncName, System.currentTimeMillis())) {
             logger.debug("Bridge-HELLO-Refresh von '{}' (Voll-Sync aktuell).", kanonisch);
+            return;
+        }
+        if (laufendeVollSyncs.add(syncName)) {
+            logger.info("Bridge-HELLO von '{}' (kanonisch '{}', Protokoll v{}).", sauber, kanonisch, version);
+            planeVollSync(server, syncName);
         }
     }
 
-    private boolean planeVollSync(RegisteredServer server, String kanonisch) {
-        try {
-            proxy.getScheduler().buildTask(plugin, () -> {
-                try {
-                    if (!mutePushAn(server)) {
-                        letzterVollSync.remove(syncSchluessel(kanonisch));
-                        logger.warn("Voll-Sync für '{}' unvollständig – nächster HELLO versucht es erneut.", kanonisch);
-                    }
-                } catch (Exception e) {
-                    logger.debug("Voll-Sync nach HELLO fehlgeschlagen.", e);
+    private void planeVollSync(RegisteredServer server, String syncName) {
+        Runnable auftrag = () -> {
+            boolean erfolgreich = false;
+            try {
+                erfolgreich = mutePushAn(server);
+                if (erfolgreich) {
+                    merkeVollSync(syncName, System.currentTimeMillis());
+                } else {
+                    logger.warn("Voll-Sync für '{}' unvollständig – nächster HELLO versucht es erneut.", syncName);
                 }
-            }).schedule();
-            return true;
+            } catch (Exception e) {
+                logger.warn("Voll-Sync für '{}' nach HELLO fehlgeschlagen.", syncName, e);
+            } finally {
+                if (!erfolgreich) {
+                    letzterVollSync.remove(syncName);
+                }
+                laufendeVollSyncs.remove(syncName);
+            }
+        };
+        try {
+            proxy.getScheduler().buildTask(plugin, auftrag).schedule();
         } catch (Exception e) {
             logger.debug("Voll-Sync konnte nicht geplant werden, läuft synchron.", e);
-            return false;
+            auftrag.run();
         }
     }
 
@@ -1125,7 +1136,8 @@ public final class BrueckenKanal {
     }
 
     private static String syncSchluessel(String kanonisch) {
-        return kanonisch == null || kanonisch.isBlank() ? "unbekannt" : kanonisch.trim();
+        return kanonisch == null || kanonisch.isBlank()
+                ? "unbekannt" : kanonisch.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private void merkeBridgeVersion(String kanonisch, String bridgePluginVersion) {

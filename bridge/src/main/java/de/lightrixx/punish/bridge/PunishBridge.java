@@ -357,7 +357,8 @@ public final class PunishBridge extends JavaPlugin {
                     for (long delay : new long[]{40L, 100L, 220L}) {
                         planerLokal.spaeterAsync(() -> {
                             try {
-                                if (kanalClient.letzteProxyBestaetigungMillis() != bestaetigungVorJoin) {
+                                if (!kanalClient.vollSyncNoetig()
+                                        && kanalClient.letzteProxyBestaetigungMillis() != bestaetigungVorJoin) {
                                     return;
                                 }
                                 kanalClient.sendeHello(joinServer);

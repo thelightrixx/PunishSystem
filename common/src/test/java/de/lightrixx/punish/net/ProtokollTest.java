@@ -46,6 +46,13 @@ class ProtokollTest {
         assertEquals("lobby", hello.serverName());
         assertEquals("v4.0-beta+011126-1853", hello.pluginVersion());
         assertTrue(!hello.sessionId().isBlank(), "HELLO v7 enthält eine Session-ID");
+        assertFalse(hello.vollSyncAngefordert());
+    }
+
+    @Test
+    void helloKannVollSyncAnfordern() throws Exception {
+        byte[] paket = Protokoll.hello("lobby", "4.0", "bridge", true);
+        assertTrue(Protokoll.leseHello(Protokoll.paket(paket).nutzdaten()).vollSyncAngefordert());
     }
 
     @Test

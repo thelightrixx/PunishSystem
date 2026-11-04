@@ -363,6 +363,11 @@ public final class Protokoll {
     }
 
     public static byte[] hello(String serverName, String pluginVersion, String variante) throws IOException {
+        return hello(serverName, pluginVersion, variante, false);
+    }
+
+    public static byte[] hello(String serverName, String pluginVersion, String variante,
+                               boolean vollSyncAngefordert) throws IOException {
         String version = kuerzeVersion(pluginVersion);
         String v = variante == null ? "" : variante.trim();
         if (v.length() > 32) {
@@ -376,11 +381,19 @@ public final class Protokoll {
             out.writeUTF(version);
             out.writeUTF(varianteFinal);
             out.writeUTF(session);
+            if (vollSyncAngefordert) {
+                out.writeBoolean(true);
+            }
         });
     }
 
     public record Hello(int protokollVersion, String serverName, String pluginVersion,
-                        String variante, String sessionId) {
+                        String variante, String sessionId, boolean vollSyncAngefordert) {
+        public Hello(int protokollVersion, String serverName, String pluginVersion, String variante,
+                     String sessionId) {
+            this(protokollVersion, serverName, pluginVersion, variante, sessionId, false);
+        }
+
         public Hello(int protokollVersion, String serverName, String pluginVersion) {
             this(protokollVersion, serverName, pluginVersion, "", "");
         }
@@ -416,10 +429,16 @@ public final class Protokoll {
         } catch (Exception e) {
             LOG.debug("HELLO ohne Session-ID (Legacy-Format toleriert).", e);
         }
+        boolean vollSyncAngefordert;
+        try {
+            vollSyncAngefordert = in.readBoolean();
+        } catch (java.io.EOFException e) {
+            vollSyncAngefordert = false;
+        }
         return new Hello(version, name == null ? "unbekannt" : name,
                 pluginVersion == null ? "" : pluginVersion.trim(),
                 variante == null ? "" : variante.trim(),
-                sessionId == null ? "" : sessionId.trim());
+                sessionId == null ? "" : sessionId.trim(), vollSyncAngefordert);
     }
 
     private static String kuerzeVersion(String version) {

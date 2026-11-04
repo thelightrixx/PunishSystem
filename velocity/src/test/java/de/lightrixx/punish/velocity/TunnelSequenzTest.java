@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -189,14 +190,15 @@ class TunnelSequenzTest {
         assertEquals(session, Protokoll.leseHelloAckMitName(ack.nutzdaten()).sessionId());
     }
 
-    @Test
-    void bridgeNeustartUmgehtDieVollSyncDrosselung() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"lobby", "Lobby"})
+    void bridgeNeustartUmgehtDieVollSyncDrosselung(String name) throws Exception {
         var kanal = kanal();
-        var server = server("lobby");
+        var server = server(name);
         long jetzt = System.currentTimeMillis();
         assertNotNull(kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
                 Protokoll.hello("lobby", "4.0", "bridge"), 1L)));
-        kanal.merkeVollSync("lobby", jetzt);
+        kanal.merkeVollSync(name, jetzt);
         assertNotNull(kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
                 Protokoll.hello("lobby", "4.0", "bridge"), 5L)));
         org.junit.jupiter.api.Assertions.assertFalse(kanal.vollSyncFaellig("lobby", jetzt + 1000L),
@@ -206,6 +208,40 @@ class TunnelSequenzTest {
         assertTrue(kanal.vollSyncFaellig("lobby", jetzt + 2000L),
                 "Nach Bridge-Neustart sind die Caches leer und brauchen sofort einen Voll-Sync");
     }
+
+    @Test
+    void angeforderterVollSyncUmgehtDrosselungAuchBeiHoehererHelloSequenz() throws Exception {
+        var kanal = kanal();
+        var server = server("Lobby");
+        long jetzt = System.currentTimeMillis();
+        assertNotNull(kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
+                Protokoll.hello("lobby", "4.0", "bridge"), 1L)));
+        kanal.merkeVollSync("Lobby", jetzt);
+        var arten = new java.util.ArrayList<Integer>();
+        var schluessel = TunnelSignatur.schluesselAus(SECRET, TunnelSignatur.Richtung.PROXY_ZU_BRIDGE);
+        when(server.sendPluginMessage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(byte[].class)))
+                .thenAnswer(inv -> {
+                    byte[] klar = TunnelSignatur.pruefenUndAbziehen(inv.getArgument(1), schluessel);
+                    arten.add(Protokoll.paket(Protokoll.entrahmeSequenz(klar).paket()).typ());
+                    return true;
+                });
+
+        kanal.beantworteHello(server, "lobby", Protokoll.VERSION, "4.0", "bridge", "refresh");
+        assertEquals(List.of(Protokoll.HELLO_ACK), arten);
+        arten.clear();
+
+        byte[] paket = kanal.sequenzPruefen(server, Protokoll.rahmeMitSequenz(
+                Protokoll.hello("lobby", "4.0", "bridge", true), 5L));
+        assertNotNull(paket);
+        assertFalse(kanal.vollSyncFaellig("Lobby", jetzt + 1000L));
+        var hello = Protokoll.leseHello(Protokoll.paket(paket).nutzdaten());
+        kanal.beantworteHello(server, hello.serverName(), hello.protokollVersion(),
+                hello.pluginVersion(), hello.variante(), hello.sessionId(), hello.vollSyncAngefordert());
+
+        assertEquals(List.of(Protokoll.HELLO_ACK, Protokoll.MUTE_SYNC, Protokoll.IP_MUTE_SYNC,
+                Protokoll.BAN_SYNC, Protokoll.TIMEOUT_SYNC, Protokoll.FREEZE_SYNC), arten);
+    }
+
     @Test
     void parallelerVersandHaeltDieSequenzreihenfolge() throws Exception {
         var kanal = kanal();

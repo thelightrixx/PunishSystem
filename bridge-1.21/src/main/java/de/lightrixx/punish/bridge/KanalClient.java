@@ -168,19 +168,8 @@ public final class KanalClient implements PluginMessageListener {
         return proxyZuBridgeSchluessel != null && bridgeZuProxySchluessel != null;
     }
 
-    // Ein HELLO darf einen laufenden Chunk-Sync nicht abbrechen: Der neue Voll-Sync
-    // verwirft das alte Staging selbst beim SYNC_BEGIN. Ein erzwungenes syncVerwerfen()
-    // mittendrin ließe die restlichen Chunks als Teilmengen-Stand anwenden.
-    private void syncStagingVerwerfenWennIdle() {
-        if (muteCache.syncLaeuft()
-                || (ipMuteCache != null && ipMuteCache.syncLaeuft())
-                || (banCache != null && banCache.syncLaeuft())
-                || (timeoutCache != null && timeoutCache.syncLaeuft())
-                || (freezeCache != null && freezeCache.syncLaeuft())) {
-            LOG.info("HELLO übersprungenes Sync-Verwerfen: ein Voll-Sync läuft bereits.");
-            return;
-        }
-        syncStagingVerwerfen();
+    boolean vollSyncNoetig() {
+        return !muteCache.istJeSynchronisiert() || muteCache.syncLaeuft();
     }
 
     private void syncStagingVerwerfen() {
@@ -225,9 +214,8 @@ public final class KanalClient implements PluginMessageListener {
         // und akzeptiert danach jede Sequenz > 0. Ein Reset hier kollidiert mit parallel
         // laufenden Sendern (Chatfilter-Treffer, GUI-Anfragen): Beide koennten dieselbe
         // Sequenz vergeben, der Proxy verwirft das zweite Paket als Replay.
-        syncStagingVerwerfenWennIdle();
         try {
-            sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante));
+            sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante, vollSyncNoetig()));
             LOG.info("Bridge-HELLO als '{}' gesendet.", serverName);
         } catch (IllegalStateException e) {
             LOG.warn("HELLO konnte nicht gesendet werden: {}", e.getMessage());
@@ -686,6 +674,10 @@ public final class KanalClient implements PluginMessageListener {
                 }
                 case Protokoll.MUTE_SYNC -> {
                     List<Protokoll.MuteEintrag> eintraege = Protokoll.leseMuteSync(paket.nutzdaten());
+                    if (muteCache.syncLaeuft()) {
+                        // Der Proxy beginnt einen Sammelabgleich außerhalb eines Sync-Rahmens mit MUTE_SYNC.
+                        syncStagingVerwerfen();
+                    }
                     muteCache.ersetzeAlle(eintraege);
                     LOG.debug("Mute-Sync erhalten ({} Einträge).", eintraege.size());
                 }

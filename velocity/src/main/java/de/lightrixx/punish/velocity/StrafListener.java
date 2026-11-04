@@ -975,7 +975,7 @@ public final class StrafListener {
                 case Protokoll.HELLO -> {
                     Protokoll.Hello hello = Protokoll.leseHello(paket.nutzdaten());
                     kanal.beantworteHello(server, hello.serverName(), hello.protokollVersion(),
-                            hello.pluginVersion(), hello.variante(), hello.sessionId());
+                            hello.pluginVersion(), hello.variante(), hello.sessionId(), hello.vollSyncAngefordert());
                 }
                 case Protokoll.BEFEHL_AUSFUEHREN -> {
                     if (!befehlTempoErlaubt(serverNameFuer(server))) {
