@@ -71,7 +71,7 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player spieler)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage(prefixHinweis("Dieser Befehl kann nur von einem Spieler ausgeführt werden.", NamedTextColor.RED));
             return true;
         }

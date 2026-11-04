@@ -22,7 +22,6 @@ class IpMuteCacheKanonischTest {
     }
 
     @Test
-    @SuppressWarnings("null")
     void findeAktivFindetKanonisierteVariante() {
         IpMuteCache cache = new IpMuteCache();
         cache.ersetzeAlle(java.util.List.of(new Protokoll.IpMuteEintrag(
@@ -52,7 +51,6 @@ class IpMuteCacheKanonischTest {
     }
 
     @Test
-    @SuppressWarnings("null")
     void mehrereScopesKoexistieren() {
         IpMuteCache cache = new IpMuteCache();
         cache.ersetzeAlle(java.util.List.of(

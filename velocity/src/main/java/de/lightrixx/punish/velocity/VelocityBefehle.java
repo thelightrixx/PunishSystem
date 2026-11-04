@@ -469,7 +469,6 @@ public final class VelocityBefehle {
         }
     }
 
-    @SuppressWarnings("null")
     private static String proxyVersion(ProxyServer proxy) {
         try {
             var version = proxy.getPluginManager().getPlugin("punishsystem")

@@ -151,7 +151,6 @@ class CacheSyncFramingTest {
     }
 
     @Test
-    @SuppressWarnings("null")
     void timeoutUndIpMuteCachesUnterstuetzenFraming() {
         TimeoutCache timeouts = new TimeoutCache();
         IpMuteCache ipMutes = new IpMuteCache();

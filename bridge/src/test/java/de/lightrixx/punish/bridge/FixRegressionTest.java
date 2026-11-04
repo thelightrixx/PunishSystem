@@ -85,7 +85,6 @@ class FixRegressionTest {
         when(config.befehlAusnahmen()).thenReturn(ausnahmen == null ? Set.of() : ausnahmen);
         when(config.klartextUbertragen()).thenReturn(true);
         de.lightrixx.punish.chatfilter.ToxizitaetsModell modell = text -> kiWert;
-        Player mockSpieler = Mockito.mock(Player.class);
         return new ChatfilterService(config, liste, modell, (a, b, c, d) -> {
         });
     }

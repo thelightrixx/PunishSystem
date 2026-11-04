@@ -1280,7 +1280,6 @@ public final class PunishBridge extends JavaPlugin {
         return eintragFuer(name, weiterleitung, true);
     }
 
-    @SuppressWarnings("null")
     private BridgeBrigadierBefehle.Eintrag eintragFuer(String name, TunnelVorschlag tunnel,
                                                       boolean mitNamensraum) {
         java.util.List<String> aliase = new java.util.ArrayList<>();

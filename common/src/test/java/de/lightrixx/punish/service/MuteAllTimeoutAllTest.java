@@ -282,7 +282,6 @@ class MuteAllTimeoutAllTest {
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
     void ipMuteCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert) {
-        var uuid = UUID.randomUUID();
         var scope = ServerScope.server("survival");
         long jetzt = System.currentTimeMillis();
         var alt = new de.lightrixx.punish.model.IpMuteRecord("1.2.3.4", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);
@@ -310,7 +309,6 @@ class MuteAllTimeoutAllTest {
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({"false, false", "false, true", "true, false", "true, true"})
     void ipTimeoutCleanupErhaeltGleichzeitigVerlaengerteStrafe(boolean verlaengert, boolean einzeln) {
-        var uuid = UUID.randomUUID();
         var scope = ServerScope.server("survival");
         long jetzt = System.currentTimeMillis();
         var alt = new de.lightrixx.punish.model.IpTimeoutRecord("1.2.3.4", "Test", "Mod", jetzt - 2000L, jetzt - 1000L, scope);

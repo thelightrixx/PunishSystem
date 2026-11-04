@@ -85,7 +85,6 @@ public final class BridgeKonfiguration implements Konfiguration {
         sichereRessource(R_GUI, guiDatei);
     }
 
-    @SuppressWarnings("null")
     private void sichereRessource(String resourcePfad, File ziel) {
         if (ziel.exists()) {
             return;
@@ -264,7 +263,6 @@ public final class BridgeKonfiguration implements Konfiguration {
         ladeDefaultInFallsFehlend(zusammen, R_GUI);
     }
 
-    @SuppressWarnings("null")
     private void ladeDefaultInFallsFehlend(FileConfiguration zusammen, String resourcePfad) {
         java.io.InputStream in = null;
         try {

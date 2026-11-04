@@ -46,7 +46,6 @@ public final class BukkitOfflineVerzeichnis implements OfflineVerzeichnis {
         }
     }
 
-    @SuppressWarnings("null")
     private static Optional<ExternSpieler> von(OfflinePlayer offline, String fallbackName) {
         if (offline == null) {
             return Optional.empty();

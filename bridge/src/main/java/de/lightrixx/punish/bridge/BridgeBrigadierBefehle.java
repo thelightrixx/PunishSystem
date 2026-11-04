@@ -43,7 +43,6 @@ public final class BridgeBrigadierBefehle {
         }
     }
 
-    @SuppressWarnings("null")
     private static void registriere(Commands registrar, Eintrag eintrag) {
         TunnelVorschlag tunnel = eintrag.tunnel();
         RequiredArgumentBuilder<CommandSourceStack, String> rest =

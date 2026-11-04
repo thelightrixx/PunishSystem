@@ -13,13 +13,12 @@ import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.util.TimeParser;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -50,7 +49,7 @@ class MassenRueckstauTest {
 
         befehl.ausfuehren(sender, new String[]{"7d", "Grund", "confirm"});
 
-        verify(messages).senden(eq(sender), eq(MessageKeys.MASSEN_IO_RUECKSTAU), any(Map.class));
+        verify(messages).senden(eq(sender), eq(MessageKeys.MASSEN_IO_RUECKSTAU), anyMap());
         verifyNoInteractions(banService);
     }
 

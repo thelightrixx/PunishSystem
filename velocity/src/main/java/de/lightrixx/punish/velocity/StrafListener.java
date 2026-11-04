@@ -205,7 +205,6 @@ public final class StrafListener {
     }
 
     @Subscribe
-    @SuppressWarnings("null")
     public void onLogin(LoginEvent event) {
         Player spieler;
         UUID uuid;

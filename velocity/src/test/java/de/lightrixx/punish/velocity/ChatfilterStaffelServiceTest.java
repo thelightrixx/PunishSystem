@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -127,7 +128,7 @@ class ChatfilterStaffelServiceTest {
         var hash = "a".repeat(64);
         dienst.melde(uuid, "Notch", new Protokoll.ChatfilterTreffer(uuid, "Notch",
                 "CHAT", "KI", 0.9d, hash, "Geheimer Klartext", System.currentTimeMillis()));
-        var captor = org.mockito.ArgumentCaptor.forClass(java.util.Map.class);
+        org.mockito.ArgumentCaptor<Map<String, String>> captor = org.mockito.ArgumentCaptor.captor();
         verify(broadcastService, times(1)).senden(
                 eq(de.lightrixx.punish.core.MessageKeys.BROADCAST_CHATFILTER_TREFFER),
                 captor.capture());

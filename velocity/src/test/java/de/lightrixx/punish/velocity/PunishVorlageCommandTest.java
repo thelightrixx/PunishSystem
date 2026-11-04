@@ -10,6 +10,7 @@ import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.storage.PlayerCache;
+import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalMatchers;
@@ -127,11 +128,10 @@ class PunishVorlageCommandTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void listeEnthaeltNurSichtbareVorlagen() {
         when(sender.hatRecht(eq("punish.ban"))).thenReturn(false);
         befehl.ausfuehren(sender, new String[0]);
-        org.mockito.ArgumentCaptor<List> captor = org.mockito.ArgumentCaptor.forClass(List.class);
+        org.mockito.ArgumentCaptor<List<Component>> captor = org.mockito.ArgumentCaptor.captor();
         verify(messageService).sendeBlock(eq(sender), captor.capture());
         assertEquals(3, captor.getValue().size());
     }

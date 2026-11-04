@@ -179,7 +179,6 @@ public final class ChatfilterService implements AutoCloseable {
         return basis;
     }
 
-    @SuppressWarnings("null")
     public Optional<FilterTreffer> pruefeChat(Player spieler, String text) {
         Objects.requireNonNull(spieler, "Der Spieler darf nicht null sein.");
         if (!darfPruefen(spieler, FilterKanal.CHAT, text)) {
@@ -241,7 +240,6 @@ public final class ChatfilterService implements AutoCloseable {
         }
     }
 
-    @SuppressWarnings("null")
     public Optional<FilterTreffer> pruefeBlockierend(Player spieler, FilterKanal kanal, String text) {
         Objects.requireNonNull(spieler, "Der Spieler darf nicht null sein.");
         Objects.requireNonNull(kanal, "Der Kanal darf nicht null sein.");
@@ -351,7 +349,6 @@ public final class ChatfilterService implements AutoCloseable {
         return !umgeht(spieler);
     }
 
-    @SuppressWarnings("null")
     private Optional<FilterTreffer> trefferStufe1(FilterKanal kanal, String text) {
         WortlistenFilter liste = wortliste;
         if (liste == null) {

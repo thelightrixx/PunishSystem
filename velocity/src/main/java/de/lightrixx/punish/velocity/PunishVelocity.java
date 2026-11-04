@@ -556,7 +556,6 @@ public final class PunishVelocity {
             if (lokal == null) {
                 return;
             }
-            String channel = config.updateChannel();
             lokal.aufgabeAsync(() -> {
                 try {
                     var info = VelocityUpdateBefehl.pruefeGithub(config, HangarUpdateService.standardAbruf());
@@ -805,7 +804,6 @@ public final class PunishVelocity {
         }
     }
 
-    @SuppressWarnings("null")
     private String liesPluginVersion() {
         try {
             return proxy.getPluginManager().getPlugin("punishsystem")

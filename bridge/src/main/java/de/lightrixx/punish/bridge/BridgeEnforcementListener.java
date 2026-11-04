@@ -611,7 +611,7 @@ public final class BridgeEnforcementListener implements Listener {
         }
         String name;
         try {
-            name = event.getInventory().getRenameText();
+            name = event.getView().getRenameText();
         } catch (Exception e) {
             LOG.debug("Amboss-Text konnte nicht gelesen werden.", e);
             return;
@@ -1094,7 +1094,6 @@ public final class BridgeEnforcementListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    @SuppressWarnings("null")
     public void beiTabComplete(com.destroystokyo.paper.event.server.AsyncTabCompleteEvent event) {
         if (!(event.getSender() instanceof Player spieler)) {
             return;

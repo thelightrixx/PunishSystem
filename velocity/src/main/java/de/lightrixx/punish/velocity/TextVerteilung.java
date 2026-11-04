@@ -248,7 +248,6 @@ public final class TextVerteilung {
         logger.info("Text-Sync an alle Bridges angestoßen.");
     }
 
-    @SuppressWarnings("unchecked")
     public void syncAn(RegisteredServer server) {
         if (server == null || !aktiv()) {
             return;

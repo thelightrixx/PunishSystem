@@ -124,7 +124,6 @@ public final class GuiManager {
         oeffneHaupt(spieler, null);
     }
 
-    @SuppressWarnings("null")
     public void oeffneHaupt(Player spieler, String startZiel) {
         GuiSitzung sitzung = sitzung(spieler);
         if (startZiel != null) {
@@ -140,7 +139,6 @@ public final class GuiManager {
         spieler.openInventory(Objects.requireNonNull(GuiMenues.haupt(sitzung, darfAlts(spieler)), "Inventar"));
     }
 
-    @SuppressWarnings("null")
     public void starteNeu(Player spieler, String startZiel) {
         GuiSitzung sitzung = sitzung(spieler);
         sitzung.zuruecksetzen();
@@ -151,7 +149,6 @@ public final class GuiManager {
         spieler.openInventory(Objects.requireNonNull(GuiMenues.haupt(sitzung, darfAlts(spieler)), "Inventar"));
     }
 
-    @SuppressWarnings("null")
     public void oeffneSpieler(Player spieler, int seite) {
         List<String> alle = onlineNamen();
         int proSeite = 45;
@@ -165,12 +162,10 @@ public final class GuiManager {
         spieler.openInventory(Objects.requireNonNull(GuiMenues.spieler(teil, sicher, mehr), "Inventar"));
     }
 
-    @SuppressWarnings("null")
     public void oeffneAktion(Player spieler) {
         spieler.openInventory(Objects.requireNonNull(GuiMenues.aktion(spieler), "Inventar"));
     }
 
-    @SuppressWarnings("null")
     public void oeffneGrund(Player spieler) {
         var sitzung = sitzung(spieler);
         String befehl = sitzung.aktion() == null ? "" : sitzung.aktion().befehl();
@@ -186,7 +181,6 @@ public final class GuiManager {
         }
     }
 
-    @SuppressWarnings("null")
     public void oeffneDauer(Player spieler) {
         var sitzung = sitzung(spieler);
         String befehl = sitzung.aktion() == null ? "" : sitzung.aktion().befehl();
@@ -210,7 +204,6 @@ public final class GuiManager {
         }
     }
 
-    @SuppressWarnings("null")
     public void oeffneScope(Player spieler) {
         var katalog = daten.katalogWennFrisch("");
         if (katalog == null) {
@@ -256,7 +249,6 @@ public final class GuiManager {
         });
     }
 
-    @SuppressWarnings("null")
     public void oeffneBestaetigen(Player spieler) {
         spieler.openInventory(Objects.requireNonNull(GuiMenues.bestaetigen(sitzung(spieler), darfSilent(spieler)), "Inventar"));
     }
@@ -311,14 +303,12 @@ public final class GuiManager {
                 Protokoll.GUI_REPORT_INFO, 1, String.valueOf(id));
     }
 
-    @SuppressWarnings("null")
     private void ladeUndOeffne(Player spieler, GuiMenues.Menue menue, String kopf,
                                String typ, int seite) {
         String extra = typ.equals(Protokoll.GUI_REPORTS) ? "offen" : "";
         ladeUndOeffne(spieler, menue, kopf, typ, seite, extra);
     }
 
-    @SuppressWarnings("null")
     private void ladeUndOeffne(Player spieler, GuiMenues.Menue menue, String kopf,
                                String typ, int seite, String extra) {
         GuiSitzung sitzung = sitzung(spieler);
