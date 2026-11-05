@@ -81,6 +81,8 @@
 
     <build>
         <finalName>PunishSystem-${project.version}-bridge-1.21</finalName>
+        <sourceDirectory>${project.build.directory}/generated-sources/bridge</sourceDirectory>
+        <testSourceDirectory>${project.build.directory}/generated-test-sources/bridge</testSourceDirectory>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -98,6 +100,71 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>gemeinsame-bridge-quellen</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../bridge/src/main/java</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>de/lightrixx/punish/bridge/PunishBridge.java</exclude>
+                                        <exclude>de/lightrixx/punish/bridge/BridgeEnforcementListener.java</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/java</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>gemeinsame-bridge-tests</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testSourceDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../bridge/src/test/java</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>de/lightrixx/punish/bridge/FixRegressionTest.java</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.basedir}/src/test/java</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -155,18 +222,6 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <!-- C-P.1: gebündelte Bibliotheken unter punish.lib verschieben,
-                                 sonst Querplugin-Klassenkollisionen (Hikari/MySQL in mehreren Plugins). -->
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.zaxxer</pattern>
-                                    <shadedPattern>de.lightrixx.punish.lib.zaxxer</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.mysql</pattern>
-                                    <shadedPattern>de.lightrixx.punish.lib.mysql</shadedPattern>
-                                </relocation>
-                            </relocations>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">

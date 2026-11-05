@@ -44,6 +44,17 @@ class HangarEchteApiTest {
         };
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"{}", "{\"name\":\"Release\"}"})
+    void fehlendeVersionWirdMitFachlichemFehlerAbgelehnt(String antwort) {
+        var dienst = new HangarUpdateService("autor", "slug", "Release", antworten(antwort, "{}"));
+
+        var fehler = assertThrows(IllegalArgumentException.class, dienst::pruefe);
+
+        assertEquals("Hangar-Antwort ohne Version.", fehler.getMessage());
+    }
+
     @Test
     void latestreleaseAlsKlartextWirdVerarbeitet() throws Exception {
         HangarUpdateService dienst = new HangarUpdateService(

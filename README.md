@@ -14,7 +14,7 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
 - **Chatfilter**: Flexibler Wortlistenfilter mit optionaler KI-Toxizitätsprüfung (ONNX-Runtime) und automatischem Staffel-Eskalationssystem.
 - **Reports & Alt-Erkennung**: Report-System für Spieler und Alt-Account-Erkennung anhand von IP-Adressen.
 - **Persistenz**: Speicherung wahlweise in **YAML** (atomar, gesichert) oder **MySQL** (HikariCP-Pool) mit automatischer Schema-Migration.
-- **Hangar-Update-Integration**: `/punish-update` liest direkt von Hangar für sichere, gestagte In-Game-Updates mit SHA-256-Integritätsprüfung.
+- **GitHub-Update-Integration**: `/punish-update` liest GitHub Releases und stellt die Jars nach SHA-256-Prüfung zum manuellen Austausch bereit. Danach Proxy und Backends neu starten.
 - **Datenschutz & LuckPerms**: IP-Maskierung nach DSGVO (Sichtbarkeit an `punish.alts` gekoppelt), volle LuckPerms-Kontext-Unterstützung mit Hochleistungs-Caching.
 
 ---
@@ -25,6 +25,8 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
 - **Proxy**: Velocity **3.4.0**+
 - **Backend-Server**: Paper / Purpur **1.21.x** (Modul `bridge-1.21`, Java 21) oder Paper **26.1**+ (Modul `bridge`, Java 25).
 - **Optionale Abhängigkeiten**: LuckPerms, PlaceholderAPI.
+
+Die gemeinsamen Java-Quellen und Tests der Bridges liegen unter `bridge/src/`. `bridge-1.21` übernimmt sie beim Maven-Build; nur `PunishBridge`, `BridgeEnforcementListener` und der API-spezifische `FixRegressionTest` bleiben dort separat. Nach einem frischen Checkout vor dem direkten IDE-Start `mvn -pl bridge-1.21 -am test-compile` ausführen.
 
 ---
 
@@ -51,7 +53,7 @@ Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkakti
      server-name: "lobby"
      tunnel-secret: "<SECRET_NUR_FUER_LOBBY>"
    ```
-   Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String([byte[]](1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
+   Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; Proxy und Bridges weisen leere oder nach dem Trimmen kürzere Secrets ab. Kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String([byte[]](1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
 4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy; `/punish-diagnostics` zeigt auf Proxy und Backends den Zustand. Danach erzeugt `/punish-setup secrets` auf dem Proxy fehlende Secrets, `/punish-setup check` prüft Speicher, Secrets und verbundene Bridges.
 
 ### 3. Datenhaltung einrichten (vor dem ersten Start beachten)

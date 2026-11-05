@@ -209,6 +209,7 @@ public final class WarnService {
         try {
             ausstehend = ausstehende.get(zielUuid);
         } catch (Exception e) {
+            LOG.warn("Ausstehende Warn-Eskalation für {} konnte nicht gelesen werden.", zielUuid, e);
             return;
         }
         if (ausstehend == null) {

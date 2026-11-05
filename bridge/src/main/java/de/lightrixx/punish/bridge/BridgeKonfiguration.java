@@ -180,6 +180,7 @@ public final class BridgeKonfiguration implements Konfiguration {
                     try {
                         gewichte.put(gruppe, gewichtAbschnitt.getInt(gruppe, 0));
                     } catch (Exception e) {
+                        LOG.debug("Rang-Gewicht für '{}' konnte nicht gelesen werden.", gruppe, e);
                         continue;
                     }
                 }

@@ -29,6 +29,35 @@ class KanalTunnelTest {
         return new KanalClient(mock(Plugin.class), new MuteCache());
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"   ", "123456789012345", " 123456789012345 "})
+    void ungueltigesSecretSperrtAuchEinenBisherAktivenTunnel(String secret) throws Exception {
+        var client = client();
+        String vorher = "punish-test-secret-lange";
+        client.setTunnelSecret(vorher);
+        assertTrue(client.tunnelSigniert());
+
+        client.setTunnelSecret(secret);
+
+        assertFalse(client.tunnelSigniert());
+        assertThrows(IllegalStateException.class,
+                () -> client.sendeBefehl(UUID.randomUUID(), "mute Ziel 10m Spam"));
+        byte[] ack = TunnelSignatur.signieren(Protokoll.rahmeMitSequenz(
+                Protokoll.helloAck(Protokoll.VERSION, "lobby", "4.0"), 1L),
+                TunnelSignatur.schluesselAus(vorher, TunnelSignatur.Richtung.PROXY_ZU_BRIDGE));
+        client.onPluginMessageReceived(Protokoll.KANAL, (org.bukkit.entity.Player) null, ack);
+        assertEquals(-1, client.proxyVersion());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"1234567890123456", " 1234567890123456 "})
+    void secretMitGenauSechzehnZeichenAktiviertDenTunnel(String secret) {
+        var client = client();
+        client.setTunnelSecret(secret);
+        assertTrue(client.tunnelSigniert());
+    }
+
     @Test
     void sendeBefehlLimit500() throws Exception {
         Plugin plugin = mock(Plugin.class);
@@ -38,7 +67,7 @@ class KanalTunnelTest {
         doReturn(java.util.List.of(spieler)).when(server).getOnlinePlayers();
         when(plugin.getServer()).thenReturn(server);
         KanalClient client = new KanalClient(plugin, new MuteCache());
-        client.setTunnelSecret("geheim-123");
+        client.setTunnelSecret("punish-test-secret-lange");
         UUID absender = UUID.randomUUID();
 
         String praefix = "ban Notch 7d ";
@@ -50,7 +79,7 @@ class KanalTunnelTest {
                 org.mockito.ArgumentCaptor.forClass(byte[].class);
         verify(spieler).sendPluginMessage(eq(plugin), eq(Protokoll.KANAL), captor.capture());
         byte[] klar = TunnelSignatur.pruefenUndAbziehen(captor.getValue(),
-                TunnelSignatur.schluesselAus("geheim-123", TunnelSignatur.Richtung.BRIDGE_ZU_PROXY));
+                TunnelSignatur.schluesselAus("punish-test-secret-lange", TunnelSignatur.Richtung.BRIDGE_ZU_PROXY));
         Protokoll.SequenzRahmen rahmen = Protokoll.entrahmeSequenz(klar);
         assertTrue(rahmen.sequenziert(), "Befehl muss sequenziert gesendet werden");
         Protokoll.Paket paket = Protokoll.paket(rahmen.paket());
@@ -95,7 +124,7 @@ class KanalTunnelTest {
         doReturn(java.util.List.of(spieler)).when(server).getOnlinePlayers();
         when(plugin.getServer()).thenReturn(server);
         KanalClient client = new KanalClient(plugin, new MuteCache());
-        client.setTunnelSecret("geheim-123");
+        client.setTunnelSecret("punish-test-secret-lange");
         assertDoesNotThrow(() -> client.sendeBefehl(UUID.randomUUID(), "mute Ziel 10m Spam"));
         verify(spieler).sendPluginMessage(eq(plugin), eq(Protokoll.KANAL), any(byte[].class));
     }
@@ -120,11 +149,11 @@ class KanalTunnelTest {
     @Test
     void replayBeiV7Abgewiesen() throws Exception {
         KanalClient client = client();
-        client.setTunnelSecret("geheim-123");
+        client.setTunnelSecret("punish-test-secret-lange");
         byte[] ack = Protokoll.rahmeMitSequenz(
                 Protokoll.helloAck(7, "lobby", "1.0"), 1L);
         byte[] versand = TunnelSignatur.signieren(ack,
-                TunnelSignatur.schluesselAus("geheim-123",
+                TunnelSignatur.schluesselAus("punish-test-secret-lange",
                         TunnelSignatur.Richtung.PROXY_ZU_BRIDGE));
         client.onPluginMessageReceived(Protokoll.KANAL, (org.bukkit.entity.Player) null, versand);
         assertEquals(7, client.proxyVersion());
@@ -145,7 +174,7 @@ class KanalTunnelTest {
         when(server.isPrimaryThread()).thenReturn(true);
         doReturn(List.of(spieler)).when(server).getOnlinePlayers();
         var client = new KanalClient(plugin, new MuteCache());
-        client.setTunnelSecret("geheim-123");
+        client.setTunnelSecret("punish-test-secret-lange");
         byte[] sync = Protokoll.muteSync(List.of());
         assertNotNull(client.sequenzGeprueft(Protokoll.rahmeMitSequenz(sync, 100L)));
         client.sendeHello("lobby");
@@ -153,7 +182,7 @@ class KanalTunnelTest {
         verify(spieler, org.mockito.Mockito.times(4))
                 .sendPluginMessage(eq(plugin), eq(Protokoll.KANAL), fang.capture());
         byte[] hello = Protokoll.entrahmeSequenz(TunnelSignatur.pruefenUndAbziehen(
-                fang.getAllValues().getFirst(), TunnelSignatur.schluesselAus("geheim-123",
+                fang.getAllValues().getFirst(), TunnelSignatur.schluesselAus("punish-test-secret-lange",
                         TunnelSignatur.Richtung.BRIDGE_ZU_PROXY))).paket();
         String session = Protokoll.leseHello(Protokoll.paket(hello).nutzdaten()).sessionId();
         byte[] fremdesAck = helloAckMitSession("alte-session");
@@ -199,7 +228,7 @@ class KanalTunnelTest {
             return null;
         }).when(spieler).sendPluginMessage(eq(plugin), eq(Protokoll.KANAL), any(byte[].class));
         var client = new KanalClient(plugin, new MuteCache());
-        client.setTunnelSecret("geheim-123");
+        client.setTunnelSecret("punish-test-secret-lange");
         try (var pool = java.util.concurrent.Executors.newSingleThreadExecutor()) {
             var async = pool.submit(() -> client.sendeBefehl(UUID.randomUUID(), "mute Ziel 10m Spam"));
             var aufgabe = geplant.poll(5, java.util.concurrent.TimeUnit.SECONDS);
@@ -208,7 +237,7 @@ class KanalTunnelTest {
             aufgabe.run();
             async.get(5, java.util.concurrent.TimeUnit.SECONDS);
         }
-        var schluessel = TunnelSignatur.schluesselAus("geheim-123", TunnelSignatur.Richtung.BRIDGE_ZU_PROXY);
+        var schluessel = TunnelSignatur.schluesselAus("punish-test-secret-lange", TunnelSignatur.Richtung.BRIDGE_ZU_PROXY);
         assertEquals(2, versand.size());
         long erste = Protokoll.entrahmeSequenz(TunnelSignatur.pruefenUndAbziehen(versand.get(0), schluessel)).sequenz();
         long zweite = Protokoll.entrahmeSequenz(TunnelSignatur.pruefenUndAbziehen(versand.get(1), schluessel)).sequenz();

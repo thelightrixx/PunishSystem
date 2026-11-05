@@ -418,6 +418,7 @@ public final class VerstossCommand extends PunishCommand {
                     return;
                 }
             } catch (Exception e) {
+                LOG.warn("Verstoß-Schutzprüfung für {} fehlgeschlagen.", ziel.get().uuid(), e);
                 return;
             }
             sendeVerstossListe(sender, ziel.get());
@@ -429,6 +430,7 @@ public final class VerstossCommand extends PunishCommand {
         try {
             verstoesse = verstossService.findeVerstoesse(spieler.uuid());
         } catch (Exception e) {
+            LOG.warn("Verstoß-Liste für {} konnte nicht geladen werden.", spieler.uuid(), e);
             return;
         }
         if (verstoesse == null || verstoesse.isEmpty()) {

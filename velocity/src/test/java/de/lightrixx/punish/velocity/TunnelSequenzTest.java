@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 class TunnelSequenzTest {
 
-    private static final String SECRET = "geheim-123";
+    private static final String SECRET = "punish-test-secret-lange";
 
     private static BrueckenKanal kanal() {
         ProxyServer proxy = mock(ProxyServer.class);
@@ -47,6 +47,43 @@ class TunnelSequenzTest {
         return TunnelSignatur.signieren(paket,
                 TunnelSignatur.schluesselAus(SECRET,
                         TunnelSignatur.Richtung.BRIDGE_ZU_PROXY));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"   ", "123456789012345", " 123456789012345 "})
+    void ungueltigesSecretSperrtNurDieBetroffeneBridgeUndEntferntAlteSchluessel(String secret) throws Exception {
+        var kanal = kanal();
+        var secrets = new java.util.LinkedHashMap<String, String>();
+        secrets.put("lobby", secret);
+        secrets.put("survival", SECRET);
+        kanal.setBridgeSecrets(secrets);
+        var lobby = server("lobby");
+        byte[] paket = Protokoll.configReload();
+
+        assertTrue(kanal.tunnelSigniert());
+        assertNull(kanal.eingehendPruefen(lobby, signiert(paket)));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> kanal.sendeAn(lobby, paket));
+        org.mockito.Mockito.verify(lobby, org.mockito.Mockito.never())
+                .sendPluginMessage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(byte[].class));
+        var survival = server("survival");
+        assertNotNull(kanal.eingehendPruefen(survival, signiert(paket)));
+        kanal.sendeAn(survival, paket);
+
+        kanal.setBridgeSecrets(java.util.Collections.singletonMap("lobby", secret));
+        assertFalse(kanal.tunnelSigniert());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"1234567890123456", " 1234567890123456 "})
+    void secretMitGenauSechzehnZeichenWirdAkzeptiert(String secret) throws Exception {
+        var kanal = kanal();
+        kanal.setBridgeSecrets(Map.of("lobby", secret));
+        byte[] paket = Protokoll.configReload();
+        byte[] signatur = TunnelSignatur.signieren(paket,
+                TunnelSignatur.schluesselAus(secret.trim(), TunnelSignatur.Richtung.BRIDGE_ZU_PROXY));
+        assertTrue(kanal.tunnelSigniert());
+        org.junit.jupiter.api.Assertions.assertArrayEquals(paket, kanal.eingehendPruefen(server("lobby"), signatur));
     }
 
     @Test

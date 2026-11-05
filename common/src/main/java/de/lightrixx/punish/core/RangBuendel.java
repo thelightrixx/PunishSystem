@@ -182,6 +182,7 @@ public final class RangBuendel {
                 }
                 roh.put(eintrag.getKey(), (int) wert);
             } catch (Exception e) {
+                LOG.debug("Rang-Gewicht für '{}' konnte nicht gelesen werden.", eintrag.getKey(), e);
                 continue;
             }
         }

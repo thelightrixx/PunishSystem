@@ -401,11 +401,14 @@ public final class VelocityBefehle {
             var server = proxy.getAllServers();
             long helloAnzahl = server.stream().filter(s -> gemeldet.containsKey(
                     s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT))).count();
-            boolean secretsVollstaendig = server.stream().allMatch(s -> secrets.containsKey(
-                    s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT)));
+            boolean secretsVollstaendig = server.stream().allMatch(s -> {
+                String secret = secrets.get(s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT));
+                return de.lightrixx.punish.net.TunnelSignatur.istKonfiguriert(secret)
+                        && !de.lightrixx.punish.net.TunnelSignatur.istSchwach(secret);
+            });
             bridgeOk = serverAnzahl > 0 && helloAnzahl == serverAnzahl && secretsVollstaendig;
             bridgeDetail = helloAnzahl + "/" + serverAnzahl + " Bridges per HELLO gemeldet; "
-                    + (secretsVollstaendig ? "Secrets vollständig" : "Bridge-Secrets fehlen");
+                    + (secretsVollstaendig ? "Secrets vollständig" : "Bridge-Secrets fehlen oder sind zu kurz");
         }
         boolean luckPerms = false;
         try {

@@ -844,6 +844,7 @@ public final class PlayerCache {
                     anonymisiert++;
                 }
             } catch (Exception e) {
+                LOG.warn("Veraltete Spieler-IP für {} konnte nicht anonymisiert werden.", eintrag.getKey(), e);
                 continue;
             }
         }

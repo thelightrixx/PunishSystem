@@ -423,7 +423,8 @@ public final class IpMuteService {
                         if (!kanonischeIp.equals(IpBanRecord.kanonisieren(online.ip().trim()))) {
                             continue;
                         }
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        LOG.debug("Spieler-IP für IP-Mute-Benachrichtigung für {} ungültig.", online.uuid(), e);
                         continue;
                     }
                     try {

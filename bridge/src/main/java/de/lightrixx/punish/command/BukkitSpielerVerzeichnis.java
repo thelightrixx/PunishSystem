@@ -74,6 +74,8 @@ public final class BukkitSpielerVerzeichnis implements SpielerVerzeichnis {
         try {
             spieler = Bukkit.getPlayer(uuid);
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(BukkitSpielerVerzeichnis.class)
+                    .warn("Spieler-Lookup zum Trennen für {} fehlgeschlagen.", uuid, e);
             return;
         }
         if (spieler == null) {
@@ -90,6 +92,8 @@ public final class BukkitSpielerVerzeichnis implements SpielerVerzeichnis {
         try {
             spieler = Bukkit.getPlayer(uuid);
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(BukkitSpielerVerzeichnis.class)
+                    .warn("Spieler-Lookup für Benachrichtigung für {} fehlgeschlagen.", uuid, e);
             return;
         }
         if (spieler == null) {

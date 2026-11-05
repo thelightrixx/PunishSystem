@@ -36,7 +36,8 @@ netzwerk:
   #   survival: "<anderes langes Zufallsgeheimnis fuer survival>"
   # Leer = Tunnel deaktiviert (Fail-Closed): Bridges bleiben stumm, bis fuer
   # ihre Server jeweils ein Secret gesetzt ist.
-  # Die Secrets erscheinen nie in Logs. Empfehlung: mindestens 16 Zeichen Zufall.
+  # Die Secrets erscheinen nie in Logs. Mindestens 16 Zeichen Zufall;
+  # leere oder nach dem Trimmen kürzere Secrets werden abgewiesen.
   bridge-secrets: {}
 
 # --- Zeit-Format für History-Einträge ---

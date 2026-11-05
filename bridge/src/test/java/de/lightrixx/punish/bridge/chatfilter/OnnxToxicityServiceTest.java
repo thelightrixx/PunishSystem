@@ -14,6 +14,30 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class OnnxToxicityServiceTest {
 
     @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "0,0,0.5", "1000,1000,0.5", "-1000,1000,1", "1000,-1000,0", "0,1,0.7310585786"
+    })
+    void nativeInferenzUndSoftmaxLaufenOhneExternesModell(float sauber, float toxisch, double erwartet,
+            @org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner) throws Exception {
+        // ONNX IR 8: drei int64-Eingaben [1,tokens], konstante float-Logits [1,2].
+        // Die letzten acht Bytes sind die beiden Logits als little-endian float32.
+        byte[] modell = java.util.Base64.getDecoder().decode(
+                "CAhCAhANOrQBEgt0ZXN0X2xvZ2l0c1ohCglpbnB1dF9pZHMSFAoSCAcSDgoCCAEKCBIGdG9rZW5z"
+                        + "WiYKDmF0dGVudGlvbl9tYXNrEhQKEggHEg4KAggBCggSBnRva2Vuc1omCg50b2tlbl90eXBlX2lk"
+                        + "cxIUChIIBxIOCgIIAQoIEgZ0b2tlbnNiGAoGbG9naXRzEg4KDAgBEggKAggBCgIIAioYCgIBAhAB"
+                        + "QgZsb2dpdHNKCAAAAAAAAAAA");
+        java.nio.ByteBuffer.wrap(modell, modell.length - 8, 8).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                .putFloat(sauber).putFloat(toxisch);
+        var datei = Files.write(ordner.resolve("test.onnx"), modell);
+        var tokenizer = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "hallo"), 16);
+        try (var dienst = OnnxToxicityService.laden(datei.toFile(), tokenizer, 500)) {
+            assertEquals(erwartet, dienst.bewerte("hallo"), 1e-9);
+            assertEquals(erwartet, dienst.bewerte(""), 1e-9);
+        }
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({"14,29,false", "14,39,false", "14,40,true", "14,51,true", "15,0,true"})
     void windowsRuntimeWirdVorDemNativenStartGeprueft(int haupt, int neben, boolean erlaubt,
             @org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner) throws Exception {

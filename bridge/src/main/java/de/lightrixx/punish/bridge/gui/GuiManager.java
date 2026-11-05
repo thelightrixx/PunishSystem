@@ -331,6 +331,7 @@ public final class GuiManager {
         try {
             anfrageId = kanal.naechsteGuiId();
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(GuiManager.class).warn("GUI-Anfrage konnte nicht angelegt werden.", e);
             return;
         }
         letzteAnfrage.put(uuid, anfrageId);

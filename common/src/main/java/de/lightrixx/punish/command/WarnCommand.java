@@ -275,6 +275,7 @@ public final class WarnCommand extends PunishCommand {
                 return;
             }
         } catch (Exception e) {
+            LOG.warn("Warn-Schutzprüfung für {} fehlgeschlagen.", spieler.uuid(), e);
             if (protectionService.istFailClosed()) {
                 messageService.senden(sender, MessageKeys.SCHUTZ_OFFLINE_UNBEKANNT,
                         Map.of("spieler", spieler.name()));
@@ -324,6 +325,7 @@ public final class WarnCommand extends PunishCommand {
                 return List.of();
             }
         } catch (Exception e) {
+            LOG.debug("Warn-Schutzprüfung für Tab-Complete für {} fehlgeschlagen.", ziel.get().uuid(), e);
             if (protectionService.istFailClosed()) {
                 return List.of();
             }
@@ -332,6 +334,7 @@ public final class WarnCommand extends PunishCommand {
         try {
             warns = warnService.findeWarns(ziel.get().uuid());
         } catch (Exception e) {
+            LOG.debug("Warn-Liste für Tab-Complete für {} konnte nicht geladen werden.", ziel.get().uuid(), e);
             return List.of();
         }
         if (warns == null || warns.isEmpty()) {
@@ -403,6 +406,7 @@ public final class WarnCommand extends PunishCommand {
         try {
             warns = warnService.findeWarns(spieler.uuid());
         } catch (Exception e) {
+            LOG.warn("Warn-Liste für {} konnte nicht geladen werden.", spieler.uuid(), e);
             return;
         }
         if (warns == null || warns.isEmpty()) {

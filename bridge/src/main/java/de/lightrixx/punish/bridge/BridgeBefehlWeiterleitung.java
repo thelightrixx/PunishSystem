@@ -1192,6 +1192,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
                         continue;
                     }
                 } catch (Exception e) {
+                    LOG.debug("Operator-Status für Offline-Tab-Vorschlag konnte nicht geprüft werden.", e);
                     continue;
                 }
                 treffer.add(name);

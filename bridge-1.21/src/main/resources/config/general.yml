@@ -37,7 +37,7 @@ netzwerk:
   # Leer = Tunnel deaktiviert (Fail-closed): Die Bridge bleibt stumm, bis ein
   # eigenes Secret gesetzt ist.
   # Das Geheimnis erscheint nie in Logs.
-  # Empfehlung: mindestens 16 Zeichen Zufall – kürzere Secrets werden im Log gewarnt.
+  # Mindestens 16 Zeichen Zufall; leere oder nach dem Trimmen kürzere Secrets werden abgewiesen.
   tunnel-secret: ""
 
 # --- Rang-Gewichte (Hierarchie-Schutz) ---

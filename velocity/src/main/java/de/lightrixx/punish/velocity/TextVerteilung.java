@@ -66,35 +66,32 @@ public final class TextVerteilung {
             }
             File wortliste = new File(chatfilterOrdner, "wortliste.txt");
             if (!wortliste.isFile()) {
-                byte[] saat = leseSeedWortliste();
-                if (saat == null) {
-                    saat = WORTLISTE_KOPF.getBytes(StandardCharsets.UTF_8);
-                }
+                byte[] saat = leseSeedWortliste()
+                        .orElseGet(() -> WORTLISTE_KOPF.getBytes(StandardCharsets.UTF_8));
                 Files.write(wortliste.toPath(), saat);
                 logger.info("Zentrale Wortliste angelegt ({}).", wortliste.getName());
             }
             File guiDatei = new File(configOrdner, "gui.yml");
             if (!guiDatei.isFile()) {
-                byte[] saat = leseSeedGui();
-                if (saat == null) {
-                    saat = GUI_MINIMAL.getBytes(StandardCharsets.UTF_8);
-                }
+                byte[] saat = leseSeedGui().orElseGet(() -> GUI_MINIMAL.getBytes(StandardCharsets.UTF_8));
                 Files.write(guiDatei.toPath(), saat);
                 logger.info("Zentrale GUI-Datei angelegt ({}).", guiDatei.getName());
             }
+            Map<String, Optional<byte[]>> gelesen = new LinkedHashMap<>();
+            gelesen.put("general.yml", generalBereinigt());
+            gelesen.put("messages.yml", leseStill(new File(configOrdner, "messages.yml")));
+            gelesen.put("screens.yml", leseStill(new File(configOrdner, "screens.yml")));
+            gelesen.put("broadcasts.yml", leseStill(new File(configOrdner, "broadcasts.yml")));
+            gelesen.put("gui.yml", leseStill(guiDatei));
+            gelesen.put("wortliste.txt", leseStill(wortliste));
             Map<String, byte[]> neu = new LinkedHashMap<>();
-            neu.put("general.yml", generalBereinigt());
-            neu.put("messages.yml", leseStill(new File(configOrdner, "messages.yml")));
-            neu.put("screens.yml", leseStill(new File(configOrdner, "screens.yml")));
-            neu.put("broadcasts.yml", leseStill(new File(configOrdner, "broadcasts.yml")));
-            neu.put("gui.yml", leseStill(guiDatei));
-            neu.put("wortliste.txt", leseStill(wortliste));
-            for (var eintrag : neu.entrySet()) {
-                if (eintrag.getValue() == null) {
+            for (var eintrag : gelesen.entrySet()) {
+                if (eintrag.getValue().isEmpty()) {
                     logger.warn("Text-Datei {} fehlt – bisheriger Text-Sync bleibt aktiv ({} Dateien).",
                             eintrag.getKey(), pakete.size());
                     return;
                 }
+                neu.put(eintrag.getKey(), eintrag.getValue().orElseThrow());
             }
             pakete = Map.copyOf(neu);
             paketHash = hashPaket(neu);
@@ -105,51 +102,48 @@ public final class TextVerteilung {
         }
     }
 
-    private byte[] leseSeedWortliste() {
+    private Optional<byte[]> leseSeedWortliste() {
         try (var in = getClass().getResourceAsStream("/config/wortliste.txt")) {
             if (in == null) {
-                return null;
+                return Optional.empty();
             }
             byte[] daten = in.readAllBytes();
-            return daten.length > 0 ? daten : null;
+            return daten.length > 0 ? Optional.of(daten) : Optional.empty();
         } catch (Exception e) {
             logger.debug("Seed-Wortliste nicht lesbar.", e);
-            return null;
+            return Optional.empty();
         }
     }
 
-    private byte[] leseSeedGui() {
+    private Optional<byte[]> leseSeedGui() {
         try (var in = getClass().getResourceAsStream("/config/gui.yml")) {
             if (in == null) {
-                return null;
+                return Optional.empty();
             }
             byte[] daten = in.readAllBytes();
-            return daten.length > 0 ? daten : null;
+            return daten.length > 0 ? Optional.of(daten) : Optional.empty();
         } catch (Exception e) {
             logger.debug("Seed-GUI nicht lesbar.", e);
-            return null;
+            return Optional.empty();
         }
     }
 
-    private byte[] generalBereinigt() {
+    private Optional<byte[]> generalBereinigt() {
         try {
-            byte[] roh = leseStill(new File(configOrdner, "general.yml"));
-            if (roh == null) {
-                return null;
-            }
-            return bereinigeGeneral(roh);
+            return leseStill(new File(configOrdner, "general.yml"))
+                    .flatMap(TextVerteilung::bereinigeGeneral);
         } catch (Exception e) {
             logger.debug("general.yml konnte nicht bereinigt werden.", e);
-            return null;
+            return Optional.empty();
         }
     }
 
-    static byte[] bereinigeGeneral(byte[] roh) {
+    static Optional<byte[]> bereinigeGeneral(byte[] roh) {
         Object geladen = safeYaml().load(new String(roh, StandardCharsets.UTF_8));
         if (!(geladen instanceof Map)) {
             // Kein Mapping (Redaktionsfehler): nie die rohe Datei verteilen – sie kann
             // speicher.mysql.passwort und bridge-secrets enthalten.
-            return null;
+            return Optional.empty();
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> karte = new LinkedHashMap<>((Map<String, Object>) geladen);
@@ -166,8 +160,8 @@ public final class TextVerteilung {
         org.yaml.snakeyaml.DumperOptions optionen = new org.yaml.snakeyaml.DumperOptions();
         optionen.setDefaultFlowStyle(org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK);
         optionen.setAllowUnicode(true);
-        return new org.yaml.snakeyaml.Yaml(optionen).dump(karte)
-                .getBytes(StandardCharsets.UTF_8);
+        return Optional.of(new org.yaml.snakeyaml.Yaml(optionen).dump(karte)
+                .getBytes(StandardCharsets.UTF_8));
     }
 
     private static org.yaml.snakeyaml.Yaml safeYaml() {
@@ -176,18 +170,19 @@ public final class TextVerteilung {
                 new org.yaml.snakeyaml.constructor.SafeConstructor(optionen));
     }
 
-    private static byte[] leseStill(File datei) {
+    private Optional<byte[]> leseStill(File datei) {
         try {
             if (datei == null || !datei.isFile()) {
-                return null;
+                return Optional.empty();
             }
             long laenge = datei.length();
             if (laenge < 1 || laenge > Protokoll.MAX_TEXT_DATEI_BYTES) {
-                return null;
+                return Optional.empty();
             }
-            return Files.readAllBytes(datei.toPath());
+            return Optional.of(Files.readAllBytes(datei.toPath()));
         } catch (Exception e) {
-            return null;
+            logger.debug("Text-Datei {} konnte nicht gelesen werden.", datei, e);
+            return Optional.empty();
         }
     }
 
@@ -311,8 +306,7 @@ public final class TextVerteilung {
         }
         try {
             File wortliste = new File(chatfilterOrdner, "wortliste.txt");
-            byte[] roh = leseStill(wortliste);
-            String stand = roh == null ? "" : new String(roh, StandardCharsets.UTF_8);
+            String stand = leseStill(wortliste).map(roh -> new String(roh, StandardCharsets.UTF_8)).orElse("");
             String gesucht = gueltig.get();
             boolean vorhanden = stand.lines()
                     .map(linie -> linie.trim().toLowerCase(java.util.Locale.ROOT))
@@ -334,12 +328,12 @@ public final class TextVerteilung {
 
     public List<String> woerter() {
         File wortliste = new File(chatfilterOrdner, "wortliste.txt");
-        byte[] roh = leseStill(wortliste);
-        if (roh == null) {
+        Optional<byte[]> roh = leseStill(wortliste);
+        if (roh.isEmpty()) {
             return List.of();
         }
         List<String> ergebnis = new ArrayList<>();
-        for (String linie : new String(roh, StandardCharsets.UTF_8).split("\\R")) {
+        for (String linie : new String(roh.orElseThrow(), StandardCharsets.UTF_8).split("\\R")) {
             String getrimmt = linie.trim();
             if (getrimmt.isEmpty() || getrimmt.startsWith("#")) {
                 continue;
@@ -356,14 +350,14 @@ public final class TextVerteilung {
         }
         try {
             File wortliste = new File(chatfilterOrdner, "wortliste.txt");
-            byte[] roh = leseStill(wortliste);
-            if (roh == null) {
+            Optional<byte[]> roh = leseStill(wortliste);
+            if (roh.isEmpty()) {
                 return false;
             }
             String gesucht = gueltig.get();
             List<String> zeilen = new ArrayList<>();
             boolean entfernt = false;
-            for (String linie : new String(roh, StandardCharsets.UTF_8).split("\\R")) {
+            for (String linie : new String(roh.orElseThrow(), StandardCharsets.UTF_8).split("\\R")) {
                 if (!linie.trim().startsWith("#") && linie.trim().equalsIgnoreCase(gesucht)) {
                     entfernt = true;
                     continue;
@@ -391,6 +385,7 @@ public final class TextVerteilung {
         try {
             return server.getServerInfo().getName();
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(TextVerteilung.class).debug("Text-Sync-Servername konnte nicht gelesen werden.", e);
             return "?";
         }
     }

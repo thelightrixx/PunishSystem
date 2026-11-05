@@ -249,9 +249,10 @@ public final class BrueckenKanal {
                     continue;
                 }
                 if (de.lightrixx.punish.net.TunnelSignatur.istSchwach(secret)) {
-                    logger.warn("Tunnel-Secret für '{}' ist kürzer als {} Zeichen – schwaches "
-                            + "Geheimnis, per Wörterbuch-/Online-Raten angreifbar.",
+                    logger.warn("Tunnel-Secret für '{}' ist kürzer als {} Zeichen – "
+                            + "Bridge wird fail-closed abgewiesen.",
                             name, de.lightrixx.punish.net.TunnelSignatur.MINDESTLAENGE);
+                    continue;
                 }
                 byte[] hin = de.lightrixx.punish.net.TunnelSignatur.schluesselAus(secret,
                         de.lightrixx.punish.net.TunnelSignatur.Richtung.PROXY_ZU_BRIDGE);

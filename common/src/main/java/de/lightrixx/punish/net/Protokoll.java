@@ -945,98 +945,43 @@ public final class Protokoll {
     }
 
     public static byte[] modellStand(String modellHash, String vocabHash) throws IOException {
-        var stand = new ModellStand(modellHash, vocabHash);
-        return nachricht(MODELL_STAND, out -> {
-            out.writeUTF(stand.modellHash());
-            out.writeUTF(stand.vocabHash());
-        });
+        return TransferProtokoll.modellStand(modellHash, vocabHash);
     }
 
     public static ModellStand leseModellStand(DataInput in) throws IOException {
-        try {
-            return new ModellStand(in.readUTF(), in.readUTF());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiger Modell-Stand.", e);
-        }
+        return TransferProtokoll.leseModellStand(in);
     }
 
     public static byte[] modellMeta(ModellMeta meta) throws IOException {
-        Objects.requireNonNull(meta, "meta");
-        return nachricht(MODELL_META, out -> {
-            out.writeUTF(meta.dateiname());
-            out.writeLong(meta.groesse());
-            out.writeUTF(meta.sha256());
-            out.writeInt(meta.chunkGroesse());
-            out.writeInt(meta.anzahl());
-        });
+        return TransferProtokoll.modellMeta(meta);
     }
 
     public static ModellMeta leseModellMeta(DataInput in) throws IOException {
-        try {
-            return new ModellMeta(in.readUTF(), in.readLong(), in.readUTF(),
-                    in.readInt(), in.readInt());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültige Modell-Meta.", e);
-        }
+        return TransferProtokoll.leseModellMeta(in);
     }
 
     public static byte[] modellBlock(ModellBlock block) throws IOException {
-        Objects.requireNonNull(block, "block");
-        return nachricht(MODELL_BLOCK, out -> {
-            out.writeUTF(block.dateiname());
-            out.writeInt(block.index());
-            out.writeInt(block.daten().length);
-            out.write(block.daten());
-        });
+        return TransferProtokoll.modellBlock(block);
     }
 
     public static ModellBlock leseModellBlock(DataInput in) throws IOException {
-        try {
-            String name = in.readUTF();
-            int index = in.readInt();
-            int laenge = in.readInt();
-            if (laenge < 1 || laenge > MAX_MODELL_CHUNK_BYTES) {
-                throw new IOException("Ungültige Block-Länge: " + laenge);
-            }
-            byte[] daten = new byte[laenge];
-            in.readFully(daten);
-            return new ModellBlock(name, index, daten);
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiger Modell-Block.", e);
-        }
+        return TransferProtokoll.leseModellBlock(in);
     }
 
     public static byte[] modellFertig(ModellFertig fertig) throws IOException {
-        Objects.requireNonNull(fertig, "fertig");
-        return nachricht(MODELL_FERTIG, out -> {
-            out.writeUTF(fertig.dateiname());
-            out.writeUTF(fertig.sha256());
-            out.writeLong(fertig.groesse());
-        });
+        return TransferProtokoll.modellFertig(fertig);
     }
 
     public static ModellFertig leseModellFertig(DataInput in) throws IOException {
-        try {
-            return new ModellFertig(in.readUTF(), in.readUTF(), in.readLong());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiges Modell-Fertig.", e);
-        }
+        return TransferProtokoll.leseModellFertig(in);
     }
 
     public static byte[] modellQuittung(ModellQuittung quittung) throws IOException {
-        Objects.requireNonNull(quittung, "quittung");
-        return nachricht(MODELL_QUITTUNG, out -> {
-            out.writeUTF(quittung.dateiname());
-            out.writeBoolean(quittung.erfolg());
-        });
+        return TransferProtokoll.modellQuittung(quittung);
     }
 
     public static ModellQuittung leseModellQuittung(DataInput in) throws IOException {
-        try {
-            return new ModellQuittung(in.readUTF(), in.readBoolean());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültige Modell-Quittung.", e);
-        }
+        return TransferProtokoll.leseModellQuittung(in);
     }
 
     public static final int MAX_TEXT_DATEI_BYTES = 256 * 1024;
@@ -1094,24 +1039,7 @@ public final class Protokoll {
     }
 
     public static String textPaketHash(java.util.Map<String, byte[]> dateien) {
-        try {
-            var digest = java.security.MessageDigest.getInstance("SHA-256");
-            var namen = new java.util.ArrayList<>(dateien.keySet());
-            namen.sort(String::compareTo);
-            for (String name : namen) {
-                byte[] daten = dateien.get(name);
-                if (daten == null) {
-                    continue;
-                }
-                digest.update(name.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                digest.update((byte) 0);
-                digest.update(daten);
-                digest.update((byte) 0);
-            }
-            return java.util.HexFormat.of().formatHex(digest.digest());
-        } catch (Exception e) {
-            throw new IllegalStateException("SHA-256 nicht verfügbar.", e);
-        }
+        return TransferProtokoll.textPaketHash(dateien);
     }
 
     static String pruefeTextDateiname(String name) {
@@ -1126,91 +1054,43 @@ public final class Protokoll {
     }
 
     public static byte[] textStand(String paketHash) throws IOException {
-        var stand = new TextStand(paketHash);
-        return nachricht(TEXT_STAND, out -> out.writeUTF(stand.paketHash()));
+        return TransferProtokoll.textStand(paketHash);
     }
 
     public static TextStand leseTextStand(DataInput in) throws IOException {
-        try {
-            return new TextStand(in.readUTF());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiger Text-Stand.", e);
-        }
+        return TransferProtokoll.leseTextStand(in);
     }
 
     public static byte[] textMeta(TextMeta meta) throws IOException {
-        Objects.requireNonNull(meta, "meta");
-        return nachricht(TEXT_META, out -> {
-            out.writeUTF(meta.dateiname());
-            out.writeLong(meta.groesse());
-            out.writeUTF(meta.sha256());
-            out.writeInt(meta.chunkGroesse());
-            out.writeInt(meta.anzahl());
-        });
+        return TransferProtokoll.textMeta(meta);
     }
 
     public static TextMeta leseTextMeta(DataInput in) throws IOException {
-        try {
-            return new TextMeta(in.readUTF(), in.readLong(), in.readUTF(),
-                    in.readInt(), in.readInt());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültige Text-Meta.", e);
-        }
+        return TransferProtokoll.leseTextMeta(in);
     }
 
     public static byte[] textBlock(TextBlock block) throws IOException {
-        Objects.requireNonNull(block, "block");
-        return nachricht(TEXT_BLOCK, out -> {
-            out.writeUTF(block.dateiname());
-            out.writeInt(block.index());
-            out.writeInt(block.daten().length);
-            out.write(block.daten());
-        });
+        return TransferProtokoll.textBlock(block);
     }
 
     public static TextBlock leseTextBlock(DataInput in) throws IOException {
-        try {
-            String name = in.readUTF();
-            int index = in.readInt();
-            int laenge = in.readInt();
-            if (laenge < 1 || laenge > MAX_MODELL_CHUNK_BYTES) {
-                throw new IOException("Ungültige Text-Block-Länge: " + laenge);
-            }
-            byte[] daten = new byte[laenge];
-            in.readFully(daten);
-            return new TextBlock(name, index, daten);
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiger Text-Block.", e);
-        }
+        return TransferProtokoll.leseTextBlock(in);
     }
 
     public static byte[] textFertig(TextFertig fertig) throws IOException {
-        Objects.requireNonNull(fertig, "fertig");
-        return nachricht(TEXT_FERTIG, out -> out.writeUTF(fertig.paketHash()));
+        return TransferProtokoll.textFertig(fertig);
     }
 
     public static TextFertig leseTextFertig(DataInput in) throws IOException {
-        try {
-            return new TextFertig(in.readUTF());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiges Text-Fertig.", e);
-        }
+        return TransferProtokoll.leseTextFertig(in);
     }
 
     public static byte[] textQuittung(TextQuittung quittung) throws IOException {
-        Objects.requireNonNull(quittung, "quittung");
-        return nachricht(TEXT_QUITTUNG, out -> {
-            out.writeUTF(quittung.paketHash());
-            out.writeBoolean(quittung.erfolg());
-        });
+        return TransferProtokoll.textQuittung(quittung);
     }
 
     public static TextQuittung leseTextQuittung(DataInput in) throws IOException {
-        try {
-            return new TextQuittung(in.readUTF(), in.readBoolean());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültige Text-Quittung.", e);
-        }
+        return TransferProtokoll.leseTextQuittung(in);
     }
 
     public static final long MAX_UPDATE_DATEI_BYTES = 64L * 1024L * 1024L;
@@ -1308,101 +1188,43 @@ public final class Protokoll {
     }
 
     public static byte[] updateStand(UpdateStand stand) throws IOException {
-        Objects.requireNonNull(stand, "stand");
-        return nachricht(UPDATE_STAND, out -> {
-            out.writeUTF(stand.version());
-            out.writeUTF(stand.variante());
-        });
+        return TransferProtokoll.updateStand(stand);
     }
 
     public static UpdateStand leseUpdateStand(DataInput in) throws IOException {
-        try {
-            return new UpdateStand(in.readUTF(), in.readUTF());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiger Update-Stand.", e);
-        }
+        return TransferProtokoll.leseUpdateStand(in);
     }
 
     public static byte[] updateMeta(UpdateMeta meta) throws IOException {
-        Objects.requireNonNull(meta, "meta");
-        return nachricht(UPDATE_META, out -> {
-            out.writeUTF(meta.variante());
-            out.writeUTF(meta.version());
-            out.writeLong(meta.groesse());
-            out.writeUTF(meta.sha256());
-            out.writeInt(meta.chunkGroesse());
-            out.writeInt(meta.anzahl());
-        });
+        return TransferProtokoll.updateMeta(meta);
     }
 
     public static UpdateMeta leseUpdateMeta(DataInput in) throws IOException {
-        try {
-            return new UpdateMeta(in.readUTF(), in.readUTF(), in.readLong(),
-                    in.readUTF(), in.readInt(), in.readInt());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültige Update-Meta.", e);
-        }
+        return TransferProtokoll.leseUpdateMeta(in);
     }
 
     public static byte[] updateBlock(UpdateBlock block) throws IOException {
-        Objects.requireNonNull(block, "block");
-        return nachricht(UPDATE_BLOCK, out -> {
-            out.writeUTF(block.variante());
-            out.writeInt(block.index());
-            out.writeInt(block.daten().length);
-            out.write(block.daten());
-        });
+        return TransferProtokoll.updateBlock(block);
     }
 
     public static UpdateBlock leseUpdateBlock(DataInput in) throws IOException {
-        try {
-            String variante = in.readUTF();
-            int index = in.readInt();
-            int laenge = in.readInt();
-            if (laenge < 1 || laenge > MAX_MODELL_CHUNK_BYTES) {
-                throw new IOException("Ungültige Update-Block-Länge: " + laenge);
-            }
-            byte[] daten = new byte[laenge];
-            in.readFully(daten);
-            return new UpdateBlock(variante, index, daten);
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiger Update-Block.", e);
-        }
+        return TransferProtokoll.leseUpdateBlock(in);
     }
 
     public static byte[] updateFertig(UpdateFertig fertig) throws IOException {
-        Objects.requireNonNull(fertig, "fertig");
-        return nachricht(UPDATE_FERTIG, out -> {
-            out.writeUTF(fertig.variante());
-            out.writeUTF(fertig.version());
-            out.writeUTF(fertig.sha256());
-            out.writeLong(fertig.groesse());
-        });
+        return TransferProtokoll.updateFertig(fertig);
     }
 
     public static UpdateFertig leseUpdateFertig(DataInput in) throws IOException {
-        try {
-            return new UpdateFertig(in.readUTF(), in.readUTF(), in.readUTF(), in.readLong());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültiges Update-Fertig.", e);
-        }
+        return TransferProtokoll.leseUpdateFertig(in);
     }
 
     public static byte[] updateQuittung(UpdateQuittung quittung) throws IOException {
-        Objects.requireNonNull(quittung, "quittung");
-        return nachricht(UPDATE_QUITTUNG, out -> {
-            out.writeUTF(quittung.variante());
-            out.writeUTF(quittung.version());
-            out.writeBoolean(quittung.erfolg());
-        });
+        return TransferProtokoll.updateQuittung(quittung);
     }
 
     public static UpdateQuittung leseUpdateQuittung(DataInput in) throws IOException {
-        try {
-            return new UpdateQuittung(in.readUTF(), in.readUTF(), in.readBoolean());
-        } catch (IllegalArgumentException e) {
-            throw new IOException("Ungültige Update-Quittung.", e);
-        }
+        return TransferProtokoll.leseUpdateQuittung(in);
     }
 
     public static List<UUID> leseUuidListe(DataInput in) throws IOException {
@@ -1508,91 +1330,27 @@ public final class Protokoll {
     }
 
     public static byte[] guiAnfrage(GuiAnfrage anfrage) throws IOException {
-        Objects.requireNonNull(anfrage, "anfrage");
-        return nachricht(GUI_ANFRAGE, out -> {
-            out.writeLong(anfrage.requestId());
-            schreibeUuid(out, anfrage.absenderUuid());
-            out.writeUTF(kuerze(anfrage.typ(), 32));
-            out.writeUTF(kuerze(anfrage.ziel(), 64));
-            out.writeUTF(kuerze(anfrage.filter(), 64));
-            out.writeInt(anfrage.seite());
-            out.writeUTF(kuerze(anfrage.extra(), MAX_GUI_TEXT));
-        });
+        return GuiProtokoll.guiAnfrage(anfrage);
     }
 
     public static GuiAnfrage leseGuiAnfrage(DataInput in) throws IOException {
-        long requestId = in.readLong();
-        if (requestId <= 0) {
-            throw new IOException("Ungültige requestId: " + requestId);
-        }
-        UUID absender = leseUuid(in);
-        String typ = in.readUTF();
-        String ziel = in.readUTF();
-        String filter = in.readUTF();
-        int seite = in.readInt();
-        String extra = in.readUTF();
-        return new GuiAnfrage(requestId, absender, typ, ziel, filter, seite, extra);
+        return GuiProtokoll.leseGuiAnfrage(in);
     }
 
     public static void schreibeGuiZeile(DataOutput out, GuiZeile zeile) throws IOException {
-        Objects.requireNonNull(out, "out");
-        Objects.requireNonNull(zeile, "zeile");
-        out.writeUTF(kuerze(zeile.typ(), 32));
-        out.writeUTF(kuerze(zeile.titel(), 200));
-        out.writeUTF(kuerze(zeile.details(), MAX_GUI_TEXT));
-        out.writeUTF(kuerze(zeile.aktion(), 300));
-        out.writeUTF(kuerze(zeile.meta(), 200));
+        GuiProtokoll.schreibeGuiZeile(out, zeile);
     }
 
     public static GuiZeile leseGuiZeile(DataInput in) throws IOException {
-        String typ = in.readUTF();
-        String titel = in.readUTF();
-        String details = in.readUTF();
-        String aktion = in.readUTF();
-        String meta = in.readUTF();
-        return new GuiZeile(typ, titel, details, aktion, meta);
+        return GuiProtokoll.leseGuiZeile(in);
     }
 
     public static byte[] guiAntwort(GuiAntwort antwort) throws IOException {
-        Objects.requireNonNull(antwort, "antwort");
-        List<GuiZeile> eintraege = antwort.eintraege();
-        if (eintraege.size() > MAX_GUI_ZEILEN) {
-            eintraege = eintraege.subList(0, MAX_GUI_ZEILEN);
-        }
-        List<GuiZeile> versand = eintraege;
-        return nachricht(GUI_ANTWORT, out -> {
-            out.writeLong(antwort.requestId());
-            out.writeBoolean(antwort.erfolg());
-            out.writeUTF(kuerze(antwort.nachricht(), MAX_GUI_TEXT));
-            out.writeInt(antwort.seite());
-            out.writeInt(antwort.seiten());
-            out.writeInt(antwort.gesamt());
-            out.writeInt(versand.size());
-            for (GuiZeile zeile : versand) {
-                schreibeGuiZeile(out, zeile);
-            }
-        });
+        return GuiProtokoll.guiAntwort(antwort);
     }
 
     public static GuiAntwort leseGuiAntwort(DataInput in) throws IOException {
-        long requestId = in.readLong();
-        if (requestId <= 0) {
-            throw new IOException("Ungültige requestId: " + requestId);
-        }
-        boolean erfolg = in.readBoolean();
-        String nachricht = in.readUTF();
-        int seite = in.readInt();
-        int seiten = in.readInt();
-        int gesamt = in.readInt();
-        int anzahl = in.readInt();
-        if (anzahl < 0 || anzahl > MAX_GUI_ZEILEN) {
-            throw new IOException("Ungültige GUI-Anzahl: " + anzahl);
-        }
-        List<GuiZeile> liste = new ArrayList<>(anzahl);
-        for (int i = 0; i < anzahl; i++) {
-            liste.add(leseGuiZeile(in));
-        }
-        return new GuiAntwort(requestId, erfolg, nachricht, seite, seiten, gesamt, liste);
+        return GuiProtokoll.leseGuiAntwort(in);
     }
 
     public record PlatzhalterAnfrage(long requestId, UUID absenderUuid, String ziel) {
@@ -1710,144 +1468,19 @@ public final class Protokoll {
     }
 
     public static byte[] platzhalterAnfrage(PlatzhalterAnfrage anfrage) throws IOException {
-        Objects.requireNonNull(anfrage, "anfrage");
-        return nachricht(PLATZHALTER_ANFRAGE, out -> {
-            out.writeLong(anfrage.requestId());
-            schreibeUuid(out, anfrage.absenderUuid());
-            out.writeUTF(kuerze(anfrage.ziel(), 64));
-        });
+        return GuiProtokoll.platzhalterAnfrage(anfrage);
     }
 
     public static PlatzhalterAnfrage lesePlatzhalterAnfrage(DataInput in) throws IOException {
-        long requestId = in.readLong();
-        if (requestId <= 0) {
-            throw new IOException("Ungültige requestId: " + requestId);
-        }
-        UUID absender = leseUuid(in);
-        String ziel = in.readUTF();
-        return new PlatzhalterAnfrage(requestId, absender, ziel);
+        return GuiProtokoll.lesePlatzhalterAnfrage(in);
     }
 
     public static byte[] platzhalterAntwort(PlatzhalterAntwort antwort) throws IOException {
-        Objects.requireNonNull(antwort, "antwort");
-        return nachricht(PLATZHALTER_ANTWORT, out -> {
-            out.writeLong(antwort.requestId());
-            out.writeBoolean(antwort.erfolg());
-            out.writeBoolean(antwort.muted());
-            out.writeLong(antwort.muteAblauf());
-            out.writeBoolean(antwort.banned());
-            out.writeLong(antwort.banAblauf());
-            out.writeBoolean(antwort.timeouted());
-            out.writeLong(antwort.timeoutAblauf());
-            out.writeBoolean(antwort.frozen());
-            out.writeLong(antwort.freezeAblauf());
-            out.writeInt(antwort.verstossAnzahl());
-            out.writeInt(antwort.verstossPunkte());
-            out.writeInt(antwort.warns());
-            out.writeInt(antwort.reportsGegen());
-            out.writeInt(antwort.reportsOffen());
-            // Detail-Felder v2 (neu): alte Bridges lesen sie nicht, sie ignorieren
-            // die nachgestellten Bytes.
-            int maxText = PlatzhalterAntwort.MAX_PLATZHALTER_TEXT;
-            out.writeUTF(kuerze(antwort.muteGrund(), maxText));
-            out.writeUTF(kuerze(antwort.muteVon(), maxText));
-            out.writeLong(antwort.muteSeit());
-            out.writeUTF(kuerze(antwort.banGrund(), maxText));
-            out.writeUTF(kuerze(antwort.banVon(), maxText));
-            out.writeLong(antwort.banSeit());
-            out.writeUTF(kuerze(antwort.timeoutGrund(), maxText));
-            out.writeUTF(kuerze(antwort.timeoutVon(), maxText));
-            out.writeLong(antwort.timeoutSeit());
-            out.writeUTF(kuerze(antwort.freezeGrund(), maxText));
-            out.writeUTF(kuerze(antwort.freezeVon(), maxText));
-            out.writeLong(antwort.freezeSeit());
-            out.writeInt(antwort.notizen());
-            out.writeInt(antwort.historyAnzahl());
-            out.writeUTF(kuerze(antwort.warnsLetzterGrund(), maxText));
-            out.writeUTF(kuerze(antwort.verstossStufe(), maxText));
-        });
+        return GuiProtokoll.platzhalterAntwort(antwort);
     }
 
     public static PlatzhalterAntwort lesePlatzhalterAntwort(DataInput in) throws IOException {
-        long requestId = in.readLong();
-        if (requestId <= 0) {
-            throw new IOException("Ungültige requestId: " + requestId);
-        }
-        boolean erfolg = in.readBoolean();
-        boolean muted = in.readBoolean();
-        long muteAblauf = in.readLong();
-        boolean banned = in.readBoolean();
-        long banAblauf = in.readLong();
-        boolean timeouted = in.readBoolean();
-        long timeoutAblauf = in.readLong();
-        // Nachgestellte Freeze-Felder (neu): alte Proxys senden sie nicht.
-        // ByteArrayInputStream meldet die exakte Restlänge: 5 Ints = 20 Bytes
-        // ohne Freeze, 29 Bytes mit Freeze. Eine abgeschnittene Sektion
-        // (Versions-Schieflage) degradiert auf v1-Werte (frozen=false,
-        // fehlende Zähler 0), statt den ganzen Frame zu verwerfen.
-        boolean frozen = false;
-        long freezeAblauf = PlatzhalterAntwort.INAKTIV;
-        boolean unvollstaendig = false;
-        try {
-            if (in instanceof DataInputStream dis && dis.available() > 20) {
-                frozen = dis.readBoolean();
-                freezeAblauf = dis.readLong();
-            }
-        } catch (IOException e) {
-            frozen = false;
-            freezeAblauf = PlatzhalterAntwort.INAKTIV;
-            unvollstaendig = true;
-        }
-        int[] zaehler = new int[5];
-        for (int i = 0; i < zaehler.length; i++) {
-            try {
-                zaehler[i] = in.readInt();
-            } catch (IOException e) {
-                unvollstaendig = true;
-                zaehler[i] = 0;
-                break;
-            }
-        }
-        if (unvollstaendig) {
-            frozen = false;
-            freezeAblauf = PlatzhalterAntwort.INAKTIV;
-        }
-        int verstossAnzahl = zaehler[0];
-        int verstossPunkte = zaehler[1];
-        int warns = zaehler[2];
-        int reportsGegen = zaehler[3];
-        int reportsOffen = zaehler[4];
-        // Nachgestellte Detail-Felder v2 (neu): alte Proxys senden sie nicht.
-        // Unvollständige Pakete ergeben leere Details, keine Fehler.
-        try {
-            String muteGrund = in.readUTF();
-            String muteVon = in.readUTF();
-            long muteSeit = in.readLong();
-            String banGrund = in.readUTF();
-            String banVon = in.readUTF();
-            long banSeit = in.readLong();
-            String timeoutGrund = in.readUTF();
-            String timeoutVon = in.readUTF();
-            long timeoutSeit = in.readLong();
-            String freezeGrund = in.readUTF();
-            String freezeVon = in.readUTF();
-            long freezeSeit = in.readLong();
-            int notizen = in.readInt();
-            int historyAnzahl = in.readInt();
-            String warnsLetzterGrund = in.readUTF();
-            String verstossStufe = in.readUTF();
-            return new PlatzhalterAntwort(requestId, erfolg, muted, muteAblauf, banned, banAblauf,
-                    timeouted, timeoutAblauf, frozen, freezeAblauf, verstossAnzahl, verstossPunkte,
-                    warns, reportsGegen, reportsOffen,
-                    muteGrund, muteVon, muteSeit, banGrund, banVon, banSeit,
-                    timeoutGrund, timeoutVon, timeoutSeit, freezeGrund, freezeVon, freezeSeit,
-                    notizen, historyAnzahl, warnsLetzterGrund, verstossStufe);
-        } catch (IOException e) {
-            return new PlatzhalterAntwort(requestId, erfolg, muted, muteAblauf, banned, banAblauf,
-                    timeouted, timeoutAblauf, frozen, freezeAblauf, verstossAnzahl, verstossPunkte,
-                    warns, reportsGegen, reportsOffen,
-                    "", "", 0L, "", "", 0L, "", "", 0L, "", "", 0L, 0, 0, "", "");
-        }
+        return GuiProtokoll.lesePlatzhalterAntwort(in);
     }
 
     public static byte[] helloAck(int proxyVersion) throws IOException {

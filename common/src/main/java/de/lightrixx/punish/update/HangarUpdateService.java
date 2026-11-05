@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -153,7 +154,7 @@ public final class HangarUpdateService {
 
     public ReleaseInfo pruefe() throws Exception {
         String roh = http.leseText(latestReleaseUrl());
-        if (ersteVersionAusNamensfeldern(roh) != null) {
+        if (ersteVersionAusNamensfeldern(roh).isPresent()) {
             return parseLatestRelease(roh, autor, slug, channel);
         }
         // Die Hangar-API liefert /latestrelease als text/plain (nur der Versionsname).
@@ -179,10 +180,8 @@ public final class HangarUpdateService {
         if (json == null || json.isBlank()) {
             throw new IllegalArgumentException("Leere Hangar-Antwort.");
         }
-        String version = ersteVersionAusNamensfeldern(json);
-        if (version == null || version.isBlank()) {
-            throw new IllegalArgumentException("Hangar-Antwort ohne Version.");
-        }
+        String version = ersteVersionAusNamensfeldern(json)
+                .orElseThrow(() -> new IllegalArgumentException("Hangar-Antwort ohne Version."));
         version = version.trim();
         if (!VERSION_STRENG.matcher(version).matches()) {
             throw new IllegalArgumentException("Hangar-Antwort ohne gueltige Version.");
@@ -257,15 +256,18 @@ public final class HangarUpdateService {
      * mit Ziffern wie "4.0..."). Feldreihenfolge-Änderungen der Hangar-API
      * treffen damit nicht das falsche Feld (z. B. Kanal- oder Projektname).
      */
-    private static String ersteVersionAusNamensfeldern(String json) {
+    private static Optional<String> ersteVersionAusNamensfeldern(String json) {
+        if (json == null) {
+            return Optional.empty();
+        }
         Matcher m = NAME_MUSTER.matcher(json);
         while (m.find()) {
             String kandidat = m.group(1).trim();
             if (VERSION_ANFANG.matcher(kandidat).matches()) {
-                return kandidat;
+                return Optional.of(kandidat);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     private static String letzteGruppe(Pattern muster, String text) {

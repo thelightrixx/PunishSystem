@@ -115,6 +115,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             return config.serverName();
         } catch (Exception e) {
+            LOG.debug("Servername für Bridge-Enforcement konnte nicht gelesen werden.", e);
             return "unbekannt";
         }
     }
@@ -165,6 +166,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             return muteCache == null || !muteCache.istJeSynchronisiert();
         } catch (Exception e) {
+            LOG.debug("Mute-Sync-Status konnte nicht gelesen werden.", e);
             return false;
         }
     }
@@ -184,6 +186,7 @@ public final class BridgeEnforcementListener implements Listener {
             ambossHinweisCooldown.put(uuid, jetzt);
             return true;
         } catch (Exception e) {
+            LOG.debug("Amboss-Hinweis-Cooldown konnte nicht geprüft werden.", e);
             return true;
         }
     }
@@ -193,6 +196,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             vorlage = config.nachricht(de.lightrixx.punish.core.MessageKeys.MUTE_SYNC_LAEUFT);
         } catch (Exception e) {
+            LOG.debug("Sync-Hinweis konnte nicht aus der Konfiguration gelesen werden.", e);
             vorlage = "<yellow>Strafen werden geladen, bitte kurz warten.";
         }
         if (vorlage == null || vorlage.isBlank()) {
@@ -201,6 +205,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             spieler.sendMessage(mitPraefix(vorlage));
         } catch (Exception e) {
+            LOG.debug("Formatierter Sync-Hinweis konnte nicht gesendet werden.", e);
             try {
                 spieler.sendMessage(Component.text("Strafen werden geladen, bitte kurz warten."));
             } catch (Exception fallbackFehler) {
@@ -217,6 +222,7 @@ public final class BridgeEnforcementListener implements Listener {
             }
             return chatfilter.istFilterAusnahme(befehl);
         } catch (Exception e) {
+            LOG.debug("Chatfilter-Ausnahme konnte nicht geprüft werden.", e);
             return false;
         }
     }
@@ -301,6 +307,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             return miniMessage.deserialize("<red>Login derzeit nicht möglich. Bitte erneut versuchen.");
         } catch (Exception e) {
+            LOG.debug("Fallback-Sperrtext konnte nicht formatiert werden.", e);
             return Component.text("Login derzeit nicht möglich. Bitte erneut versuchen.");
         }
     }
@@ -320,6 +327,7 @@ public final class BridgeEnforcementListener implements Listener {
             boolean muteSync = muteCache != null && muteCache.istJeSynchronisiert();
             return sperrfensterAktiv(alter, banSync, timeoutSync, muteSync);
         } catch (Exception e) {
+            LOG.debug("Sync-Sperrfenster konnte nicht geprüft werden.", e);
             return false;
         }
     }
@@ -328,6 +336,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             return Math.max(0L, System.currentTimeMillis() - startMillis);
         } catch (Exception e) {
+            LOG.debug("Bridge-Laufzeit konnte nicht ermittelt werden.", e);
             return SYNC_SPERRFENSTER_MILLIS;
         }
     }
@@ -337,6 +346,7 @@ public final class BridgeEnforcementListener implements Listener {
             return miniMessage.deserialize(
                     "<yellow>Server startet noch (Sync läuft).<newline><gray>Bitte in wenigen Sekunden erneut joinen.");
         } catch (Exception e) {
+            LOG.debug("Sync-Sperrtext konnte nicht formatiert werden.", e);
             return Component.text("Server startet noch (Sync läuft). Bitte in wenigen Sekunden erneut joinen.");
         }
     }
@@ -1015,12 +1025,14 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             praefix = miniMessage.deserialize(config.praefix());
         } catch (Exception e) {
+            LOG.debug("Nachrichtenpräfix konnte nicht formatiert werden.", e);
             praefix = Component.text("[PunishSystem]");
         }
         Component inhalt;
         try {
             inhalt = miniMessage.deserialize(ersetzt);
         } catch (Exception e) {
+            LOG.debug("Nachricht konnte nicht formatiert werden.", e);
             inhalt = Component.text(ersetzt);
         }
         return praefix.append(Component.space()).append(inhalt);
@@ -1111,6 +1123,7 @@ public final class BridgeEnforcementListener implements Listener {
         try {
             befehl = extrahiereBefehl(event.getBuffer().toLowerCase(Locale.ROOT));
         } catch (Exception e) {
+            LOG.debug("Befehl für Tab-Complete-Filter konnte nicht gelesen werden.", e);
             return;
         }
         if (!istMuteBlockiert(befehl)) {
@@ -1134,6 +1147,7 @@ public final class BridgeEnforcementListener implements Listener {
             try {
                 neu = Set.copyOf(config.muteBlockierteBefehle());
             } catch (Exception e) {
+                LOG.debug("Mute-Befehlsliste konnte nicht gelesen werden; verwende Fallback.", e);
                 neu = (gecacht != null) ? gecacht : Set.of(
                         "/msg", "/tell", "/w", "/whisper", "/t",
                         "/r", "/reply",

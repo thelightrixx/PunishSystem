@@ -208,6 +208,7 @@ public final class PunishNoteCommand extends PunishCommand {
                 return;
             }
         } catch (Exception e) {
+            LOG.warn("Notiz-Schutzprüfung für {} fehlgeschlagen.", spieler.uuid(), e);
             if (protectionService.istFailClosed()) {
                 messageService.senden(sender, MessageKeys.SCHUTZ_OFFLINE_UNBEKANNT,
                         Map.of("spieler", spieler.name()));
@@ -257,6 +258,7 @@ public final class PunishNoteCommand extends PunishCommand {
                 return List.of();
             }
         } catch (Exception e) {
+            LOG.warn("Notiz-Schutzprüfung für Tab-Complete für {} fehlgeschlagen.", ziel.get().uuid(), e);
             if (protectionService.istFailClosed()) {
                 return List.of();
             }
@@ -265,6 +267,7 @@ public final class PunishNoteCommand extends PunishCommand {
         try {
             notizen = noteService.findeNotizen(ziel.get().uuid());
         } catch (Exception e) {
+            LOG.debug("Notiz-Liste für Tab-Complete für {} konnte nicht geladen werden.", ziel.get().uuid(), e);
             return List.of();
         }
         if (notizen == null || notizen.isEmpty()) {
@@ -336,6 +339,7 @@ public final class PunishNoteCommand extends PunishCommand {
         try {
             notizen = noteService.findeNotizen(spieler.uuid());
         } catch (Exception e) {
+            LOG.warn("Notiz-Liste für {} konnte nicht geladen werden.", spieler.uuid(), e);
             return;
         }
         if (notizen == null || notizen.isEmpty()) {

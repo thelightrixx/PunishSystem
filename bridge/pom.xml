@@ -155,18 +155,6 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <!-- C-P.1: gebündelte Bibliotheken unter punish.lib verschieben,
-                                 sonst Querplugin-Klassenkollisionen (Hikari/MySQL in mehreren Plugins). -->
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.zaxxer</pattern>
-                                    <shadedPattern>de.lightrixx.punish.lib.zaxxer</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.mysql</pattern>
-                                    <shadedPattern>de.lightrixx.punish.lib.mysql</shadedPattern>
-                                </relocation>
-                            </relocations>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">

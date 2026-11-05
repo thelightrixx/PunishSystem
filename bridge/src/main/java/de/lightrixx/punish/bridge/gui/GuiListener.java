@@ -76,6 +76,7 @@ public final class GuiListener implements Listener {
         try {
             klar = GuiManager.klartext(event.message());
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(GuiListener.class).debug("GUI-Chattext konnte nicht gelesen werden.", e);
             return;
         }
         boolean wartete = manager.wartetAufEingabe(spieler);
@@ -83,6 +84,7 @@ public final class GuiListener implements Listener {
         try {
             verbraucht = manager.chatEingabe(spieler, klar);
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(GuiListener.class).warn("GUI-Chateingabe konnte nicht verarbeitet werden.", e);
             if (wartete) {
                 event.setCancelled(true);
             }

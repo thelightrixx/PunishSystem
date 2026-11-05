@@ -20,6 +20,25 @@ import static org.mockito.Mockito.when;
 
 class TextVerteilungTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"", "nur Text", "- liste"})
+    void generalOhneMappingWirdNichtVerteilt(String yaml) {
+        assertTrue(TextVerteilung.bereinigeGeneral(yaml.getBytes(StandardCharsets.UTF_8)).isEmpty());
+    }
+
+    @Test
+    void fehlendeDateiBeimReloadBehaeltDasLetzteVollstaendigePaket() throws Exception {
+        verteilung.laden();
+        assertTrue(verteilung.aktiv());
+        String vorher = verteilung.paketHash();
+        Files.delete(datenOrdner.toPath().resolve("config/messages.yml"));
+
+        verteilung.laden();
+
+        assertTrue(verteilung.aktiv());
+        assertEquals(vorher, verteilung.paketHash());
+    }
+
     @TempDir
     File datenOrdner;
 
@@ -110,7 +129,7 @@ class TextVerteilungTest {
         String roh = "prefix: \"x\"\nnetzwerk:\n  server-name: \"lobby\"\n  server-liste: []\n"
                 + "speicher:\n  typ: \"mysql\"\n  mysql:\n    passwort: \"geheim\"\n";
         String bereinigt = new String(TextVerteilung.bereinigeGeneral(
-                roh.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+                roh.getBytes(StandardCharsets.UTF_8)).orElseThrow(), StandardCharsets.UTF_8);
         assertFalse(bereinigt.contains("geheim"));
         assertFalse(bereinigt.contains("speicher"));
         assertFalse(bereinigt.contains("lobby"));
@@ -125,7 +144,7 @@ class TextVerteilungTest {
                 + "  bridge-secrets:\n    lobby: \"LobbyGeheimnis123!\"\n"
                 + "    survival: \"SurvivalGeheimnis123!\"\n  server-liste: []\n";
         String bereinigt = new String(TextVerteilung.bereinigeGeneral(
-                roh.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+                roh.getBytes(StandardCharsets.UTF_8)).orElseThrow(), StandardCharsets.UTF_8);
         assertFalse(bereinigt.contains("NetzwerkGeheimnis123!"));
         assertFalse(bereinigt.contains("LobbyGeheimnis123!"));
         assertFalse(bereinigt.contains("SurvivalGeheimnis123!"));

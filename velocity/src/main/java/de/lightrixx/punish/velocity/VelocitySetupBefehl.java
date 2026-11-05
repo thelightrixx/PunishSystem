@@ -110,7 +110,9 @@ public final class VelocitySetupBefehl extends PunishCommand {
         Map<String, String> secrets = konfiguration.brueckenSecrets();
         List<String> fehlend = new ArrayList<>();
         for (String name : server) {
-            if (!secrets.containsKey(name)) {
+            String secret = secrets.get(name);
+            if (!de.lightrixx.punish.net.TunnelSignatur.istKonfiguriert(secret)
+                    || de.lightrixx.punish.net.TunnelSignatur.istSchwach(secret)) {
                 fehlend.add(name);
             }
         }
@@ -188,7 +190,8 @@ public final class VelocitySetupBefehl extends PunishCommand {
             return;
         }
         String secret = konfiguration.brueckenSecrets().get(name);
-        if (secret == null) {
+        if (!de.lightrixx.punish.net.TunnelSignatur.istKonfiguriert(secret)
+                || de.lightrixx.punish.net.TunnelSignatur.istSchwach(secret)) {
             messageService.senden(sender, MessageKeys.SETUP_BRIDGE_KEIN_SECRET,
                     Map.of("server", name));
             return;

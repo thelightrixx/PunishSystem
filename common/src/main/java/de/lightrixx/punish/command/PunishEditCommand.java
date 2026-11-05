@@ -9,7 +9,6 @@ import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.CachedPlayer;
 import de.lightrixx.punish.model.IpBanRecord;
 import de.lightrixx.punish.model.NoteRecord;
-import de.lightrixx.punish.model.ParseResult;
 import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.model.VerstossRecord;
 import de.lightrixx.punish.model.VerstossStufe;
@@ -71,7 +70,7 @@ public final class PunishEditCommand extends PunishCommand {
     private final IpBanService ipBanService;
     private final IpMuteService ipMuteService;
     private final IpTimeoutService ipTimeoutService;
-    private final TimeParser timeParser;
+    private final PunishEditEingaben eingaben;
 
     @SuppressWarnings("checkstyle:parameternumber")
     public PunishEditCommand(MessageService messageService,
@@ -101,7 +100,7 @@ public final class PunishEditCommand extends PunishCommand {
         this.ipBanService = Objects.requireNonNull(ipBanService, "Der IpBanService darf nicht null sein.");
         this.ipMuteService = Objects.requireNonNull(ipMuteService, "Der IpMuteService darf nicht null sein.");
         this.ipTimeoutService = Objects.requireNonNull(ipTimeoutService, "Der IpTimeoutService darf nicht null sein.");
-        this.timeParser = Objects.requireNonNull(timeParser, "Der TimeParser darf nicht null sein.");
+        this.eingaben = new PunishEditEingaben(timeParser);
     }
 
     @Override
@@ -247,7 +246,7 @@ public final class PunishEditCommand extends PunishCommand {
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
         if (nummerRoh != null && !nummerRoh.isBlank()) {
-            Optional<Integer> nummer = parseNummer(nummerRoh);
+            Optional<Integer> nummer = eingaben.parseNummer(nummerRoh);
             if (nummer.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NUMMER_UNGUELTIG, Map.of("nummer", nummerRoh));
                 return;
@@ -325,7 +324,7 @@ public final class PunishEditCommand extends PunishCommand {
         }
         var mini = MiniMessageUtil.miniMessage();
         if (nummerRoh != null && !nummerRoh.isBlank()) {
-            Optional<Integer> nummer = parseNummer(nummerRoh);
+            Optional<Integer> nummer = eingaben.parseNummer(nummerRoh);
             if (nummer.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NUMMER_UNGUELTIG, Map.of("nummer", nummerRoh));
                 return;
@@ -392,7 +391,7 @@ public final class PunishEditCommand extends PunishCommand {
         }
         var mini = MiniMessageUtil.miniMessage();
         if (nummerRoh != null && !nummerRoh.isBlank()) {
-            Optional<Integer> nummer = parseNummer(nummerRoh);
+            Optional<Integer> nummer = eingaben.parseNummer(nummerRoh);
             if (nummer.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NUMMER_UNGUELTIG, Map.of("nummer", nummerRoh));
                 return;
@@ -664,7 +663,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         CachedPlayer spieler = ziel.get();
-        Optional<Integer> nummer = parseNummer(args[1]);
+        Optional<Integer> nummer = eingaben.parseNummer(args[1]);
         if (nummer.isEmpty()) {
             messageService.senden(sender, MessageKeys.NUMMER_UNGUELTIG, Map.of("nummer", args[1]));
             return;
@@ -696,8 +695,8 @@ public final class PunishEditCommand extends PunishCommand {
                         Map.of("spieler", spieler.name(), "id", String.valueOf(nummer.get())));
                 return;
             }
-            int start = 2 + skipVorschauTokens(args, 1, nummer.get(), alt);
-            Felder felder = parseFelder(args, start);
+            int start = 2 + eingaben.skipVorschauTokens(args, 1, nummer.get(), alt);
+            Felder felder = eingaben.parseFelder(args, start);
             if (felder.stufeUngueltig) {
                 messageService.senden(sender, MessageKeys.LEVEL_UNGUELTIG, Map.of("level", felder.stufeRoh));
                 return;
@@ -738,7 +737,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         CachedPlayer spieler = ziel.get();
-        Optional<Integer> nummer = parseNummer(args[1]);
+        Optional<Integer> nummer = eingaben.parseNummer(args[1]);
         if (nummer.isEmpty()) {
             messageService.senden(sender, MessageKeys.NUMMER_UNGUELTIG, Map.of("nummer", args[1]));
             return;
@@ -766,8 +765,8 @@ public final class PunishEditCommand extends PunishCommand {
                         Map.of("spieler", spieler.name(), "id", String.valueOf(nummer.get())));
                 return;
             }
-            int start = 2 + skipVorschauTokens(args, 1, nummer.get(), WarnCommand.vorschau(alt));
-            Felder felder = parseFelder(args, start);
+            int start = 2 + eingaben.skipVorschauTokens(args, 1, nummer.get(), WarnCommand.vorschau(alt));
+            Felder felder = eingaben.parseFelder(args, start);
             String neuerGrund = felder.grund;
             if (neuerGrund == null || neuerGrund.isBlank()) {
                 messageService.senden(sender, MessageKeys.KEIN_GRUND);
@@ -798,7 +797,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         CachedPlayer spieler = ziel.get();
-        Optional<Integer> nummer = parseNummer(args[1]);
+        Optional<Integer> nummer = eingaben.parseNummer(args[1]);
         if (nummer.isEmpty()) {
             messageService.senden(sender, MessageKeys.NUMMER_UNGUELTIG, Map.of("nummer", args[1]));
             return;
@@ -826,8 +825,8 @@ public final class PunishEditCommand extends PunishCommand {
                         Map.of("spieler", spieler.name(), "id", String.valueOf(nummer.get())));
                 return;
             }
-            int start = 2 + skipVorschauTokens(args, 1, nummer.get(), PunishNoteCommand.vorschau(alt));
-            Felder felder = parseFelder(args, start);
+            int start = 2 + eingaben.skipVorschauTokens(args, 1, nummer.get(), PunishNoteCommand.vorschau(alt));
+            Felder felder = eingaben.parseFelder(args, start);
             String neuerText = felder.grund;
             if (neuerText == null || neuerText.isBlank()) {
                 messageService.senden(sender, MessageKeys.KEIN_GRUND);
@@ -875,7 +874,7 @@ public final class PunishEditCommand extends PunishCommand {
                         Map.of("spieler", spieler.name()));
                 return;
             }
-            Felder felder = parseFelderMitLegacyDauer(args, 1);
+            Felder felder = eingaben.parseFelderMitLegacyDauer(args, 1);
             if (felder.dauerUngueltig) {
                 messageService.senden(sender, MessageKeys.DAUER_UNGUELTIG);
                 return;
@@ -990,7 +989,7 @@ public final class PunishEditCommand extends PunishCommand {
                 messageService.senden(sender, MessageKeys.NICHT_GEMUTET, Map.of("spieler", spieler.name()));
                 return;
             }
-            Felder felder = parseFelderMitLegacyDauer(args, 1);
+            Felder felder = eingaben.parseFelderMitLegacyDauer(args, 1);
             if (felder.perm) {
                 messageService.senden(sender, MessageKeys.PERM_NICHT_ERLAUBT);
                 return;
@@ -1059,7 +1058,7 @@ public final class PunishEditCommand extends PunishCommand {
                 messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT, Map.of("spieler", spieler.name()));
                 return;
             }
-            Felder felder = parseFelderMitLegacyDauer(args, 1);
+            Felder felder = eingaben.parseFelderMitLegacyDauer(args, 1);
             if (felder.perm) {
                 messageService.senden(sender, MessageKeys.PERM_NICHT_ERLAUBT);
                 return;
@@ -1128,7 +1127,7 @@ public final class PunishEditCommand extends PunishCommand {
                 messageService.senden(sender, MessageKeys.NICHT_GEBANNT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
                 return;
             }
-            Felder felder = parseFelderMitLegacyDauer(args, 1);
+            Felder felder = eingaben.parseFelderMitLegacyDauer(args, 1);
             if (felder.dauerUngueltig) {
                 messageService.senden(sender, MessageKeys.DAUER_UNGUELTIG);
                 return;
@@ -1226,7 +1225,7 @@ public final class PunishEditCommand extends PunishCommand {
                 messageService.senden(sender, MessageKeys.NICHT_GEMUTET_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
                 return;
             }
-            Felder felder = parseFelderMitLegacyDauer(args, 1);
+            Felder felder = eingaben.parseFelderMitLegacyDauer(args, 1);
             if (felder.perm) {
                 messageService.senden(sender, MessageKeys.PERM_NICHT_ERLAUBT);
                 return;
@@ -1300,7 +1299,7 @@ public final class PunishEditCommand extends PunishCommand {
                 messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
                 return;
             }
-            Felder felder = parseFelderMitLegacyDauer(args, 1);
+            Felder felder = eingaben.parseFelderMitLegacyDauer(args, 1);
             if (felder.perm) {
                 messageService.senden(sender, MessageKeys.PERM_NICHT_ERLAUBT);
                 return;
@@ -1636,141 +1635,9 @@ public final class PunishEditCommand extends PunishCommand {
         return TYP_BAN_IP.equals(typ) || TYP_MUTE_IP.equals(typ) || TYP_TIMEOUT_IP.equals(typ);
     }
 
-    private record Felder(String grund, VerstossStufe stufe, boolean stufeUngueltig, String stufeRoh,
+    record Felder(String grund, VerstossStufe stufe, boolean stufeUngueltig, String stufeRoh,
                           Long dauerMillis, boolean dauerUngueltig, String dauerRoh, boolean perm,
                           boolean grundExplizit) {
-    }
-
-    private Felder parseFelder(String[] args, int start) {
-        StringBuilder grundSammler = new StringBuilder();
-        StringBuilder legacySammler = new StringBuilder();
-        boolean grundModus = false;
-        boolean grundExplizit = false;
-        VerstossStufe stufe = null;
-        boolean stufeUngueltig = false;
-        String stufeRoh = "";
-        Long dauerMillis = null;
-        boolean dauerUngueltig = false;
-        String dauerRoh = "";
-        boolean perm = false;
-        for (int i = start; i < args.length; i++) {
-            String token = args[i];
-            if (token == null || token.isBlank()) {
-                continue;
-            }
-            int gleich = token.indexOf('=');
-            if (gleich > 0) {
-                String key = token.substring(0, gleich).trim().toLowerCase(Locale.ROOT);
-                String wert = token.substring(gleich + 1);
-                switch (key) {
-                    case "grund", "reason", "text" -> {
-                        grundModus = true;
-                        grundExplizit = true;
-                        anhaengen(grundSammler, wert);
-                    }
-                    case "level", "stufe" -> {
-                        String w = wert.trim();
-                        var parsed = VerstossStufe.parse(w);
-                        if (parsed.isPresent()) {
-                            stufe = parsed.get();
-                        } else {
-                            stufeUngueltig = true;
-                            stufeRoh = w;
-                        }
-                        grundModus = false;
-                    }
-                    case "dauer", "duration", "zeit", "time" -> {
-                        String w = wert.trim();
-                        if (w.equalsIgnoreCase("perm") || w.equalsIgnoreCase("permanent")
-                                || w.equalsIgnoreCase("perma")) {
-                            perm = true;
-                        } else {
-                            ParseResult parsed = timeParser.parsen(w);
-                            if (parsed instanceof ParseResult.Geltzeit(long millis)) {
-                                dauerMillis = millis;
-                            } else if (parsed instanceof ParseResult.Permanent) {
-                                perm = true;
-                            } else {
-                                dauerUngueltig = true;
-                                dauerRoh = w;
-                            }
-                        }
-                        grundModus = false;
-                    }
-                    default -> {
-                        if (grundModus) {
-                            anhaengen(grundSammler, token);
-                        } else {
-                            anhaengen(legacySammler, token);
-                        }
-                    }
-                }
-            } else if (grundModus) {
-                anhaengen(grundSammler, token);
-            } else {
-                anhaengen(legacySammler, token);
-            }
-        }
-        String grund = grundSammler.isEmpty() ? legacySammler.toString() : grundSammler.toString();
-        return new Felder(normalisiereGrund(grund), stufe, stufeUngueltig, stufeRoh,
-                dauerMillis, dauerUngueltig, dauerRoh, perm, grundExplizit);
-    }
-
-    private Felder parseFelderMitLegacyDauer(String[] args, int start) {
-        Felder basis = parseFelder(args, start);
-        if (basis.dauerMillis != null || basis.perm || basis.dauerUngueltig || basis.grundExplizit) {
-            return basis;
-        }
-        if (basis.grund == null || basis.grund.isBlank()) {
-            return basis;
-        }
-        String[] teile = basis.grund.split(" ", 2);
-        String kandidat = teile[0];
-        ParseResult parsed = timeParser.parsen(kandidat);
-        if (parsed instanceof ParseResult.Geltzeit(long millis)) {
-            String rest = teile.length > 1 ? teile[1] : "";
-            return new Felder(normalisiereGrund(rest), basis.stufe, basis.stufeUngueltig, basis.stufeRoh,
-                    millis, false, "", false, false);
-        }
-        if (parsed instanceof ParseResult.Permanent) {
-            String rest = teile.length > 1 ? teile[1] : "";
-            return new Felder(normalisiereGrund(rest), basis.stufe, basis.stufeUngueltig, basis.stufeRoh,
-                    null, false, "", true, false);
-        }
-        boolean siehtNachDauerAus = kandidat.matches("(?i)^[0-9]+[a-z]*$|^(perm|permanent|perma)$");
-        if (siehtNachDauerAus) {
-            return new Felder(basis.grund, basis.stufe, basis.stufeUngueltig, basis.stufeRoh,
-                    null, true, kandidat, false, false);
-        }
-        return basis;
-    }
-
-    private static void anhaengen(StringBuilder sammler, String teil) {
-        if (teil == null) {
-            return;
-        }
-        String getrimmt = teil.trim();
-        if (getrimmt.isEmpty() && sammler.isEmpty()) {
-            return;
-        }
-        if (!sammler.isEmpty()) {
-            sammler.append(" ");
-        }
-        sammler.append(teil);
-    }
-
-    private Optional<Integer> parseNummer(String roh) {
-        if (roh == null || roh.isBlank()) {
-            return Optional.empty();
-        }
-        int trenner = roh.indexOf(' ');
-        String teil = (trenner >= 0 ? roh.substring(0, trenner) : roh).trim();
-        try {
-            int nummer = Integer.parseInt(teil);
-            return nummer >= 1 ? Optional.of(nummer) : Optional.empty();
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
     }
 
     private static String[] ohneErstes(String[] args) {
@@ -1778,70 +1645,6 @@ public final class PunishEditCommand extends PunishCommand {
             return new String[0];
         }
         return Arrays.copyOfRange(args, 1, args.length);
-    }
-
-    private int skipVorschauTokens(String[] args, int nummerIndex, int nummer, VerstossRecord record) {
-        if (record == null || args.length <= nummerIndex + 1) {
-            return 0;
-        }
-        String kennung;
-        try {
-            kennung = MiniMessageUtil.miniMessage().escapeTags(
-                    de.lightrixx.punish.model.VerstossKennung.kennung(record));
-        } catch (Exception e) {
-            return 0;
-        }
-        return skipTokenSequenz(args, nummerIndex, nummer, kennung.split(" "));
-    }
-
-    private int skipVorschauTokens(String[] args, int nummerIndex, int nummer, String vorschau) {
-        if (vorschau == null || vorschau.isBlank() || args.length <= nummerIndex + 1) {
-            return 0;
-        }
-        String sauber;
-        try {
-            sauber = MiniMessageUtil.miniMessage().escapeTags(vorschau);
-        } catch (Exception e) {
-            sauber = vorschau;
-        }
-        return skipTokenSequenz(args, nummerIndex, nummer, sauber.split(" "));
-    }
-
-    private int skipTokenSequenz(String[] args, int nummerIndex, int nummer, String[] tokens) {
-        if (tokens == null || tokens.length == 0) {
-            return 0;
-        }
-        int start = nummerIndex + 1;
-        if (args.length >= start + tokens.length) {
-            boolean treffer = true;
-            for (int i = 0; i < tokens.length; i++) {
-                if (!tokens[i].equals(args[start + i])) {
-                    treffer = false;
-                    break;
-                }
-            }
-            if (treffer) {
-                return tokens.length;
-            }
-        }
-
-        if (tokens.length > 1 && args.length > nummerIndex && args[nummerIndex] != null
-                && args[nummerIndex].trim().equals(nummer + " " + tokens[0])) {
-            String[] rest = Arrays.copyOfRange(tokens, 1, tokens.length);
-            if (args.length >= start + rest.length) {
-                boolean treffer = true;
-                for (int i = 0; i < rest.length; i++) {
-                    if (!rest[i].equals(args[start + i])) {
-                        treffer = false;
-                        break;
-                    }
-                }
-                if (treffer) {
-                    return rest.length;
-                }
-            }
-        }
-        return 0;
     }
 
     private record IpZiel(String ip, CachedPlayer spieler) {

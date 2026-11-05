@@ -142,7 +142,8 @@ public final class KanalClient implements PluginMessageListener {
     }
 
     public void setTunnelSecret(String geheimnis) {
-        if (de.lightrixx.punish.net.TunnelSignatur.istKonfiguriert(geheimnis)) {
+        if (de.lightrixx.punish.net.TunnelSignatur.istKonfiguriert(geheimnis)
+                && !de.lightrixx.punish.net.TunnelSignatur.istSchwach(geheimnis)) {
             this.proxyZuBridgeSchluessel = de.lightrixx.punish.net.TunnelSignatur.schluesselAus(
                     geheimnis.trim(),
                     de.lightrixx.punish.net.TunnelSignatur.Richtung.PROXY_ZU_BRIDGE);
@@ -150,17 +151,13 @@ public final class KanalClient implements PluginMessageListener {
                     geheimnis.trim(),
                     de.lightrixx.punish.net.TunnelSignatur.Richtung.BRIDGE_ZU_PROXY);
             LOG.info("Tunnel-Signatur aktiv (eigenes Bridge-Secret, richtungsgebunden).");
-            if (de.lightrixx.punish.net.TunnelSignatur.istSchwach(geheimnis)) {
-                LOG.warn("netzwerk.tunnel-secret ist kürzer als {} Zeichen – schwaches Geheimnis, "
-                        + "per Wörterbuch-/Online-Raten angreifbar. Bitte ein langes Zufallsgeheimnis "
-                        + "verwenden.", de.lightrixx.punish.net.TunnelSignatur.MINDESTLAENGE);
-            }
         } else {
             this.proxyZuBridgeSchluessel = null;
             this.bridgeZuProxySchluessel = null;
-            LOG.warn("Tunnel-Signatur inaktiv (netzwerk.tunnel-secret leer): "
+            LOG.warn("Tunnel-Signatur inaktiv (netzwerk.tunnel-secret leer oder kürzer als {} Zeichen): "
                     + "Fail-closed – Tunnel-Nachrichten werden abgewiesen, bis ein eigenes "
-                    + "Secret für diese Bridge gesetzt ist.");
+                    + "ausreichend langes Secret für diese Bridge gesetzt ist.",
+                    de.lightrixx.punish.net.TunnelSignatur.MINDESTLAENGE);
         }
     }
 

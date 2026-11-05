@@ -30,7 +30,7 @@ public final class PunishBridge extends JavaPlugin {
     private BridgeKonfiguration bridgeKonfiguration;
     private de.lightrixx.punish.bridge.chatfilter.ChatfilterKonfiguration chatfilterKonfiguration;
     private de.lightrixx.punish.bridge.chatfilter.ChatfilterService chatfilterService;
-    private volatile String chatfilterDateiStand = "";
+    private volatile java.util.Optional<String> chatfilterDateiStand = java.util.Optional.of("");
     private final java.util.concurrent.atomic.AtomicBoolean chatfilterReloadLaeuft =
             new java.util.concurrent.atomic.AtomicBoolean(false);
     private final Object chatfilterSchalterSperre = new Object();
@@ -84,7 +84,7 @@ public final class PunishBridge extends JavaPlugin {
             LOG.debug("Folia-Check übersprungen.", e);
         }
         File datenOrdner = getDataFolder();
-        migriereLegacyOrdner(datenOrdner);
+        BridgeDateien.migriereLegacyOrdner(datenOrdner);
         if (!datenOrdner.exists() && !datenOrdner.mkdirs()) {
             LOG.warn("Der Datenordner konnte nicht angelegt werden.");
         }
@@ -457,7 +457,7 @@ public final class PunishBridge extends JavaPlugin {
         if (dienst == null && !cfConfig.aktiv()) {
             LOG.info("Chatfilter deaktiviert (chatfilter.aktiv=false).");
         }
-        chatfilterDateiStand = berechneChatfilterDateiStand(cfConfig);
+        chatfilterDateiStand = BridgeDateien.chatfilterStand(getDataFolder(), cfConfig);
         return dienst;
     }
 
@@ -546,48 +546,6 @@ public final class PunishBridge extends JavaPlugin {
         return !alterStand.equals(neuerStand);
     }
 
-    private String berechneChatfilterDateiStand(
-            de.lightrixx.punish.bridge.chatfilter.ChatfilterKonfiguration cfConfig) {
-        try {
-            java.util.Map<String, byte[]> stand = new java.util.LinkedHashMap<>();
-            java.io.File configOrdner = new java.io.File(getDataFolder(), "config");
-            leseInStand(stand, new java.io.File(configOrdner, "chatfilter.yml"), "chatfilter.yml");
-            leseInStand(stand, new java.io.File(new java.io.File(getDataFolder(), TextEmpfaenger.SYNC_ORDNER),
-                    "general.yml"), "config-sync-general.yml");
-            if (cfConfig != null) {
-                leseInStand(stand, cfConfig.dateiAufloesen(cfConfig.wortlisteDateiname()), "wortliste.txt");
-                leseInStand(stand, cfConfig.dateiAufloesen(cfConfig.modellDateiname()), "modell_int8.onnx");
-                leseInStand(stand, cfConfig.dateiAufloesen(cfConfig.vocabDateiname()), "vocab.txt");
-            }
-            if (stand.isEmpty()) {
-                return "";
-            }
-            return de.lightrixx.punish.net.Protokoll.textPaketHash(stand);
-        } catch (Exception e) {
-            LOG.debug("Chatfilter-Datei-Stand konnte nicht berechnet werden.", e);
-            return null;
-        }
-    }
-
-    private static final long STAND_STREAMING_AB_BYTES = 8L * 1024L * 1024L;
-
-    private static void leseInStand(java.util.Map<String, byte[]> stand, java.io.File datei,
-                                    String schluessel) {
-        try {
-            if (datei != null && datei.isFile() && datei.length() > 0) {
-                if (datei.length() > STAND_STREAMING_AB_BYTES) {
-                    String hash = de.lightrixx.punish.chatfilter.TextHash.sha256DateiHex(
-                            datei.toPath());
-                    stand.put(schluessel, hash.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                } else {
-                    stand.put(schluessel, java.nio.file.Files.readAllBytes(datei.toPath()));
-                }
-            }
-        } catch (Exception e) {
-            LOG.debug("Chatfilter-Datei {} konnte nicht gelesen werden.", schluessel, e);
-        }
-    }
-
     private void ladeChatfilterNeu() {
         try {
             BridgeKonfiguration config = bridgeKonfiguration;
@@ -632,8 +590,9 @@ public final class PunishBridge extends JavaPlugin {
             kiAusfallBereitsGemeldet = false;
             richteModellEmpfaengerEin(cfConfig);
             richteTextEmpfaengerEin();
-            String dateiStand = berechneChatfilterDateiStand(cfConfig);
-            if (!rebuildNoetig(chatfilterDateiStand, dateiStand, chatfilterService != null)) {
+            var dateiStand = BridgeDateien.chatfilterStand(getDataFolder(), cfConfig);
+            if (chatfilterDateiStand.isPresent() && dateiStand.isPresent()
+                    && !rebuildNoetig(chatfilterDateiStand.get(), dateiStand.get(), chatfilterService != null)) {
                 LOG.debug("Chatfilter-Dateien unverändert, kein Neubau (Modell bleibt geladen).");
                 aktualisiereModellStand();
                 aktualisiereTextStand();
@@ -654,7 +613,7 @@ public final class PunishBridge extends JavaPlugin {
             } else if (!sollChatfilterGebautWerden(cfConfig)) {
                 enforcementListener.setChatfilter(null);
                 chatfilterService = null;
-                chatfilterDateiStand = "";
+                chatfilterDateiStand = java.util.Optional.of("");
                 LOG.info("Chatfilter per Reload deaktiviert.");
             } else {
                 LOG.warn("Chatfilter-Reload fehlgeschlagen, alte Konfiguration bleibt aktiv.");
@@ -855,22 +814,8 @@ public final class PunishBridge extends JavaPlugin {
         if (kanalClient == null || cfConfig == null) {
             return;
         }
-        kanalClient.setModellStand(hashDateiStill(cfConfig, cfConfig.modellDateiname()),
-                hashDateiStill(cfConfig, cfConfig.vocabDateiname()));
-    }
-
-    private static String hashDateiStill(
-            de.lightrixx.punish.bridge.chatfilter.ChatfilterKonfiguration cfConfig, String name) {
-        try {
-            java.io.File datei = cfConfig.dateiAufloesen(name);
-            if (datei == null || !datei.isFile()) {
-                return "";
-            }
-            return de.lightrixx.punish.chatfilter.TextHash.sha256DateiHex(datei.toPath());
-        } catch (Exception e) {
-            LOG.debug("Modell-Hash konnte nicht berechnet werden.", e);
-            return "";
-        }
+        kanalClient.setModellStand(BridgeDateien.hashDateiStill(cfConfig, cfConfig.modellDateiname()),
+                BridgeDateien.hashDateiStill(cfConfig, cfConfig.vocabDateiname()));
     }
 
     private de.lightrixx.punish.bridge.chatfilter.ChatfilterService baueChatfilterService(
@@ -1079,21 +1024,6 @@ public final class PunishBridge extends JavaPlugin {
         }
     }
 
-    private static boolean fehltZeilenumbruch(java.nio.file.Path pfad) throws java.io.IOException {
-        try (java.nio.channels.FileChannel kanal = java.nio.channels.FileChannel.open(pfad,
-                java.nio.file.StandardOpenOption.READ)) {
-            long groesse = kanal.size();
-            if (groesse <= 0) {
-                return false;
-            }
-            java.nio.ByteBuffer puffer = java.nio.ByteBuffer.allocate(1);
-            kanal.position(groesse - 1);
-            kanal.read(puffer);
-            byte letztes = puffer.array()[0];
-            return letztes != '\n' && letztes != '\r';
-        }
-    }
-
     private void fuegeChatfilterWortHinzu(String wort) {
         var gueltig = de.lightrixx.punish.chatfilter.WortlistenFilter.gueltigerEintrag(wort);
         if (gueltig.isEmpty()) {
@@ -1114,20 +1044,7 @@ public final class PunishBridge extends JavaPlugin {
         java.io.File datei;
         try {
             datei = cfConfig.dateiAufloesen(cfConfig.wortlisteDateiname());
-            var eltern = datei.getParentFile();
-            if (eltern != null) {
-                eltern.mkdirs();
-            }
-            java.nio.file.Path pfad = datei.toPath();
-            if (java.nio.file.Files.exists(pfad) && fehltZeilenumbruch(pfad)) {
-                java.nio.file.Files.writeString(pfad, System.lineSeparator(),
-                        java.nio.charset.StandardCharsets.UTF_8,
-                        java.nio.file.StandardOpenOption.APPEND);
-            }
-            java.nio.file.Files.writeString(pfad, gueltig.get()
-                    + System.lineSeparator(), java.nio.charset.StandardCharsets.UTF_8,
-                    java.nio.file.StandardOpenOption.CREATE,
-                    java.nio.file.StandardOpenOption.APPEND);
+            BridgeDateien.fuegeWortHinzu(datei, gueltig.get());
         } catch (Exception e) {
             LOG.warn("Chatfilter-Wort konnte nicht gespeichert werden.", e);
             return;
@@ -1144,58 +1061,6 @@ public final class PunishBridge extends JavaPlugin {
             LOG.info("Chatfilter-Wort '{}' übernommen (sofort aktiv).", gueltig.get());
         } catch (Exception e) {
             LOG.warn("Chatfilter-Wort gespeichert, Live-Update fehlgeschlagen (Reload nötig).", e);
-        }
-    }
-
-    private void migriereLegacyOrdner(File neu) {
-        try {
-            File eltern = neu.getParentFile();
-            if (eltern == null) {
-                return;
-            }
-            if (neu.exists() && neu.isDirectory() && neu.list() != null && neu.list().length > 0) {
-                return;
-            }
-            String[] legacyNamen = {"PunishBridge", "PunishSystem-Bridge"};
-            for (String legacyName : legacyNamen) {
-                File alt = new File(eltern, legacyName);
-                if (alt.equals(neu) || !alt.isDirectory()) {
-                    continue;
-                }
-                try {
-                    java.nio.file.Files.move(alt.toPath(), neu.toPath(),
-                            java.nio.file.StandardCopyOption.ATOMIC_MOVE);
-                    LOG.info("Datenordner '{}' nach '{}' migriert.", alt.getName(), neu.getName());
-                    return;
-                } catch (Exception moveFehler) {
-                    LOG.debug("Atomarer Move fehlgeschlagen, versuche Kopie.", moveFehler);
-                    try {
-                        kopiereOrdnerRekursiv(alt.toPath(), neu.toPath());
-                        LOG.info("Datenordner '{}' nach '{}' kopiert (alt bleibt als Backup).",
-                                alt.getName(), neu.getName());
-                        return;
-                    } catch (Exception kopierFehler) {
-                        LOG.warn("Legacy-Datenordner '{}' konnte nicht migriert werden.", alt.getName(), kopierFehler);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOG.debug("Legacy-Migration übersprungen.", e);
-        }
-    }
-
-    private static void kopiereOrdnerRekursiv(java.nio.file.Path quelle, java.nio.file.Path ziel) throws java.io.IOException {
-        try (java.util.stream.Stream<java.nio.file.Path> stream = java.nio.file.Files.walk(quelle)) {
-            for (java.nio.file.Path pfad : (Iterable<java.nio.file.Path>) stream::iterator) {
-                java.nio.file.Path relativ = quelle.relativize(pfad);
-                java.nio.file.Path zielPfad = ziel.resolve(relativ);
-                if (java.nio.file.Files.isDirectory(pfad)) {
-                    java.nio.file.Files.createDirectories(zielPfad);
-                } else {
-                    java.nio.file.Files.createDirectories(zielPfad.getParent());
-                    java.nio.file.Files.copy(pfad, zielPfad, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
         }
     }
 

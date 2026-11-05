@@ -385,12 +385,13 @@ class BridgeSicherheitRegressionTest {
                 case 1 -> java.util.Map.of("lobby", "4.0");
                 default -> java.util.Map.of("lobby", "4.0", "survival", "4.0");
             });
-            for (boolean secrets : java.util.List.of(false, true)) {
-                when(config.brueckenSecrets()).thenReturn(secrets
-                        ? java.util.Map.of("lobby", "test-lobby", "survival", "test-survival") : java.util.Map.of());
+            for (String secret : java.util.List.of("", "kurz", "123456789012345", "1234567890123456",
+                    " 1234567890123456 ")) {
+                when(config.brueckenSecrets()).thenReturn(secret.isEmpty() ? java.util.Map.of()
+                        : java.util.Map.of("lobby", secret, "survival", secret));
                 var kontext = (de.lightrixx.punish.command.PunishDiagnosticsCommand.Kontext)
                         methode.invoke(null, proxy, config, kanal, null);
-                assertEquals(anzahl == 2 && secrets, kontext.bridgeOk());
+                assertEquals(anzahl == 2 && secret.trim().length() >= 16, kontext.bridgeOk());
                 assertTrue(kontext.bridgeDetail().contains(anzahl + "/2"));
                 assertFalse(kontext.bridgeDetail().contains("verbunden"));
             }

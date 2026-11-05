@@ -9,6 +9,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BridgeShadeGuardTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"PunishBridge.java", "BridgeEnforcementListener.java"})
+    void apiVariantenWeichenNurAnVorgesehenenStellenAb(String name) throws Exception {
+        Path wurzel = modulVerzeichnis().getParent();
+        String paket = "src/main/java/de/lightrixx/punish/bridge/" + name;
+        String aktuell = Files.readString(wurzel.resolve("bridge").resolve(paket)).replace("\r\n", "\n");
+        String legacy = Files.readString(wurzel.resolve("bridge-1.21").resolve(paket)).replace("\r\n", "\n");
+        legacy = legacy.replace("mitVariante(\"bridge-1.21\")", "mitVariante(\"bridge\")")
+                .replace("event.getVehicle().teleport(event.getFrom(),\n"
+                                + "                        io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);",
+                        "event.getVehicle().teleport(event.getFrom());");
+        assertEquals(aktuell, legacy, "Unbeabsichtigter Drift in " + name);
+    }
+
     private static Path modulVerzeichnis() {
         String basedir = System.getProperty("basedir");
         Path start = (basedir == null || basedir.isBlank())

@@ -39,6 +39,7 @@ import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.storage.VerpassteBroadcastsRepository;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +50,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class StrafListener {
+
+    private static final Logger LOG = LoggerFactory.getLogger(StrafListener.class);
 
     private final ProxyServer proxy;
     private final Logger logger;
@@ -352,6 +355,7 @@ public final class StrafListener {
             return protection.istGeschuetzt(zielUuid,
                     de.lightrixx.punish.service.ProtectionService.IgnoreTyp.ALTS);
         } catch (Exception e) {
+            logger.warn("Alt-Schutzprüfung für {} fehlgeschlagen.", zielUuid, e);
             return false;
         }
     }
@@ -411,6 +415,7 @@ public final class StrafListener {
             return net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
                     .deserialize("<red>Login derzeit nicht möglich. Bitte erneut versuchen.");
         } catch (Exception e) {
+            logger.debug("Fallback-Sperrtext konnte nicht formatiert werden.", e);
             return Component.text("Login derzeit nicht möglich. Bitte erneut versuchen.");
         }
     }
@@ -673,12 +678,15 @@ public final class StrafListener {
             spieler = event.getPlayer();
             uuid = spieler.getUniqueId();
         } catch (Exception e) {
+            logger.warn("Spieler für Serverwechsel-Prüfung (PreConnect) konnte nicht ermittelt werden.", e);
             return;
         }
         RegisteredServer ziel;
         try {
             ziel = event.getResult().getServer().orElse(null);
         } catch (Exception e) {
+            logger.warn("Zielserver für Serverwechsel-Prüfung (PreConnect) für {} konnte nicht ermittelt werden.",
+                    uuid, e);
             return;
         }
         if (ziel == null) {
@@ -688,6 +696,8 @@ public final class StrafListener {
         try {
             serverName = ziel.getServerInfo().getName();
         } catch (Exception e) {
+            logger.warn("Servername für Serverwechsel-Prüfung (PreConnect) für {} konnte nicht ermittelt werden.",
+                    uuid, e);
             return;
         }
         if (serverName == null || serverName.isBlank()) {
@@ -953,6 +963,7 @@ public final class StrafListener {
         try {
             server = verbindung.getServer();
         } catch (Exception e) {
+            logger.warn("Quellserver einer Tunnel-Nachricht konnte nicht ermittelt werden.", e);
             return;
         }
         byte[] daten = kanal.eingehendPruefen(server, event.getData());
@@ -1231,6 +1242,7 @@ public final class StrafListener {
             String name = server == null ? null : server.getServerInfo().getName();
             return name == null || name.isBlank() ? "?" : name;
         } catch (Exception e) {
+            LOG.debug("Servername einer Bridge konnte nicht ermittelt werden.", e);
             return "?";
         }
     }
@@ -1254,10 +1266,12 @@ public final class StrafListener {
                 erwartet = melder.getServerInfo().getName();
                 ist = verbindung.getServer().getServerInfo().getName();
             } catch (Exception e) {
+                LOG.debug("Serverbindung eines Chatfilter-Treffers für {} konnte nicht geprüft werden.", ziel, e);
                 return false;
             }
             return erwartet != null && erwartet.equalsIgnoreCase(ist);
         } catch (Exception e) {
+            LOG.debug("Spielerverbindung eines Chatfilter-Treffers für {} konnte nicht ermittelt werden.", ziel, e);
             return false;
         }
     }
@@ -1271,10 +1285,12 @@ public final class StrafListener {
                 try {
                     return VelocitySender.hatRecht(spieler, knoten);
                 } catch (Exception e) {
+                    logger.debug("Recht {} für {} konnte nicht geprüft werden.", knoten, uuid, e);
                     return false;
                 }
             }).orElse(false);
         } catch (Exception e) {
+            logger.debug("Spieler für Rechteprüfung {} für {} konnte nicht ermittelt werden.", knoten, uuid, e);
             return false;
         }
     }
@@ -1296,6 +1312,7 @@ public final class StrafListener {
             Optional<CachedPlayer> cached = playerCache.findenNachName(ziel.trim());
             return cached.isPresent() && absender.equals(cached.get().uuid());
         } catch (Exception e) {
+            logger.debug("Selbstprüfung für {} und Ziel '{}' fehlgeschlagen.", absender, ziel, e);
             return false;
         }
     }
@@ -1356,7 +1373,7 @@ public final class StrafListener {
                 }
             }
         } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(StrafListener.class).debug("IP-Lookup fehlgeschlagen.", e);
+            LOG.debug("IP-Lookup fehlgeschlagen.", e);
         }
         return "unbekannt";
     }

@@ -170,6 +170,7 @@ public final class PsCheckCommand extends PunishCommand {
                         continue;
                     }
                 } catch (Exception e) {
+                    LOG.debug("Alt-Schutzprüfung für /pscheck für {} fehlgeschlagen.", kandidat.uuid(), e);
                     continue;
                 }
                 anzahl++;
@@ -184,6 +185,7 @@ public final class PsCheckCommand extends PunishCommand {
         try {
             return protectionService.istGeschuetzt(zielUuid);
         } catch (Exception e) {
+            LOG.warn("Schutzprüfung für /pscheck für {} fehlgeschlagen.", zielUuid, e);
             return protectionService.istFailClosed();
         }
     }
