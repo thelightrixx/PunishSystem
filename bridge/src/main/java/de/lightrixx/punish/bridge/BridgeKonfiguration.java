@@ -38,7 +38,7 @@ public final class BridgeKonfiguration implements Konfiguration {
     private static final String R_GUI = "config/gui.yml";
 
     private static final List<String> GENERAL_KEYS = List.of(
-            "prefix", "netzwerk", "anzeige-zone", "schutz", "offline-resolution",
+            "prefix", "netzwerk", "befehle", "anzeige-zone", "schutz", "offline-resolution",
             "speicher", "verstoesse", "limits", "bestaetigungen", "history", "mute", "tab",
             "vorschlaege", "defaults", "reports", "rang-buendel", "rang-gewicht",
             "config-version");
@@ -726,6 +726,11 @@ public final class BridgeKonfiguration implements Konfiguration {
             LOG.trace("Config-Pfad {} konnte nicht gelesen werden.", pfad, e);
             return standard;
         }
+    }
+
+    @Override
+    public boolean befehleUeberschreiben() {
+        return leseBool("befehle.ueberschreiben", true);
     }
 
     private boolean leseBool(String pfad, boolean standard) {

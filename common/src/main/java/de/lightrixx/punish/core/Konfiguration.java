@@ -43,6 +43,10 @@ public interface Konfiguration {
         return AKTUELLE_CONFIG_VERSION;
     }
 
+    default boolean befehleUeberschreiben() {
+        return true;
+    }
+
     default int ipAufbewahrungTage() {
         return 90;
     }

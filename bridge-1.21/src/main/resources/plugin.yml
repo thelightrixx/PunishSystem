@@ -8,7 +8,7 @@ description: >
   Source of Truth bleibt der Proxy, die Bridge hat keine eigene Straflogik.
 author: lightrixx
 authors: [lightrixx]
-softdepend: [PlaceholderAPI]
+softdepend: [PlaceholderAPI, Essentials]
 commands:
   punish-gui:
     description: Öffnet die PunishGUI (Command-Builder, Daten live vom Proxy).

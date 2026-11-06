@@ -156,7 +156,7 @@ public final class VelocityBefehle {
         java.util.Map<String, PunishCommand> vorlagenZiele = new java.util.LinkedHashMap<>();
         BanCommand ban = new BanCommand(messageService, config, protectionService, playerCache,
                 banService, timeParser, planer, verzeichnis);
-        registrar(manager, plugin, proxy, messageService, "ban", List.of(), ban);
+        registrar(manager, plugin, proxy, messageService, "ban", List.of("eban", "tempban", "etempban"), ban);
         vorlagenZiele.put("ban", ban);
         PermabannCommand permabann = new PermabannCommand(messageService, config, protectionService, playerCache,
                 banService, planer, verzeichnis);
@@ -164,18 +164,20 @@ public final class VelocityBefehle {
         vorlagenZiele.put("permabann", permabann);
         BanIpCommand banIp = new BanIpCommand(messageService, config, protectionService, playerCache,
                 ipBanService, timeParser, planer, verzeichnis);
-        registrar(manager, plugin, proxy, messageService, "ban-ip", List.of(), banIp);
+        registrar(manager, plugin, proxy, messageService, "ban-ip",
+                List.of("banip", "ebanip", "tempbanip", "etempbanip"), banIp);
         vorlagenZiele.put("ban-ip", banIp);
         UnbanIpCommand unbanIp = new UnbanIpCommand(messageService, config, protectionService,
                 playerCache, ipBanService, ipBanRepository, planer, verzeichnis);
-        registrar(manager, plugin, proxy, messageService, "unban-ip", List.of(), unbanIp);
+        registrar(manager, plugin, proxy, messageService, "unban-ip",
+                List.of("unbanip", "eunbanip", "pardon-ip"), unbanIp);
         BanAllCommand banAll = new BanAllCommand(messageService, config, protectionService, playerCache,
                 banService, timeParser, planer, verzeichnis);
         banAll.setIoExecutor(ioExecutor);
         registrar(manager, plugin, proxy, messageService, "ban-all", List.of(), banAll);
         MuteCommand mute = new MuteCommand(messageService, config, protectionService, playerCache,
                 muteService, timeParser, planer, verzeichnis);
-        registrar(manager, plugin, proxy, messageService, "mute", List.of(), mute);
+        registrar(manager, plugin, proxy, messageService, "mute", List.of("emute"), mute);
         vorlagenZiele.put("mute", mute);
         UnmuteCommand unmute = new UnmuteCommand(messageService, config, protectionService,
                 playerCache, muteService, verzeichnis);
@@ -198,7 +200,7 @@ public final class VelocityBefehle {
                 unmuteIp);
         KickCommand kick = new KickCommand(messageService, config, protectionService, playerCache,
                 kickService, verzeichnis);
-        registrar(manager, plugin, proxy, messageService, "kick", List.of(), kick);
+        registrar(manager, plugin, proxy, messageService, "kick", List.of("ekick"), kick);
         vorlagenZiele.put("kick", kick);
         KickIpCommand kickIp = new KickIpCommand(messageService, config, protectionService, playerCache,
                 kickService, verzeichnis);
@@ -207,11 +209,11 @@ public final class VelocityBefehle {
         KickAllCommand kickAll = new KickAllCommand(messageService, config, protectionService, playerCache,
                 kickService, verzeichnis);
         kickAll.setIoExecutor(ioExecutor);
-        registrar(manager, plugin, proxy, messageService, "kick-all", List.of(), kickAll);
+        registrar(manager, plugin, proxy, messageService, "kick-all", List.of("kickall", "ekickall"), kickAll);
         PardonCommand pardon = new PardonCommand(messageService, config, protectionService, playerCache,
                 banService, planer, verzeichnis);
         pardon.setVerstossService(verstossService);
-        registrar(manager, plugin, proxy, messageService, "pardon", List.of("unban"), pardon);
+        registrar(manager, plugin, proxy, messageService, "pardon", List.of("unban", "eunban"), pardon);
         PardonAllCommand pardonAll = new PardonAllCommand(messageService, config, protectionService, playerCache,
                 banService, planer, verzeichnis);
         pardonAll.setIoExecutor(ioExecutor);
@@ -490,6 +492,11 @@ public final class VelocityBefehle {
     private static void registrar(CommandManager manager, PunishVelocity plugin, ProxyServer proxy,
                                    MessageService messageService, String name,
                                    List<String> aliase, PunishCommand befehl) {
+        boolean ueberschreiben = befehl.uebernimmtFremdeBefehle();
+        List<String> fremdeAliase = ueberschreibAliase(name);
+        if (!ueberschreiben && aliase != null) {
+            aliase = aliase.stream().filter(alias -> !fremdeAliase.contains(alias)).toList();
+        }
         LiteralArgumentBuilder<CommandSource> knoten = BrigadierCommand
                 .literalArgumentBuilder(name)
                 .requires(quelle -> {
@@ -625,8 +632,20 @@ public final class VelocityBefehle {
         alleAliase.add("punish:" + name);
         if (aliase != null) {
             for (String alias : aliase) {
-                if (alias != null && !alias.isBlank()) {
+                if (alias != null && !alias.isBlank() && !fremdeAliase.contains(alias.trim())) {
                     alleAliase.add("punish:" + alias.trim());
+                }
+            }
+        }
+        if (ueberschreiben && istStrafBefehl(name)) {
+            List<String> namen = new ArrayList<>();
+            namen.add(name);
+            if (aliase != null) {
+                namen.addAll(aliase);
+            }
+            for (String befehlsName : namen) {
+                for (String praefix : List.of("minecraft:", "bukkit:", "essentials:")) {
+                    alleAliase.add(praefix + befehlsName);
                 }
             }
         }
@@ -648,6 +667,30 @@ public final class VelocityBefehle {
                         .error("Registrierung von /{} endgültig fehlgeschlagen – der Befehl fehlt im Proxy.", name, ex);
             }
         }
+    }
+
+    private static boolean istStrafBefehl(String name) {
+        return switch (name) {
+            case "ban", "permabann", "ban-ip", "unban-ip", "ban-all",
+                    "kick", "kick-ip", "kick-all", "pardon", "pardon-all",
+                    "mute", "unmute", "mute-ip", "unmute-ip", "mute-all", "unmute-all",
+                    "timeout", "untimeout", "timeout-ip", "untimeout-ip", "timeout-all", "untimeout-all",
+                    "freeze", "unfreeze", "warn", "verstoss" -> true;
+            default -> false;
+        };
+    }
+
+    private static List<String> ueberschreibAliase(String name) {
+        return switch (name) {
+            case "ban" -> List.of("eban", "tempban", "etempban");
+            case "ban-ip" -> List.of("banip", "ebanip", "tempbanip", "etempbanip");
+            case "unban-ip" -> List.of("unbanip", "eunbanip", "pardon-ip");
+            case "mute" -> List.of("emute");
+            case "kick" -> List.of("ekick");
+            case "kick-all" -> List.of("kickall", "ekickall");
+            case "pardon" -> List.of("eunban");
+            default -> List.of();
+        };
     }
 
     static String[] zuArgs(BefehlsSender sender, String rest) {

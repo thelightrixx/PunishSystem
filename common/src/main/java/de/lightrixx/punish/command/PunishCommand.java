@@ -92,6 +92,10 @@ public abstract class PunishCommand {
         return hatRecht(sender, new String[0]);
     }
 
+    public boolean uebernimmtFremdeBefehle() {
+        return configManager.befehleUeberschreiben();
+    }
+
     public boolean unterstuetztScope() {
         return true;
     }

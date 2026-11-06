@@ -11,6 +11,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class VelocityKonfigurationSetupTest {
 
     @Test
+    void befehlsUeberschreibungIstStandardmaessigAktivUndAbschaltbar(
+            @org.junit.jupiter.api.io.TempDir java.io.File ordner) throws Exception {
+        var config = new VelocityKonfiguration(org.mockito.Mockito.mock(
+                com.velocitypowered.api.proxy.ProxyServer.class), ordner);
+        config.sicherstellen();
+        var datei = ordner.toPath().resolve("config/general.yml");
+        java.nio.file.Files.writeString(datei, "prefix: '<red>Punish'\n");
+        config.laden();
+        assertTrue(config.befehleUeberschreiben());
+
+        java.nio.file.Files.writeString(datei, "befehle:\n  ueberschreiben: false\n");
+        config.laden();
+        assertFalse(config.befehleUeberschreiben());
+
+        java.nio.file.Files.writeString(datei, "befehle:\n  ueberschreiben: true\n");
+        config.laden();
+        assertTrue(config.befehleUeberschreiben());
+    }
+
+    @Test
     void ersetztLeerenBlockUndBehaeltKommentar() {
         String alt = "netzwerk:\n"
                 + "  server-name: \"\"\n"

@@ -11,11 +11,70 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.RETURNS_SELF;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class BridgeSicherheitRegressionTest {
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"kick,ekick,true", "ban,tempban,true", "ban-ip,banip,true",
+            "unban-ip,pardon-ip,true", "mute,emute,true", "pardon,unban,true", "kick-all,kickall,true",
+            "kick,ekick,false", "ban,tempban,false", "ban-ip,banip,false",
+            "unban-ip,pardon-ip,false", "mute,emute,false", "pardon,unban,false", "kick-all,kickall,false"})
+    void proxyRegistriertDirekteStrafBefehleNurBeiAktivemSchalter(
+            String name, String alias, boolean ueberschreiben) throws Exception {
+        var manager = mock(com.velocitypowered.api.command.CommandManager.class);
+        var builder = mock(com.velocitypowered.api.command.CommandMeta.Builder.class, RETURNS_SELF);
+        var meta = mock(com.velocitypowered.api.command.CommandMeta.class);
+        when(manager.metaBuilder(name)).thenReturn(builder);
+        when(builder.build()).thenReturn(meta);
+        var befehl = mock(de.lightrixx.punish.command.PunishCommand.class);
+        when(befehl.uebernimmtFremdeBefehle()).thenReturn(ueberschreiben);
+        var nachrichten = mock(de.lightrixx.punish.service.MessageService.class);
+        var registrieren = VelocityBefehle.class.getDeclaredMethod("registrar",
+                com.velocitypowered.api.command.CommandManager.class, PunishVelocity.class,
+                com.velocitypowered.api.proxy.ProxyServer.class,
+                de.lightrixx.punish.service.MessageService.class, String.class,
+                java.util.List.class, de.lightrixx.punish.command.PunishCommand.class);
+        registrieren.setAccessible(true);
+        registrieren.invoke(null, manager, mock(PunishVelocity.class),
+                mock(com.velocitypowered.api.proxy.ProxyServer.class), nachrichten,
+                name, java.util.List.of(alias), befehl);
+
+        var aliase = org.mockito.ArgumentCaptor.forClass(String[].class);
+        verify(builder).aliases(aliase.capture());
+        var namen = java.util.List.of(aliase.getValue());
+        var erwartetePunishNamen = alias.equals("unban")
+                ? java.util.Set.of("punish:pardon", "punish:unban") : java.util.Set.of("punish:" + name);
+        assertEquals(erwartetePunishNamen, namen.stream().filter(label -> label.startsWith("punish:"))
+                .collect(java.util.stream.Collectors.toSet()));
+        assertEquals(ueberschreiben || alias.equals("unban"), namen.contains(alias));
+        for (String label : java.util.List.of(name, alias)) {
+            assertEquals(ueberschreiben, namen.contains("minecraft:" + label));
+            assertEquals(ueberschreiben, namen.contains("essentials:" + label));
+            assertEquals(ueberschreiben, namen.contains("bukkit:" + label));
+        }
+        var registriert = org.mockito.ArgumentCaptor.forClass(com.velocitypowered.api.command.BrigadierCommand.class);
+        verify(manager).register(eq(meta), registriert.capture());
+        var dispatcher = new com.mojang.brigadier.CommandDispatcher<com.velocitypowered.api.command.CommandSource>();
+        dispatcher.getRoot().addChild(registriert.getValue().getNode());
+        var quelle = mock(com.velocitypowered.api.command.CommandSource.class);
+        when(befehl.sichtbarFuer(any())).thenReturn(true);
+        when(befehl.hatRecht(any(), any())).thenReturn(true);
+        assertEquals(1, dispatcher.execute(name + " Notch Grund", quelle));
+        verify(befehl).ausfuehren(any(), org.mockito.AdditionalMatchers.aryEq(new String[]{"Notch", "Grund"}));
+
+        clearInvocations(befehl);
+        when(befehl.hatRecht(any(), any())).thenReturn(false);
+        assertEquals(0, dispatcher.execute(name + " Notch Grund", quelle));
+        verify(befehl, never()).ausfuehren(any(), any());
+        verify(nachrichten).senden(any(), eq(de.lightrixx.punish.core.MessageKeys.KEIN_RECHT));
+    }
 
     @Test
     @DisplayName("P1: BEFEHL_AUSFUEHREN-Allowlist blockt RCE (luckperms/op/stop)")

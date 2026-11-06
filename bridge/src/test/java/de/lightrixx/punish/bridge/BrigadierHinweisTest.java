@@ -1,12 +1,93 @@
 package de.lightrixx.punish.bridge;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalMatchers.aryEq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class BrigadierHinweisTest {
+
+    @ParameterizedTest
+    @CsvSource({"kick,ekick,true", "ban,tempban,true", "ban-ip,banip,true", "unban-ip,pardon-ip,true",
+            "mute,emute,true", "pardon,unban,true", "kick-all,kickall,true",
+            "kick,ekick,false", "ban,tempban,false", "ban-ip,banip,false", "unban-ip,pardon-ip,false",
+            "mute,emute,false", "pardon,unban,false", "kick-all,kickall,false"})
+    void strafBefehleVerdraengenFremdeBefehleNurBeiAktivemSchalter(
+            String name, String alias, boolean ueberschreiben) throws Exception {
+        var registrar = mock(Commands.class);
+        var tunnel = mock(TunnelVorschlag.class);
+        var sender = mock(CommandSender.class);
+        var quelle = mock(CommandSourceStack.class);
+        when(quelle.getSender()).thenReturn(sender);
+        when(tunnel.darfSehen(sender)).thenReturn(true);
+        var knoten = new LinkedHashMap<String, LiteralCommandNode<CommandSourceStack>>();
+        var labels = List.of(name, alias, "minecraft:" + name, "essentials:" + name,
+                "bukkit:" + name, "essentials:" + alias, "minecraft:" + alias);
+        for (String label : labels) {
+            knoten.put(label, Commands.literal(label).executes(ctx -> 17)
+                    .then(Commands.argument("alt", StringArgumentType.greedyString()).executes(ctx -> 17)).build());
+        }
+        doAnswer(aufruf -> {
+            LiteralCommandNode<CommandSourceStack> node = aufruf.getArgument(0);
+            Collection<String> aliase = aufruf.getArgument(2);
+            knoten.put(node.getLiteral(), node);
+            for (String andererName : aliase) {
+                var aliasKnoten = new LiteralCommandNode<>(andererName, node.getCommand(),
+                        node.getRequirement(), node.getRedirect(), node.getRedirectModifier(), node.isFork());
+                node.getChildren().forEach(aliasKnoten::addChild);
+                knoten.putIfAbsent(andererName, aliasKnoten);
+            }
+            return java.util.Set.of(node.getLiteral());
+        }).when(registrar).register(any(), anyString(), anyCollection());
+
+        BridgeBrigadierBefehle.registrieren(registrar, List.of(
+                new BridgeBrigadierBefehle.Eintrag(name,
+                        name.equals("pardon") ? List.of("unban", "punish:pardon", "punish:unban")
+                                : List.of("punish:" + name), "Test", tunnel)), ueberschreiben);
+
+        var dispatcher = new CommandDispatcher<CommandSourceStack>();
+        knoten.values().forEach(dispatcher.getRoot()::addChild);
+        var erwartetePunishNamen = name.equals("pardon")
+                ? java.util.Set.of("punish:pardon", "punish:unban") : java.util.Set.of("punish:" + name);
+        var vorschlaege = dispatcher.getCompletionSuggestions(dispatcher.parse("punish:", quelle)).get();
+        assertEquals(erwartetePunishNamen, vorschlaege.getList().stream()
+                .map(com.mojang.brigadier.suggestion.Suggestion::getText)
+                .collect(java.util.stream.Collectors.toSet()));
+        for (String label : labels) {
+            assertEquals(label, knoten.get(label).getLiteral());
+            assertEquals(ueberschreiben || label.equals(name) ? 1 : 17,
+                    dispatcher.execute(label + " Notch Grund", quelle));
+        }
+        verify(tunnel, times(ueberschreiben ? labels.size() : 1))
+                .fuehreAus(eq(sender), aryEq(new String[]{"Notch", "Grund"}));
+
+        clearInvocations(tunnel);
+        when(tunnel.darfSehen(sender)).thenReturn(false);
+        for (String label : labels) {
+            if (ueberschreiben || label.equals(name)) {
+                assertThrows(CommandSyntaxException.class, () -> dispatcher.execute(label + " Notch", quelle));
+            } else {
+                assertEquals(17, dispatcher.execute(label + " Notch", quelle));
+            }
+        }
+        verify(tunnel, never()).fuehreAus(any(), any());
+    }
 
     private BridgeBefehlWeiterleitung tunnelFuer(String ziel) {
         KanalClient kanal = mock(KanalClient.class);

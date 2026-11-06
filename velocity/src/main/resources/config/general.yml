@@ -16,6 +16,13 @@
 # Warnung im Log, kein Abbruch. Bitte nach Update /punish-reload nutzen.
 config-version: "2026-11-01"
 
+# Strafbefehle von Minecraft/Essentials einschließlich direkter Aufrufe übernehmen.
+# false: normale PunishSystem-Registrierung ohne zusätzliche Fremdbefehls-Aliase.
+# Auf dem Proxy einstellen, mit /punish-reload an die Bridges verteilen.
+# Nach dem Text-Sync Proxy und Backends neu starten; ein Reload allein reicht nicht.
+befehle:
+  ueberschreiben: true
+
 prefix: "<dark_gray>[<red>PunishSystem<dark_gray>]"
 
 # --- Netzwerk / Proxy-Vorbereitung (Zero-Config) ---

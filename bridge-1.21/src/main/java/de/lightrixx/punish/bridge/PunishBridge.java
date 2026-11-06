@@ -1191,7 +1191,8 @@ public final class PunishBridge extends JavaPlugin {
     private void registriereBrigadier(java.util.List<BridgeBrigadierBefehle.Eintrag> eintraege) {
         getLifecycleManager().registerEventHandler(
                 io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents.COMMANDS,
-                event -> BridgeBrigadierBefehle.registrieren(event.registrar(), eintraege));
+                event -> BridgeBrigadierBefehle.registrieren(event.registrar(), eintraege,
+                        bridgeKonfiguration.befehleUeberschreiben()));
         LOG.info("Brigadier-TAB für {} Befehle registriert.", eintraege.size());
     }
 

@@ -291,6 +291,11 @@ public final class VelocityKonfiguration implements Konfiguration {
         return abschnitt(abschnitt).get(schluessel);
     }
 
+    @Override
+    public boolean befehleUeberschreiben() {
+        return Karten.wahr(abschnitt("befehle"), "ueberschreiben", true);
+    }
+
     public boolean chatfilterAktiv() {
         return Karten.wahr(abschnitt("chatfilter"), "aktiv", false);
     }

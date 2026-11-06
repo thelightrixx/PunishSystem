@@ -22,6 +22,13 @@
 # Schema-Version dieser Config (2026-11-01). Bei Downgrade Warnung im Log, kein Abbruch.
 config-version: "2026-11-01"
 
+# Strafbefehle von Minecraft/Essentials einschließlich direkter Aufrufe übernehmen.
+# false: normale PunishSystem-Registrierung ohne zusätzliche Fremdbefehls-Aliase.
+# Auf dem Proxy einstellen, mit /punish-reload an die Bridges verteilen.
+# Nach dem Text-Sync Proxy und Backends neu starten; ein Reload allein reicht nicht.
+befehle:
+  ueberschreiben: true
+
 # --- Netzwerk (Zero-Config) ---
 # server-name: leer lassen = Auto (Proxy meldet kanonischen Namen via HELLO_ACK).
 # Nur setzen, wenn der Auto-Name überschrieben werden soll.

@@ -26,6 +26,10 @@ public final class BridgeBrigadierBefehle {
     }
 
     public static void registrieren(Commands registrar, Collection<Eintrag> eintraege) {
+        registrieren(registrar, eintraege, true);
+    }
+
+    public static void registrieren(Commands registrar, Collection<Eintrag> eintraege, boolean ueberschreiben) {
         if (registrar == null || eintraege == null || eintraege.isEmpty()) {
             return;
         }
@@ -35,7 +39,7 @@ public final class BridgeBrigadierBefehle {
                 continue;
             }
             try {
-                registriere(registrar, eintrag);
+                registriere(registrar, eintrag, ueberschreiben);
             } catch (Exception e) {
                 LOG.warn("Brigadier-Registrierung für /{} fehlgeschlagen (Legacy-TAB bleibt aktiv).",
                         eintrag.name(), e);
@@ -43,7 +47,7 @@ public final class BridgeBrigadierBefehle {
         }
     }
 
-    private static void registriere(Commands registrar, Eintrag eintrag) {
+    private static void registriere(Commands registrar, Eintrag eintrag, boolean ueberschreiben) {
         TunnelVorschlag tunnel = eintrag.tunnel();
         RequiredArgumentBuilder<CommandSourceStack, String> rest =
                 RequiredArgumentBuilder.<CommandSourceStack, String>argument(
@@ -164,6 +168,11 @@ public final class BridgeBrigadierBefehle {
                 }
             }
         }
+        if (ueberschreiben) {
+            for (String alias : ueberschreibAliase(eintrag.name())) {
+                aliase.add(alias);
+            }
+        }
         String beschreibung = eintrag.beschreibung() == null ? "" : eintrag.beschreibung();
         try {
             registrar.register(node, beschreibung, aliase);
@@ -172,7 +181,44 @@ public final class BridgeBrigadierBefehle {
                     eintrag.name(), e.getMessage());
             registrar.register(node, beschreibung, List.of());
         }
+        if (ueberschreiben && istStrafBefehl(eintrag.name())) {
+            List<String> namen = new ArrayList<>();
+            namen.add(eintrag.name());
+            aliase.stream().filter(alias -> !alias.contains(":")).forEach(namen::add);
+            for (String name : namen) {
+                for (String praefix : List.of("", "minecraft:", "bukkit:", "essentials:")) {
+                    var uebernahme = new LiteralCommandNode<>(praefix + name, node.getCommand(),
+                            node.getRequirement(), node.getRedirect(), node.getRedirectModifier(), node.isFork());
+                    node.getChildren().forEach(uebernahme::addChild);
+                    registrar.register(uebernahme, beschreibung, List.of());
+                }
+            }
+        }
         LOG.debug("Brigadier-Command /{} registriert ({} Aliase).", eintrag.name(), aliase.size());
+    }
+
+    private static boolean istStrafBefehl(String name) {
+        return switch (name) {
+            case "ban", "permabann", "ban-ip", "unban-ip", "ban-all",
+                    "kick", "kick-ip", "kick-all", "pardon", "pardon-all",
+                    "mute", "unmute", "mute-ip", "unmute-ip", "mute-all", "unmute-all",
+                    "timeout", "untimeout", "timeout-ip", "untimeout-ip", "timeout-all", "untimeout-all",
+                    "freeze", "unfreeze", "warn", "verstoss" -> true;
+            default -> false;
+        };
+    }
+
+    private static List<String> ueberschreibAliase(String name) {
+        return switch (name) {
+            case "ban" -> List.of("eban", "tempban", "etempban");
+            case "ban-ip" -> List.of("banip", "ebanip", "tempbanip", "etempbanip");
+            case "unban-ip" -> List.of("unbanip", "eunbanip", "pardon-ip");
+            case "mute" -> List.of("emute");
+            case "kick" -> List.of("ekick");
+            case "kick-all" -> List.of("kickall", "ekickall");
+            case "pardon" -> List.of("eunban");
+            default -> List.of();
+        };
     }
 
     static String[] zuArgs(String rest) {

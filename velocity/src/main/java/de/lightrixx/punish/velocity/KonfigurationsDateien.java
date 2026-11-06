@@ -22,7 +22,7 @@ final class KonfigurationsDateien {
     private static final String R_BROADCASTS = "/config/broadcasts.yml";
 
     private static final List<String> GENERAL_KEYS = List.of(
-            "prefix", "netzwerk", "anzeige-zone", "schutz", "offline-resolution",
+            "prefix", "netzwerk", "befehle", "anzeige-zone", "schutz", "offline-resolution",
             "speicher", "datenschutz", "verstoesse", "warns", "limits", "bestaetigungen", "history", "mute", "tab",
             "vorschlaege", "defaults", "reports", "chatfilter", "alt-wache", "bann-unban-antrag",
             "rang-buendel", "rang-gewicht", "update", "config-version");
