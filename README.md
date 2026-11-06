@@ -1,97 +1,64 @@
 # PunishSystem v4.0.0-beta
 
-**PunishSystem** ist ein hochperformantes, netzwerkweites Moderations- und Bestrafungssystem für Minecraft. Es wurde speziell für den Einsatz auf **Velocity-Proxies** mit **Paper/Purpur-Backend-Servern** entwickelt.
+PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
-Der Velocity-Proxy fungiert dabei als **Source of Truth** für alle Netzwerkaktionen und Speicherung. Die Paper-Bridges erzwingen Mutes/Freezes/Timeouts lokal, bieten eine interaktive **PunishGUI** und leiten Befehle über einen kryptographisch signierten Plugin-Message-Tunnel an den Proxy weiter.
+## Dokumentation
 
----
+Die vollständige Dokumentation liegt in [docs/index.html](docs/index.html). Öffne diese Datei lokal im Browser; sie funktioniert ohne Internetverbindung. Die Navigation ist nach Aufgaben geordnet, die Suche findet auch Befehle, Permissions und Konfigurationsschlüssel.
 
-## Highlights & Features
+| Aufgabe | Einstieg |
+|---|---|
+| Netzwerk zum ersten Mal einrichten | [Installation und Voraussetzungen](docs/index.html#/installation) |
+| Einen Moderationsfall durchspielen | [Moderations-Schnellstart](docs/index.html#/schnellstart) |
+| Syntax, Beispiele oder Aliase finden | [Befehlsreferenz](docs/index.html#/befehle) |
+| Rechte an Teamgruppen vergeben | [Rang-Bündel und LuckPerms](docs/index.html#/rang-buendel), [alle Permissions](docs/index.html#/rechte) |
+| Eine Einstellung oder Nachricht ändern | [Dateien und Zuständigkeiten](docs/index.html#/config-uebersicht) |
+| MySQL einrichten oder YAML-Daten übernehmen | [Speicher und Migration](docs/index.html#/speicher) |
+| Eine bestehende Installation aktualisieren | [Updates und Sicherungen](docs/index.html#/betrieb) |
+| Ein Problem untersuchen | [Fehlerbehebung](docs/index.html#/fehlerbehebung) |
+| Das Projekt bauen | [Bauen und Entwickeln](docs/index.html#/entwicklung) |
 
-- **Netzwerkweite Strafverwaltung**: Banns, Mutes, Timeouts, Freezes, Kicks, Verwarnungen, Verstoß-Punkte, Notizen und IP-Strafen.
-- **Server-Scopes**: Strafen können global oder auf spezifische Server (`--global`, `--<Servername>` oder `--server=<Name>`) angewendet werden.
-- **PunishGUI**: Interaktives In-Game-Menü für Moderatoren mit Live-Daten vom Proxy.
-- **Chatfilter**: Flexibler Wortlistenfilter mit optionaler KI-Toxizitätsprüfung (ONNX-Runtime) und automatischem Staffel-Eskalationssystem.
-- **Reports & Alt-Erkennung**: Report-System für Spieler und Alt-Account-Erkennung anhand von IP-Adressen.
-- **Persistenz**: Speicherung wahlweise in **YAML** (atomar, gesichert) oder **MySQL** (HikariCP-Pool) mit automatischer Schema-Migration.
-- **GitHub-Update-Integration**: `/punish-update` liest GitHub Releases und stellt die Jars nach SHA-256-Prüfung zum manuellen Austausch bereit. Danach Proxy und Backends neu starten.
-- **Datenschutz & LuckPerms**: IP-Maskierung nach DSGVO (Sichtbarkeit an `punish.alts` gekoppelt), volle LuckPerms-Kontext-Unterstützung mit Hochleistungs-Caching.
+## Voraussetzungen und Jars
 
----
-
-## Systemanforderungen
-
-- **Java**: **Java 21** für Proxy und `bridge-1.21`; **Java 25** für das Modul `bridge` (Paper 26.1+ setzt Java 25 voraus, die Paper-API 26.1 ist auf Klassenversion 69 übersetzt). Gebaut wird in beiden Fällen mit JDK 25, Bytecode-Ziel der eigenen Klassen ist Release 21.
-- **Proxy**: Velocity **3.4.0**+
-- **Backend-Server**: Paper / Purpur **1.21.x** (Modul `bridge-1.21`, Java 21) oder Paper **26.1**+ (Modul `bridge`, Java 25).
-- **Optionale Abhängigkeiten**: LuckPerms, PlaceholderAPI.
-
-Die gemeinsamen Java-Quellen und Tests der Bridges liegen unter `bridge/src/`. `bridge-1.21` übernimmt sie beim Maven-Build; nur `PunishBridge`, `BridgeEnforcementListener` und der API-spezifische `FixRegressionTest` bleiben dort separat. Nach einem frischen Checkout vor dem direkten IDE-Start `mvn -pl bridge-1.21 -am test-compile` ausführen.
-
----
-
-## Installation & Schnellstart
-
-### 1. Dateien platzieren
-- **`PunishSystem-v4.0.0-beta-(velocity)+<Build>.jar`** in den `plugins/`-Ordner des **Velocity-Proxys** legen.
-- **`PunishSystem-v4.0.0-beta-(bridge)+<Build>.jar`** (für Paper 26.1+) oder **`PunishSystem-v4.0.0-beta-(bridge-1.21)+<Build>.jar`** (für Paper 1.21.x) in die `plugins/`-Ordner der **Backend-Server** legen.
-
-`<Build>` ist die Buildnummer aus dem Dateinamen, zum Beispiel `011126_1933`. Alle drei Jars gehören zusammen und müssen auf derselben Version und Buildnummer laufen.
-
-### 2. Tunnel-Secrets konfigurieren
-1. Proxy und Backends einmal starten und stoppen.
-2. In der `plugins/PunishSystemVelocity/config/general.yml` auf dem Proxy pro Bridge ein eigenes Secret eintragen:
-   ```yaml
-   netzwerk:
-     bridge-secrets:
-       lobby: "<SECRET_NUR_FUER_LOBBY>"
-       survival: "<ANDERES_SECRET_NUR_FUER_SURVIVAL>"
-   ```
-3. Auf jeder Bridge in `plugins/PunishSystemBridge/config/general.yml` den eigenen Servernamen und **genau das zugehörige** Secret eintragen:
-   ```yaml
-   netzwerk:
-     server-name: "lobby"
-     tunnel-secret: "<SECRET_NUR_FUER_LOBBY>"
-   ```
-   Jede Bridge hat ein eigenes Secret. Ein gemeinsames Secret für mehrere Bridges ist unsicher und wird nicht unterstützt. Secrets mindestens 16 Zeichen lang und zufällig wählen; Proxy und Bridges weisen leere oder nach dem Trimmen kürzere Secrets ab. Kein Beispiel-Secret aus dieser Doku übernehmen. Erzeugen z. B. mit `openssl rand -base64 32` oder PowerShell `[Convert]::ToBase64String([byte[]](1..32 | ForEach-Object { Get-Random -Maximum 256 }))`.
-4. Server starten. Die Bridges verbinden sich automatisch mit dem Proxy; `/punish-diagnostics` zeigt auf Proxy und Backends den Zustand. Danach erzeugt `/punish-setup secrets` auf dem Proxy fehlende Secrets, `/punish-setup check` prüft Speicher, Secrets und verbundene Bridges.
-
-### 3. Datenhaltung einrichten (vor dem ersten Start beachten)
-
-Der Proxy speichert standardmäßig in **MySQL** (`config/general.yml`, Abschnitt `speicher`). Ist dort keine erreichbare Datenbank hinterlegt, deaktiviert sich das Proxy-Plugin beim Start (Fail-Closed) und der Proxy läuft ohne Strafverwaltung. Zwei Wege:
-
-- **MySQL (Standard für Netzwerke):** Datenbank und Benutzer anlegen und in `plugins/PunishSystemVelocity/config/general.yml` unter `speicher.mysql` eintragen (`host`, `port`, `datenbank`, `benutzer`, `passwort`). Vorhandene YAML-Daten werden beim ersten Start mit `migration-beim-start: true` einmalig übernommen, aber nur wenn die Datenbank noch leer ist.
-- **YAML (Einzelserver):** in derselben Datei `speicher.typ: "yaml"` setzen; die Daten liegen dann unter `plugins/PunishSystemVelocity/data/`.
-
-Die Bridges speichern nichts selbst; sie erhalten alle Strafen per Sync vom Proxy.
-
----
-
-## Befehle & Rechte (Auszug)
-
-| Befehl | Beschreibung | Haupt-Permission |
+| Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
-| `/ban <Spieler> <Dauer> [Grund] [--global\|--<Servername>\|--server=<Name>]` | Bannt einen Spieler | `punish.ban` |
-| `/mute <Spieler> <Dauer> [Grund] [--global\|--<Servername>\|--server=<Name>]` | Mutet einen Spieler | `punish.mute` |
-| `/timeout <Spieler> <Dauer> [Grund] [--global\|--<Servername>\|--server=<Name>]` | Versetzt einen Spieler in Timeout | `punish.timeout` |
-| `/freeze <Spieler> [Dauer] [Grund]` | Friert einen Spieler ein | `punish.freeze` |
-| `/kick <Spieler> [Grund]` | Kickt einen Spieler vom Netzwerk | `punish.kick` |
-| `/warn <Spieler> <Grund>` | Verwarnt einen Spieler | `punish.warn` |
-| `/punish-gui [Spieler]` | Öffnet die interaktive PunishGUI | `punish.gui` |
-| `/punish-status [Spieler\|self\|server]` | Zeigt aktive Strafen | `punish.status` |
-| `/punish-history [Spieler\|self\|server]` | Zeigt den kompletten Strafverlauf | `punish.history` |
-| `/alts <Spieler\|IP>` | Zeigt verknüpfte Zweitaccounts | `punish.alts` |
-| `/report <Spieler> <Grund>` | Meldet einen Spieler an das Team | `punish.report` |
-| `/reports` | Verwaltet offene Reports | `punish.reports` |
-| `/punish-update [check\|status\|apply]` | Prüft und installiert Updates | `punish.update` |
-| `/punish-reload` | Lädt die Konfiguration neu | `punish.reload` |
+| Proxy | Velocity 3.4.0+, Java 21 | `velocity` |
+| Backend mit Minecraft 1.21.x | Paper/Purpur 1.21.x, Java 21 | `bridge-1.21` |
+| Backend mit Minecraft 26.1+ | Paper/Purpur 26.1+, Java 25 | `bridge` |
 
-Vollständige Befehls-, Rechte- und Konfigurationsübersicht findest du in der mitgelieferten Dokumentation unter `docs/index.html`.
+Installiere die Proxy-Jar und **genau eine passende Bridge pro Backend** in den jeweiligen `plugins/`-Ordner. Alle installierten Jars müssen dieselbe Version und Buildnummer haben. Folia wird nicht unterstützt. LuckPerms und PlaceholderAPI sind optional; ohne LuckPerms ist die Schutzprüfung bekannter Offline-Spieler eingeschränkt.
 
----
+## Reihenfolge der Ersteinrichtung
+
+1. Jars einspielen, Proxy und Backends einmal starten und wieder stoppen, damit die Konfigurationsdateien entstehen.
+2. **Zuerst den Proxy-Speicher einrichten:** MySQL ist Standard und benötigt eine erreichbare Datenbank samt Benutzer. Alternativ `speicher.typ: "yaml"` setzen. Scheitert der Speicherstart, läuft Velocity ohne PunishSystem-Strafverwaltung weiter.
+3. **Pro Bridge ein eigenes zufälliges Tunnel-Secret** mit mindestens 16 Zeichen nach dem Trimmen setzen. Auf dem Proxy steht es unter `netzwerk.bridge-secrets.<Servername>`, auf der passenden Bridge unter `netzwerk.tunnel-secret`. Der Bridge-`server-name` muss zum registrierten Velocity-Server passen. Bei laufendem Proxy-Plugin kann `/punish-setup secrets` fehlende Secrets erzeugen.
+4. Rechte auf dem Proxy vergeben, Server starten und `/punish-setup check` sowie `/punish-diagnostics` prüfen. Für Sync und Tunnel muss auf dem betroffenen Backend mindestens ein Spieler verbunden sein.
+5. Mit einem ungeschützten Testaccount eine Strafe setzen, ihre Wirkung prüfen und im gleichen Scope wieder aufheben.
+
+Die [Installationsanleitung](docs/index.html#/installation) enthält die vollständigen YAML-Beispiele, Dateipfade und Prüfschritte. Regeln und Texte werden zentral auf dem Proxy gepflegt; synchronisierte Bridge-Dateien sind keine unabhängige Konfiguration.
+
+## Funktionen
+
+- Banns, Timeouts, Mutes, Freezes, Kicks und IP-Strafen mit globalem oder serverbezogenem Scope.
+- Verwarnungen, Verstoß-Punkte mit Auto-Bann, interne Notizen, Reports und IP-basierte Alt-Erkennung.
+- Status, Hauptverlauf, Bearbeitung, Vorlagen, Undo, Statistik und JSON-Export.
+- PunishGUI, Wortlistenfilter und optionales lokales KI-Modell für den Chatfilter.
+- MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
+- GitHub-Updates mit SHA-256-Prüfung: Jars werden bereitgestellt und anschließend manuell ausgetauscht; danach alle Server neu starten.
+
+## Aus dem Quellcode bauen
+
+JDK 25 und Maven werden benötigt. Die eigenen Klassen verwenden Java-Release 21. Unter Windows baut `build_all_jars.bat nobump` alle Jars mit Tests, ohne die Buildnummer zu ändern. Alternativ:
+
+```shell
+mvn verify
+```
+
+Das Projekt enthält `common`, `velocity`, `bridge` und `bridge-1.21`. Gemeinsame Bridge-Quellen und -Tests liegen unter `bridge/src/`; `bridge-1.21` übernimmt sie beim Build. Vor dem ersten IDE-Start `mvn -pl bridge-1.21 -am test-compile` ausführen. Weitere Build-Befehle und die separat gepflegten API-Klassen erklärt [Bauen und Entwickeln](docs/index.html#/entwicklung).
 
 ## Lizenz
 
-Das Plugin und sein Quellcode stehen unter der **MIT-Lizenz** (siehe [LICENSE](LICENSE)).
+Plugin und Quellcode stehen unter der [MIT-Lizenz](LICENSE).
 
-*Hinweis zum optionalen KI-Modell:* Das über Skripte ladbare Chatfilter-Modell (`ankekat1000/toxic-bert-german`) sowie dessen Vokabular stehen unter **CC BY-NC-SA 4.0** (nur nicht-kommerzielle Nutzung). Es ist nicht Teil der mitgelieferten JAR-Dateien.
+Das optionale Chatfilter-Modell `ankekat1000/toxic-bert-german` und sein Vokabular werden nicht mit den Jars ausgeliefert. Das Repository führt dafür die Lizenzangabe **CC BY-NC-SA 4.0**. Hinweise zur separaten Bereitstellung stehen unter [Chatfilter](docs/index.html#/chatfilter).
