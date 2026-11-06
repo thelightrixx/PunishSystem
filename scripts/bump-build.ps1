@@ -4,7 +4,7 @@
     Setzt die Buildnummer in pom.xml auf das aktuelle Datum und die aktuelle Minute (DDMMYY-HHMM).
 
 .DESCRIPTION
-    Versionsschema: Basis+Build, z.B. 4.0.0-preview+011126-1853.
+    Versionsschema: Basis+Build, z.B. v4.0.0-preview+011126-1853.
     Der Build ist das lokale Datum (TTMMJJ), die Stunde (00-23) und die Minute (00-59).
     Maven-Version ohne fuehrendes 'v' (Konvention); das Anzeige-'v'
     ergaenzen StartBanner und PluginVersion automatisch.

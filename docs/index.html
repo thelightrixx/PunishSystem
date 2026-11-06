@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Dokumentation</title>
-<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem 4.0.0-preview.">
+<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.0-preview.">
 <script>
 (function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
@@ -62,27 +62,29 @@
   --r-s:6px; --r-m:10px; --r-l:14px;
 }
 :root[data-theme="dark"]{
-  --bg:#0e1319; --surface:#151b23; --surface-2:#1b232d; --hover:#202935;
-  --text:#e8ecf1; --text-2:#bac2cd; --text-3:#8b96a5;
-  --line:#242d38; --line-2:#344050;
+  --bg:#171717; --surface:#202020; --surface-2:#282828; --hover:#303030;
+  --text:#ededed; --text-2:#c2c2c2; --text-3:#a3a3a3;
+  --line:#333333; --line-2:#484848;
   --accent:#ff6c5d; --accent-ink:#ff8e81; --accent-soft:#2c1714;
   --link:#86b6ff; --focus:#86b6ff;
 
-  --chrome:#090c10; --chrome-2:#131a22; --chrome-line:#1f2832;
-  --chrome-text:#c5cdd8; --chrome-dim:#8591a2; --chrome-hi:#ffffff;
+  --chrome:#141414; --chrome-2:#202020; --chrome-line:#303030;
+  --chrome-text:#d0d0d0; --chrome-dim:#a0a0a0; --chrome-hi:#ffffff;
   --chrome-hover:rgba(255,255,255,.07); --chrome-active:rgba(255,255,255,.1);
-  --chrome-line-hover:#3a4656;
+  --chrome-line-hover:#484848;
 
-  --code-bg:#0a0e13; --code-line:#222b36;
-  --ic-bg:#1f2833; --ic-text:#e2e7ee;
+  --code-bg:#111111; --code-text:#dedede; --code-line:#333333; --code-dim:#a3a3a3;
+  --tok-com:#a3a3a3;
+  --ic-bg:#2a2a2a; --ic-text:#e5e5e5;
+  --mc-bg:#111111;
 
-  --note:#8ebcff; --note-bg:#121f37;
+  --note:#8ebcff; --note-bg:#242424;
   --warn:#f3c777; --warn-bg:#292008;
   --danger:#ff9a8f; --danger-bg:#2d1512;
   --ok:#82dca2; --ok-bg:#0e2318;
 
   --k-ban:#ff6c5d; --k-timeout:#f59e2b; --k-mute:#a98bff; --k-freeze:#3cc4e4;
-  --k-kick:#8e9cb0; --k-warn:#e0b43a;
+  --k-kick:#a3a3a3; --k-warn:#e0b43a;
 }
 
 /* ---------- Grundlagen ---------- */
@@ -528,7 +530,7 @@ details>div{padding:14px 18px 2px}
   <div class="hero">
     <div class="hero-copy">
       <h1>PunishSystem Dokumentation</h1>
-      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem 4.0.0-preview auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.0.0-preview auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
       <div class="hero-actions">
         <a class="hero-action primary" href="#/installation">
           Installation starten
@@ -3300,7 +3302,7 @@ mvn verify</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem 4.0.0-preview. Dokumentation für Admins und Moderatoren.</div>');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.0.0-preview. Dokumentation für Admins und Moderatoren.</div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');
