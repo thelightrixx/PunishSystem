@@ -42,6 +42,19 @@ class UpdateVergleichTest {
     }
 
     @Test
+    void previewLiegtZwischenBetaUndReleaseCandidate() {
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0.0-beta+031126-2053", "4.0.0-preview"));
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0.0-preview", "4.0.0-beta+061126-1200"));
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0.0-preview+061126-1200", "4.0.0-RC"));
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0.0-RC", "4.0.0-preview+061126-1200"));
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0.0-preview", "4.0.0"));
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0.0", "4.0.0-preview"));
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0.0-preview", "v4.0.0-preview"));
+        assertTrue(UpdateVergleich.neuerVerfuegbar("4.0.0-preview+061126-1200", "4.0.0-preview+061126-1201"));
+        assertFalse(UpdateVergleich.neuerVerfuegbar("4.0.0-preview+061126-1201", "4.0.0-preview+061126-1200"));
+    }
+
+    @Test
     void releaseCandidateLiegtZwischenBetaUndFinal() {
         assertTrue(UpdateVergleich.neuerVerfuegbar("4.0-beta+011126-1853", "4.0-RC+011126-1854"));
         assertTrue(UpdateVergleich.neuerVerfuegbar("4.0-RC+011126-1854", "4.0+011126-1855"));

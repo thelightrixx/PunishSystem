@@ -100,13 +100,29 @@ class BuildNumberTest {
         PluginVersion fin = PluginVersion.parse("v4.0+011126-1855");
         assertFalse(fin.istBeta());
         assertFalse(fin.istReleaseCandidate());
-        assertEquals(2, fin.kanalRang());
-        assertEquals(1, rc.kanalRang());
+        assertEquals(3, fin.kanalRang());
+        assertEquals(2, rc.kanalRang());
         assertEquals(0, beta.kanalRang());
 
         assertTrue(PluginVersion.istGueltig("v4.0-RC"));
         assertTrue(PluginVersion.istGueltig("v4.0-rc+011126-1853"));
         assertFalse(PluginVersion.istGueltig("v4.0-gamma+011126-1853"));
+    }
+
+    @Test
+    void pluginVersionPreviewMitUndOhneBuild() {
+        PluginVersion ohne = PluginVersion.parse("4.0.0-preview");
+        assertEquals("v4.0.0-preview", ohne.voll());
+        assertFalse(ohne.hatBuild());
+        assertFalse(ohne.istBeta());
+        assertFalse(ohne.istReleaseCandidate());
+        assertEquals(1, ohne.kanalRang());
+
+        PluginVersion mit = PluginVersion.parse("v4.0.0-preview+061126-1200");
+        assertTrue(mit.hatBuild());
+        assertEquals("v4.0.0-preview+061126-1200", mit.voll());
+        assertEquals(ohne.kanalRang(), mit.kanalRang());
+        assertTrue(PluginVersion.istGueltig("v4.0.0-PREVIEW"));
     }
 
     @Test

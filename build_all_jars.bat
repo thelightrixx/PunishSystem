@@ -7,7 +7,7 @@ rem  Ablauf (Standard):
 rem    1. Falls eine Buildnummer vorhanden ist, diese auf das aktuelle
 rem       lokale Datum und die aktuelle Minute setzen (DDMMYY-HHMM,
 rem       z. B. 011126-1853; Logik aus scripts\bump-build.ps1).
-rem       Versionen ohne Buildnummer (z. B. 4.0 oder 4.0-beta) werden
+rem       Versionen ohne Buildnummer (z. B. 4.0 oder 4.0-preview) werden
 rem       nicht auf einen Datums-Build gesetzt.
 rem    2. Neue Version in alle Modul-poms + PunishVelocity.java
 rem       synchronisieren (velocity-plugin.json nutzt ${project.version}).
@@ -15,7 +15,7 @@ rem    3. Alle Plattform-Module mit Maven bauen
 rem       (mvn -pl velocity,bridge,bridge-1.21 -am clean package).
 rem    4. Alle drei Jars als PunishSystem-v<Basis>-(<Plattform>)+<Build>.jar
 rem       ins Hauptverzeichnis kopieren (gleiche Versionsnummer),
-rem       z. B. PunishSystem-v4.0.0-beta-(velocity)+011126_1929.jar.
+rem       z. B. PunishSystem-v4.0.0-preview-(velocity)+011126_1929.jar.
 rem
 rem  Aufruf:
 rem    build_all_jars.bat                  Datums-Build (falls Buildnummer vorhanden) + Build (mit Tests)
@@ -77,7 +77,7 @@ echo [INFO] Maven: %MVN_CMD%
 
 rem --- 2. Version bestimmen, Buildnummer auf aktuelles Datum/Uhrzeit setzen ---
 if "%SKIP_BUMP%"=="1" goto :ohne_bump
-rem Version ohne Buildnummer (final z. B. 4.0 oder Beta z. B. 4.0-beta) wird nicht auf einen Datums-Build gesetzt.
+rem Version ohne Buildnummer (final z. B. 4.0 oder Preview z. B. 4.0-preview) wird nicht auf einen Datums-Build gesetzt.
 powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; if ($x.project.version.Trim() -notmatch '\+') { exit 3 }"
 if errorlevel 3 goto :final_ohne_bump
 echo [INFO] Setze Buildnummer auf aktuelles Datum/Uhrzeit ...

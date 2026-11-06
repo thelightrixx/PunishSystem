@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Dokumentation</title>
-<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem 4.0.0-beta.">
+<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem 4.0.0-preview.">
 <script>
 (function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
@@ -504,7 +504,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite der Dokumentation"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Dokumentation</small></button>
-  <span class="ver">v4.0.0-beta</span>
+  <span class="ver">v4.0.0-preview</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Dokumentation durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -528,7 +528,7 @@ details>div{padding:14px 18px 2px}
   <div class="hero">
     <div class="hero-copy">
       <h1>PunishSystem Dokumentation</h1>
-      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem 4.0.0-beta auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem 4.0.0-preview auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
       <div class="hero-actions">
         <a class="hero-action primary" href="#/installation">
           Installation starten
@@ -3044,7 +3044,7 @@ build_all_jars.bat nobump skiptests</pre>
     <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Versionen ohne Buildnummer bleiben unverändert.</li>
     <li><code>nobump</code> lässt die Version unverändert. <code>skiptests</code> überspringt die Tests.</li>
     <li>Das Skript synchronisiert die Parent-Version in den Modul-Poms und die Versionsangabe der Proxy-Plugin-Klasse; die Plugin-Metadaten werden beim Maven-Build verarbeitet.</li>
-    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.0-beta-(velocity)+031126_2053.jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
+    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.0-preview-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
   </ul>
   <p>Maven baut ohne das Hilfsskript direkt in die <code>target/</code>-Ordner der Module:</p>
   <pre data-lang="shell">mvn -pl velocity,bridge,bridge-1.21 -am clean package</pre>
@@ -3300,7 +3300,7 @@ mvn verify</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem 4.0.0-beta. Dokumentation für Admins und Moderatoren.</div>');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem 4.0.0-preview. Dokumentation für Admins und Moderatoren.</div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');

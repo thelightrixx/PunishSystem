@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public final class PluginVersion {
 
     private static final Pattern BASIS_MUSTER =
-            Pattern.compile("^[vV]?\\d+\\.\\d+(\\.\\d+)?(-alpha|-beta|-rc)?(-SNAPSHOT)?$",
+            Pattern.compile("^[vV]?\\d+\\.\\d+(\\.\\d+)?(-alpha|-beta|-preview|-rc)?(-SNAPSHOT)?$",
                     Pattern.CASE_INSENSITIVE);
 
     private final String basis;
@@ -36,7 +36,7 @@ public final class PluginVersion {
         String buildTeil = plus >= 0 ? getrimmt.substring(plus + 1).trim() : "";
         if (!BASIS_MUSTER.matcher(basisTeil).matches()) {
             throw new IllegalArgumentException(
-                    "Ungueltige Basis '" + basisTeil + "' (erwartet z. B. v4.0, v4.0-RC oder v4.0-beta).");
+                    "Ungueltige Basis '" + basisTeil + "' (erwartet z. B. v4.0, v4.0-RC oder v4.0-preview).");
         }
         if (basisTeil.startsWith("v") || basisTeil.startsWith("V")) {
             basisTeil = "v" + basisTeil.substring(1);
@@ -133,10 +133,13 @@ public final class PluginVersion {
         if (istBeta() || istSnapshot()) {
             return 0;
         }
-        if (istReleaseCandidate()) {
+        if (basis.toLowerCase(Locale.ROOT).endsWith("-preview")) {
             return 1;
         }
-        return 2;
+        if (istReleaseCandidate()) {
+            return 2;
+        }
+        return 3;
     }
 
     public String voll() {
