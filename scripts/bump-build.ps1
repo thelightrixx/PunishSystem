@@ -77,9 +77,8 @@ if ([string]::IsNullOrWhiteSpace($AltBuild) -and
     [string]::IsNullOrWhiteSpace($Base) -and
     [string]::IsNullOrWhiteSpace($Build) -and
     -not $IstBeta -and -not $IstPreview -and -not $IstRc -and -not $IstSnapshot) {
-    throw ("Finale Version '$Aktuell' hat keine Buildnummer - Bump abgelehnt. " +
-        "Eine neue Linie mit -Base starten (z. B. -Base v4.0.1 oder -Base v4.1-preview); " +
-        "zum reinen Bauen build_all_jars.bat verwenden.")
+    Write-Host "Finale Version '$Aktuell' ohne Buildnummer - kein Datums-Build."
+    exit 3
 }
 
 if ([string]::IsNullOrWhiteSpace($Build)) {

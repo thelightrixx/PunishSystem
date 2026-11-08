@@ -3045,10 +3045,10 @@ build_all_jars.bat nobump
 build_all_jars.bat skiptests
 build_all_jars.bat nobump skiptests</pre>
   <ul>
-    <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Versionen ohne Buildnummer bleiben unverändert.</li>
+    <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer oder eine Vorabversion (<code>-alpha</code>, <code>-beta</code>, <code>-preview</code>, <code>-RC</code>, <code>-SNAPSHOT</code>) auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Finale Versionen ohne Buildnummer bleiben unverändert.</li>
     <li><code>nobump</code> lässt die Version unverändert. <code>skiptests</code> überspringt die Tests.</li>
     <li>Das Skript synchronisiert die Parent-Version in den Modul-Poms und die Versionsangabe der Proxy-Plugin-Klasse; die Plugin-Metadaten werden beim Maven-Build verarbeitet.</li>
-    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.0-preview-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
+    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.0-preview-(velocity)+081126_1929.jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
   </ul>
   <p>Maven baut ohne das Hilfsskript direkt in die <code>target/</code>-Ordner der Module:</p>
   <pre data-lang="shell">mvn -pl velocity,bridge,bridge-1.21 -am clean package</pre>

@@ -4,11 +4,12 @@ rem  PunishSystem - build_all_jars.bat
 rem  Baut Velocity + Bridge (26.x) + Bridge-1.21 mit GLEICHER Version.
 rem
 rem  Ablauf (Standard):
-rem    1. Falls eine Buildnummer vorhanden ist, diese auf das aktuelle
-rem       lokale Datum und die aktuelle Minute setzen (DDMMYY-HHMM,
-rem       z. B. 011126-1853; Logik aus scripts\bump-build.ps1).
-rem       Versionen ohne Buildnummer (z. B. 4.0 oder 4.0-preview) werden
-rem       nicht auf einen Datums-Build gesetzt.
+rem    1. Bei Vorabversionen (alpha/beta/preview/RC/SNAPSHOT) oder einer
+rem       bereits vorhandenen Buildnummer diese auf das aktuelle lokale
+rem       Datum und die aktuelle Minute setzen (DDMMYY-HHMM, z. B.
+rem       011126-1853; Logik aus scripts\bump-build.ps1).
+rem       Finale Versionen ohne Buildnummer (z. B. 4.0 oder 4.0.0) bleiben
+rem       unveraendert.
 rem    2. Neue Version in alle Modul-poms + PunishVelocity.java
 rem       synchronisieren (velocity-plugin.json nutzt ${project.version}).
 rem    3. Alle Plattform-Module mit Maven bauen
@@ -18,9 +19,9 @@ rem       ins Hauptverzeichnis kopieren (gleiche Versionsnummer),
 rem       z. B. PunishSystem-v4.0.0-preview-(velocity)+011126_1929.jar.
 rem
 rem  Aufruf:
-rem    build_all_jars.bat                  Datums-Build (falls Buildnummer vorhanden) + Build (mit Tests)
+rem    build_all_jars.bat                  Datums-Build (bei Vorabversionen oder vorhandener Buildnummer) + Build (mit Tests)
 rem    build_all_jars.bat nobump           nur bauen, Version bleibt
-rem    build_all_jars.bat skiptests        Datums-Build (falls Buildnummer vorhanden) + Build ohne Tests
+rem    build_all_jars.bat skiptests        Datums-Build (bei Vorabversionen oder vorhandener Buildnummer) + Build ohne Tests
 rem    build_all_jars.bat nobump skiptests nur bauen ohne Tests
 rem ================================================================
 chcp 65001 >nul
@@ -77,34 +78,33 @@ echo [INFO] Maven: %MVN_CMD%
 
 rem --- 2. Version bestimmen, Buildnummer auf aktuelles Datum/Uhrzeit setzen ---
 if "%SKIP_BUMP%"=="1" goto :ohne_bump
-rem Version ohne Buildnummer (final z. B. 4.0 oder Preview z. B. 4.0-preview) wird nicht auf einen Datums-Build gesetzt.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; if ($x.project.version.Trim() -notmatch '\+') { exit 3 }"
-if errorlevel 3 goto :final_ohne_bump
-echo [INFO] Setze Buildnummer auf aktuelles Datum/Uhrzeit ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim() | Out-File -Encoding ascii ($env:TEMP + '\punish_old_version.txt')"
-set /p OLD_VERSION=<"%TEMP%\punish_old_version.txt"
-del "%TEMP%\punish_old_version.txt"
+rem bump-build.ps1 entscheidet: Vorabversionen (alpha/beta/preview/RC/SNAPSHOT)
+rem erhalten einen Datums-Build, finale Versionen bleiben unveraendert (Exit 3).
+set "OLD_VERSION="
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim()"`) do set "OLD_VERSION=%%V"
+if not defined OLD_VERSION goto :bump_fehler
 echo [INFO] Alt: %OLD_VERSION%
 powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\bump-build.ps1"
+if errorlevel 3 goto :final_ohne_bump
 if errorlevel 1 goto :bump_fehler
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim() | Out-File -Encoding ascii ($env:TEMP + '\punish_new_version.txt')"
-set /p NEW_VERSION=<"%TEMP%\punish_new_version.txt"
-del "%TEMP%\punish_new_version.txt"
+set "NEW_VERSION="
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim()"`) do set "NEW_VERSION=%%V"
+if not defined NEW_VERSION goto :sync_fehler
 echo [INFO] Neu: %NEW_VERSION%
 goto :sync_version
 :ohne_bump
 echo [INFO] nobump: Version bleibt unveraendert.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim() | Out-File -Encoding ascii ($env:TEMP + '\punish_new_version.txt')"
-set /p NEW_VERSION=<"%TEMP%\punish_new_version.txt"
-del "%TEMP%\punish_new_version.txt"
+set "NEW_VERSION="
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim()"`) do set "NEW_VERSION=%%V"
+if not defined NEW_VERSION goto :sync_fehler
 echo [INFO] Version: %NEW_VERSION%
 goto :bauen
 
 :final_ohne_bump
-echo [INFO] Version ohne Buildnummer erkannt - kein Datums-Build.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim() | Out-File -Encoding ascii ($env:TEMP + '\punish_new_version.txt')"
-set /p NEW_VERSION=<"%TEMP%\punish_new_version.txt"
-del "%TEMP%\punish_new_version.txt"
+echo [INFO] Finale Version ohne Buildnummer erkannt - kein Datums-Build.
+set "NEW_VERSION="
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim()"`) do set "NEW_VERSION=%%V"
+if not defined NEW_VERSION goto :sync_fehler
 echo [INFO] Version: %NEW_VERSION%
 goto :bauen
 
