@@ -270,7 +270,15 @@ public abstract class PunishCommand {
             messageService.senden(sender, MessageKeys.SCHUTZ_HINWEIS_GESCHUETZT,
                     Map.of("spieler", zielName));
         } else if (ergebnis == ProtectionService.SchutzErgebnis.UNSICHER) {
-            messageService.senden(sender, MessageKeys.SCHUTZ_HINWEIS_UNBEKANNT,
+            boolean failClosed;
+            try {
+                failClosed = protectionService.istFailClosed();
+            } catch (Exception e) {
+                failClosed = true;
+            }
+            messageService.senden(sender, failClosed
+                            ? MessageKeys.SCHUTZ_HINWEIS_UNBEKANNT
+                            : MessageKeys.SCHUTZ_HINWEIS_UNBEKANNT_ERLAUBT,
                     Map.of("spieler", zielName));
         }
     }

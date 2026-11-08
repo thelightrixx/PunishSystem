@@ -478,4 +478,42 @@ class FixPaketRegressionTest {
         org.mockito.Mockito.verify(repo).entbannenDauerhaft(eq(uuid), any(), any());
         org.mockito.Mockito.verifyNoInteractions(broadcast, kick);
     }
+
+    @Test
+    void unsichererSchutzHinweisNenntErlaubnisBeiFailOpen() {
+        var messages = mock(de.lightrixx.punish.service.MessageService.class);
+        var schutz = mock(ProtectionService.class);
+        when(schutz.istFailClosed()).thenReturn(false);
+        var befehl = new HinweisBefehl(messages, schutz);
+        var sender = mock(BefehlsSender.class);
+        befehl.hinweis(sender, "Steve", ProtectionService.SchutzErgebnis.UNSICHER);
+        org.mockito.Mockito.verify(messages).senden(sender,
+                MessageKeys.SCHUTZ_HINWEIS_UNBEKANNT_ERLAUBT, Map.of("spieler", "Steve"));
+    }
+
+    private static final class HinweisBefehl extends PunishCommand {
+        private HinweisBefehl(de.lightrixx.punish.service.MessageService messages,
+                              ProtectionService schutz) {
+            super(messages, mock(Konfiguration.class), schutz, mock(PlayerCache.class));
+        }
+
+        private void hinweis(BefehlsSender sender, String name,
+                             ProtectionService.SchutzErgebnis ergebnis) {
+            sendeSchutzHinweis(sender, name, ergebnis);
+        }
+
+        @Override
+        protected String recht() {
+            return "test";
+        }
+
+        @Override
+        public void ausfuehren(BefehlsSender sender, String[] args) {
+        }
+
+        @Override
+        public List<String> vervollstaendigen(BefehlsSender sender, String[] args) {
+            return List.of();
+        }
+    }
 }

@@ -42,6 +42,7 @@ messages:
   schutz-offline-unbekannt: "<yellow>Der Schutzstatus von <white>%spieler% <yellow>konnte nicht geprüft werden (offline, Rechte-Cache leer). Aktion aus Sicherheit blockiert – später erneut versuchen oder <white>schutz.fail-closed: false<yellow> setzen."
   schutz-hinweis-geschuetzt: "<yellow>Hinweis: <white>%spieler% <yellow>ist durch <white>punish.ignore<yellow> geschützt. Die Ansicht wird angezeigt; Strafaktionen bleiben gesperrt."
   schutz-hinweis-unbekannt: "<yellow>Hinweis: Der Schutzstatus von <white>%spieler% <yellow>ist ungeklärt. Die Ansicht wird angezeigt; Strafaktionen bleiben aus Sicherheit gesperrt."
+  schutz-hinweis-unbekannt-erlaubt: "<yellow>Hinweis: Der Schutzstatus von <white>%spieler% <yellow>ist ungeklärt. Die Ansicht wird angezeigt; Strafaktionen sind laut <white>schutz.fail-closed: false<yellow> erlaubt."
   schutz-pruefung-laeuft: "<gray>Prüfe Schutzstatus von <white>%spieler%<gray> …"
   silent-ohne-recht: "<yellow>Silent erfordert <white>punish.allow-silent-syntax<yellow> – die Strafe wurde laut ausgeführt."
   ip-nicht-gefunden: "<red>Für <white>%spieler% <red>ist keine IP-Adresse bekannt."

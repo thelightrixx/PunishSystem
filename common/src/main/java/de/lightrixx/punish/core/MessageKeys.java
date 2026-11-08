@@ -29,6 +29,7 @@ public final class MessageKeys {
     public static final String SCHUTZ_OFFLINE_UNBEKANNT = "schutz-offline-unbekannt";
     public static final String SCHUTZ_HINWEIS_GESCHUETZT = "schutz-hinweis-geschuetzt";
     public static final String SCHUTZ_HINWEIS_UNBEKANNT = "schutz-hinweis-unbekannt";
+    public static final String SCHUTZ_HINWEIS_UNBEKANNT_ERLAUBT = "schutz-hinweis-unbekannt-erlaubt";
     public static final String SCHUTZ_PRUEFUNG_LAEUFT = "schutz-pruefung-laeuft";
     public static final String IP_NICHT_GEFUNDEN = "ip-nicht-gefunden";
     public static final String BESTAETIGUNG_NOETIG = "bestaetigung-noetig";

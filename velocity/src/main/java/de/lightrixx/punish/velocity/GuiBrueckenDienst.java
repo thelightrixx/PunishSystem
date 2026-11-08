@@ -170,8 +170,17 @@ public final class GuiBrueckenDienst {
             zeilen.add(new Protokoll.GuiZeile("INFO", "Geschützt",
                     "Durch punish.ignore geschützt. Ansicht sichtbar, Strafaktionen gesperrt.", "", name));
         } else if (status == ProtectionService.SchutzErgebnis.UNSICHER) {
+            boolean failClosed;
+            try {
+                failClosed = protectionService.istFailClosed();
+            } catch (Exception e) {
+                failClosed = true;
+            }
             zeilen.add(new Protokoll.GuiZeile("INFO", "Schutzstatus ungeklärt",
-                    "Ansicht sichtbar, Strafaktionen aus Sicherheit gesperrt.", "", name));
+                    failClosed
+                            ? "Ansicht sichtbar, Strafaktionen aus Sicherheit gesperrt."
+                            : "Ansicht sichtbar, Strafaktionen laut schutz.fail-closed: false erlaubt.",
+                    "", name));
         }
     }
 
