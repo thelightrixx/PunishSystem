@@ -99,21 +99,6 @@ public final class PunishHistoryCommand extends PunishCommand {
         }
     }
 
-    private boolean istGeschuetztNameAusgeblendet(String zielName) {
-        if (zielName == null || zielName.isBlank()) {
-            return false;
-        }
-        try {
-            Optional<CachedPlayer> gefunden = playerCache.findenNachName(zielName.trim());
-            if (gefunden.isEmpty()) {
-                return false;
-            }
-            return protectionService.istGeschuetzt(gefunden.get().uuid());
-        } catch (Exception e) {
-            return protectionService.istFailClosed();
-        }
-    }
-
     @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
         String scopeFilter = null;
@@ -194,18 +179,7 @@ public final class PunishHistoryCommand extends PunishCommand {
     private void spielerAnsicht(BefehlsSender sender, PunishmentsQuery query, UUID zielUuid, String zielName,
                                 String scopeFilter) {
         if (query.zielTyp() != PunishmentsQuery.ZielTyp.SELF) {
-            try {
-                if (protectionService.istGeschuetzt(zielUuid)) {
-                    messageService.senden(sender, MessageKeys.GESCHUETZT);
-                    return;
-                }
-            } catch (Exception e) {
-                if (protectionService.istFailClosed()) {
-                    messageService.senden(sender, MessageKeys.SCHUTZ_OFFLINE_UNBEKANNT,
-                            Map.of("spieler", zielName));
-                    return;
-                }
-            }
+            sendeSchutzHinweis(sender, zielName, schutzErgebnis(zielUuid));
         }
         int seitenGroesse = Math.max(1, configManager.historyEintraegeProSeite());
         PunishmentsFilter filter = query.filter();
@@ -226,7 +200,6 @@ public final class PunishHistoryCommand extends PunishCommand {
         List<HistoryEntry> verlauf = historyService.findeServerHistory(HISTORY_FETCH_LIMIT).stream()
                 .filter(e -> e != null && filter.passt(e.typ()))
                 .filter(e -> passtScopeFilter(e.scope(), scopeFilter))
-                .filter(e -> !istGeschuetztNameAusgeblendet(e.ziel()))
                 .sorted(NEUESTE_ZUERST)
                 .toList();
 
@@ -332,7 +305,8 @@ public final class PunishHistoryCommand extends PunishCommand {
         }
         return switch (eintrag.typ()) {
             case BAN, BAN_EDIT, PERMABANN, AUTO_BANN ->
-                    sender.hatRecht(Permissions.PUNISH_PARDON.node()) ? "/pardon " + ziel : null;
+                    sender.hatRecht(Permissions.PUNISH_PARDON.node())
+                            ? "/pardon " + ziel + " --" + eintrag.scopeAlsObjekt().speicherwert() : null;
             case BAN_ALL, PARDON_ALL, KICK_ALL, IP_KICK, MUTE_ALL, UNMUTE_ALL, TIMEOUT_ALL,
                     UNTIMEOUT_ALL ->
                     null;

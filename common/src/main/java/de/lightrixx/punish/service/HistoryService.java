@@ -8,6 +8,7 @@ import de.lightrixx.punish.storage.HistoryRepository;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class HistoryService {
 
@@ -35,6 +36,15 @@ public final class HistoryService {
         historyRepository.hinzufuegenNeu(typ, ausfuehrer, zielUuid, zielName, grund, ablauf,
                 scope == null ? ServerScope.UNBEKANNT_WERT : scope.speicherwert(),
                 herkunft);
+    }
+
+    public void hinzufuegenDauerhaft(HistoryType typ, String ausfuehrer, UUID zielUuid,
+                                     String zielName, String grund, Long ablauf,
+                                     ServerScope scope, String herkunft) {
+        hinzufuegen(typ, ausfuehrer, zielUuid, zielName, grund, ablauf, scope, herkunft);
+        if (!historyRepository.warteAufPersistenz(5, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("History konnte nicht rechtzeitig dauerhaft gespeichert werden.");
+        }
     }
 
     public void hinzufuegen(HistoryType typ, String ausfuehrer, String ziel,

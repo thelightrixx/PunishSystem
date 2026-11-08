@@ -114,14 +114,20 @@ public final class BanCommand extends PunishCommand {
                 } catch (Exception e) {
                     LOG.debug("Kürzungs-Hinweis übersprungen.", e);
                 }
-                boolean erfolg = banService.bannen(
+                BanService.BanErgebnis ergebnis = banService.bannenMitErgebnis(
                         spieler.uuid(),
                         spieler.name(),
                         dauerMillis,
                         grund,
                         ausfuehrerName(sender),
                         scope, herkunft, silent, sender);
-                if (!erfolg) {
+                if (ergebnis == BanService.BanErgebnis.PERSISTENZ_FEHLER
+                        || ergebnis == BanService.BanErgebnis.ROLLBACK_FEHLER) {
+                    messageService.senden(sender, ergebnis == BanService.BanErgebnis.PERSISTENZ_FEHLER
+                            ? MessageKeys.BAN_SPEICHER_FEHLER : MessageKeys.BAN_ROLLBACK_FEHLER);
+                    return;
+                }
+                if (ergebnis != BanService.BanErgebnis.ERFOLG) {
 
                     try {
                         if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())

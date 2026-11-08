@@ -127,7 +127,7 @@ public final class PunishGuiCommand implements CommandExecutor, TabCompleter,
                 }
                 boolean geschuetzt = false;
                 try {
-                    geschuetzt = online.isOp() || hatIgnoreSchutz(online);
+                    geschuetzt = hatIgnoreSchutz(online);
                 } catch (Exception e) {
                     org.slf4j.LoggerFactory.getLogger(PunishGuiCommand.class).debug("Spieler-Permission konnte nicht gelesen werden.", e);
                 }

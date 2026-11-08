@@ -421,6 +421,20 @@ public final class StrafListener {
     }
 
     private Component loginSperre(UUID uuid, String name, String ip, long jetzt) {
+        boolean ipUnbekannt = "unbekannt".equalsIgnoreCase(ip);
+        if (ipUnbekannt) {
+            boolean failClosed;
+            try {
+                failClosed = config.schutzFailClosed();
+            } catch (Exception e) {
+                failClosed = true;
+            }
+            if (failClosed) {
+                logger.warn("IP für '{}' nicht lesbar – Login wird fail-closed verweigert.", name);
+                return fallbackSperre();
+            }
+            logger.warn("IP für '{}' nicht lesbar – IP-Prüfungen werden fail-open übersprungen.", name);
+        }
         Optional<BanRecord> bann;
         try {
             bann = banService.findeAbdeckend(uuid, ServerScope.global());
@@ -449,7 +463,7 @@ public final class StrafListener {
                 }
             });
         }
-        if (!"unbekannt".equals(ip)) {
+        if (!ipUnbekannt) {
             Optional<IpBanRecord> ipBann;
             try {
                 ipBann = ipBanService.ipFindeAbdeckend(ip, ServerScope.global());
@@ -497,7 +511,7 @@ public final class StrafListener {
                 }
             });
         }
-        if (ipTimeoutService != null && !"unbekannt".equals(ip)) {
+        if (ipTimeoutService != null && !ipUnbekannt) {
             Optional<IpTimeoutRecord> ipTimeout;
             try {
                 ipTimeout = ipTimeoutService.findeAbdeckend(ip, ServerScope.global());
@@ -521,8 +535,6 @@ public final class StrafListener {
                     }
                 });
             }
-        } else if (ipTimeoutService != null) {
-            logger.warn("IP für '{}' nicht lesbar – IP-Timeout-Prüfung übersprungen (Fail-Open in der IP-Dimension).", name);
         }
         try {
             var mute = muteService.findeAktivenMuteFuer(uuid, jetzt, "unbekannt");
@@ -744,8 +756,12 @@ public final class StrafListener {
                         }
                     }
                 } else {
-                    logger.warn("IP für '{}' (PreConnect) nicht lesbar – IP-Bann-Prüfung übersprungen (Fail-Open in der IP-Dimension).",
-                            spieler.getUsername());
+                    logger.warn("IP für '{}' (PreConnect) nicht lesbar – IP-Bann-Prüfung {}.",
+                            spieler.getUsername(),
+                            failClosed ? "fail-closed verweigert" : "fail-open übersprungen");
+                    if (failClosed) {
+                        sperre = fallbackSperre();
+                    }
                 }
             } catch (Exception e) {
                 logger.warn("IP-Lookup (PreConnect) für '{}' fehlgeschlagen ({}).", spieler.getUsername(),
@@ -790,8 +806,12 @@ public final class StrafListener {
                         }
                     }
                 } else {
-                    logger.warn("IP für '{}' (PreConnect) nicht lesbar – IP-Timeout-Prüfung übersprungen (Fail-Open in der IP-Dimension).",
-                            spieler.getUsername());
+                    logger.warn("IP für '{}' (PreConnect) nicht lesbar – IP-Timeout-Prüfung {}.",
+                            spieler.getUsername(),
+                            failClosed ? "fail-closed verweigert" : "fail-open übersprungen");
+                    if (failClosed) {
+                        sperre = fallbackSperre();
+                    }
                 }
             } catch (Exception e) {
                 logger.warn("IP-Timeout-Lookup (PreConnect) für '{}' fehlgeschlagen ({}).", spieler.getUsername(),

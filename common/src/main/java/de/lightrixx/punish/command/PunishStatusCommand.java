@@ -195,17 +195,6 @@ public final class PunishStatusCommand extends PunishCommand {
         }
     }
 
-    private boolean istGeschuetztAusgeblendet(UUID zielUuid) {
-        if (zielUuid == null) {
-            return false;
-        }
-        try {
-            return protectionService.istGeschuetzt(zielUuid);
-        } catch (Exception e) {
-            return protectionService.istFailClosed();
-        }
-    }
-
     @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
         String scopeFilter = null;
@@ -291,9 +280,8 @@ public final class PunishStatusCommand extends PunishCommand {
 
     private void spielerAnsicht(BefehlsSender sender, PunishmentsQuery query, UUID zielUuid, String zielName,
                                 String scopeFilter) {
-        if (query.zielTyp() != PunishmentsQuery.ZielTyp.SELF && istGeschuetztAusgeblendet(zielUuid)) {
-            messageService.senden(sender, MessageKeys.GESCHUETZT);
-            return;
+        if (query.zielTyp() != PunishmentsQuery.ZielTyp.SELF) {
+            sendeSchutzHinweis(sender, zielName, schutzErgebnis(zielUuid));
         }
         long jetzt = System.currentTimeMillis();
         PunishmentsFilter filter = query.filter();
@@ -499,7 +487,6 @@ public final class PunishStatusCommand extends PunishCommand {
             var banns = banRepository.alle().stream()
                     .filter(Objects::nonNull)
                     .filter(b -> b.istAktiv(jetzt))
-                    .filter(b -> !istGeschuetztAusgeblendet(b.spielerUuid()))
                     .filter(b -> passtScopeFilter(b.scope().anzeige(), scopeFilter))
                     .sorted(Comparator.comparingLong((BanRecord record) -> record.erstelltAm()).reversed())
                     .toList();
@@ -510,7 +497,6 @@ public final class PunishStatusCommand extends PunishCommand {
             var mutes = muteRepository.alle().stream()
                     .filter(Objects::nonNull)
                     .filter(m -> m.istAktiv(jetzt))
-                    .filter(m -> !istGeschuetztAusgeblendet(m.spielerUuid()))
                     .filter(m -> passtScopeFilter(m.scope().anzeige(), scopeFilter))
                     .sorted(Comparator.comparingLong((MuteRecord record) -> record.erstelltAm()).reversed())
                     .toList();
@@ -521,7 +507,6 @@ public final class PunishStatusCommand extends PunishCommand {
             var timeouts = timeoutRepository.alle().stream()
                     .filter(Objects::nonNull)
                     .filter(t -> t.istAktiv(jetzt))
-                    .filter(t -> !istGeschuetztAusgeblendet(t.spielerUuid()))
                     .filter(t -> passtScopeFilter(t.scope().anzeige(), scopeFilter))
                     .sorted(Comparator.comparingLong((TimeoutRecord record) -> record.erstelltAm()).reversed())
                     .toList();
@@ -532,7 +517,6 @@ public final class PunishStatusCommand extends PunishCommand {
             var freezes = freezeRepository.alle().stream()
                     .filter(Objects::nonNull)
                     .filter(f -> f.istAktiv(jetzt))
-                    .filter(f -> !istGeschuetztAusgeblendet(f.spielerUuid()))
                     .filter(f -> passtScopeFilter(f.scope().anzeige(), scopeFilter))
                     .sorted(Comparator.comparingLong((FreezeRecord record) -> record.erstelltAm()).reversed())
                     .toList();
@@ -571,7 +555,7 @@ public final class PunishStatusCommand extends PunishCommand {
         }
         if (filter.zeigtVerstoesse()) {
             var proSpieler = verstossRepository.alle().entrySet().stream()
-                    .filter(e -> e.getKey() != null && !istGeschuetztAusgeblendet(e.getKey()))
+                    .filter(e -> e.getKey() != null)
                     .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
                     .sorted(Comparator.<Map.Entry<UUID, List<VerstossRecord>>>comparingInt(
                             e -> e.getValue().size()).reversed()
@@ -592,7 +576,7 @@ public final class PunishStatusCommand extends PunishCommand {
         }
         if (filter.zeigtWarns() && warnRepository != null) {
             var proSpielerWarn = warnRepository.alle().entrySet().stream()
-                    .filter(e -> e.getKey() != null && !istGeschuetztAusgeblendet(e.getKey()))
+                    .filter(e -> e.getKey() != null)
                     .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
                     .sorted(Comparator.<Map.Entry<UUID, List<WarnRecord>>>comparingInt(
                             e -> e.getValue().size()).reversed()

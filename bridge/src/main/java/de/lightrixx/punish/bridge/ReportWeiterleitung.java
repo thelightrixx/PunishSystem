@@ -185,13 +185,6 @@ public final class ReportWeiterleitung implements CommandExecutor, TabCompleter,
             return true;
         }
         try {
-            if (ziel.isOp()) {
-                return true;
-            }
-        } catch (Exception e) {
-            return true;
-        }
-        try {
             for (String knoten : IGNORE_KNOTEN) {
                 try {
                     if (ziel.hasPermission(knoten)) {

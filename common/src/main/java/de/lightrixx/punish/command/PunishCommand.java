@@ -100,6 +100,10 @@ public abstract class PunishCommand {
         return true;
     }
 
+    public boolean erzwingtExplizitenScope() {
+        return false;
+    }
+
     protected String[] ohneScopeFlags(String[] args) {
         if (args == null || args.length == 0) {
             return args == null ? new String[0] : args;
@@ -249,6 +253,26 @@ public abstract class PunishCommand {
             return false;
         }
         return false;
+    }
+
+    protected ProtectionService.SchutzErgebnis schutzErgebnis(UUID zielUuid) {
+        try {
+            return protectionService.pruefeSchutz(zielUuid);
+        } catch (Exception e) {
+            LOG.warn("Schutzprüfung für {} fehlgeschlagen, werte als UNSICHER.", zielUuid, e);
+            return ProtectionService.SchutzErgebnis.UNSICHER;
+        }
+    }
+
+    protected void sendeSchutzHinweis(BefehlsSender sender, String zielName,
+                                      ProtectionService.SchutzErgebnis ergebnis) {
+        if (ergebnis == ProtectionService.SchutzErgebnis.GESCHUETZT) {
+            messageService.senden(sender, MessageKeys.SCHUTZ_HINWEIS_GESCHUETZT,
+                    Map.of("spieler", zielName));
+        } else if (ergebnis == ProtectionService.SchutzErgebnis.UNSICHER) {
+            messageService.senden(sender, MessageKeys.SCHUTZ_HINWEIS_UNBEKANNT,
+                    Map.of("spieler", zielName));
+        }
     }
 
     protected void mitSchutz(BefehlsSender sender, String[] args, CachedPlayer ziel, Runnable fortsetzung) {

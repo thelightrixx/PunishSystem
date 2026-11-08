@@ -45,6 +45,11 @@ public final class PardonCommand extends PunishCommand {
     }
 
     @Override
+    public boolean erzwingtExplizitenScope() {
+        return true;
+    }
+
+    @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
 
         ScopeParser.Ergebnis scope = scopeAusArgsMitUnbekannt(args);
@@ -52,6 +57,10 @@ public final class PardonCommand extends PunishCommand {
         String[] bereinigt = scope.bereinigteArgs();
         if (bereinigt.length < 1) {
             messageService.senden(sender, MessageKeys.SPIELER_NICHT_GEFUNDEN, Map.of("spieler", ""));
+            return;
+        }
+        if (!scope.hatteFlag()) {
+            messageService.senden(sender, MessageKeys.PARDON_SCOPE_FEHLT);
             return;
         }
 

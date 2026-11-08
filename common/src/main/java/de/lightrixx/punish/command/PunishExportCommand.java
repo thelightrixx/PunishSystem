@@ -30,7 +30,7 @@ import java.util.UUID;
 
 public final class PunishExportCommand extends PunishCommand {
 
-    private static final int HISTORY_LIMIT = 100_000;
+    private static final int HISTORY_LIMIT = 5000;
     private static final DateTimeFormatter DATEINAME =
             DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
 

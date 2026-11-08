@@ -8,6 +8,7 @@ import de.lightrixx.punish.model.ReportRecord;
 import de.lightrixx.punish.net.Protokoll;
 import de.lightrixx.punish.service.HistoryService;
 import de.lightrixx.punish.service.ReportService;
+import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.storage.BanRepository;
 import de.lightrixx.punish.storage.FreezeRepository;
 import de.lightrixx.punish.storage.IpBanRepository;
@@ -152,14 +153,25 @@ public final class GuiBrueckenDienst {
         return Optional.empty();
     }
 
-    private boolean istGeschuetzt(UUID zielUuid) {
+    private ProtectionService.SchutzErgebnis schutzStatus(UUID zielUuid) {
         if (protectionService == null || zielUuid == null) {
-            return false;
+            return ProtectionService.SchutzErgebnis.NICHT_GESCHUETZT;
         }
         try {
-            return protectionService.istGeschuetzt(zielUuid);
+            return protectionService.pruefeSchutz(zielUuid);
         } catch (Exception e) {
-            return protectionService.istFailClosed();
+            return ProtectionService.SchutzErgebnis.UNSICHER;
+        }
+    }
+
+    private void schutzHinweis(List<Protokoll.GuiZeile> zeilen, UUID zielUuid, String name) {
+        ProtectionService.SchutzErgebnis status = schutzStatus(zielUuid);
+        if (status == ProtectionService.SchutzErgebnis.GESCHUETZT) {
+            zeilen.add(new Protokoll.GuiZeile("INFO", "Geschützt",
+                    "Durch punish.ignore geschützt. Ansicht sichtbar, Strafaktionen gesperrt.", "", name));
+        } else if (status == ProtectionService.SchutzErgebnis.UNSICHER) {
+            zeilen.add(new Protokoll.GuiZeile("INFO", "Schutzstatus ungeklärt",
+                    "Ansicht sichtbar, Strafaktionen aus Sicherheit gesperrt.", "", name));
         }
     }
 
@@ -169,14 +181,11 @@ public final class GuiBrueckenDienst {
             return new Protokoll.GuiAntwort(anfrage.requestId(), false,
                     "Spieler nicht gefunden: " + anfrage.ziel(), 1, 1, 0, List.of());
         }
-        if (istGeschuetzt(ziel.get().uuid())) {
-            return new Protokoll.GuiAntwort(anfrage.requestId(), false,
-                    "Dieser Spieler ist geschützt.", 1, 1, 0, List.of());
-        }
         UUID uuid = ziel.get().uuid();
         String name = ziel.get().name();
         long jetzt = System.currentTimeMillis();
         List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
+        schutzHinweis(zeilen, uuid, name);
 
         try {
             for (var bann : banRepository.alleFuer(uuid)) {
@@ -281,10 +290,6 @@ public final class GuiBrueckenDienst {
             return new Protokoll.GuiAntwort(anfrage.requestId(), false,
                     "Spieler nicht gefunden: " + anfrage.ziel(), 1, 1, 0, List.of());
         }
-        if (istGeschuetzt(ziel.get().uuid())) {
-            return new Protokoll.GuiAntwort(anfrage.requestId(), false,
-                    "Dieser Spieler ist geschützt.", 1, 1, 0, List.of());
-        }
         List<HistoryEntry> verlauf;
         try {
             verlauf = historyService.findeSpielerHistory(ziel.get().uuid(), 500);
@@ -294,6 +299,7 @@ public final class GuiBrueckenDienst {
         }
         List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
         String name = ziel.get().name();
+        schutzHinweis(zeilen, ziel.get().uuid(), name);
         for (HistoryEntry eintrag : verlauf) {
             if (eintrag == null) {
                 continue;
@@ -479,14 +485,11 @@ public final class GuiBrueckenDienst {
             return new Protokoll.GuiAntwort(anfrage.requestId(), false,
                     "Spieler nicht gefunden: " + anfrage.ziel(), 1, 1, 0, List.of());
         }
-        if (istGeschuetzt(ziel.get().uuid())) {
-            return new Protokoll.GuiAntwort(anfrage.requestId(), false,
-                    "Dieser Spieler ist geschützt.", 1, 1, 0, List.of());
-        }
         UUID uuid = ziel.get().uuid();
         String name = ziel.get().name();
         long jetzt = System.currentTimeMillis();
         List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
+        schutzHinweis(zeilen, uuid, name);
 
         int banns = 0;
         int mutes = 0;

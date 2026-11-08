@@ -152,6 +152,10 @@ public final class HistoryRepository {
         hinzufuegenIntern(eintrag, schluessel);
     }
 
+    public boolean warteAufPersistenz(long timeout, java.util.concurrent.TimeUnit einheit) {
+        return ioExecutor.warteAufIdle(timeout, einheit);
+    }
+
     private void hinzufuegenIntern(HistoryEntry eintrag, UUID schluessel) {
 
         boolean istAufhebung = eintrag.typ().istAufhebung();

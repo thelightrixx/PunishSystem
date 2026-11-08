@@ -1048,8 +1048,6 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
         return hat(sender, "punish.allow-silent-syntax");
     }
 
-    // B-020: Fail-closed (null/op/Fehler -> geschützt) bleibt bewusst bestehen,
-    // keine Verhaltensänderung.
     private static final List<String> IGNORE_KNOTEN = List.of(
             "punish.ignore.*",
             "punish.ignore.ban",
@@ -1065,13 +1063,6 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
 
     private static boolean istGeschuetzt(Player ziel) {
         if (ziel == null) {
-            return true;
-        }
-        try {
-            if (ziel.isOp()) {
-                return true;
-            }
-        } catch (Exception e) {
             return true;
         }
         try {
@@ -1185,14 +1176,6 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
                     continue;
                 }
                 if (klein.contains(name.toLowerCase(Locale.ROOT))) {
-                    continue;
-                }
-                try {
-                    if (offline.isOp()) {
-                        continue;
-                    }
-                } catch (Exception e) {
-                    LOG.debug("Operator-Status für Offline-Tab-Vorschlag konnte nicht geprüft werden.", e);
                     continue;
                 }
                 treffer.add(name);

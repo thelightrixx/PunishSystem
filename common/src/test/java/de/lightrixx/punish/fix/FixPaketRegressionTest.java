@@ -392,4 +392,90 @@ class FixPaketRegressionTest {
         org.mockito.Mockito.verify(verzeichnis, org.mockito.Mockito.never()).trennen(eq(lobby.uuid()), any());
         org.mockito.Mockito.verify(verzeichnis).trennen(eq(survival.uuid()), any());
     }
+
+    @Test
+    void pardonOhneExplizitenScopeWirdAbgelehnt() {
+        var message = mock(de.lightrixx.punish.service.MessageService.class);
+        var ban = mock(de.lightrixx.punish.service.BanService.class);
+        var config = mock(Konfiguration.class);
+        var scope = de.lightrixx.punish.model.ServerScope.global();
+        when(config.standardScope()).thenReturn(scope);
+        var befehl = new de.lightrixx.punish.command.PardonCommand(message, config,
+                mock(ProtectionService.class), mock(PlayerCache.class), ban,
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class), mock(SpielerVerzeichnis.class));
+        var sender = mock(BefehlsSender.class);
+        befehl.ausfuehren(sender, new String[]{"Steve"});
+        org.mockito.Mockito.verify(message).senden(sender, MessageKeys.PARDON_SCOPE_FEHLT);
+        org.mockito.Mockito.verifyNoInteractions(ban);
+    }
+
+    @Test
+    void banPersistenzFehlerWirdNichtAlsErfolgGemeldet() {
+        var repo = mock(de.lightrixx.punish.storage.BanRepository.class);
+        when(repo.bannenWennFreiDauerhaft(any()))
+                .thenReturn(de.lightrixx.punish.storage.BanRepository.BannPersistenz.FEHLER);
+        var history = mock(de.lightrixx.punish.service.HistoryService.class);
+        var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
+        var kick = mock(de.lightrixx.punish.service.BanKickHelper.class);
+        var schutz = mock(ProtectionService.class);
+        when(schutz.istErlaubteSelbstbestrafung(any(), any())).thenReturn(false);
+        when(schutz.istGeschuetzt(any(UUID.class), any(ProtectionService.IgnoreTyp.class))).thenReturn(false);
+        var service = new de.lightrixx.punish.service.BanService(repo, history, broadcast,
+                mock(de.lightrixx.punish.storage.LogWriter.class), schutz, kick,
+                mock(SpielerVerzeichnis.class));
+        var ergebnis = service.bannenMitErgebnis(UUID.randomUUID(), "Steve", 60_000L, "Test",
+                "Mod", de.lightrixx.punish.model.ServerScope.global(), "lobby", false, null);
+        assertEquals(de.lightrixx.punish.service.BanService.BanErgebnis.PERSISTENZ_FEHLER, ergebnis);
+        org.mockito.Mockito.verifyNoInteractions(history, broadcast, kick);
+    }
+
+    @Test
+    void historyFehlerRolltBannZurueck() {
+        UUID uuid = UUID.randomUUID();
+        var repo = mock(de.lightrixx.punish.storage.BanRepository.class);
+        when(repo.bannenWennFreiDauerhaft(any()))
+                .thenReturn(de.lightrixx.punish.storage.BanRepository.BannPersistenz.ERFOLG);
+        when(repo.entbannenDauerhaft(eq(uuid), any(), any())).thenReturn(true);
+        var history = mock(de.lightrixx.punish.service.HistoryService.class);
+        org.mockito.Mockito.doThrow(new IllegalStateException("History nicht schreibbar"))
+                .when(history).hinzufuegenDauerhaft(any(), any(), any(), any(), any(), any(), any(), any());
+        var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
+        var kick = mock(de.lightrixx.punish.service.BanKickHelper.class);
+        var schutz = mock(ProtectionService.class);
+        when(schutz.istErlaubteSelbstbestrafung(any(), any())).thenReturn(false);
+        when(schutz.istGeschuetzt(any(UUID.class), any(ProtectionService.IgnoreTyp.class))).thenReturn(false);
+        var service = new de.lightrixx.punish.service.BanService(repo, history, broadcast,
+                mock(de.lightrixx.punish.storage.LogWriter.class), schutz, kick,
+                mock(SpielerVerzeichnis.class));
+        var ergebnis = service.bannenMitErgebnis(uuid, "Steve", 60_000L, "Test",
+                "Mod", de.lightrixx.punish.model.ServerScope.global(), "lobby", false, null);
+        assertEquals(de.lightrixx.punish.service.BanService.BanErgebnis.PERSISTENZ_FEHLER, ergebnis);
+        org.mockito.Mockito.verify(repo).entbannenDauerhaft(eq(uuid), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(broadcast, kick);
+    }
+
+    @Test
+    void fehlgeschlagenerRollbackWirdSeparatGemeldet() {
+        UUID uuid = UUID.randomUUID();
+        var repo = mock(de.lightrixx.punish.storage.BanRepository.class);
+        when(repo.bannenWennFreiDauerhaft(any()))
+                .thenReturn(de.lightrixx.punish.storage.BanRepository.BannPersistenz.ERFOLG);
+        when(repo.entbannenDauerhaft(eq(uuid), any(), any())).thenReturn(false);
+        var history = mock(de.lightrixx.punish.service.HistoryService.class);
+        org.mockito.Mockito.doThrow(new IllegalStateException("History nicht schreibbar"))
+                .when(history).hinzufuegenDauerhaft(any(), any(), any(), any(), any(), any(), any(), any());
+        var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
+        var kick = mock(de.lightrixx.punish.service.BanKickHelper.class);
+        var schutz = mock(ProtectionService.class);
+        when(schutz.istErlaubteSelbstbestrafung(any(), any())).thenReturn(false);
+        when(schutz.istGeschuetzt(any(UUID.class), any(ProtectionService.IgnoreTyp.class))).thenReturn(false);
+        var service = new de.lightrixx.punish.service.BanService(repo, history, broadcast,
+                mock(de.lightrixx.punish.storage.LogWriter.class), schutz, kick,
+                mock(SpielerVerzeichnis.class));
+        var ergebnis = service.bannenMitErgebnis(uuid, "Steve", 60_000L, "Test",
+                "Mod", de.lightrixx.punish.model.ServerScope.global(), "lobby", false, null);
+        assertEquals(de.lightrixx.punish.service.BanService.BanErgebnis.ROLLBACK_FEHLER, ergebnis);
+        org.mockito.Mockito.verify(repo).entbannenDauerhaft(eq(uuid), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(broadcast, kick);
+    }
 }

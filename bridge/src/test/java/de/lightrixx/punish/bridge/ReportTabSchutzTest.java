@@ -20,8 +20,9 @@ class ReportTabSchutzTest {
     }
 
     @Test
-    void opGeschuetzt() {
-        assertTrue(ReportWeiterleitung.istGeschuetzt(spieler(true, false)));
+    void opNichtGeschuetzt() {
+        assertFalse(ReportWeiterleitung.istGeschuetzt(spieler(true, false)),
+                "OPs sind keine Schutzquelle; nur punish.ignore zählt");
     }
 
     @Test

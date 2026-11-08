@@ -27,6 +27,8 @@ public final class MessageKeys {
     public static final String SELBSTBESTRAFUNG = "selbstbestrafung";
     public static final String GESCHUETZT = "geschuetzt";
     public static final String SCHUTZ_OFFLINE_UNBEKANNT = "schutz-offline-unbekannt";
+    public static final String SCHUTZ_HINWEIS_GESCHUETZT = "schutz-hinweis-geschuetzt";
+    public static final String SCHUTZ_HINWEIS_UNBEKANNT = "schutz-hinweis-unbekannt";
     public static final String SCHUTZ_PRUEFUNG_LAEUFT = "schutz-pruefung-laeuft";
     public static final String IP_NICHT_GEFUNDEN = "ip-nicht-gefunden";
     public static final String BESTAETIGUNG_NOETIG = "bestaetigung-noetig";
@@ -207,6 +209,9 @@ public final class MessageKeys {
     public static final String ALTS_IP_GEBANNT = "alts-ip-gebannt";
     public static final String ALTS_LEER = "alts-leer";
     public static final String PARDON_AUTO_HINWEIS = "pardon-auto-hinweis";
+    public static final String PARDON_SCOPE_FEHLT = "pardon-scope-fehlt";
+    public static final String BAN_SPEICHER_FEHLER = "ban-speicher-fehler";
+    public static final String BAN_ROLLBACK_FEHLER = "ban-rollback-fehler";
     public static final String DELETE_IP_SYNTAX = "delete-ip-syntax";
     public static final String DELETE_IP_ERFOLG = "delete-ip-erfolg";
     public static final String PARDON_ERFOLG = "pardon-erfolg";

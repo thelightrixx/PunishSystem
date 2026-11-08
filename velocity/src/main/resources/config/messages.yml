@@ -40,6 +40,8 @@ messages:
   selbstbestrafung: "<red>Du kannst dich nicht selbst bestrafen."
   geschuetzt: "<red>Dieser Spieler ist geschützt."
   schutz-offline-unbekannt: "<yellow>Der Schutzstatus von <white>%spieler% <yellow>konnte nicht geprüft werden (offline, Rechte-Cache leer). Aktion aus Sicherheit blockiert – später erneut versuchen oder <white>schutz.fail-closed: false<yellow> setzen."
+  schutz-hinweis-geschuetzt: "<yellow>Hinweis: <white>%spieler% <yellow>ist durch <white>punish.ignore<yellow> geschützt. Die Ansicht wird angezeigt; Strafaktionen bleiben gesperrt."
+  schutz-hinweis-unbekannt: "<yellow>Hinweis: Der Schutzstatus von <white>%spieler% <yellow>ist ungeklärt. Die Ansicht wird angezeigt; Strafaktionen bleiben aus Sicherheit gesperrt."
   schutz-pruefung-laeuft: "<gray>Prüfe Schutzstatus von <white>%spieler%<gray> …"
   silent-ohne-recht: "<yellow>Silent erfordert <white>punish.allow-silent-syntax<yellow> – die Strafe wurde laut ausgeführt."
   ip-nicht-gefunden: "<red>Für <white>%spieler% <red>ist keine IP-Adresse bekannt."
@@ -206,6 +208,9 @@ messages:
 
   # Pardon
   pardon-auto-hinweis: "<yellow>Hinweis: Die Verstöße von <white>%spieler% <yellow>bleiben bestehen – der nächste Verstoß löst sofort einen neuen Auto-Bann aus."
+  pardon-scope-fehlt: "<red>Bitte den Scope ausdrücklich angeben: <white>/pardon <Spieler> --global<red> oder <white>--server <Server><red>."
+  ban-speicher-fehler: "<red>Die Strafe konnte nicht dauerhaft gespeichert werden und wurde zurückgenommen. Bitte den Fehler im Log prüfen."
+  ban-rollback-fehler: "<red>Die Strafe konnte nicht dauerhaft gespeichert werden und der automatische Rollback ist fehlgeschlagen. Bitte den Bann-Status prüfen und ggf. manuell aufheben."
   delete-ip-syntax: "<red>Verwendung: /punish-delete-ip <Spieler|IP>"
   delete-ip-erfolg: "<green>IP-Daten gelöscht (<white>%ip%<green>): Banns <white>%banns%<green>, Mutes <white>%mutes%<green>, Timeouts <white>%timeouts%<green>, Cache-Einträge <white>%anzahl%<green>."
   pardon-erfolg: "<green>Der Bann von <white>%spieler% <green>wurde aufgehoben."

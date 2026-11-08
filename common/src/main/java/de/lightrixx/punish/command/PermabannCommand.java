@@ -64,13 +64,19 @@ public final class PermabannCommand extends PunishCommand {
             }
 
             String grund = grundAusArgumenten(bereinigt, 1, MessageKeys.DEFAULT_PERMABANN_GRUND);
-            boolean erfolg = banService.permabann(
+            BanService.BanErgebnis ergebnis = banService.permabannMitErgebnis(
                     spieler.uuid(),
                     spieler.name(),
                     grund,
                     ausfuehrerName(sender),
                     wirksam, herkunftVon(sender), silent, sender);
-            if (!erfolg) {
+            if (ergebnis == BanService.BanErgebnis.PERSISTENZ_FEHLER
+                    || ergebnis == BanService.BanErgebnis.ROLLBACK_FEHLER) {
+                messageService.senden(sender, ergebnis == BanService.BanErgebnis.PERSISTENZ_FEHLER
+                        ? MessageKeys.BAN_SPEICHER_FEHLER : MessageKeys.BAN_ROLLBACK_FEHLER);
+                return;
+            }
+            if (ergebnis != BanService.BanErgebnis.ERFOLG) {
                 try {
                     if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())
                             && schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.BAN))) {

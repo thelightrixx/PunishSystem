@@ -207,18 +207,7 @@ public final class PunishEditCommand extends PunishCommand {
     }
 
     private boolean schutzBlockiertAnzeige(BefehlsSender sender, CachedPlayer spieler) {
-        try {
-            if (protectionService.istGeschuetzt(spieler.uuid())) {
-                messageService.senden(sender, MessageKeys.GESCHUETZT);
-                return true;
-            }
-        } catch (Exception e) {
-            if (protectionService.istFailClosed()) {
-                messageService.senden(sender, MessageKeys.SCHUTZ_OFFLINE_UNBEKANNT,
-                        Map.of("spieler", spieler.name()));
-                return true;
-            }
-        }
+        sendeSchutzHinweis(sender, spieler.name(), schutzErgebnis(spieler.uuid()));
         return false;
     }
 

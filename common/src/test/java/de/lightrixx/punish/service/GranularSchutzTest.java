@@ -181,7 +181,8 @@ class GranularSchutzTest {
         when(config.standardScope()).thenReturn(de.lightrixx.punish.model.ServerScope.global());
         when(config.banMaxMinuten()).thenReturn(60L);
         var repository = mock(de.lightrixx.punish.storage.BanRepository.class);
-        when(repository.bannenWennFrei(any())).thenReturn(true);
+        when(repository.bannenWennFreiDauerhaft(any()))
+                .thenReturn(de.lightrixx.punish.storage.BanRepository.BannPersistenz.ERFOLG);
         var service = new BanService(repository, mock(HistoryService.class), mock(BroadcastService.class),
                 mock(de.lightrixx.punish.storage.LogWriter.class), schutz, mock(BanKickHelper.class), verzeichnis);
         var befehl = new de.lightrixx.punish.command.BanCommand(mock(MessageService.class), config, schutz,
@@ -189,7 +190,7 @@ class GranularSchutzTest {
                 new de.lightrixx.punish.util.TimeParser(), mock(de.lightrixx.punish.core.AuftragsPlaner.class),
                 verzeichnis);
         befehl.ausfuehren(sender, new String[]{"Selbst", "1m", "Test", "--global"});
-        org.mockito.Mockito.verify(repository).bannenWennFrei(org.mockito.ArgumentMatchers.argThat(
+        org.mockito.Mockito.verify(repository).bannenWennFreiDauerhaft(org.mockito.ArgumentMatchers.argThat(
                 bann -> bann.spielerUuid().equals(uuid) && bann.grund().equals("Test")));
     }
 }

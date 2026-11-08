@@ -709,7 +709,8 @@ public final class VelocityBefehle {
         }
         // Auto-Scope nur für Befehle mit Scope-Unterstützung. Ohne Scope (Kick, Warn,
         // Note, Verstoss, Punishments, Reload) würde das Flag sonst im Grund/Text landen.
-        boolean mitScope = befehl == null || befehl.unterstuetztScope();
+        boolean mitScope = befehl == null
+                || (befehl.unterstuetztScope() && !befehl.erzwingtExplizitenScope());
         if (!mitScope) {
             return teile.toArray(new String[0]);
         }

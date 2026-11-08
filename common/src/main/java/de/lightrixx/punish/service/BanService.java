@@ -37,6 +37,10 @@ public final class BanService {
         void banGeaendert();
     }
 
+    public enum BanErgebnis {
+        ERFOLG, BEREITS_GEBANNT, PERSISTENZ_FEHLER, ROLLBACK_FEHLER, ABGELEHNT
+    }
+
     private final java.util.Set<BanBeobachter> beobachter =
             java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
 
@@ -98,6 +102,12 @@ public final class BanService {
 
     public boolean bannen(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
                           ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
+        return bannenMitErgebnis(zielUuid, zielName, dauerMillis, grund, ausfuehrer,
+                scope, herkunft, silent, sender) == BanErgebnis.ERFOLG;
+    }
+
+    public BanErgebnis bannenMitErgebnis(UUID zielUuid, String zielName, long dauerMillis, String grund, String ausfuehrer,
+                                         ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
@@ -106,15 +116,15 @@ public final class BanService {
             if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
                     && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
                 LOG.warn("bannen für {} abgewiesen: Ziel ist geschützt.", zielUuid);
-                return false;
+                return BanErgebnis.ABGELEHNT;
             }
         } catch (Exception e) {
             LOG.warn("Schutzcheck für {} fehlgeschlagen, breche sicherheitshalber ab.", zielUuid, e);
-            return false;
+            return BanErgebnis.ABGELEHNT;
         }
         if (dauerMillis <= 0) {
             LOG.warn("bannen: ungültige Dauer {} für {} – abgelehnt.", dauerMillis, zielUuid);
-            return false;
+            return BanErgebnis.ABGELEHNT;
         }
         long jetzt = System.currentTimeMillis();
         long ablaufAm;
@@ -123,7 +133,7 @@ public final class BanService {
         } catch (ArithmeticException e) {
             LOG.warn("bannen: Ablauf-Überlauf (jetzt={}, dauer={}) für {} – als DAUER_UNGUELTIG werten, nicht als BEREITS_GEBANNT",
                     jetzt, dauerMillis, zielUuid, e);
-            return false;
+            return BanErgebnis.ABGELEHNT;
         }
 
         BanRecord record;
@@ -131,10 +141,14 @@ public final class BanService {
             record = new BanRecord(zielUuid, zielName, grund, ausfuehrer, jetzt, ablaufAm, false, wirksam);
         } catch (Exception e) {
             LOG.warn("bannen für {} abgewiesen: ungültige Eingabedaten (Name/Grund).", zielUuid, e);
-            return false;
+            return BanErgebnis.ABGELEHNT;
         }
-        if (!banRepository.bannenWennFrei(record)) {
-            return false;
+        BanRepository.BannPersistenz persistenz = banRepository.bannenWennFreiDauerhaft(record);
+        if (persistenz == BanRepository.BannPersistenz.BEREITS_GEBANNT) {
+            return BanErgebnis.BEREITS_GEBANNT;
+        }
+        if (persistenz == BanRepository.BannPersistenz.FEHLER) {
+            return BanErgebnis.PERSISTENZ_FEHLER;
         }
 
         Map<String, String> platzhalter = BanKickHelper.platzhalter(
@@ -146,10 +160,21 @@ public final class BanService {
         platzhalter.put("herkunft", herkunftNorm);
 
         try {
-            historyService.hinzufuegen(HistoryType.BAN, ausfuehrer, zielUuid, zielName, grund, ablaufAm,
+            historyService.hinzufuegenDauerhaft(HistoryType.BAN, ausfuehrer, zielUuid, zielName, grund, ablaufAm,
                     wirksam, herkunftNorm);
         } catch (Exception e) {
-            LOG.warn("Ban-History für {} konnte nicht geschrieben werden (Ban bleibt aktiv).", zielUuid, e);
+            boolean rollback = banRepository.entbannenDauerhaft(zielUuid, wirksam, record);
+            LOG.error("Ban-History für {} konnte nicht geschrieben werden; Rollback {}.",
+                    zielUuid, rollback ? "erfolgreich" : "fehlgeschlagen", e);
+            if (rollback) {
+                try {
+                    historyService.hinzufuegen(HistoryType.PARDON, "System", zielUuid, zielName,
+                            "Rollback nach fehlgeschlagener Bann-History", null, wirksam, herkunftNorm);
+                } catch (Exception rollbackFehler) {
+                    LOG.warn("Rollback-History für {} konnte nicht geschrieben werden.", zielUuid, rollbackFehler);
+                }
+            }
+            return rollback ? BanErgebnis.PERSISTENZ_FEHLER : BanErgebnis.ROLLBACK_FEHLER;
         }
         kickHelper.spielerKicken(zielUuid, MessageKeys.SCREEN_BANN, platzhalter);
         broadcastService.senden(MessageKeys.BROADCAST_BAN, platzhalter, silent);
@@ -158,7 +183,7 @@ public final class BanService {
                         + ", Ablauf: " + ZeitFormat.formatZeitpunkt(ablaufAm),
                 wirksam, herkunftNorm);
         benachrichtige();
-        return true;
+        return BanErgebnis.ERFOLG;
     }
 
     public boolean permabann(UUID zielUuid, String zielName, String grund, String ausfuehrer) {
@@ -178,6 +203,12 @@ public final class BanService {
 
     public boolean permabann(UUID zielUuid, String zielName, String grund, String ausfuehrer,
                              ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
+        return permabannMitErgebnis(zielUuid, zielName, grund, ausfuehrer,
+                scope, herkunft, silent, sender) == BanErgebnis.ERFOLG;
+    }
+
+    public BanErgebnis permabannMitErgebnis(UUID zielUuid, String zielName, String grund, String ausfuehrer,
+                                            ServerScope scope, String herkunft, boolean silent, de.lightrixx.punish.core.BefehlsSender sender) {
         ServerScope wirksam = scope == null ? ServerScope.unbekannt() : scope;
         String herkunftNorm = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
@@ -185,11 +216,11 @@ public final class BanService {
             if (!protectionService.istErlaubteSelbstbestrafung(sender, zielUuid)
                     && protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
                 LOG.warn("permabann für {} abgewiesen: Ziel ist geschützt.", zielUuid);
-                return false;
+                return BanErgebnis.ABGELEHNT;
             }
         } catch (Exception e) {
             LOG.warn("Schutzcheck für {} fehlgeschlagen, breche sicherheitshalber ab.", zielUuid, e);
-            return false;
+            return BanErgebnis.ABGELEHNT;
         }
         long jetzt = System.currentTimeMillis();
         BanRecord record;
@@ -197,10 +228,14 @@ public final class BanService {
             record = new BanRecord(zielUuid, zielName, grund, ausfuehrer, jetzt, null, false, wirksam);
         } catch (Exception e) {
             LOG.warn("permabann für {} abgewiesen: ungültige Eingabedaten (Name/Grund).", zielUuid, e);
-            return false;
+            return BanErgebnis.ABGELEHNT;
         }
-        if (!banRepository.bannenWennFrei(record)) {
-            return false;
+        BanRepository.BannPersistenz persistenz = banRepository.bannenWennFreiDauerhaft(record);
+        if (persistenz == BanRepository.BannPersistenz.BEREITS_GEBANNT) {
+            return BanErgebnis.BEREITS_GEBANNT;
+        }
+        if (persistenz == BanRepository.BannPersistenz.FEHLER) {
+            return BanErgebnis.PERSISTENZ_FEHLER;
         }
 
         Map<String, String> platzhalter = BanKickHelper.platzhalter(
@@ -210,17 +245,28 @@ public final class BanService {
         platzhalter.put("herkunft", herkunftNorm);
 
         try {
-            historyService.hinzufuegen(HistoryType.PERMABANN, ausfuehrer, zielUuid, zielName, grund, null,
+            historyService.hinzufuegenDauerhaft(HistoryType.PERMABANN, ausfuehrer, zielUuid, zielName, grund, null,
                     wirksam, herkunftNorm);
         } catch (Exception e) {
-            LOG.warn("Permabann-History für {} konnte nicht geschrieben werden (Ban bleibt aktiv).", zielUuid, e);
+            boolean rollback = banRepository.entbannenDauerhaft(zielUuid, wirksam, record);
+            LOG.error("Permabann-History für {} konnte nicht geschrieben werden; Rollback {}.",
+                    zielUuid, rollback ? "erfolgreich" : "fehlgeschlagen", e);
+            if (rollback) {
+                try {
+                    historyService.hinzufuegen(HistoryType.PARDON, "System", zielUuid, zielName,
+                            "Rollback nach fehlgeschlagener Permabann-History", null, wirksam, herkunftNorm);
+                } catch (Exception rollbackFehler) {
+                    LOG.warn("Rollback-History für {} konnte nicht geschrieben werden.", zielUuid, rollbackFehler);
+                }
+            }
+            return rollback ? BanErgebnis.PERSISTENZ_FEHLER : BanErgebnis.ROLLBACK_FEHLER;
         }
         kickHelper.spielerKicken(zielUuid, MessageKeys.SCREEN_BANN_PERMANENT, platzhalter);
         broadcastService.senden(MessageKeys.BROADCAST_PERMABANN, platzhalter, silent);
         logWriter.schreiben(HistoryType.PERMABANN, ausfuehrer, zielName,
                 "Grund: " + grund + ", Dauer: Permanent", wirksam, herkunftNorm);
         benachrichtige();
-        return true;
+        return BanErgebnis.ERFOLG;
     }
 
     public boolean entbannen(UUID zielUuid, String zielName, String ausfuehrer,

@@ -80,10 +80,7 @@ public final class PsCheckCommand extends PunishCommand {
         }
         CachedPlayer ziel = gefunden.get();
         UUID zielUuid = ziel.uuid();
-        if (istGeschuetztAusgeblendet(zielUuid)) {
-            messageService.senden(sender, MessageKeys.GESCHUETZT);
-            return;
-        }
+        sendeSchutzHinweis(sender, ziel.name(), schutzErgebnis(zielUuid));
         long jetzt = System.currentTimeMillis();
         int banns = zaehle(banRepository.alleFuer(zielUuid),
                 bann -> bann != null && bann.istAktiv(jetzt));
@@ -179,15 +176,6 @@ public final class PsCheckCommand extends PunishCommand {
             LOG.debug("Alt-Zählung für /pscheck fehlgeschlagen.", e);
         }
         return anzahl;
-    }
-
-    private boolean istGeschuetztAusgeblendet(UUID zielUuid) {
-        try {
-            return protectionService.istGeschuetzt(zielUuid);
-        } catch (Exception e) {
-            LOG.warn("Schutzprüfung für /pscheck für {} fehlgeschlagen.", zielUuid, e);
-            return protectionService.istFailClosed();
-        }
     }
 
     private Component aktion(String label, String befehl, String hover) {

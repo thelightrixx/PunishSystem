@@ -146,7 +146,7 @@ public final class PunishDiagnosticsCommand extends PunishCommand {
         ergebnis.add(new Zeile("Bridge-Anbindung", kontext.bridgeOk(), kontext.bridgeDetail()));
         ergebnis.add(new Zeile("LuckPerms",
                 kontext.luckPermsVorhanden(),
-                kontext.luckPermsVorhanden() ? "gefunden" : "nicht gefunden (Offline-Schutz nur via OP)"));
+                kontext.luckPermsVorhanden() ? "gefunden" : "nicht gefunden (OP schützt nicht; punish.ignore-Rechte prüfen)"));
         ergebnis.add(new Zeile("Chatfilter",
                 !kontext.chatfilterAktiv() || !kontext.chatfilterDetail().isBlank() && !kontext.chatfilterDetail().toLowerCase(java.util.Locale.ROOT).contains("fehlt"),
                 kontext.chatfilterAktiv() ? kontext.chatfilterDetail() : "deaktiviert"));

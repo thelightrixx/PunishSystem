@@ -27,6 +27,10 @@ import java.util.function.Predicate;
 
 public final class BanRepository {
 
+    public enum BannPersistenz {
+        ERFOLG, BEREITS_GEBANNT, FEHLER
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(BanRepository.class);
     private static final String DATEI_NAME = "bans.yml";
     private static final String SCHLUESSEL_SPIELER_NAME = "spieler-name";
@@ -240,6 +244,38 @@ public final class BanRepository {
         }
     }
 
+    public BannPersistenz bannenWennFreiDauerhaft(BanRecord bann) {
+        Objects.requireNonNull(bann, "Der Bann darf nicht null sein.");
+        StoreLock.LOCK.writeLock().lock();
+        try {
+            long jetzt = System.currentTimeMillis();
+            for (Map.Entry<StrafSchluessel, BanRecord> eintrag : banns.entrySet()) {
+                BanRecord bestehend = eintrag.getValue();
+                if (bestehend != null && eintrag.getKey().uuid().equals(bann.spielerUuid())
+                        && bestehend.istAktiv(jetzt) && bestehend.scope().decktAb(bann.scope())) {
+                    return BannPersistenz.BEREITS_GEBANNT;
+                }
+            }
+            StrafSchluessel key = StrafSchluessel.von(bann.spielerUuid(), bann.scope());
+            banns.put(key, bann);
+            try {
+                if (mysql != null) {
+                    upsertZeileNachMysql(bann);
+                } else {
+                    speichernDauerhaft();
+                }
+                return BannPersistenz.ERFOLG;
+            } catch (Exception e) {
+                banns.remove(key, bann);
+                LOG.error("Bann für {} konnte nicht dauerhaft gespeichert werden.",
+                        bann.spielerUuid(), e);
+                return BannPersistenz.FEHLER;
+            }
+        } finally {
+            StoreLock.LOCK.writeLock().unlock();
+        }
+    }
+
     public Collection<BanRecord> bannenAlleWennFrei(Collection<BanRecord> neueBanns) {
         Objects.requireNonNull(neueBanns, "Die Bann-Liste darf nicht null sein.");
         if (neueBanns.isEmpty()) {
@@ -296,6 +332,48 @@ public final class BanRepository {
         } finally {
             StoreLock.LOCK.writeLock().unlock();
         }
+    }
+
+    public boolean entbannenDauerhaft(UUID spielerUuid, ServerScope scope, BanRecord erwartet) {
+        Objects.requireNonNull(spielerUuid, "Die Spieler-UUID darf nicht null sein.");
+        Objects.requireNonNull(scope, "Der Scope darf nicht null sein.");
+        StoreLock.LOCK.writeLock().lock();
+        try {
+            StrafSchluessel key = StrafSchluessel.von(spielerUuid, scope);
+            BanRecord entfernt = banns.get(key);
+            if (entfernt == null || (erwartet != null && !entfernt.equals(erwartet))) {
+                return false;
+            }
+            if (!banns.remove(key, entfernt)) {
+                return false;
+            }
+            try {
+                if (mysql != null) {
+                    loescheZeileNachMysql(spielerUuid, scope);
+                } else {
+                    speichernDauerhaft();
+                }
+                return true;
+            } catch (Exception e) {
+                banns.putIfAbsent(key, entfernt);
+                LOG.error("Bann-Rollback für {} konnte nicht dauerhaft gespeichert werden.",
+                        spielerUuid, e);
+                return false;
+            }
+        } finally {
+            StoreLock.LOCK.writeLock().unlock();
+        }
+    }
+
+    private void speichernDauerhaft() {
+        if (mysql != null) {
+            speichereNachMysql(List.copyOf(banns.values()));
+            return;
+        }
+        Collection<BanRecord> snapshot = List.copyOf(banns.values());
+        java.util.Map<String, Object> rohSnapshot = new java.util.HashMap<>(rohQuarantaene);
+        Map<String, Object> root = konfigurationErstellen(snapshot, rohSnapshot);
+        yamlSpeicher.speichern(root, datei);
     }
 
     public Optional<BanRecord> entbannenWenn(UUID spielerUuid, ServerScope scope, Predicate<BanRecord> bedingung) {
