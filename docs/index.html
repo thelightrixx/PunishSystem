@@ -907,6 +907,7 @@ details>div{padding:14px 18px 2px}
     <li>Aus der Konsole gilt <code>--global</code>.</li>
   </ul>
   <p>Der Proxy ergänzt das passende Flag beim Ausführen selbst. Manuell wählen lässt es sich über die Tab-Vervollständigung nach <code>--</code>.</p>
+  <p><strong>Ausnahme <code>/pardon</code>:</strong> Der Befehl verlangt immer ein explizites Scope-Flag (<code>--global</code>, <code>--server=&lt;Name&gt;</code>, <code>--&lt;Server&gt;</code> oder <code>--unbekannt</code>). Ohne Flag wird er abgelehnt; der Standard-Scope wird nicht automatisch ergänzt.</p>
 
   <h2>Welche Befehle kennen Scopes?</h2>
   <div class="tbl"><table>
@@ -1021,13 +1022,13 @@ details>div{padding:14px 18px 2px}
   <p class="lead">Wer nicht bestraft werden darf, wie das System mit Unsicherheit umgeht und wie Strafen ohne Team-Meldung verhängt werden.</p>
 
   <h2>Geschützte Spieler</h2>
-  <p>Diese Spieler lassen sich nicht bestrafen. Der Versuch endet mit „Dieser Spieler ist geschützt“.</p>
+  <p>Geschützt sind ausschließlich Spieler mit direkt vergebenen Ignore-Rechten. Der OP-Status schützt nicht. Der Versuch, einen geschützten Spieler zu bestrafen, endet mit „Dieser Spieler ist geschützt“.</p>
   <ul>
-    <li>Operatoren (OPs)</li>
     <li>Spieler mit <code>punish.ignore.*</code> oder dem passenden <code>punish.ignore.&lt;typ&gt;</code> (<code>ban</code>, <code>mute</code>, <code>timeout</code>, <code>freeze</code>, <code>kick</code>, <code>warn</code>, <code>verstoss</code>, <code>note</code>, <code>alts</code>, <code>report</code>). IP-Varianten fallen unter ihren Grundtyp. Das alte globale <code>punish.ignore</code> wird nicht mehr geprüft.</li>
   </ul>
-  <p>Zusätzlich blockiert die Rang-Hierarchie Aktionen gegen Spieler mit höherem Gewicht. Gleichrangige sind durch diese Prüfung nicht gesperrt; OP- und Ignore-Schutz gelten weiterhin. LuckPerms-Gruppengewichte haben Vorrang, <code>rang-gewicht</code> ist der Fallback. Die Konsole unterliegt dieser Rang-Prüfung nicht.</p>
-  <p>Selbstbestrafung ist standardmäßig gesperrt. Mit <code>schutz.selbstbestrafung-erlaubt: true</code> lässt sie sich für Tests erlauben; bei der eigenen UUID werden dann auch OP-/Ignore-Prüfungen übersprungen. Befehlsrechte und Dauerlimits bleiben erforderlich.</p>
+  <p><code>/punish-status</code>, <code>/punish-history</code>, <code>/pscheck</code>, <code>/punish-edit</code> und die Status-, History- und Dossier-Ansichten der GUI zeigen geschützte Spieler weiterhin an und kennzeichnen sie. Die Strafaktion selbst bleibt gesperrt. Ist der Schutzstatus ungeklärt, zeigen die Ansichten einen Hinweis; ob die Aktion ausgeführt wird, hängt von <code>schutz.fail-closed</code> ab.</p>
+  <p>Zusätzlich blockiert die Rang-Hierarchie Aktionen gegen Spieler mit höherem Gewicht. Gleichrangige sind durch diese Prüfung nicht gesperrt; der Ignore-Schutz gilt weiterhin. LuckPerms-Gruppengewichte haben Vorrang, <code>rang-gewicht</code> ist der Fallback. Die Konsole unterliegt dieser Rang-Prüfung nicht.</p>
+  <p>Selbstbestrafung ist standardmäßig gesperrt. Mit <code>schutz.selbstbestrafung-erlaubt: true</code> lässt sie sich für Tests erlauben; bei der eigenen UUID werden dann auch Ignore-Prüfungen übersprungen. Befehlsrechte und Dauerlimits bleiben erforderlich.</p>
   <div class="callout danger"><div><span class="ttl">Schutzrechte nur an Einzelpersonen</span><p><code>punish.ignore.*</code> und <code>punish.ignore.&lt;typ&gt;</code> werden direkt an einzelne Spieler vergeben und nie in ein Rang-Bündel aufgenommen.</p></div></div>
 
   <h2>Spieler, die offline sind</h2>
@@ -1156,7 +1157,7 @@ details>div{padding:14px 18px 2px}
   <h2>Der Ablauf im Menü</h2>
   <ol class="steps">
     <li><strong>Spieler wählen</strong>
-      <p>Im Hauptmenü einen Spieler nehmen oder mit <code>/punish-gui [Spieler]</code> direkt einsteigen. Das Menü listet alle Online-Spieler auf Seiten. Die TAB-Vervollständigung von <code>/punish-gui</code> zeigt höchstens 25 Namen, ohne einen selbst, ohne OPs und ohne geschützte Spieler.</p>
+      <p>Im Hauptmenü einen Spieler nehmen oder mit <code>/punish-gui [Spieler]</code> direkt einsteigen. Das Menü listet alle Online-Spieler auf Seiten. Die TAB-Vervollständigung von <code>/punish-gui</code> zeigt höchstens 25 Namen, ohne den Ausführenden selbst und ohne geschützte Spieler.</p>
     </li>
     <li><strong>Aktion, Grund und Dauer wählen</strong>
       <p>Strafart, Grund (mit „Empf. Dauer“) und Dauer bzw. Verstoß-Stufe (<code>low</code>, <code>medium</code>, <code>high</code>) anklicken. Aktionen ohne Recht sind ausgegraut. Massenbefehle (<code>*-all</code>) gibt es in der GUI nicht.</p>
@@ -1427,9 +1428,10 @@ details>div{padding:14px 18px 2px}
   <p class="lead">Bann, Mute und Timeout werden mit eigenen Befehlen aufgehoben. Betroffene Spieler werden benachrichtigt, sofern sie online sind.</p>
 
   <article class="cmd-card" data-cmd="/pardon" data-alias="/unban" data-perm="punish.pardon" data-scope="ja">
-    <p class="desc">Hebt den Bann eines Spielers auf.</p>
-    <pre data-lang="cmd">/pardon &lt;Spieler&gt; [--Scope] [-s]</pre>
+    <p class="desc">Hebt den Bann eines Spielers auf. Der Scope ist Pflicht.</p>
+    <pre data-lang="cmd">/pardon &lt;Spieler&gt; (--global | --&lt;Server&gt; | --unbekannt) [-s]</pre>
     <pre data-lang="cmd">/pardon Notch --global</pre>
+    <div class="callout warn"><div><span class="ttl">Scope ist Pflicht</span><p>Ohne <code>--global</code>, <code>--server=&lt;Name&gt;</code>, <code>--&lt;Server&gt;</code> oder <code>--unbekannt</code> wird der Befehl abgelehnt. Der Standard-Scope wird bei <code>/pardon</code> nicht automatisch ergänzt.</p></div></div>
     <div class="callout warn"><div><span class="ttl">Auto-Bann aufheben</span><p>Wird jemand entbannt, der durch das Verstoß-Limit gebannt wurde, bleiben seine Verstöße bestehen. Der nächste Verstoß bannt ihn sofort wieder. Bei Bedarf wird zusätzlich mit <code>/verstoss remove</code> oder <code>/verstoss clear</code> aufgeräumt.</p></div></div>
   </article>
 
@@ -2071,7 +2073,7 @@ anzeige-zone: "Europe/Berlin"</pre>
   selbstbestrafung-erlaubt: false
 offline-resolution:
   allow-never-seen: false</pre>
-      <p><code>fail-closed</code> lehnt Aktionen bei unklarem Schutzstatus ab. <code>selbstbestrafung-erlaubt</code> erlaubt bei <code>true</code> Tests an der eigenen UUID einschließlich des Überspringens eigener OP-/Ignore-Sperren. <code>allow-never-seen</code> erlaubt vorläufige Einträge für nicht auflösbare Namen; erfolgreiche Mojang-Auflösung benötigt diesen Schalter nicht. Siehe <a href="#/schutz">Schutz und stille Strafen</a>.</p>
+      <p><code>fail-closed</code> lehnt Aktionen bei unklarem Schutzstatus ab. <code>selbstbestrafung-erlaubt</code> erlaubt bei <code>true</code> Tests an der eigenen UUID einschließlich des Überspringens eigener Ignore-Sperren. <code>allow-never-seen</code> erlaubt vorläufige Einträge für nicht auflösbare Namen; erfolgreiche Mojang-Auflösung benötigt diesen Schalter nicht. Siehe <a href="#/schutz">Schutz und stille Strafen</a>.</p>
     </div>
   </details>
 
@@ -2273,7 +2275,7 @@ history:
   p-admin: 80
   vize: 90
   präsident: 100</pre>
-      <p>Legt fest, wie hoch eine Gruppe in der Hierarchie steht. Ist LuckPerms aktiv, gilt zuerst das dortige Gruppengewicht; diese Liste ist der Fallback. Ein höheres Zielgewicht blockiert die Aktion, gleiches Gewicht nicht. Fehlende Gruppen zählen als 0. OP-/Ignore-Schutz gilt zusätzlich. Siehe <a href="#/schutz">Schutz und stille Strafen</a>.</p>
+      <p>Legt fest, wie hoch eine Gruppe in der Hierarchie steht. Ist LuckPerms aktiv, gilt zuerst das dortige Gruppengewicht; diese Liste ist der Fallback. Ein höheres Zielgewicht blockiert die Aktion, gleiches Gewicht nicht. Fehlende Gruppen zählen als 0. Der Ignore-Schutz gilt zusätzlich; der OP-Status schützt nicht. Siehe <a href="#/schutz">Schutz und stille Strafen</a>.</p>
     </div>
   </details>
 
@@ -2856,7 +2858,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </details>
   <details>
     <summary>„Dieser Spieler ist geschützt.“</summary>
-    <div><p>OP-Status oder <code>punish.ignore.*</code> bzw. <code>punish.ignore.&lt;typ&gt;</code> können die Aktion sperren. Zusätzlich die Rang-Gewichte prüfen, wenn das Ziel höher eingestuft ist. Bei Tests an der eigenen UUID ist <code>schutz.selbstbestrafung-erlaubt</code> maßgeblich.</p></div>
+    <div><p><code>punish.ignore.*</code> bzw. <code>punish.ignore.&lt;typ&gt;</code> können die Aktion sperren; der OP-Status schützt nicht. Zusätzlich die Rang-Gewichte prüfen, wenn das Ziel höher eingestuft ist. Bei Tests an der eigenen UUID ist <code>schutz.selbstbestrafung-erlaubt</code> maßgeblich.</p></div>
   </details>
   <details>
     <summary>„Der Schutzstatus … konnte nicht geprüft werden“</summary>
@@ -2985,7 +2987,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <div><p>Ja, mit <code>-s</code> am Ende, sofern <code>punish.allow-silent-syntax</code> vorliegt. Die Strafe steht trotzdem im Server-Log.</p></div></details>
 
   <details><summary>Warum lässt sich ein Admin nicht bestrafen?</summary>
-    <div><p>Operatoren und Spieler mit <code>punish.ignore.*</code> bzw. dem passenden <code>punish.ignore.&lt;typ&gt;</code> sind geschützt. Das schützt das Team vor Fehlern und Missbrauch.</p></div></details>
+    <div><p>Der OP-Status schützt nicht. Blockiert wird nur, wenn das Ziel direkt <code>punish.ignore.*</code> bzw. das passende <code>punish.ignore.&lt;typ&gt;</code> hat oder die Rang-Hierarchie die Aktion wegen eines höheren Gewichts sperrt. Die Ansichten bleiben sichtbar.</p></div></details>
 
   <details><summary>Was passiert mit den Verstößen nach einem Auto-Bann?</summary>
     <div><p>Läuft der Auto-Bann ab, werden die Verstöße zurückgesetzt. Wird er vorher von Hand aufgehoben, bleiben sie bestehen und der nächste Verstoß bannt sofort wieder. Siehe <a href="#/verstoesse">Verstöße und Auto-Bann</a>.</p></div></details>

@@ -36,6 +36,8 @@ Installiere die Proxy-Jar und **genau eine passende Bridge pro Backend** in den 
 4. Rechte auf dem Proxy vergeben, Server starten und `/punish-setup check` sowie `/punish-diagnostics` prüfen. Für Sync und Tunnel muss auf dem betroffenen Backend mindestens ein Spieler verbunden sein.
 5. Mit einem ungeschützten Testaccount eine Strafe setzen, ihre Wirkung prüfen und im gleichen Scope wieder aufheben.
 
+Geschützt sind ausschließlich Spieler mit direkt vergebenen `punish.ignore.*`- oder `punish.ignore.<typ>`-Rechten; der OP-Status ist keine Schutzquelle. Die Rang-Hierarchie bleibt davon unberührt. Geschützte Spieler bleiben in Status, History und den GUI-Aktenansichten sichtbar und werden dort gekennzeichnet. Beim Aufheben eines Banns ist der Scope Pflicht: `/pardon` akzeptiert `--global`, `--server=<Name>`, `--<Server>` oder `--unbekannt`; ohne Flag wird der Befehl abgelehnt.
+
 Die [Installationsanleitung](docs/index.html#/installation) enthält die vollständigen YAML-Beispiele, Dateipfade und Prüfschritte. Regeln und Texte werden zentral auf dem Proxy gepflegt; synchronisierte Bridge-Dateien sind keine unabhängige Konfiguration.
 
 ## Funktionen
