@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.lightrixx</groupId>
   <artifactId>punish-parent</artifactId>
-  <version>4.0.0-preview+081126-2001</version>
+  <version>4.0.0-preview+091126-2043</version>
   <packaging>pom</packaging>
   <name>PunishSystem (Parent)</name>
   <modules>
