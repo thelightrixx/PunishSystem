@@ -418,7 +418,7 @@ public final class WarnCommand extends PunishCommand {
     private void sendeWarnBlock(BefehlsSender sender, CachedPlayer spieler, List<WarnRecord> warns) {
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.WARN_LIST_KOPF, Map.of(
+        zeilen.add(messageService.komponente(MessageKeys.WARN_LIST_KOPF, Map.of(
                 "spieler", spieler.name(),
                 "anzahl", String.valueOf(warns.size()))));
         warns.stream()

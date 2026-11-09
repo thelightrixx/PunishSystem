@@ -141,7 +141,7 @@ public final class PunishStatsCommand extends PunishCommand {
                 .thenComparing(zaehlerEintrag -> zaehlerEintrag.name, String.CASE_INSENSITIVE_ORDER));
 
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATS_KOPF,
+        zeilen.add(messageService.komponente(MessageKeys.PUNISH_STATS_KOPF,
                 Map.of("zeitraum", zeitraum)));
         if (ausgabe.isEmpty()) {
             zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATS_LEER,

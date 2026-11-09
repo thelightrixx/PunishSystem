@@ -433,8 +433,8 @@ public final class VerstossCommand extends PunishCommand {
         }
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<gray>Verstöße von <white>"
-                + mini.escapeTags(spieler.name()) + "<gray>:"));
+        zeilen.add(messageService.mitPraefix(mini.deserialize("<gray>Verstöße von <white>"
+                + mini.escapeTags(spieler.name()) + "<gray>:")));
         verstoesse.stream()
                 .sorted(java.util.Comparator.comparingInt(VerstossRecord::nummer).reversed())
                 .limit(10)

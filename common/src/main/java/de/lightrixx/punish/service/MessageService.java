@@ -101,6 +101,11 @@ public final class MessageService {
 
     public Component komponente(String schluessel, Map<String, String> platzhalter,
                                 Set<String> rohSchluessel) {
+        return mitPraefix(komponenteOhnePraefix(schluessel, platzhalter, rohSchluessel));
+    }
+
+    public Component mitPraefix(Component inhalt) {
+        Objects.requireNonNull(inhalt, "Der Inhalt darf nicht null sein.");
         Component praefix;
         try {
             praefix = miniMessage.deserialize(configManager.praefix());
@@ -108,7 +113,6 @@ public final class MessageService {
             LOG.warn("Prefix konnte nicht als MiniMessage geparst werden (nutze Plain-Text).", e);
             praefix = Component.text("[Punish]");
         }
-        Component inhalt = komponenteOhnePraefix(schluessel, platzhalter, rohSchluessel);
         return praefix.append(Component.space()).append(inhalt);
     }
 

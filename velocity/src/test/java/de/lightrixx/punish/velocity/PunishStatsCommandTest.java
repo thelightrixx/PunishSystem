@@ -13,6 +13,7 @@ import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.util.TimeParser;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -82,5 +84,34 @@ class PunishStatsCommandTest {
         befehl.ausfuehren(Mockito.mock(BefehlsSender.class), new String[]{"7x", "ModA"});
         verify(messageService).senden(Mockito.any(), eq(MessageKeys.PUNISH_STATS_ZEITRAUM_UNGUELTIG),
                 anyMap());
+    }
+
+    @Test
+    void blockKopfEnthaeltPrefix() {
+        var config = Mockito.mock(Konfiguration.class);
+        when(config.praefix()).thenReturn("<dark_gray>[<red>PunishSystem<dark_gray>]");
+        when(config.nachricht(MessageKeys.PUNISH_STATS_KOPF))
+                .thenReturn("<gold>Team-Statistik <gray>(<white><zeitraum><gray>)");
+        when(config.nachricht(MessageKeys.PUNISH_STATS_ZEILE))
+                .thenReturn("<white><staff> <gray>| <white><banns> Bans");
+        MessageService echteNachrichten = new MessageService(config);
+        var echterBefehl = new PunishStatsCommand(echteNachrichten, config,
+                Mockito.mock(ProtectionService.class), Mockito.mock(PlayerCache.class),
+                Mockito.mock(SpielerVerzeichnis.class), historyService, null, new TimeParser());
+        when(historyService.findeAlle())
+                .thenReturn(List.of(eintrag(1, HistoryType.BAN, "ModA", TAG)));
+        BefehlsSender sender = Mockito.mock(BefehlsSender.class);
+        when(sender.abstandsSchluessel()).thenReturn("test:prefix");
+
+        echterBefehl.ausfuehren(sender, new String[]{"7d"});
+
+        ArgumentCaptor<Component> captor = ArgumentCaptor.forClass(Component.class);
+        verify(sender, Mockito.atLeastOnce()).nachricht(captor.capture());
+        String kopf = captor.getAllValues().stream()
+                .map(zeile -> MiniMessage.miniMessage().serialize(zeile))
+                .filter(zeile -> zeile.contains("Team-Statistik"))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(kopf.contains("PunishSystem"), "Blockkopf ohne Prefix: " + kopf);
     }
 }

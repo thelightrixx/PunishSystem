@@ -250,8 +250,8 @@ public final class PunishEditCommand extends PunishCommand {
                         Map.of("spieler", spieler.name(), "id", String.valueOf(nummer.get())));
                 return;
             }
-            zeilen.add(mini.deserialize("<yellow>Verstoß <white>#" + treffer.nummer()
-                    + "<yellow> von <white>" + mini.escapeTags(spieler.name())));
+            zeilen.add(messageService.mitPraefix(mini.deserialize("<yellow>Verstoß <white>#" + treffer.nummer()
+                    + "<yellow> von <white>" + mini.escapeTags(spieler.name()))));
             zeilen.add(mini.deserialize("<gray>Stufe: <white>" + mini.escapeTags(treffer.stufe().schluessel())
                     + " <gray>Grund: <white>" + mini.escapeTags(treffer.grund())));
             zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(treffer.ausfuehrer())
@@ -270,7 +270,8 @@ public final class PunishEditCommand extends PunishCommand {
             messageService.sendeBlock(sender, zeilen);
             return;
         }
-        zeilen.add(mini.deserialize("<gray>Verstöße von <white>" + mini.escapeTags(spieler.name()) + "<gray>:"));
+        zeilen.add(messageService.mitPraefix(
+                mini.deserialize("<gray>Verstöße von <white>" + mini.escapeTags(spieler.name()) + "<gray>:")));
         alle.stream()
                 .filter(Objects::nonNull)
                 .sorted(java.util.Comparator.comparingInt(VerstossRecord::nummer).reversed())
@@ -329,8 +330,8 @@ public final class PunishEditCommand extends PunishCommand {
                 return;
             }
             List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-            zeilen.add(mini.deserialize("<yellow>Warnung <white>#" + treffer.nummer()
-                    + "<yellow> für <white>" + mini.escapeTags(spieler.name())));
+            zeilen.add(messageService.mitPraefix(mini.deserialize("<yellow>Warnung <white>#" + treffer.nummer()
+                    + "<yellow> für <white>" + mini.escapeTags(spieler.name()))));
             zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(treffer.grund())));
             zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(treffer.ausfuehrer())
                     + " <gray>am <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(treffer.erstelltAm()))));
@@ -343,7 +344,8 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<gray>Warnungen von <white>" + mini.escapeTags(spieler.name()) + "<gray>:"));
+        zeilen.add(messageService.mitPraefix(
+                mini.deserialize("<gray>Warnungen von <white>" + mini.escapeTags(spieler.name()) + "<gray>:")));
         alle.stream().filter(Objects::nonNull)
                 .sorted(java.util.Comparator.comparingInt(WarnRecord::nummer).reversed()).limit(10)
                 .forEach(w -> zeilen.add(mini.deserialize("<gray>#<white>" + w.nummer() + "<gray> – <white>"
@@ -396,8 +398,8 @@ public final class PunishEditCommand extends PunishCommand {
                 return;
             }
             List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-            zeilen.add(mini.deserialize("<yellow>Notiz <white>#" + treffer.nummer()
-                    + "<yellow> für <white>" + mini.escapeTags(spieler.name())));
+            zeilen.add(messageService.mitPraefix(mini.deserialize("<yellow>Notiz <white>#" + treffer.nummer()
+                    + "<yellow> für <white>" + mini.escapeTags(spieler.name()))));
             zeilen.add(mini.deserialize("<gray>Text: <white>" + mini.escapeTags(treffer.text())));
             zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(treffer.ausfuehrer())
                     + " <gray>am <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(treffer.erstelltAm()))));
@@ -410,7 +412,8 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<gray>Notizen von <white>" + mini.escapeTags(spieler.name()) + "<gray>:"));
+        zeilen.add(messageService.mitPraefix(
+                mini.deserialize("<gray>Notizen von <white>" + mini.escapeTags(spieler.name()) + "<gray>:")));
         alle.stream().filter(Objects::nonNull)
                 .sorted(java.util.Comparator.comparingInt(NoteRecord::nummer).reversed()).limit(10)
                 .forEach(n -> zeilen.add(mini.deserialize("<gray>#<white>" + n.nummer() + "<gray> – <white>"
@@ -441,7 +444,8 @@ public final class PunishEditCommand extends PunishCommand {
         var b = aktiv.get();
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<yellow>Bann für <white>" + mini.escapeTags(spieler.name())));
+        zeilen.add(messageService.mitPraefix(
+                mini.deserialize("<yellow>Bann für <white>" + mini.escapeTags(spieler.name()))));
         zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(b.grund())));
         String ablauf = b.istPermanent() ? "Permanent" : ZeitFormat.formatZeitpunkt(b.ablaufAm());
         String rest = b.istPermanent() ? "–" : ZeitFormat.formatRestzeit(b.verbleibendeMillis(jetzt));
@@ -475,7 +479,8 @@ public final class PunishEditCommand extends PunishCommand {
         var m = aktiv.get();
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<yellow>Mute für <white>" + mini.escapeTags(spieler.name())));
+        zeilen.add(messageService.mitPraefix(
+                mini.deserialize("<yellow>Mute für <white>" + mini.escapeTags(spieler.name()))));
         zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(m.grund())));
         zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(m.ausfuehrer())
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(m.ablaufAm()))
@@ -508,7 +513,8 @@ public final class PunishEditCommand extends PunishCommand {
         var t = aktiv.get();
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<yellow>Timeout für <white>" + mini.escapeTags(spieler.name())));
+        zeilen.add(messageService.mitPraefix(
+                mini.deserialize("<yellow>Timeout für <white>" + mini.escapeTags(spieler.name()))));
         zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(t.grund())));
         zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(t.ausfuehrer())
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(t.ablaufAm()))
@@ -538,8 +544,8 @@ public final class PunishEditCommand extends PunishCommand {
         var b = aktiv.get();
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<yellow>IP-Bann für <white>"
-                + mini.escapeTags(PunishStatusCommand.maskeIp(sender, ip))));
+        zeilen.add(messageService.mitPraefix(mini.deserialize("<yellow>IP-Bann für <white>"
+                + mini.escapeTags(PunishStatusCommand.maskeIp(sender, ip)))));
         zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(b.grund())));
         String ablauf = b.istPermanent() ? "Permanent" : ZeitFormat.formatZeitpunkt(b.ablaufAm());
         zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(b.ausfuehrer())
@@ -571,8 +577,8 @@ public final class PunishEditCommand extends PunishCommand {
         var m = aktiv.get();
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<yellow>IP-Mute für <white>"
-                + mini.escapeTags(PunishStatusCommand.maskeIp(sender, ip))));
+        zeilen.add(messageService.mitPraefix(mini.deserialize("<yellow>IP-Mute für <white>"
+                + mini.escapeTags(PunishStatusCommand.maskeIp(sender, ip)))));
         zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(m.grund())));
         zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(m.ausfuehrer())
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(m.ablaufAm()))
@@ -603,8 +609,8 @@ public final class PunishEditCommand extends PunishCommand {
         var t = aktiv.get();
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(mini.deserialize("<yellow>IP-Timeout für <white>"
-                + mini.escapeTags(PunishStatusCommand.maskeIp(sender, ip))));
+        zeilen.add(messageService.mitPraefix(mini.deserialize("<yellow>IP-Timeout für <white>"
+                + mini.escapeTags(PunishStatusCommand.maskeIp(sender, ip)))));
         zeilen.add(mini.deserialize("<gray>Grund: <white>" + mini.escapeTags(t.grund())));
         zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(t.ausfuehrer())
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(t.ablaufAm()))

@@ -185,7 +185,7 @@ public final class ChatfilterBefehl extends PunishCommand {
             return;
         }
         List<net.kyori.adventure.text.Component> zeilen = new java.util.ArrayList<>();
-        zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.CHATFILTER_LISTE_KOPF,
+        zeilen.add(messageService.komponente(MessageKeys.CHATFILTER_LISTE_KOPF,
                 Map.of("anzahl", String.valueOf(woerter.size()))));
         if (woerter.isEmpty()) {
             zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.CHATFILTER_LISTE_LEER, Map.of()));

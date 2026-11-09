@@ -170,7 +170,7 @@ public final class ReportsCommand extends PunishCommand {
         }
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.REPORTS_KOPF, Map.of(
+        zeilen.add(messageService.komponente(MessageKeys.REPORTS_KOPF, Map.of(
                 "anzahl", String.valueOf(liste.size()))));
         liste.stream()
                 .filter(Objects::nonNull)

@@ -351,7 +351,7 @@ public final class PunishNoteCommand extends PunishCommand {
     private void sendeNotizBlock(BefehlsSender sender, CachedPlayer spieler, List<NoteRecord> notizen) {
         var mini = MiniMessageUtil.miniMessage();
         List<net.kyori.adventure.text.Component> zeilen = new ArrayList<>();
-        zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.NOTE_LIST_KOPF, Map.of(
+        zeilen.add(messageService.komponente(MessageKeys.NOTE_LIST_KOPF, Map.of(
                 "spieler", spieler.name(),
                 "anzahl", String.valueOf(notizen.size()))));
         notizen.stream()
