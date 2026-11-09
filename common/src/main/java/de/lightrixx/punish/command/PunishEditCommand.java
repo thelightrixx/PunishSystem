@@ -27,6 +27,7 @@ import de.lightrixx.punish.service.VerstossService;
 import de.lightrixx.punish.service.WarnService;
 import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.util.MiniMessageUtil;
+import de.lightrixx.punish.util.TabHinweis;
 import de.lightrixx.punish.util.TimeParser;
 import de.lightrixx.punish.util.ZeitFormat;
 
@@ -57,9 +58,6 @@ public final class PunishEditCommand extends PunishCommand {
             TYP_VERSTOSS, TYP_WARN, TYP_NOTE,
             TYP_BAN, TYP_MUTE, TYP_TIMEOUT,
             TYP_BAN_IP, TYP_MUTE_IP, TYP_TIMEOUT_IP);
-
-    private static final List<String> LEVEL_VORSCHLAEGE = List.of(
-            "level=low", "level=medium", "level=high");
 
     private final VerstossService verstossService;
     private final WarnService warnService;
@@ -159,8 +157,8 @@ public final class PunishEditCommand extends PunishCommand {
 
     @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
-        ScopeParser.Ergebnis scope = scopeAusArgs(args == null ? new String[0] : args);
-        if (blockiereBeiUnbekanntemScope(sender, scope)) {
+        ScopeParser.Ergebnis scope = scopeAusArgsMitUnbekannt(args);
+        if (blockiereBeiUngueltigemScope(sender, scope)) {
             return;
         }
         boolean silent = silentAuswerten(sender, scope);
@@ -435,7 +433,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         long jetzt = System.currentTimeMillis();
-        var aktiv = banService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = banService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEBANNT, Map.of("spieler", spieler.name()));
             return;
@@ -450,11 +448,11 @@ public final class PunishEditCommand extends PunishCommand {
         zeilen.add(mini.deserialize("<gray>Von <white>" + mini.escapeTags(b.ausfuehrer())
                 + " <gray>bis <white>" + mini.escapeTags(ablauf) + " <gray>(noch " + mini.escapeTags(rest) + ")"));
         zeilen.add(mini.deserialize("<gray>Scope: <white>" + mini.escapeTags(b.scope().anzeige())));
-        String basis = "/punish-edit ban " + spieler.name() + " dauer= grund=";
+        String basis = "/punish-edit ban " + spieler.name() + " grund= " + b.scope().alsFlag();
         zeilen.add(mini.deserialize("<green>[Bearbeiten]")
                 .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(basis))
                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
-                        mini.deserialize("<gray>Klicken zum Übernehmen"))));
+                        mini.deserialize("<gray>Grund vor dem Scope-Flag ergänzen"))));
         messageService.sendeBlock(sender, zeilen);
     }
 
@@ -469,7 +467,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         long jetzt = System.currentTimeMillis();
-        var aktiv = muteService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = muteService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEMUTET, Map.of("spieler", spieler.name()));
             return;
@@ -483,11 +481,11 @@ public final class PunishEditCommand extends PunishCommand {
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(m.ablaufAm()))
                 + " <gray>(noch " + mini.escapeTags(ZeitFormat.formatRestzeit(m.verbleibendeMillis(jetzt))) + ")"));
         zeilen.add(mini.deserialize("<gray>Scope: <white>" + mini.escapeTags(m.scope().anzeige())));
-        String basis = "/punish-edit mute " + spieler.name() + " dauer= grund=";
+        String basis = "/punish-edit mute " + spieler.name() + " grund= " + m.scope().alsFlag();
         zeilen.add(mini.deserialize("<green>[Bearbeiten]")
                 .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(basis))
                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
-                        mini.deserialize("<gray>Klicken zum Übernehmen"))));
+                        mini.deserialize("<gray>Grund vor dem Scope-Flag ergänzen"))));
         messageService.sendeBlock(sender, zeilen);
     }
 
@@ -502,7 +500,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         long jetzt = System.currentTimeMillis();
-        var aktiv = timeoutService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = timeoutService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT, Map.of("spieler", spieler.name()));
             return;
@@ -516,11 +514,11 @@ public final class PunishEditCommand extends PunishCommand {
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(t.ablaufAm()))
                 + " <gray>(noch " + mini.escapeTags(ZeitFormat.formatRestzeit(t.verbleibendeMillis(jetzt))) + ")"));
         zeilen.add(mini.deserialize("<gray>Scope: <white>" + mini.escapeTags(t.scope().anzeige())));
-        String basis = "/punish-edit timeout " + spieler.name() + " dauer= grund=";
+        String basis = "/punish-edit timeout " + spieler.name() + " grund= " + t.scope().alsFlag();
         zeilen.add(mini.deserialize("<green>[Bearbeiten]")
                 .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(basis))
                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
-                        mini.deserialize("<gray>Klicken zum Übernehmen"))));
+                        mini.deserialize("<gray>Grund vor dem Scope-Flag ergänzen"))));
         messageService.sendeBlock(sender, zeilen);
     }
 
@@ -532,7 +530,7 @@ public final class PunishEditCommand extends PunishCommand {
         }
         String ip = ziel.get().ip();
         long jetzt = System.currentTimeMillis();
-        var aktiv = ipBanService.ipFindeAbdeckend(ip, scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = ipBanService.ipFinden(ip, scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEBANNT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
             return;
@@ -548,11 +546,11 @@ public final class PunishEditCommand extends PunishCommand {
                 + " <gray>bis <white>" + mini.escapeTags(ablauf)));
         zeilen.add(mini.deserialize("<gray>Scope: <white>" + mini.escapeTags(b.scope().anzeige())));
         if (sender.hatRecht(Permissions.PUNISH_ALTS.node())) {
-            String basis = "/punish-edit ban-ip " + ip + " dauer= grund=";
+            String basis = "/punish-edit ban-ip " + ip + " grund= " + b.scope().alsFlag();
             zeilen.add(mini.deserialize("<green>[Bearbeiten]")
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(basis))
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
-                            mini.deserialize("<gray>Klicken zum Übernehmen"))));
+                            mini.deserialize("<gray>Grund vor dem Scope-Flag ergänzen"))));
         }
         messageService.sendeBlock(sender, zeilen);
     }
@@ -565,7 +563,7 @@ public final class PunishEditCommand extends PunishCommand {
         }
         String ip = ziel.get().ip();
         long jetzt = System.currentTimeMillis();
-        var aktiv = ipMuteService.findeAbdeckend(ip, scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = ipMuteService.finden(ip, scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEMUTET_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
             return;
@@ -580,11 +578,11 @@ public final class PunishEditCommand extends PunishCommand {
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(m.ablaufAm()))
                 + " <gray>(noch " + mini.escapeTags(ZeitFormat.formatRestzeit(m.verbleibendeMillis(jetzt))) + ")"));
         if (sender.hatRecht(Permissions.PUNISH_ALTS.node())) {
-            String basis = "/punish-edit mute-ip " + ip + " dauer= grund=";
+            String basis = "/punish-edit mute-ip " + ip + " grund= " + m.scope().alsFlag();
             zeilen.add(mini.deserialize("<green>[Bearbeiten]")
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(basis))
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
-                            mini.deserialize("<gray>Klicken zum Übernehmen"))));
+                            mini.deserialize("<gray>Grund vor dem Scope-Flag ergänzen"))));
         }
         messageService.sendeBlock(sender, zeilen);
     }
@@ -597,7 +595,7 @@ public final class PunishEditCommand extends PunishCommand {
         }
         String ip = ziel.get().ip();
         long jetzt = System.currentTimeMillis();
-        var aktiv = ipTimeoutService.findeAbdeckend(ip, scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = ipTimeoutService.finden(ip, scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
             return;
@@ -612,11 +610,11 @@ public final class PunishEditCommand extends PunishCommand {
                 + " <gray>bis <white>" + mini.escapeTags(ZeitFormat.formatZeitpunkt(t.ablaufAm()))
                 + " <gray>(noch " + mini.escapeTags(ZeitFormat.formatRestzeit(t.verbleibendeMillis(jetzt))) + ")"));
         if (sender.hatRecht(Permissions.PUNISH_ALTS.node())) {
-            String basis = "/punish-edit timeout-ip " + ip + " dauer= grund=";
+            String basis = "/punish-edit timeout-ip " + ip + " grund= " + t.scope().alsFlag();
             zeilen.add(mini.deserialize("<green>[Bearbeiten]")
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(basis))
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
-                            mini.deserialize("<gray>Klicken zum Übernehmen"))));
+                            mini.deserialize("<gray>Grund vor dem Scope-Flag ergänzen"))));
         }
         messageService.sendeBlock(sender, zeilen);
     }
@@ -846,7 +844,7 @@ public final class PunishEditCommand extends PunishCommand {
         }
         CachedPlayer spieler = ziel.get();
         long jetzt = System.currentTimeMillis();
-        var aktiv = banService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = banService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEBANNT, Map.of("spieler", spieler.name()));
             return;
@@ -856,7 +854,7 @@ public final class PunishEditCommand extends PunishCommand {
             return;
         }
         mitSchutz(sender, args, spieler, ProtectionService.IgnoreTyp.BAN, TYP_BAN, () -> {
-            var erneut = banService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(System.currentTimeMillis()));
+            var erneut = banService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(System.currentTimeMillis()));
             if (erneut.isEmpty() || erneut.get().autoBann()) {
                 messageService.senden(sender, erneut.isEmpty()
                         ? MessageKeys.NICHT_GEBANNT : MessageKeys.AUTO_BANN_AKTIV,
@@ -966,13 +964,13 @@ public final class PunishEditCommand extends PunishCommand {
         }
         CachedPlayer spieler = ziel.get();
         long jetzt = System.currentTimeMillis();
-        var aktiv = muteService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = muteService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEMUTET, Map.of("spieler", spieler.name()));
             return;
         }
         mitSchutz(sender, args, spieler, ProtectionService.IgnoreTyp.MUTE, TYP_MUTE, () -> {
-            var erneut = muteService.findeAbdeckend(spieler.uuid(), scope)
+            var erneut = muteService.finden(spieler.uuid(), scope)
                     .filter(b -> b.istAktiv(System.currentTimeMillis()));
             if (erneut.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NICHT_GEMUTET, Map.of("spieler", spieler.name()));
@@ -1035,13 +1033,13 @@ public final class PunishEditCommand extends PunishCommand {
         }
         CachedPlayer spieler = ziel.get();
         long jetzt = System.currentTimeMillis();
-        var aktiv = timeoutService.findeAbdeckend(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = timeoutService.finden(spieler.uuid(), scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT, Map.of("spieler", spieler.name()));
             return;
         }
         mitSchutz(sender, args, spieler, ProtectionService.IgnoreTyp.TIMEOUT, TYP_TIMEOUT, () -> {
-            var erneut = timeoutService.findeAbdeckend(spieler.uuid(), scope)
+            var erneut = timeoutService.finden(spieler.uuid(), scope)
                     .filter(b -> b.istAktiv(System.currentTimeMillis()));
             if (erneut.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT, Map.of("spieler", spieler.name()));
@@ -1104,13 +1102,13 @@ public final class PunishEditCommand extends PunishCommand {
         }
         String ip = roh.get().ip();
         long jetzt = System.currentTimeMillis();
-        var aktiv = ipBanService.ipFindeAbdeckend(ip, scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = ipBanService.ipFinden(ip, scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEBANNT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
             return;
         }
         Runnable fortsetzung = () -> {
-            var erneut = ipBanService.ipFindeAbdeckend(ip, scope)
+            var erneut = ipBanService.ipFinden(ip, scope)
                     .filter(b -> b.istAktiv(System.currentTimeMillis()));
             if (erneut.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NICHT_GEBANNT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
@@ -1202,13 +1200,13 @@ public final class PunishEditCommand extends PunishCommand {
         }
         String ip = roh.get().ip();
         long jetzt = System.currentTimeMillis();
-        var aktiv = ipMuteService.findeAbdeckend(ip, scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = ipMuteService.finden(ip, scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_GEMUTET_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
             return;
         }
         Runnable fortsetzung = () -> {
-            var erneut = ipMuteService.findeAbdeckend(ip, scope)
+            var erneut = ipMuteService.finden(ip, scope)
                     .filter(b -> b.istAktiv(System.currentTimeMillis()));
             if (erneut.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NICHT_GEMUTET_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
@@ -1276,13 +1274,13 @@ public final class PunishEditCommand extends PunishCommand {
         }
         String ip = roh.get().ip();
         long jetzt = System.currentTimeMillis();
-        var aktiv = ipTimeoutService.findeAbdeckend(ip, scope).filter(b -> b.istAktiv(jetzt));
+        var aktiv = ipTimeoutService.finden(ip, scope).filter(b -> b.istAktiv(jetzt));
         if (aktiv.isEmpty()) {
             messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
             return;
         }
         Runnable fortsetzung = () -> {
-            var erneut = ipTimeoutService.findeAbdeckend(ip, scope)
+            var erneut = ipTimeoutService.finden(ip, scope)
                     .filter(b -> b.istAktiv(System.currentTimeMillis()));
             if (erneut.isEmpty()) {
                 messageService.senden(sender, MessageKeys.NICHT_IM_TIMEOUT_IP, Map.of("ip", PunishStatusCommand.maskeIp(sender, ip)));
@@ -1447,7 +1445,7 @@ public final class PunishEditCommand extends PunishCommand {
         if (aktuell != null && aktuell.contains("=")) {
             String key = aktuell.substring(0, aktuell.indexOf('=')).toLowerCase(Locale.ROOT);
             if (key.equals("level") || key.equals("stufe")) {
-                return filtere(LEVEL_VORSCHLAEGE, aktuell);
+                return filtere(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE, aktuell);
             }
             if (key.equals("dauer") || key.equals("duration") || key.equals("zeit")) {
                 List<String> vorschlaege = new ArrayList<>();
@@ -1461,10 +1459,16 @@ public final class PunishEditCommand extends PunishCommand {
                 return filtere(vorschlaege, aktuell);
             }
         }
-        List<String> gemischt = new ArrayList<>();
         if (TYP_VERSTOSS.equals(typ)) {
-            gemischt.addAll(LEVEL_VORSCHLAEGE);
+            List<String> felder = new ArrayList<>(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE);
+            felder.add("grund=");
+            if (args.length == 4) {
+                felder.addAll(grundVorschlaege(typ));
+            }
+            felder.addAll(silentVorschlag(sender, ""));
+            return filtere(felder, aktuell);
         }
+        List<String> gemischt = new ArrayList<>();
         if (istAktivTyp(typ) || istIpTyp(typ)) {
             for (String d : dauerVorschlaegeOhnePermFuer(typ)) {
                 gemischt.add("dauer=" + d);

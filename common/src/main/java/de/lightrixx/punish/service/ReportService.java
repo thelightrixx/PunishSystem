@@ -268,17 +268,11 @@ public final class ReportService {
             }
             return Optional.empty();
         }
-        Optional<ReportRecord> aktuell = reportRepository.findenNachId(id);
-        if (aktuell.isPresent() && istAbgeschlossen(aktuell.get().status())
-                && aktuell.get().status() != status) {
-            throw new BereitsGeschlossen(aktuell.get().status());
-        }
         Optional<ReportRecord> geschlossen = reportRepository.statusSetzenWenn(id, status, bearbeiter,
-                saubererGrund, alt -> !istAbgeschlossen(alt.status()) || alt.status() == status);
+                saubererGrund, alt -> !istAbgeschlossen(alt.status()));
         if (geschlossen.isEmpty()) {
             Optional<ReportRecord> inzwischen = reportRepository.findenNachId(id);
-            if (inzwischen.isPresent() && istAbgeschlossen(inzwischen.get().status())
-                    && inzwischen.get().status() != status) {
+            if (inzwischen.isPresent() && istAbgeschlossen(inzwischen.get().status())) {
                 throw new BereitsGeschlossen(inzwischen.get().status());
             }
         }

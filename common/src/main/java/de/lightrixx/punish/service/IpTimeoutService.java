@@ -258,7 +258,8 @@ public final class IpTimeoutService {
                     kanonisch, dauerMillis);
             return Optional.empty();
         }
-        Optional<IpTimeoutRecord> alt = repository.findeAbdeckend(kanonisch, scopeSelektor, jetzt);
+        Optional<IpTimeoutRecord> alt = repository.finden(kanonisch, scopeSelektor)
+                .filter(eintrag -> eintrag.istAktiv(jetzt));
         if (alt.isEmpty()) {
             return Optional.empty();
         }

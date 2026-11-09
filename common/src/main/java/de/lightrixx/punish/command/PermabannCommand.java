@@ -7,6 +7,7 @@ import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.core.Permissions;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.CachedPlayer;
+import de.lightrixx.punish.model.HistoryType;
 import de.lightrixx.punish.service.BanService;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
@@ -76,7 +77,9 @@ public final class PermabannCommand extends PunishCommand {
                         ? MessageKeys.BAN_SPEICHER_FEHLER : MessageKeys.BAN_ROLLBACK_FEHLER);
                 return;
             }
-            if (ergebnis != BanService.BanErgebnis.ERFOLG) {
+            if (ergebnis == BanService.BanErgebnis.ERFOLG) {
+                bestaetigeStrafe(sender, HistoryType.PERMABANN, spieler.name(), wirksam, silent);
+            } else {
                 try {
                     if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())
                             && schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.BAN))) {

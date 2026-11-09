@@ -46,10 +46,11 @@ public final class PunishmentsQueryParser {
                             }
                         }
                         case "player", "spieler", "target", "ziel", "p" -> {
-                            var ziel = zielAusWert(wert);
-                            if (ziel != null) {
-                                zielTyp = ziel.typ();
-                                spielerName = ziel.name();
+                            if (wert.isBlank()) {
+                                unbekannterSchluessel = schluessel;
+                            } else {
+                                zielTyp = PunishmentsQuery.ZielTyp.SPIELER;
+                                spielerName = wert;
                             }
                         }
                         case "page", "seite" -> {
@@ -104,23 +105,6 @@ public final class PunishmentsQueryParser {
             return doppelpunkt;
         }
         return Math.min(doppelpunkt, gleich);
-    }
-
-    private record ZielTreffer(PunishmentsQuery.ZielTyp typ, String name) {
-    }
-
-    private static ZielTreffer zielAusWert(String wert) {
-        if (wert == null || wert.isBlank()) {
-            return null;
-        }
-        String kandidat = wert.trim();
-        if (istSelf(kandidat)) {
-            return new ZielTreffer(PunishmentsQuery.ZielTyp.SELF, null);
-        }
-        if (istServer(kandidat)) {
-            return new ZielTreffer(PunishmentsQuery.ZielTyp.SERVER, null);
-        }
-        return new ZielTreffer(PunishmentsQuery.ZielTyp.SPIELER, kandidat);
     }
 
     private static boolean istSelf(String wert) {

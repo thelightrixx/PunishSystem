@@ -13,6 +13,7 @@ import de.lightrixx.punish.model.IpBanRecord;
 import de.lightrixx.punish.model.IpMuteRecord;
 import de.lightrixx.punish.model.IpTimeoutRecord;
 import de.lightrixx.punish.model.MuteRecord;
+import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.model.TimeoutRecord;
 import de.lightrixx.punish.model.VerstossRecord;
 import de.lightrixx.punish.model.WarnRecord;
@@ -164,11 +165,12 @@ public final class PunishStatusCommand extends PunishCommand {
         if (sender == null) {
             return false;
         }
-        if (istSelbstAnfrage(sender, args)) {
+        var zielTyp = PunishmentsQueryParser.parsen(abfrageScope(args).bereinigteArgs()).query().zielTyp();
+        if (sender.istSpieler() && zielTyp == PunishmentsQuery.ZielTyp.SELF) {
             return sender.hatRecht(Permissions.PUNISH_OWN.node())
                     || sender.hatRecht(Permissions.PUNISH_STATUS.node());
         }
-        if (istServerAnfrage(args)) {
+        if (zielTyp == PunishmentsQuery.ZielTyp.SERVER) {
             return sender.hatRecht(Permissions.PUNISH_STATUS_SERVER.node());
         }
         return sender.hatRecht(Permissions.PUNISH_STATUS.node());
@@ -177,52 +179,17 @@ public final class PunishStatusCommand extends PunishCommand {
     @Override
     public boolean sichtbarFuer(BefehlsSender sender) {
         return hatRecht(sender, new String[0])
-                || (sender != null && sender.hatRecht(Permissions.PUNISH_OWN.node()));
-    }
-
-    private boolean istSelbstAnfrage(BefehlsSender sender, String[] args) {
-        if (sender == null || !sender.istSpieler()) {
-            return false;
-        }
-        return PunishmentsQueryParser.parsen(args).query().zielTyp() == PunishmentsQuery.ZielTyp.SELF;
-    }
-
-    private boolean istServerAnfrage(String[] args) {
-        try {
-            return PunishmentsQueryParser.parsen(args).query().zielTyp() == PunishmentsQuery.ZielTyp.SERVER;
-        } catch (Exception e) {
-            return false;
-        }
+                || (sender != null && sender.hatRecht(Permissions.PUNISH_STATUS_SERVER.node()));
     }
 
     @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
-        String scopeFilter = null;
-        String[] queryArgs = args;
-        if (args != null && args.length > 0) {
-            String letztes = args[args.length - 1];
-            if (letztes != null && letztes.startsWith("--") && letztes.length() >= 3) {
-                String rest = letztes.substring(2).trim().toLowerCase(java.util.Locale.ROOT);
-                if (rest.equals("global") || rest.equals("unbekannt")) {
-                    scopeFilter = rest;
-                    queryArgs = java.util.Arrays.copyOf(args, args.length - 1);
-                } else if (rest.startsWith("server=")) {
-                    String name = de.lightrixx.punish.model.ServerScope.normalisiereServerName(
-                            rest.substring("server=".length()));
-                    if (name != null) {
-                        scopeFilter = name;
-                        queryArgs = java.util.Arrays.copyOf(args, args.length - 1);
-                    }
-                } else {
-                    String name = de.lightrixx.punish.model.ServerScope.normalisiereServerName(rest);
-                    if (name != null) {
-                        scopeFilter = name;
-                        queryArgs = java.util.Arrays.copyOf(args, args.length - 1);
-                    }
-                }
-            }
+        var scope = abfrageScope(args);
+        if (blockiereBeiUngueltigemScope(sender, scope)) {
+            return;
         }
-        var parsed = PunishmentsQueryParser.parsen(queryArgs);
+        String scopeFilter = scope.hatteFlag() ? scope.scope().speicherwert() : null;
+        var parsed = PunishmentsQueryParser.parsen(scope.bereinigteArgs());
         if (parsed.unbekannterFilter() != null) {
             messageService.senden(sender, MessageKeys.PUNISH_STATUS_FILTER_UNGUELTIG,
                     Map.of("filter", parsed.unbekannterFilter()));
@@ -397,7 +364,7 @@ public final class PunishStatusCommand extends PunishCommand {
         }
 
         sendeErgebnis(sender, query, zielName,
-                query.zielTyp() == PunishmentsQuery.ZielTyp.SELF ? "self" : zielName,
+                query.zielTyp() == PunishmentsQuery.ZielTyp.SELF ? "self" : "player:" + zielName,
                 scopeFilter, aktivZeilen, aktivAnzahl);
     }
 
@@ -660,7 +627,7 @@ public final class PunishStatusCommand extends PunishCommand {
                                      int seite, int seiten) {
         String basis = "/punish-status " + zielToken
                 + " filter:" + query.filter().name().toLowerCase(Locale.ROOT) + " page:";
-        String scope = scopeFilter == null || scopeFilter.isBlank() ? "" : " --" + scopeFilter;
+        String scope = scopeFilter == null ? "" : " " + ServerScope.ausSpeicherwert(scopeFilter).alsFlag();
         Component nav = Component.text("‹ Zurück", seite > 1 ? NamedTextColor.YELLOW : NamedTextColor.DARK_GRAY);
         if (seite > 1) {
             String befehl = basis + (seite - 1) + scope;
@@ -686,7 +653,7 @@ public final class PunishStatusCommand extends PunishCommand {
         ph.put("scope", bann.scope().anzeige());
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_PARDON.node()) && gueltigerName(bann.spielerName())) {
-            return mitKlick(zeile, "/pardon " + bann.spielerName(), ph);
+            return mitKlick(zeile, "/pardon " + bann.spielerName() + " " + bann.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -698,7 +665,7 @@ public final class PunishStatusCommand extends PunishCommand {
         ph.put("scope", mute.scope().anzeige());
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_UNMUTE.node()) && gueltigerName(mute.spielerName())) {
-            return mitKlick(zeile, "/unmute " + mute.spielerName(), ph);
+            return mitKlick(zeile, "/unmute " + mute.spielerName() + " " + mute.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -710,7 +677,7 @@ public final class PunishStatusCommand extends PunishCommand {
         ph.put("scope", timeout.scope().anzeige());
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_UNTIMEOUT.node()) && gueltigerName(timeout.spielerName())) {
-            return mitKlick(zeile, "/untimeout " + timeout.spielerName(), ph);
+            return mitKlick(zeile, "/untimeout " + timeout.spielerName() + " " + timeout.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -723,7 +690,7 @@ public final class PunishStatusCommand extends PunishCommand {
         ph.put("scope", freeze.scope().anzeige());
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_UNFREEZE.node()) && gueltigerName(freeze.spielerName())) {
-            return mitKlick(zeile, "/unfreeze " + freeze.spielerName(), ph);
+            return mitKlick(zeile, "/unfreeze " + freeze.spielerName() + " " + freeze.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -757,7 +724,7 @@ public final class PunishStatusCommand extends PunishCommand {
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_ALTS.node())
                 && sender.hatRecht(Permissions.PUNISH_UNBANIP.node())) {
-            return mitKlick(zeile, "/unban-ip " + ipBann.ip(), ph);
+            return mitKlick(zeile, "/unban-ip " + ipBann.ip() + " " + ipBann.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -771,7 +738,7 @@ public final class PunishStatusCommand extends PunishCommand {
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_ALTS.node())
                 && sender.hatRecht(Permissions.PUNISH_UNMUTEIP.node())) {
-            return mitKlick(zeile, "/unmute-ip " + ipMute.ip(), ph);
+            return mitKlick(zeile, "/unmute-ip " + ipMute.ip() + " " + ipMute.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -785,7 +752,7 @@ public final class PunishStatusCommand extends PunishCommand {
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.PUNISH_STATUS_EINTRAG, ph);
         if (sender.hatRecht(Permissions.PUNISH_ALTS.node())
                 && sender.hatRecht(Permissions.PUNISH_UNTIMEOUTIP.node())) {
-            return mitKlick(zeile, "/untimeout-ip " + ipTimeout.ip(), ph);
+            return mitKlick(zeile, "/untimeout-ip " + ipTimeout.ip() + " " + ipTimeout.scope().alsFlag(), ph);
         }
         return zeile;
     }
@@ -995,12 +962,7 @@ public final class PunishStatusCommand extends PunishCommand {
                 || sender.hatRecht(Permissions.PUNISH_STATUS.node());
         Set<String> kombiniert = new LinkedHashSet<>();
         if (!darfFremd) {
-            kombiniert.add(praefix + "self");
-            return new ArrayList<>(kombiniert);
-        }
-        kombiniert.add(praefix + "self");
-        if (sender == null || sender.hatRecht(Permissions.PUNISH_STATUS_SERVER.node())) {
-            kombiniert.add(praefix + "server");
+            return List.of();
         }
         for (String name : onlineTreffer(rest, 30)) {
             kombiniert.add(praefix + name);

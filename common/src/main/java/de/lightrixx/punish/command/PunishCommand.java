@@ -7,6 +7,8 @@ import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.core.OnlineSpieler;
 import de.lightrixx.punish.core.Permissions;
 import de.lightrixx.punish.model.CachedPlayer;
+import de.lightrixx.punish.model.HistoryType;
+import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.storage.PlayerCache;
@@ -797,8 +799,26 @@ public abstract class PunishCommand {
         return ergebnis;
     }
 
+    protected ScopeParser.Ergebnis abfrageScope(String[] args) {
+        return ScopeParser.parsen(args == null ? new String[0] : args,
+                ServerScope.global(), bekannteServer(), true);
+    }
+
     protected boolean darfSilent(BefehlsSender sender) {
         return sender != null && sender.hatRecht(Permissions.ALLOW_SILENT.node());
+    }
+
+    protected void bestaetigeStrafe(BefehlsSender sender, HistoryType typ, String spieler, ServerScope scope,
+                                   boolean silent) {
+        if (sender == null) {
+            return;
+        }
+        String broadcast = typ.name().toLowerCase(Locale.ROOT);
+        if (silent || !sender.istSpieler() || !sender.hatRecht(Permissions.BROADCAST_RECEIVE_ALL.node())
+                || !configManager.broadcastAktiv(broadcast)) {
+            messageService.senden(sender, MessageKeys.STRAFE_BESTAETIGT,
+                    Map.of("typ", typ.anzeigename(), "spieler", spieler, "scope", scope.anzeige()));
+        }
     }
 
     protected boolean silentAuswerten(BefehlsSender sender, ScopeParser.Ergebnis ergebnis) {
@@ -897,8 +917,20 @@ public abstract class PunishCommand {
         }
     }
 
+    protected boolean blockiereBeiUngueltigemScope(BefehlsSender sender, ScopeParser.Ergebnis ergebnis) {
+        if (ergebnis.ungueltigesFlag().isEmpty()) {
+            return false;
+        }
+        messageService.senden(sender, MessageKeys.SCOPE_UNGUELTIG,
+                Map.of("flag", ergebnis.ungueltigesFlag()));
+        return true;
+    }
+
     protected boolean blockiereBeiUnbekanntemScope(de.lightrixx.punish.core.BefehlsSender sender,
                                                    ScopeParser.Ergebnis ergebnis) {
+        if (blockiereBeiUngueltigemScope(sender, ergebnis)) {
+            return true;
+        }
         if (!istUnbekannterServerScope(ergebnis)) {
             return false;
         }

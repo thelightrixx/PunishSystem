@@ -315,6 +315,8 @@ public final class GuiManager {
         String ziel = sitzung.ziel();
         UUID uuid = spieler.getUniqueId();
         String zielKopie = ziel;
+        dossierAktionen.remove(uuid);
+        listenSeiten.remove(uuid);
         int seiteKopie = Math.max(1, seite);
         String extraKopie = extra == null ? "" : extra;
         long detailId = 0L;
@@ -354,16 +356,13 @@ public final class GuiManager {
                     if (online == null) {
                         return;
                     }
-                    try {
-                        if (versand != null) {
-                            listenSeiten.put(uuid, Math.max(1, versand.seiten()));
-                        }
-                    } catch (Exception e) {
-                        org.slf4j.LoggerFactory.getLogger(GuiManager.class).trace("Listen-Seiten konnten nicht gespeichert werden.", e);
-                    }
                     var offenes = online.getOpenInventory().getTopInventory().getHolder();
                     if (!(offenes instanceof GuiMenues.GuiHolder holder) || holder.menue() != menue) {
                         return;
+                    }
+                    if (versand != null && versand.erfolg()) {
+                        listenSeiten.put(uuid, Math.max(1, versand.seiten()));
+                        sitzung.seite(versand.seite());
                     }
                     if (menue == GuiMenues.Menue.DOSSIER) {
                         List<String> aktionen = new ArrayList<>();
@@ -417,6 +416,18 @@ public final class GuiManager {
             return true;
         }
         return false;
+    }
+
+    void klickNaechsterTick(Player spieler, Inventory inventar, GuiMenues.GuiHolder holder, int slot) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (spieler.isOnline() && inventar.equals(spieler.getOpenInventory().getTopInventory())) {
+                try {
+                    klick(spieler, holder, slot);
+                } catch (Exception e) {
+                    org.slf4j.LoggerFactory.getLogger(GuiManager.class).warn("GUI-Klick fehlgeschlagen.", e);
+                }
+            }
+        });
     }
 
     public boolean klick(Player spieler, GuiMenues.GuiHolder holder, int slot) {

@@ -62,12 +62,7 @@ public final class BridgeBrigadierBefehle {
                             if (! tunnel.darfSehen(sender)) {
                                 return builder.buildFuture();
                             }
-                            String roh;
-                            try {
-                                roh = ctx.getArgument("rest", String.class);
-                            } catch (Throwable t) {
-                                roh = "";
-                            }
+                            String roh = builder.getRemaining();
                             String[] teile = TabHinweis.teile(roh);
                             List<String> vorschlaege;
                             try {
@@ -78,7 +73,8 @@ public final class BridgeBrigadierBefehle {
                             if (vorschlaege == null || vorschlaege.isEmpty()) {
                                 return builder.buildFuture();
                             }
-                            String praefix = TabHinweis.praefixFuer(roh);
+                            var vorschlagsBuilder = builder.createOffset(
+                                    builder.getStart() + TabHinweis.praefixFuer(roh).length());
                             for (String vorschlag : vorschlaege) {
                                 if (vorschlag == null) {
                                     continue;
@@ -90,13 +86,13 @@ public final class BridgeBrigadierBefehle {
                                     LOG.trace("Hinweis konnte nicht gelesen werden.", e);
                                 }
                                 if (hinweis == null || hinweis.isBlank()) {
-                                    builder.suggest(praefix + vorschlag);
+                                    vorschlagsBuilder.suggest(vorschlag);
                                 } else {
                                     final String text = hinweis;
-                                    builder.suggest(praefix + vorschlag, () -> text);
+                                    vorschlagsBuilder.suggest(vorschlag, () -> text);
                                 }
                             }
-                            return builder.buildFuture();
+                            return vorschlagsBuilder.buildFuture();
                         })
                         .executes(ctx -> {
                             CommandSender sender;

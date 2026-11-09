@@ -1,17 +1,43 @@
 package de.lightrixx.punish.command;
 
+import de.lightrixx.punish.core.AuftragsPlaner;
+import de.lightrixx.punish.core.BefehlsSender;
+import de.lightrixx.punish.core.Konfiguration;
+import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.VerstossStufe;
+import de.lightrixx.punish.service.MessageService;
+import de.lightrixx.punish.service.ProtectionService;
+import de.lightrixx.punish.service.VerstossService;
+import de.lightrixx.punish.storage.PlayerCache;
+import de.lightrixx.punish.util.TabHinweis;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class VerstossStufenAngabeTest {
+
+    @Test
+    void schlaegtStufenNachMehrteiligemGrundVor() {
+        var befehl = new VerstossCommand(mock(MessageService.class), mock(Konfiguration.class),
+                mock(ProtectionService.class), mock(PlayerCache.class), mock(VerstossService.class),
+                mock(AuftragsPlaner.class), mock(SpielerVerzeichnis.class));
+        var sender = mock(BefehlsSender.class);
+        var stufen = List.of("level=low", "level=medium", "level=high");
+        String basis = "add Steve Spam im Chat ";
+
+        assertEquals(stufen, befehl.vervollstaendigen(sender, TabHinweis.teile(basis)));
+        assertEquals(stufen, befehl.vervollstaendigen(sender, TabHinweis.teile(basis + "l")));
+        assertEquals(List.of("level=high"), befehl.vervollstaendigen(sender, TabHinweis.teile(basis + "level=h")));
+        assertTrue(befehl.vervollstaendigen(sender, TabHinweis.teile(basis + "wiederholt")).isEmpty());
+    }
 
     @Test
     @DisplayName("level= am Ende wird erkannt und aus dem Grund entfernt")

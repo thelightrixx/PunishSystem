@@ -40,6 +40,9 @@ public final class UnmuteIpCommand extends PunishCommand {
     @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
         ScopeParser.Ergebnis scope = scopeAusArgsMitUnbekannt(args);
+        if (blockiereBeiUngueltigemScope(sender, scope)) {
+            return;
+        }
         boolean silent = silentAuswerten(sender, scope);
         String[] bereinigt = scope.bereinigteArgs();
         if (bereinigt.length < 1) {

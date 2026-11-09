@@ -113,7 +113,7 @@ class PunishEditDauerPermTest {
     void ipBannGrundEditBleibtBefristet() {
         PunishEditCommand befehl = bauen(mock(PlayerCache.class));
         long jetzt = System.currentTimeMillis();
-        when(ipBanService.ipFindeAbdeckend(eq("1.2.3.4"), any())).thenReturn(Optional.of(
+        when(ipBanService.ipFinden(eq("1.2.3.4"), any())).thenReturn(Optional.of(
                 new IpBanRecord("1.2.3.4", "Alt", "Mod", jetzt - 60_000L,
                         jetzt + 60_000L, ServerScope.global())));
 
@@ -132,7 +132,7 @@ class PunishEditDauerPermTest {
     void ipBannGrundMitDauerTokenBleibtGrund() {
         PunishEditCommand befehl = bauen(mock(PlayerCache.class));
         long jetzt = System.currentTimeMillis();
-        when(ipBanService.ipFindeAbdeckend(eq("1.2.3.4"), any())).thenReturn(Optional.of(
+        when(ipBanService.ipFinden(eq("1.2.3.4"), any())).thenReturn(Optional.of(
                 new IpBanRecord("1.2.3.4", "Alt", "Mod", jetzt - 60_000L,
                         jetzt + 300_000L, ServerScope.global())));
 
@@ -155,7 +155,7 @@ class PunishEditDauerPermTest {
     void ipBannGrundWieDauerMeldetKeinDauerUngueltig() {
         PunishEditCommand befehl = bauen(mock(PlayerCache.class));
         long jetzt = System.currentTimeMillis();
-        when(ipBanService.ipFindeAbdeckend(eq("1.2.3.4"), any())).thenReturn(Optional.of(
+        when(ipBanService.ipFinden(eq("1.2.3.4"), any())).thenReturn(Optional.of(
                 new IpBanRecord("1.2.3.4", "Alt", "Mod", jetzt - 60_000L,
                         jetzt + 300_000L, ServerScope.global())));
 
@@ -172,7 +172,7 @@ class PunishEditDauerPermTest {
     @DisplayName("Grundänderung an permanentem IP-Bann bleibt permanent")
     void ipPermanenterBannGrundEditBleibtPermanent() {
         PunishEditCommand befehl = bauen(mock(PlayerCache.class));
-        when(ipBanService.ipFindeAbdeckend(eq("1.2.3.4"), any())).thenReturn(Optional.of(
+        when(ipBanService.ipFinden(eq("1.2.3.4"), any())).thenReturn(Optional.of(
                 new IpBanRecord("1.2.3.4", "Alt", "Mod", System.currentTimeMillis() - 60_000L,
                         null, ServerScope.global())));
 
@@ -188,7 +188,7 @@ class PunishEditDauerPermTest {
     void permanenterBannOhneRechtNichtVerkuerzbar() {
         UUID uuid = UUID.randomUUID();
         PunishEditCommand befehl = bauen(cacheMit(uuid));
-        when(banService.findeAbdeckend(eq(uuid), any())).thenReturn(Optional.of(new BanRecord(
+        when(banService.finden(eq(uuid), any())).thenReturn(Optional.of(new BanRecord(
                 uuid, "Ziel", "Alt", "Mod", System.currentTimeMillis() - 60_000L,
                 null, false, ServerScope.global())));
         BefehlsSender sender = mock(BefehlsSender.class);
@@ -212,7 +212,7 @@ class PunishEditDauerPermTest {
     void editMuteDauerPermMeldetPermNichtErlaubt() {
         UUID uuid = UUID.randomUUID();
         PunishEditCommand befehl = bauen(cacheMit(uuid));
-        when(muteService.findeAbdeckend(eq(uuid), any())).thenReturn(Optional.of(new MuteRecord(
+        when(muteService.finden(eq(uuid), any())).thenReturn(Optional.of(new MuteRecord(
                 uuid, "Ziel", "Spam", "Mod", System.currentTimeMillis() - 60000,
                 System.currentTimeMillis() + 60000, ServerScope.global())));
         befehl.ausfuehren(sender(), new String[]{"mute", "Ziel", "dauer=perm"});
@@ -225,7 +225,7 @@ class PunishEditDauerPermTest {
     void editTimeoutDauerPermMeldetPermNichtErlaubt() {
         UUID uuid = UUID.randomUUID();
         PunishEditCommand befehl = bauen(cacheMit(uuid));
-        when(timeoutService.findeAbdeckend(eq(uuid), any())).thenReturn(Optional.of(new TimeoutRecord(
+        when(timeoutService.finden(eq(uuid), any())).thenReturn(Optional.of(new TimeoutRecord(
                 uuid, "Ziel", "Spam", "Mod", System.currentTimeMillis() - 60000,
                 System.currentTimeMillis() + 60000, ServerScope.global())));
         befehl.ausfuehren(sender(), new String[]{"timeout", "Ziel", "dauer=perm"});
@@ -237,7 +237,7 @@ class PunishEditDauerPermTest {
     @DisplayName("S1-08: /punish edit mute-ip 1.2.3.4 dauer=perm → perm-nicht-erlaubt")
     void editMuteIpDauerPermMeldetPermNichtErlaubt() {
         PunishEditCommand befehl = bauen(mock(PlayerCache.class));
-        when(ipMuteService.findeAbdeckend(eq("1.2.3.4"), any())).thenReturn(Optional.of(new IpMuteRecord(
+        when(ipMuteService.finden(eq("1.2.3.4"), any())).thenReturn(Optional.of(new IpMuteRecord(
                 "1.2.3.4", "Spam", "Mod", System.currentTimeMillis() - 60000,
                 System.currentTimeMillis() + 60000, ServerScope.global())));
         befehl.ausfuehren(sender(), new String[]{"mute-ip", "1.2.3.4", "dauer=perm"});
@@ -249,7 +249,7 @@ class PunishEditDauerPermTest {
     @DisplayName("S1-08: /punish edit timeout-ip 1.2.3.4 dauer=perm → perm-nicht-erlaubt")
     void editTimeoutIpDauerPermMeldetPermNichtErlaubt() {
         PunishEditCommand befehl = bauen(mock(PlayerCache.class));
-        when(ipTimeoutService.findeAbdeckend(eq("1.2.3.4"), any())).thenReturn(
+        when(ipTimeoutService.finden(eq("1.2.3.4"), any())).thenReturn(
                 Optional.of(new IpTimeoutRecord(
                         "1.2.3.4", "Spam", "Mod", System.currentTimeMillis() - 60000,
                         System.currentTimeMillis() + 60000, ServerScope.global())));

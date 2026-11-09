@@ -362,6 +362,7 @@ public final class PunishVelocity {
                     historyRepository.anonymisiereAbgelaufeneIps(jetzt,
                             config.ipAufbewahrungTage() * 86_400_000L);
                     playerCache.sweepAbgelaufeneIps();
+                    strafListener.bereinigeAltWacheCooldowns(jetzt);
                     verstossService.bereinigeAlleVerfallenen();
                     verpasstRepo.beschneidenAelterAls(jetzt - VERPASST_RETENTION_MILLIS);
                 } catch (Exception e) {

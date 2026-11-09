@@ -242,7 +242,9 @@ public final class ReportsCommand extends PunishCommand {
                     Map.of("id", String.valueOf(id.get())));
             return;
         }
-        messageService.senden(sender, MessageKeys.REPORT_CLOSE_ERFOLG, Map.of(
+        String schluessel = status == ReportStatus.ANGENOMMEN
+                ? MessageKeys.REPORT_ACCEPT_ERFOLG : MessageKeys.REPORT_CLOSE_ERFOLG;
+        messageService.senden(sender, schluessel, Map.of(
                 "id", String.valueOf(id.get()),
                 "spieler", geschlossen.get().zielName(),
                 "status", geschlossen.get().status().name()));

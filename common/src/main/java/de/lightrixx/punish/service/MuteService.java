@@ -149,7 +149,7 @@ public final class MuteService {
         platzhalter.put("scope", wirksam.anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zielInformieren(zielUuid, MessageKeys.ZIEL_GEMUTET, platzhalter);
+        zielInformieren(zielUuid, MessageKeys.ZIEL_GEMUTET, platzhalter, wirksam);
 
         try {
             historyService.hinzufuegen(HistoryType.MUTE, ausfuehrer, zielUuid, zielName, grund, ablaufAm,
@@ -204,7 +204,7 @@ public final class MuteService {
         platzhalter.put("scope", entfernt.get().scope().anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zielInformieren(zielUuid, MessageKeys.ZIEL_ENTMUTET, platzhalter);
+        zielInformieren(zielUuid, MessageKeys.ZIEL_ENTMUTET, platzhalter, entfernt.get().scope());
 
         try {
             historyService.hinzufuegen(HistoryType.UNMUTE, ausfuehrer, zielUuid, zielName,
@@ -254,7 +254,8 @@ public final class MuteService {
             return Optional.empty();
         }
 
-        Optional<MuteRecord> alt = muteRepository.findeAbdeckend(zielUuid, scopeSelektor, jetzt);
+        Optional<MuteRecord> alt = muteRepository.finden(zielUuid, scopeSelektor)
+                .filter(eintrag -> eintrag.istAktiv(jetzt));
         if (alt.isEmpty()) {
             return Optional.empty();
         }
@@ -278,7 +279,7 @@ public final class MuteService {
         platzhalter.put("scope", neu.scope().anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zielInformieren(zielUuid, MessageKeys.ZIEL_MUTE_BEARBEITET, platzhalter);
+        zielInformieren(zielUuid, MessageKeys.ZIEL_MUTE_BEARBEITET, platzhalter, neu.scope());
 
         try {
             historyService.hinzufuegen(HistoryType.MUTE_EDIT, ausfuehrer, zielUuid, zielName,
@@ -382,7 +383,7 @@ public final class MuteService {
         for (MuteRecord record : gesetzt) {
             Map<String, String> einzel = new HashMap<>(platzhalter);
             einzel.put("spieler", record.spielerName());
-            zielInformieren(record.spielerUuid(), MessageKeys.ZIEL_GEMUTET, einzel);
+            zielInformieren(record.spielerUuid(), MessageKeys.ZIEL_GEMUTET, einzel, record.scope());
             benachrichtige(record.spielerUuid());
         }
         return new MassenErgebnis(gesetzt.size(), gekuerzt);
@@ -672,17 +673,20 @@ public final class MuteService {
         return anzahl;
     }
 
-    private void zielInformieren(UUID zielUuid, String schluessel, Map<String, String> platzhalter) {
+    private void zielInformieren(UUID zielUuid, String schluessel, Map<String, String> platzhalter,
+                                 ServerScope scope) {
         if (!verzeichnis.darfDirektAusfuehren()) {
 
             try {
-                taskScheduler.aufgabe(() -> zielInformieren(zielUuid, schluessel, platzhalter));
+                taskScheduler.aufgabe(() -> zielInformieren(zielUuid, schluessel, platzhalter, scope));
             } catch (IllegalStateException e) {
                 LOG.debug(
                         "Ziel-Info nach Shutdown verworfen für {}", zielUuid);
             }
             return;
         }
-        messageService.anSpieler(zielUuid, schluessel, platzhalter, verzeichnis);
+        if (scope.typ() != ServerScope.Typ.SERVER || scope.server().equalsIgnoreCase(verzeichnis.serverName(zielUuid))) {
+            messageService.anSpieler(zielUuid, schluessel, platzhalter, verzeichnis);
+        }
     }
 }

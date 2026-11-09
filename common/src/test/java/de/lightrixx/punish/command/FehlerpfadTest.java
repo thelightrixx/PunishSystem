@@ -110,6 +110,24 @@ class FehlerpfadTest {
     }
 
     @Test
+    void erfolgreicherStillerMuteWirdDemAusfuehrendenBestaetigt() {
+        UUID uuid = UUID.randomUUID();
+        var nachrichten = mock(MessageService.class);
+        var mutes = mock(MuteService.class);
+        var sender = sender();
+        var scope = ServerScope.server("lobby");
+        when(mutes.muten(eq(uuid), eq("Ziel"), eq(600_000L), eq("Spam"), anyString(),
+                eq(scope), anyString(), eq(true), eq(sender))).thenReturn(true);
+        var befehl = new MuteCommand(nachrichten, config(), neutralerSchutz(), cacheMit(uuid),
+                mutes, new TimeParser(), mock(de.lightrixx.punish.core.AuftragsPlaner.class), leeresVerzeichnis());
+
+        befehl.ausfuehren(sender, new String[]{"Ziel", "10m", "Spam", "--lobby", "-s"});
+
+        verify(nachrichten).senden(sender, MessageKeys.STRAFE_BESTAETIGT,
+                Map.of("typ", "Mute", "spieler", "Ziel", "scope", "lobby"));
+    }
+
+    @Test
     @DisplayName("A-003: Fehler beim inneren Scheduler meldet aktion-fehlgeschlagen")
     @SuppressWarnings("unchecked")
     void innererSchedulerFehlerMeldetFehler() {

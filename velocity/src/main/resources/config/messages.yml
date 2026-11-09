@@ -76,6 +76,7 @@ messages:
   reload-fehler: "<red>Beim Neuladen der Konfiguration ist ein Fehler aufgetreten. Details in der Konsole."
   reload-laeuft-bereits: "<yellow>Es läuft bereits ein Reload – bitte kurz warten."
   aktion-fehlgeschlagen: "<red>Die Aktion konnte nicht ausgeführt werden. Details in der Konsole."
+  strafe-bestaetigt: "<green>%typ% für <white>%spieler% <green>verhängt (Scope: <white>%scope%<green>)."
 
   # Version
   punish-version: "<gray>PunishSystem <white>%version% <gray>by <white>lightrixx"
@@ -218,6 +219,7 @@ messages:
   unmute-erfolg: "<green>Der Mute von <white>%spieler% <green>wurde aufgehoben."
   unfreeze-erfolg: "<green>Der Freeze von <white>%spieler% <green>wurde aufgehoben."
   scope-unbekannt-warnung: "<yellow>Warnung: <white>%scope% <yellow>ist kein bekannter Server – die Strafe wirkt dort ggf. nirgends (Tippfehler?). Bekannt: <white>%bekannt%"
+  scope-ungueltig: "<red>Ungültiges Scope-Flag <white>%flag%<red>. Gib am Ende genau einen Scope an, z. B. --global oder --server=lobby."
   scope-abdeckend-hinweis: "<yellow>Hinweis: <white>%spieler% <yellow>ist in einem anderen Scope weiter aktiv (<white>%scope%<yellow>). Nutze den passenden Scope (z. B. --global), siehe /punish-status bzw. /punish-history."
 
   # Punish Status Ansicht (nur aktive Strafen)
@@ -272,6 +274,7 @@ messages:
   reports-eintrag: "<gray>#%id% <white>%spieler% <gray>von %reporter% | %grund% <gray>(%server%, %datum%)"
   report-info: "<yellow>Report <white>#%id% <yellow>%status%<newline><gray>Ziel: <white>%spieler%<newline><gray>Reporter: <white>%reporter%<newline><gray>Grund: <white>%grund%<newline><gray>Server: <white>%server%<newline><gray>Erstellt: <white>%datum%"
   report-close-erfolg: "<green>Report <white>#%id% <green>wurde als <white>%status% <green>geschlossen."
+  report-accept-erfolg: "<green>Du hast Report <white>#%id% <green>übernommen (Status: <white>%status%<green>)."
   report-delete-erfolg: "<green>Report <white>#%id% <green>wurde gelöscht."
   report-bearbeitet: "<yellow>Dein Report <white>#%id% <yellow>gegen <white>%spieler% <yellow>wurde bearbeitet (Status: <white>%status%<yellow>)."
 

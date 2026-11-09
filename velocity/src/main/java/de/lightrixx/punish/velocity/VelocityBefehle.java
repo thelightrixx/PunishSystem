@@ -513,15 +513,7 @@ public final class VelocityBefehle {
                             if (!befehl.sichtbarFuer(sender)) {
                                 return builder.buildFuture();
                             }
-                            String rest;
-                            try {
-                                rest = ctx.getArgument("rest", String.class);
-                            } catch (Exception e) {
-                                rest = "";
-                            }
-                            if (rest == null) {
-                                rest = "";
-                            }
+                            String rest = builder.getRemaining();
                             String[] teile = TabHinweis.teile(rest);
                             List<String> vorschlaege;
                             try {
@@ -565,7 +557,8 @@ public final class VelocityBefehle {
                             if (alle.isEmpty()) {
                                 return builder.buildFuture();
                             }
-                            String praefix = TabHinweis.praefixFuer(rest);
+                            var vorschlagsBuilder = builder.createOffset(
+                                    builder.getStart() + TabHinweis.praefixFuer(rest).length());
                             for (String vorschlag : alle) {
                                 if (vorschlag == null) {
                                     continue;
@@ -577,13 +570,13 @@ public final class VelocityBefehle {
                                     org.slf4j.LoggerFactory.getLogger(VelocityBefehle.class).debug("Tab-Complete Tooltip fehlgeschlagen.", e);
                                 }
                                 if (hinweis == null || hinweis.isBlank()) {
-                                    builder.suggest(praefix + vorschlag);
+                                    vorschlagsBuilder.suggest(vorschlag);
                                 } else {
                                     final String text = hinweis;
-                                    builder.suggest(praefix + vorschlag, () -> text);
+                                    vorschlagsBuilder.suggest(vorschlag, () -> text);
                                 }
                             }
-                            return builder.buildFuture();
+                            return vorschlagsBuilder.buildFuture();
                         })
                         .executes(ctx -> {
                             BefehlsSender sender = new VelocitySender(ctx.getSource());
@@ -714,11 +707,12 @@ public final class VelocityBefehle {
         if (!mitScope) {
             return teile.toArray(new String[0]);
         }
-        if (teile.isEmpty() || !teile.get(teile.size() - 1).startsWith("--")) {
-            String standard = standardFlag(sender);
-            if (standard != null) {
-                teile.add(standard);
-            }
+        int letztes = teile.size() - 1;
+        while (letztes >= 0 && de.lightrixx.punish.command.ScopeParser.istSilentFlag(teile.get(letztes))) {
+            letztes--;
+        }
+        if (letztes < 0 || !teile.get(letztes).startsWith("--")) {
+            teile.add(standardFlag(sender));
         }
         return teile.toArray(new String[0]);
     }
@@ -735,7 +729,7 @@ public final class VelocityBefehle {
                     && !herkunft.equalsIgnoreCase(ServerScope.UNBEKANNT_WERT)
                     && !herkunft.equalsIgnoreCase("konsole")
                     && ServerScope.istGueltigerServerName(herkunft)) {
-                return "--" + herkunft.trim().toLowerCase(java.util.Locale.ROOT);
+                return ServerScope.server(herkunft).alsFlag();
             }
         }
         return "--global";

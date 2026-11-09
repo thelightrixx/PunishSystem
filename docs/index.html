@@ -886,7 +886,7 @@ details>div{padding:14px 18px 2px}
   <p class="lead">Ein Scope legt fest, wo eine Strafe gilt: im ganzen Netzwerk oder nur auf einem Server.</p>
 
   <h2>Die Scope-Flags</h2>
-  <p>Der Scope wird als Flag ans Ende des Befehls angegeben.</p>
+  <p>Setze das Scope-Flag ans Ende des Befehls. Ein unvollständiges Flag wie <code>--server=</code> oder widersprüchliche Flags wie <code>--global --survival</code> führen zu einer Fehlermeldung.</p>
   <div class="tbl"><table>
     <thead><tr><th>Flag</th><th>Wirkung</th></tr></thead>
     <tbody>
@@ -1061,6 +1061,7 @@ details>div{padding:14px 18px 2px}
 
   <h2>Wer bekommt die Team-Meldungen?</h2>
   <p>Alle mit der Permission <code>punish.message.all-punishes</code>. Welche Ereignisse gemeldet werden, wird in der <a href="#/config-texte">broadcasts.yml</a> eingestellt.</p>
+  <p>Bei <code>/ban</code>, <code>/permabann</code>, <code>/mute</code>, <code>/timeout</code> und <code>/freeze</code> erhält der Ausführende eine direkte Bestätigung mit dem Scope, wenn er keine Team-Meldung sieht, etwa bei <code>-s</code>.</p>
 </section>
 
 <section class="page" data-id="verstoesse" data-group="Moderation" data-title="Verstöße und Auto-Bann">
@@ -1213,7 +1214,7 @@ details>div{padding:14px 18px 2px}
     <thead><tr><th>Status</th><th>Gesetzt mit</th><th>Bedeutung</th></tr></thead>
     <tbody>
       <tr><td>offen</td><td>(automatisch)</td><td>Neu eingegangen</td></tr>
-      <tr><td>angenommen</td><td><code>accept</code></td><td>Ein Teammitglied kümmert sich darum. Der Report zählt weiter als offen.</td></tr>
+      <tr><td>angenommen</td><td><code>accept</code></td><td>Das Teammitglied erhält eine Bestätigung für die Übernahme. Der Report zählt weiter als offen.</td></tr>
       <tr><td>abgelehnt</td><td><code>deny</code></td><td>Keine Maßnahme nötig</td></tr>
       <tr><td>erledigt</td><td><code>close</code></td><td>Abgeschlossen</td></tr>
     </tbody>
@@ -1577,6 +1578,7 @@ details>div{padding:14px 18px 2px}
 /verstoss clear &lt;Spieler&gt; [-s]</pre>
     <pre data-lang="cmd">/verstoss add Notch Spamming level=high
 /verstoss remove Notch 1</pre>
+    <p>Tippe nach dem Grund ein Leerzeichen und drücke Tab. Die Vorschläge <code>level=low</code>, <code>level=medium</code> und <code>level=high</code> erscheinen auch, wenn du nur <code>l</code> eingibst. Beim Übernehmen bleibt der Grund erhalten.</p>
     <p>Entweder <code>punish.verstoss</code> oder das jeweilige Unterrecht <code>punish.verstoss.add</code>, <code>punish.verstoss.remove</code> bzw. <code>punish.verstoss.clear</code> genügt. Einen <code>edit</code>-Unterbefehl gibt es nicht; Änderungen laufen über <a href="#/befehle-bearbeiten"><code>/punish-edit</code></a>. Ohne Stufenangabe gilt die konfigurierte Standardstufe <code>medium</code>. Alternativ darf die Stufe direkt nach dem Spielernamen stehen: <code>/verstoss add Notch high Cheating</code>. Bei aktivem Auto-Bann werden weitere manuelle Verstöße abgelehnt.</p>
   </article>
 
@@ -1627,6 +1629,7 @@ details>div{padding:14px 18px 2px}
 
   <h2>Die Filter</h2>
   <p>Mit <code>filter:</code> wird die Ausgabe auf eine Art eingeschränkt. Ohne Filter gilt <code>all</code>. Daneben verstehen beide Befehle die Schlüssel <code>typ:</code> (wie <code>filter:</code>), <code>player:</code> (auch <code>spieler:</code>, <code>target:</code>, <code>ziel:</code>, <code>p:</code>) und <code>page:</code> (auch <code>seite:</code>).</p>
+  <p>Ohne Scope-Flag zeigen beide Befehle Einträge aus allen Scopes. Bei Strafen mit Scope beschränkt <code>--global</code> die Ausgabe auf global gespeicherte Einträge.</p>
   <div class="tbl"><table>
     <thead><tr><th>Filter</th><th>Zeigt</th></tr></thead>
     <tbody>
@@ -1673,6 +1676,7 @@ details>div{padding:14px 18px 2px}
       <tr><td><code>note</code></td><td>Eine Notiz</td><td>Ja</td></tr>
     </tbody>
   </table></div>
+  <p>Bei Banns, Mutes, Timeouts und ihren IP-Varianten wählen <code>show</code> und die Bearbeitung den Eintrag im angegebenen Scope. Der Bearbeiten-Knopf übernimmt den Scope aus dem angezeigten Eintrag. Ergänze den Grund vor dem Scope-Flag.</p>
 
   <h2>Die Felder</h2>
   <div class="tbl"><table>
@@ -1683,6 +1687,7 @@ details>div{padding:14px 18px 2px}
       <tr><td><code>dauer=</code> (auch <code>duration=</code>, <code>zeit=</code>, <code>time=</code>)</td><td>Neue Restdauer ab dem Bearbeitungszeitpunkt, zum Beispiel <code>7d</code>. Ohne Daueränderung bleibt der bisherige Ablauf erhalten.</td><td>Bann, Mute, Timeout und ihre IP-Varianten</td></tr>
     </tbody>
   </table></div>
+  <p>Beim Bearbeiten eines Verstoßes zeigt Tab die drei <code>level=</code>-Vorschläge nach einem Leerzeichen hinter der Nummer oder hinter dem Grund. Für eine reine Stufenänderung reicht die Nummer mit <code>level=</code> und der neuen Stufe.</p>
   <div class="callout"><div><span class="ttl">Nachweis der Änderung</span><p>Datum und Ausführer sind keine Eingabefelder. Die Bearbeitung erzeugt einen History-Eintrag; bei zeitlichen Strafen wird der aktive Datensatz mit Bearbeiter und Bearbeitungszeit neu gesetzt. Frühere History-Einträge bleiben erhalten.</p></div></div>
 
   <h2>Beispiele</h2>
@@ -1711,7 +1716,7 @@ details>div{padding:14px 18px 2px}
     <pre data-lang="cmd">/punish-undo [Spieler]</pre>
     <pre data-lang="cmd">/punish-undo
 /punish-undo Notch</pre>
-    <p>Zurückgenommen werden Bann (auch Permabann und Auto-Bann), Mute, Timeout, Freeze, IP-Bann, IP-Mute, IP-Timeout und Verwarnungen. Bei Warns wird ein vorhandener Eintrag mit gleichem Grund und höchstens 60 Sekunden Zeitabweichung zum History-Eintrag gesucht; das ist keine Frist seit der Verwarnung. Zusätzlich ist das Recht des Gegenbefehls nötig, etwa <code>punish.pardon</code>. Kicks, Verstöße, Notizen und abgelaufene Einträge sind nicht zurücknehmbar. Beim Aufheben eines Auto-Banns bleiben die Verstoß-Punkte bestehen.</p>
+    <p>Zurückgenommen werden Bann (auch Permabann und Auto-Bann), Mute, Timeout, Freeze, IP-Bann, IP-Mute, IP-Timeout und Verwarnungen. Bei Warns sucht der Befehl einen Eintrag mit gleichem Ausführer und Grund. Die Zeitstempel von Warn und History-Eintrag dürfen dabei höchstens 60 Sekunden auseinanderliegen. Zusätzlich ist das Recht des Gegenbefehls nötig, etwa <code>punish.pardon</code>. Kicks, Verstöße, Notizen und abgelaufene Einträge sind nicht zurücknehmbar. Beim Aufheben eines Auto-Banns bleiben die Verstoß-Punkte bestehen.</p>
   </article>
 
   <article class="cmd-card" data-cmd="/punish-stats" data-alias="/psstats" data-perm="punish.stats" data-scope="nein">
@@ -2368,6 +2373,7 @@ vorschlaege:
   kein-recht: "&lt;red&gt;Dazu hast du keine Berechtigung."
   bereits-gebannt: "&lt;red&gt;Der Spieler &lt;white&gt;%spieler% &lt;red&gt;ist bereits gebannt."
   ziel-warn: "&lt;yellow&gt;Du wurdest von &lt;white&gt;%ausfuehrer% &lt;yellow&gt;verwarnt. Grund: &lt;white&gt;%grund%"</pre>
+  <p><code>strafe-bestaetigt</code> ist die direkte Bestätigung einer verhängten Strafe. <code>scope-ungueltig</code> meldet einen Syntaxfehler beim Scope und setzt das betroffene Flag als <code>%flag%</code> ein. <code>report-accept-erfolg</code> bestätigt die Übernahme eines Reports.</p>
   <p>Verfügbare Platzhalter: <code>%spieler%</code>, <code>%dauer%</code>, <code>%grund%</code>, <code>%anzahl%</code>, <code>%max%</code>, <code>%min%</code>, <code>%ip%</code>, <code>%id%</code>, <code>%text%</code>, <code>%ziel%</code>, <code>%filter%</code>, <code>%seite%</code>, <code>%seiten%</code>, <code>%typ%</code>, <code>%datum%</code>, <code>%ablauf%</code>, <code>%ausfuehrer%</code>, <code>%bearbeiter%</code>, <code>%reporter%</code>, <code>%server%</code>, <code>%status%</code>, <code>%level%</code>, <code>%punkte%</code>, <code>%stufe%</code>, <code>%wort%</code>, <code>%version%</code>, <code>%aktuell%</code>, <code>%channel%</code>, <code>%detail%</code>, <code>%scope%</code>, <code>%bekannt%</code>, <code>%zuletzt%</code>, <code>%banstatus%</code>, <code>%rest%</code>, <code>%ipstatus%</code>, <code>%banns%</code>, <code>%mutes%</code>, <code>%timeouts%</code>, <code>%plattform%</code>, <code>%warnungen%</code>, <code>%verbleibend%</code>, <code>%nummer%</code>, <code>%befehl%</code>, <code>%nutzung%</code>, <code>%kandidaten%</code>, <code>%quelle%</code>, <code>%name%</code>, <code>%ausstehend%</code>, <code>%verstoesse%</code>, <code>%warns%</code>, <code>%alts%</code>, <code>%label%</code>, <code>%kanal%</code>. Welche in einer Meldung funktionieren, zeigen die vorhandenen Beispiele.</p>
 
   <h2>screens.yml</h2>

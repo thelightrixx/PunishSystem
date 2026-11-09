@@ -40,6 +40,7 @@ public final class MessageKeys {
     public static final String RELOAD_TEILWEISE = "reload-teilweise";
     public static final String RELOAD_FEHLER = "reload-fehler";
     public static final String AKTION_FEHLGESCHLAGEN = "aktion-fehlgeschlagen";
+    public static final String STRAFE_BESTAETIGT = "strafe-bestaetigt";
     public static final String RELOAD_LAEUFT_BEREITS = "reload-laeuft-bereits";
     public static final String UPDATE_AKTUELL = "update-aktuell";
     public static final String UPDATE_VERFUEGBAR = "update-verfuegbar";
@@ -112,6 +113,7 @@ public final class MessageKeys {
     public static final String REPORTS_MEHR = "reports-mehr";
     public static final String REPORT_INFO = "report-info";
     public static final String REPORT_CLOSE_ERFOLG = "report-close-erfolg";
+    public static final String REPORT_ACCEPT_ERFOLG = "report-accept-erfolg";
     public static final String REPORT_DELETE_ERFOLG = "report-delete-erfolg";
     public static final String REPORT_BEARBEITET = "report-bearbeitet";
     public static final String NOTE_NICHT_GEFUNDEN = "note-nicht-gefunden";
@@ -246,6 +248,7 @@ public final class MessageKeys {
     public static final String IP_GETEILT_BLOCK = "ip-geteilt-block";
 
     public static final String SCOPE_UNBEKANNT_WARNUNG = "scope-unbekannt-warnung";
+    public static final String SCOPE_UNGUELTIG = "scope-ungueltig";
 
     public static final String SCOPE_ABDECKEND_HINWEIS = "scope-abdeckend-hinweis";
 

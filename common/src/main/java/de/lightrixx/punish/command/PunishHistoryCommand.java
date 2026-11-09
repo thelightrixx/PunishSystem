@@ -9,6 +9,7 @@ import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.CachedPlayer;
 import de.lightrixx.punish.model.HistoryEntry;
 import de.lightrixx.punish.model.HistoryType;
+import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.service.HistoryService;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
@@ -68,11 +69,12 @@ public final class PunishHistoryCommand extends PunishCommand {
         if (sender == null) {
             return false;
         }
-        if (istSelbstAnfrage(sender, args)) {
+        var zielTyp = PunishmentsQueryParser.parsen(abfrageScope(args).bereinigteArgs()).query().zielTyp();
+        if (sender.istSpieler() && zielTyp == PunishmentsQuery.ZielTyp.SELF) {
             return sender.hatRecht(Permissions.PUNISH_OWN.node())
                     || sender.hatRecht(Permissions.PUNISH_HISTORY.node());
         }
-        if (istServerAnfrage(args)) {
+        if (zielTyp == PunishmentsQuery.ZielTyp.SERVER) {
             return sender.hatRecht(Permissions.PUNISH_HISTORY_SERVER.node());
         }
         return sender.hatRecht(Permissions.PUNISH_HISTORY.node());
@@ -81,52 +83,17 @@ public final class PunishHistoryCommand extends PunishCommand {
     @Override
     public boolean sichtbarFuer(BefehlsSender sender) {
         return hatRecht(sender, new String[0])
-                || (sender != null && sender.hatRecht(Permissions.PUNISH_OWN.node()));
-    }
-
-    private boolean istSelbstAnfrage(BefehlsSender sender, String[] args) {
-        if (sender == null || !sender.istSpieler()) {
-            return false;
-        }
-        return PunishmentsQueryParser.parsen(args).query().zielTyp() == PunishmentsQuery.ZielTyp.SELF;
-    }
-
-    private boolean istServerAnfrage(String[] args) {
-        try {
-            return PunishmentsQueryParser.parsen(args).query().zielTyp() == PunishmentsQuery.ZielTyp.SERVER;
-        } catch (Exception e) {
-            return false;
-        }
+                || (sender != null && sender.hatRecht(Permissions.PUNISH_HISTORY_SERVER.node()));
     }
 
     @Override
     public void ausfuehren(BefehlsSender sender, String[] args) {
-        String scopeFilter = null;
-        String[] queryArgs = args;
-        if (args != null && args.length > 0) {
-            String letztes = args[args.length - 1];
-            if (letztes != null && letztes.startsWith("--") && letztes.length() >= 3) {
-                String rest = letztes.substring(2).trim().toLowerCase(java.util.Locale.ROOT);
-                if (rest.equals("global") || rest.equals("unbekannt")) {
-                    scopeFilter = rest;
-                    queryArgs = java.util.Arrays.copyOf(args, args.length - 1);
-                } else if (rest.startsWith("server=")) {
-                    String name = de.lightrixx.punish.model.ServerScope.normalisiereServerName(
-                            rest.substring("server=".length()));
-                    if (name != null) {
-                        scopeFilter = name;
-                        queryArgs = java.util.Arrays.copyOf(args, args.length - 1);
-                    }
-                } else {
-                    String name = de.lightrixx.punish.model.ServerScope.normalisiereServerName(rest);
-                    if (name != null) {
-                        scopeFilter = name;
-                        queryArgs = java.util.Arrays.copyOf(args, args.length - 1);
-                    }
-                }
-            }
+        var scope = abfrageScope(args);
+        if (blockiereBeiUngueltigemScope(sender, scope)) {
+            return;
         }
-        var parsed = PunishmentsQueryParser.parsen(queryArgs);
+        String scopeFilter = scope.hatteFlag() ? scope.scope().speicherwert() : null;
+        var parsed = PunishmentsQueryParser.parsen(scope.bereinigteArgs());
         if (parsed.unbekannterFilter() != null) {
             messageService.senden(sender, MessageKeys.PUNISH_HISTORY_FILTER_UNGUELTIG,
                     Map.of("filter", parsed.unbekannterFilter()));
@@ -170,10 +137,7 @@ public final class PunishHistoryCommand extends PunishCommand {
         if (filter == null) {
             return true;
         }
-        if (eintragScope == null || eintragScope.isBlank()) {
-            eintragScope = de.lightrixx.punish.model.ServerScope.UNBEKANNT_WERT;
-        }
-        return eintragScope.trim().equalsIgnoreCase(filter);
+        return ServerScope.ausSpeicherwert(eintragScope).speicherwert().equals(filter);
     }
 
     private void spielerAnsicht(BefehlsSender sender, PunishmentsQuery query, UUID zielUuid, String zielName,
@@ -190,7 +154,8 @@ public final class PunishHistoryCommand extends PunishCommand {
                 .sorted(NEUESTE_ZUERST)
                 .toList();
 
-        sendeErgebnis(sender, query, zielName, verlauf, seitenGroesse, "player:" + zielName);
+        String zielToken = query.zielTyp() == PunishmentsQuery.ZielTyp.SELF ? "self" : "player:" + zielName;
+        sendeErgebnis(sender, query, zielName, verlauf, seitenGroesse, zielToken, scopeFilter);
     }
 
     private void serverUebersicht(BefehlsSender sender, PunishmentsQuery query, String scopeFilter) {
@@ -203,11 +168,12 @@ public final class PunishHistoryCommand extends PunishCommand {
                 .sorted(NEUESTE_ZUERST)
                 .toList();
 
-        sendeErgebnis(sender, query, "Server", verlauf, seitenGroesse, "player:server");
+        sendeErgebnis(sender, query, "Server", verlauf, seitenGroesse, "server", scopeFilter);
     }
 
     private void sendeErgebnis(BefehlsSender sender, PunishmentsQuery query, String zielName,
-                               List<HistoryEntry> verlauf, int seitenGroesse, String spielerToken) {
+                               List<HistoryEntry> verlauf, int seitenGroesse, String spielerToken,
+                               String scopeFilter) {
         int sichereGroesse = Math.max(1, seitenGroesse);
         int seiten = Math.max(1, (verlauf.size() + sichereGroesse - 1) / sichereGroesse);
         int seite = Math.min(Math.max(1, query.seite()), seiten);
@@ -236,24 +202,26 @@ public final class PunishHistoryCommand extends PunishCommand {
             }
         }
         if (seiten > 1) {
-            zeilen.add(baueNavigation(query, spielerToken, seite, seiten));
+            zeilen.add(baueNavigation(query, spielerToken, scopeFilter, seite, seiten));
         }
         messageService.sendeBlock(sender, zeilen);
     }
 
-    private Component baueNavigation(PunishmentsQuery query, String spielerToken, int seite, int seiten) {
+    private Component baueNavigation(PunishmentsQuery query, String spielerToken, String scopeFilter,
+                                     int seite, int seiten) {
         String basis = "/punish-history filter:" + query.filter().name().toLowerCase(Locale.ROOT)
                 + " " + spielerToken + " page:";
+        String scope = scopeFilter == null ? "" : " " + ServerScope.ausSpeicherwert(scopeFilter).alsFlag();
         Component nav = Component.text("‹ Zurück", seite > 1 ? NamedTextColor.YELLOW : NamedTextColor.DARK_GRAY);
         if (seite > 1) {
-            String befehl = basis + (seite - 1);
+            String befehl = basis + (seite - 1) + scope;
             nav = nav.clickEvent(ClickEvent.runCommand(befehl))
                     .hoverEvent(HoverEvent.showText(Component.text(befehl, NamedTextColor.GRAY)));
         }
         nav = nav.append(Component.text("  |  Seite " + seite + "/" + seiten + "  |  ", NamedTextColor.GRAY));
         Component weiter = Component.text("Weiter ›", seite < seiten ? NamedTextColor.YELLOW : NamedTextColor.DARK_GRAY);
         if (seite < seiten) {
-            String befehl = basis + (seite + 1);
+            String befehl = basis + (seite + 1) + scope;
             weiter = weiter.clickEvent(ClickEvent.runCommand(befehl))
                     .hoverEvent(HoverEvent.showText(Component.text(befehl, NamedTextColor.GRAY)));
         }
@@ -272,9 +240,9 @@ public final class PunishHistoryCommand extends PunishCommand {
         ph.put("scope", eintrag.scope());
         ph.put("herkunft", eintrag.herkunft());
         Component zeile = messageService.komponenteOhnePraefix(MessageKeys.HISTORY_EINTRAG, ph);
+        Component hover = messageService.komponenteOhnePraefix(MessageKeys.HISTORY_HOVER, ph);
+        zeile = zeile.hoverEvent(HoverEvent.showText(hover));
         if (eintrag.istEffektivAktiv(jetzt)) {
-            Component hover = messageService.komponenteOhnePraefix(MessageKeys.HISTORY_HOVER, ph);
-            zeile = zeile.hoverEvent(HoverEvent.showText(hover));
             String klick = klickBefehlFuer(sender, eintrag);
             if (klick != null) {
                 zeile = zeile.clickEvent(ClickEvent.suggestCommand(klick));
@@ -285,37 +253,38 @@ public final class PunishHistoryCommand extends PunishCommand {
 
     private String klickBefehlFuer(BefehlsSender sender, HistoryEntry eintrag) {
         String ziel = eintrag.ziel();
+        String scope = " " + eintrag.scopeAlsObjekt().alsFlag();
         if (ziel == null || !ziel.matches("[A-Za-z0-9_]{3,16}")) {
             if ((eintrag.typ() == HistoryType.BAN_IP || eintrag.typ() == HistoryType.IP_BAN_EDIT)
                     && sender.hatRecht(Permissions.PUNISH_UNBANIP.node())
                     && ziel != null && !ziel.isBlank()) {
-                return "/unban-ip " + ziel;
+                return "/unban-ip " + ziel + scope;
             }
             if ((eintrag.typ() == HistoryType.IP_MUTE || eintrag.typ() == HistoryType.IP_MUTE_EDIT)
                     && sender.hatRecht(Permissions.PUNISH_UNMUTEIP.node())
                     && ziel != null && !ziel.isBlank()) {
-                return "/unmute-ip " + ziel;
+                return "/unmute-ip " + ziel + scope;
             }
             if ((eintrag.typ() == HistoryType.IP_TIMEOUT || eintrag.typ() == HistoryType.IP_TIMEOUT_EDIT)
                     && sender.hatRecht(Permissions.PUNISH_UNTIMEOUTIP.node())
                     && ziel != null && !ziel.isBlank()) {
-                return "/untimeout-ip " + ziel;
+                return "/untimeout-ip " + ziel + scope;
             }
             return null;
         }
         return switch (eintrag.typ()) {
             case BAN, BAN_EDIT, PERMABANN, AUTO_BANN ->
                     sender.hatRecht(Permissions.PUNISH_PARDON.node())
-                            ? "/pardon " + ziel + " --" + eintrag.scopeAlsObjekt().speicherwert() : null;
+                            ? "/pardon " + ziel + scope : null;
             case BAN_ALL, PARDON_ALL, KICK_ALL, IP_KICK, MUTE_ALL, UNMUTE_ALL, TIMEOUT_ALL,
                     UNTIMEOUT_ALL ->
                     null;
             case MUTE, MUTE_EDIT ->
-                    sender.hatRecht(Permissions.PUNISH_UNMUTE.node()) ? "/unmute " + ziel : null;
+                    sender.hatRecht(Permissions.PUNISH_UNMUTE.node()) ? "/unmute " + ziel + scope : null;
             case TIMEOUT, TIMEOUT_EDIT ->
-                    sender.hatRecht(Permissions.PUNISH_UNTIMEOUT.node()) ? "/untimeout " + ziel : null;
+                    sender.hatRecht(Permissions.PUNISH_UNTIMEOUT.node()) ? "/untimeout " + ziel + scope : null;
             case FREEZE ->
-                    sender.hatRecht(Permissions.PUNISH_UNFREEZE.node()) ? "/unfreeze " + ziel : null;
+                    sender.hatRecht(Permissions.PUNISH_UNFREEZE.node()) ? "/unfreeze " + ziel + scope : null;
             case WARN_ADD, WARN_EDIT, WARN_REMOVE ->
                     sender.hatRecht(Permissions.PUNISH_WARN.node()) ? "/warn list " + ziel : null;
             default -> null;
@@ -469,12 +438,7 @@ public final class PunishHistoryCommand extends PunishCommand {
                 || sender.hatRecht(Permissions.PUNISH_HISTORY.node());
         Set<String> kombiniert = new LinkedHashSet<>();
         if (!darfFremd) {
-            kombiniert.add(praefix + "self");
-            return new ArrayList<>(kombiniert);
-        }
-        kombiniert.add(praefix + "self");
-        if (sender == null || sender.hatRecht(Permissions.PUNISH_HISTORY_SERVER.node())) {
-            kombiniert.add(praefix + "server");
+            return List.of();
         }
         for (String name : onlineTreffer(rest, 30)) {
             kombiniert.add(praefix + name);

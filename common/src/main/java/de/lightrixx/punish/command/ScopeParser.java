@@ -3,6 +3,7 @@ package de.lightrixx.punish.command;
 import de.lightrixx.punish.model.ServerScope;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -13,7 +14,12 @@ public final class ScopeParser {
     private ScopeParser() {
     }
 
-    public record Ergebnis(String[] bereinigteArgs, ServerScope scope, boolean hatteFlag, boolean silent) {
+    public record Ergebnis(String[] bereinigteArgs, ServerScope scope, boolean hatteFlag, boolean silent,
+                           String ungueltigesFlag) {
+        public Ergebnis(String[] bereinigteArgs, ServerScope scope, boolean hatteFlag, boolean silent) {
+            this(bereinigteArgs, scope, hatteFlag, silent, "");
+        }
+
         public Ergebnis(String[] bereinigteArgs, ServerScope scope, boolean hatteFlag) {
             this(bereinigteArgs, scope, hatteFlag, false);
         }
@@ -36,37 +42,50 @@ public final class ScopeParser {
                                   boolean unbekanntErlaubt) {
         Objects.requireNonNull(args, "args darf nicht null sein.");
         Objects.requireNonNull(standard, "standard darf nicht null sein.");
-        if (args.length == 0) {
-            return new Ergebnis(args, standard, false, false);
-        }
-
-        String[] aktuell = args;
+        int ende = args.length;
         ServerScope wirksam = standard;
         boolean hatteFlag = false;
         boolean silent = false;
-        while (aktuell.length > 0) {
-            String letztes = aktuell[aktuell.length - 1];
+        while (ende > 0) {
+            String letztes = args[ende - 1];
             if (istSilentFlag(letztes)) {
                 silent = true;
-                String[] bereinigt = new String[aktuell.length - 1];
-                System.arraycopy(aktuell, 0, bereinigt, 0, aktuell.length - 1);
-                aktuell = bereinigt;
+                ende--;
                 continue;
-            }
-            if (letztes == null || !letztes.startsWith("--") || letztes.length() < 3) {
-                break;
             }
             ServerScope scope = scopeAusFlag(letztes, bekannteServer, unbekanntErlaubt);
             if (scope == null) {
+                if ("--".equals(letztes) || istExpliziteScopeSyntax(letztes)
+                        || siehtNachScopeVersuchAus(letztes)) {
+                    return new Ergebnis(args, standard, false, silent, letztes);
+                }
                 break;
+            }
+            if (hatteFlag && !wirksam.equals(scope)) {
+                return new Ergebnis(args, standard, false, silent, letztes);
             }
             wirksam = scope;
             hatteFlag = true;
-            String[] bereinigt = new String[aktuell.length - 1];
-            System.arraycopy(aktuell, 0, bereinigt, 0, aktuell.length - 1);
-            aktuell = bereinigt;
+            ende--;
         }
-        return new Ergebnis(aktuell, wirksam, hatteFlag, silent);
+        for (int i = 0; i < ende; i++) {
+            String argument = args[i];
+            ServerScope scope = scopeAusFlag(argument, bekannteServer, unbekanntErlaubt);
+            if (istExpliziteScopeSyntax(argument) || (scope != null
+                    && istBekannterScopeFuerStrip(argument, scope, bekannteServer, unbekanntErlaubt))) {
+                return new Ergebnis(args, standard, false, silent, argument);
+            }
+        }
+        return new Ergebnis(ende == args.length ? args : Arrays.copyOf(args, ende), wirksam, hatteFlag, silent);
+    }
+
+    private static boolean istExpliziteScopeSyntax(String argument) {
+        if (!istScopeFlag(argument)) {
+            return false;
+        }
+        String normiert = argument.toLowerCase(Locale.ROOT);
+        return normiert.equals("--server") || normiert.startsWith("--server=")
+                || normiert.equals("--unbekannt");
     }
 
     public static SilentErgebnis parsenSilent(String[] args) {
@@ -224,23 +243,17 @@ public final class ScopeParser {
             List<String> server = new ArrayList<>();
             for (String roh : bekannteServer) {
                 String normiert = ServerScope.normalisiereServerName(roh);
-                if (normiert == null || server.contains(normiert)) {
+                if (normiert == null) {
                     continue;
                 }
-                String kandidat = "--" + normiert;
-                if (kandidat.toLowerCase(Locale.ROOT).startsWith(vergleich)) {
-                    server.add(normiert);
+                String kandidat = vergleich.startsWith("--server=") || normiert.equals("server")
+                        ? "--server=" + normiert : "--" + normiert;
+                if (kandidat.startsWith(vergleich) && !server.contains(kandidat)) {
+                    server.add(kandidat);
                 }
             }
             server.sort(String.CASE_INSENSITIVE_ORDER);
-            for (String name : server) {
-                ergebnis.add("--" + name);
-            }
-        }
-
-        if ("--server=".startsWith(vergleich) && !ergebnis.contains("--server=")) {
-
-            ergebnis.add("--server=");
+            ergebnis.addAll(server);
         }
         return ergebnis;
     }

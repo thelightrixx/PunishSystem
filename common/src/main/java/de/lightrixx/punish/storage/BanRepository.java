@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public final class BanRepository {
@@ -246,7 +247,9 @@ public final class BanRepository {
 
     public BannPersistenz bannenWennFreiDauerhaft(BanRecord bann) {
         Objects.requireNonNull(bann, "Der Bann darf nicht null sein.");
-        StoreLock.LOCK.writeLock().lock();
+        if (!sperreNachSchreibqueue()) {
+            return BannPersistenz.FEHLER;
+        }
         try {
             long jetzt = System.currentTimeMillis();
             for (Map.Entry<StrafSchluessel, BanRecord> eintrag : banns.entrySet()) {
@@ -337,7 +340,9 @@ public final class BanRepository {
     public boolean entbannenDauerhaft(UUID spielerUuid, ServerScope scope, BanRecord erwartet) {
         Objects.requireNonNull(spielerUuid, "Die Spieler-UUID darf nicht null sein.");
         Objects.requireNonNull(scope, "Der Scope darf nicht null sein.");
-        StoreLock.LOCK.writeLock().lock();
+        if (!sperreNachSchreibqueue()) {
+            return false;
+        }
         try {
             StrafSchluessel key = StrafSchluessel.von(spielerUuid, scope);
             BanRecord entfernt = banns.get(key);
@@ -363,6 +368,22 @@ public final class BanRepository {
         } finally {
             StoreLock.LOCK.writeLock().unlock();
         }
+    }
+
+    private boolean sperreNachSchreibqueue() {
+        long frist = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        long verbleibend = frist - System.nanoTime();
+        while (verbleibend > 0 && ioExecutor.warteAufAbarbeitung(verbleibend, TimeUnit.NANOSECONDS)) {
+            var sperre = StoreLock.LOCK.writeLock();
+            sperre.lock();
+            if (!ioExecutor.hatAusstehendeAuftraege()) {
+                return true;
+            }
+            sperre.unlock();
+            verbleibend = frist - System.nanoTime();
+        }
+        LOG.warn("Dauerhafte Bann-Änderung abgebrochen: frühere Schreibaufträge noch nicht abgearbeitet.");
+        return false;
     }
 
     private void speichernDauerhaft() {

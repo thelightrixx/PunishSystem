@@ -630,16 +630,10 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             return spielerVorschlag(sender, aktuell);
         }
         if ("add".equals(sub)) {
-            if (aktuell.toLowerCase(Locale.ROOT).startsWith("level=")) {
-                return TabHinweis.filtere(List.of("level=low", "level=medium", "level=high"), aktuell);
+            List<String> gemischt = new ArrayList<>(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE);
+            if (args.length == 3 && !aktuell.toLowerCase(Locale.ROOT).startsWith("level=")) {
+                gemischt.addAll(grundFuer("verstoss"));
             }
-            if (args.length > 3) {
-                return darfSilent(sender) ? TabHinweis.filtere(List.of("-s"), aktuell) : List.of();
-            }
-            List<String> gemischt = new ArrayList<>(grundFuer("verstoss"));
-            gemischt.add("level=low");
-            gemischt.add("level=medium");
-            gemischt.add("level=high");
             if (darfSilent(sender)) {
                 gemischt.add("-s");
             }
@@ -787,7 +781,7 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
         if (aktuell.contains("=")) {
             String key = aktuell.substring(0, aktuell.indexOf('=')).toLowerCase(Locale.ROOT);
             if (key.equals("level") || key.equals("stufe")) {
-                return TabHinweis.filtere(List.of("level=low", "level=medium", "level=high"), aktuell);
+                return TabHinweis.filtere(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE, aktuell);
             }
             if (key.equals("dauer") || key.equals("duration") || key.equals("zeit")) {
                 List<String> vorschlaege = new ArrayList<>();
@@ -799,10 +793,21 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             return List.of();
         }
         if (args.length > 3) {
+            if ("verstoss".equalsIgnoreCase(typ) || "verstoß".equalsIgnoreCase(typ)) {
+                List<String> felder = new ArrayList<>(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE);
+                felder.add("grund=");
+                if (args.length == 4) {
+                    felder.addAll(grundFuer("verstoss"));
+                }
+                if (darfSilent(sender)) {
+                    felder.add("-s");
+                }
+                return TabHinweis.filtere(felder, aktuell);
+            }
             return endFlags(sender, aktuell);
         }
-        List<String> gemischt = new ArrayList<>(
-                List.of("dauer=", "grund=", "text=", "level=low", "level=medium", "level=high"));
+        List<String> gemischt = new ArrayList<>(List.of("dauer=", "grund=", "text="));
+        gemischt.addAll(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE);
         gemischt.addAll(grundFuer("ban"));
         gemischt.addAll(endFlags(sender, ""));
         return TabHinweis.filtere(gemischt, aktuell);

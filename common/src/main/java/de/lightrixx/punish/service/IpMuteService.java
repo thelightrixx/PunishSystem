@@ -161,7 +161,7 @@ public final class IpMuteService {
         platzhalter.put("scope", wirksam.anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zieleInformieren(kanonisch, MessageKeys.ZIEL_GEMUTET_IP, platzhalter);
+        zieleInformieren(kanonisch, MessageKeys.ZIEL_GEMUTET_IP, platzhalter, wirksam);
 
         try {
             historyService.hinzufuegen(HistoryType.IP_MUTE, ausfuehrer, kanonisch, grund, ablaufAm,
@@ -221,7 +221,7 @@ public final class IpMuteService {
         platzhalter.put("scope", entfernt.get().scope().anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zieleInformieren(kanonisch, MessageKeys.ZIEL_ENTMUTET_IP, platzhalter);
+        zieleInformieren(kanonisch, MessageKeys.ZIEL_ENTMUTET_IP, platzhalter, entfernt.get().scope());
 
         try {
             historyService.hinzufuegen(HistoryType.IP_UNMUTE, ausfuehrer, kanonisch,
@@ -268,7 +268,8 @@ public final class IpMuteService {
             LOG.warn("ipMute-bearbeiten für {} abgewiesen: Ablauf-Überlauf.", kanonisch, e);
             return Optional.empty();
         }
-        Optional<IpMuteRecord> alt = repository.findeAbdeckend(kanonisch, scopeSelektor, jetzt);
+        Optional<IpMuteRecord> alt = repository.finden(kanonisch, scopeSelektor)
+                .filter(eintrag -> eintrag.istAktiv(jetzt));
         if (alt.isEmpty()) {
             LOG.warn("ipMute-bearbeiten für {} abgewiesen: kein abdeckender Eintrag.", kanonisch);
             return Optional.empty();
@@ -293,7 +294,7 @@ public final class IpMuteService {
         platzhalter.put("scope", neu.scope().anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zieleInformieren(kanonisch, MessageKeys.ZIEL_MUTE_BEARBEITET_IP, platzhalter);
+        zieleInformieren(kanonisch, MessageKeys.ZIEL_MUTE_BEARBEITET_IP, platzhalter, neu.scope());
 
         try {
             historyService.hinzufuegen(HistoryType.IP_MUTE_EDIT, ausfuehrer, kanonisch,
@@ -411,7 +412,8 @@ public final class IpMuteService {
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
-    private void zieleInformieren(String kanonischeIp, String schluessel, Map<String, String> platzhalter) {
+    private void zieleInformieren(String kanonischeIp, String schluessel, Map<String, String> platzhalter,
+                                 ServerScope scope) {
         Runnable versand = () -> {
             try {
                 for (OnlineSpieler online : verzeichnis.onlineSpieler()) {
@@ -428,7 +430,10 @@ public final class IpMuteService {
                         continue;
                     }
                     try {
-                        messageService.anSpieler(online.uuid(), schluessel, platzhalter, verzeichnis);
+                        if (scope.typ() != ServerScope.Typ.SERVER
+                                || scope.server().equalsIgnoreCase(verzeichnis.serverName(online.uuid()))) {
+                            messageService.anSpieler(online.uuid(), schluessel, platzhalter, verzeichnis);
+                        }
                     } catch (Exception e) {
                         LOG.debug("IP-Mute-Info an {} fehlgeschlagen.", online.name(), e);
                     }

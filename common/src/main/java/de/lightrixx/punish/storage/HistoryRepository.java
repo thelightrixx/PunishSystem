@@ -313,22 +313,13 @@ public final class HistoryRepository {
         }
     }
 
-    private static boolean scopePasstFuerAufhebung(String bestehendScope, String aufhebungScope) {
-        String aufhebung = aufhebungScope == null ? "" : aufhebungScope.trim().toLowerCase(java.util.Locale.ROOT);
-
-        if (aufhebung.isEmpty()
-                || aufhebung.equals(de.lightrixx.punish.model.ServerScope.GLOBAL_WERT)
-                || aufhebung.equals(de.lightrixx.punish.model.ServerScope.UNBEKANNT_WERT)) {
-            return true;
-        }
-        String bestehend = bestehendScope == null ? "" : bestehendScope.trim().toLowerCase(java.util.Locale.ROOT);
-        return bestehend.equals(aufhebung);
-    }
-
     private boolean wirdAufgehobenVon(HistoryEntry bestehend, HistoryType aufhebung,
                                       String aufhebungScope) {
         if (!bestehend.aktiv()) return false;
-        if (!scopePasstFuerAufhebung(bestehend.scope(), aufhebungScope)) return false;
+        if (aufhebung != HistoryType.RESET
+                && !bestehend.scopeAlsObjekt().equals(ServerScope.ausSpeicherwert(aufhebungScope))) {
+            return false;
+        }
         return switch (aufhebung) {
             case PARDON, PARDON_ALL -> bestehend.typ() == HistoryType.BAN
                     || bestehend.typ() == HistoryType.BAN_EDIT

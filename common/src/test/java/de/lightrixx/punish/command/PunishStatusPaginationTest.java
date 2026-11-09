@@ -3,9 +3,12 @@ package de.lightrixx.punish.command;
 import de.lightrixx.punish.core.BefehlsSender;
 import de.lightrixx.punish.core.Konfiguration;
 import de.lightrixx.punish.core.MessageKeys;
+import de.lightrixx.punish.core.Permissions;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.BanRecord;
 import de.lightrixx.punish.model.CachedPlayer;
+import de.lightrixx.punish.model.ServerScope;
+import de.lightrixx.punish.service.HistoryService;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.service.VerstossService;
@@ -179,5 +182,46 @@ class PunishStatusPaginationTest {
         assertFalse(vorschlaege.isEmpty(), "Es müssen weiterhin Filter vorgeschlagen werden");
         assertTrue(vorschlaege.stream().noneMatch(v -> v.toLowerCase().contains("kicks")),
                 "filter:kicks ist im Status-Befehl nicht verfügbar: " + vorschlaege);
+    }
+
+    @Test
+    void klickHebtNurDenAngezeigtenBannAuf() {
+        when(banRepository.alleFuer(ZIEL)).thenReturn(List.of(new BanRecord(ZIEL, "Ziel", "Test", "Mod",
+                JETZT - 1000L, JETZT + 3_600_000L, false, ServerScope.server("lobby"))));
+
+        befehl.ausfuehren(sender(), new String[]{"Ziel"});
+
+        assertTrue(bloecke.getFirst().stream().anyMatch(zeile -> zeile.clickEvent() != null
+                && zeile.clickEvent().payload() instanceof ClickEvent.Payload.Text text
+                && text.value().equals("/pardon Ziel --lobby")));
+    }
+
+    @Test
+    void scopeFilterAendertWederServerRechtNochEigeneAnsicht() {
+        var history = new PunishHistoryCommand(messages, config, schutz, cache, mock(HistoryService.class),
+                mock(SpielerVerzeichnis.class));
+        var spieler = mock(BefehlsSender.class);
+        when(spieler.istSpieler()).thenReturn(true);
+        when(spieler.hatRecht(Permissions.PUNISH_STATUS.node())).thenReturn(true);
+        when(spieler.hatRecht(Permissions.PUNISH_HISTORY.node())).thenReturn(true);
+        assertFalse(befehl.hatRecht(spieler, new String[]{"server", "--lobby"}));
+        assertFalse(history.hatRecht(spieler, new String[]{"server", "--lobby"}));
+
+        var selbst = mock(BefehlsSender.class);
+        when(selbst.istSpieler()).thenReturn(true);
+        when(selbst.hatRecht(Permissions.PUNISH_OWN.node())).thenReturn(true);
+        assertTrue(befehl.hatRecht(selbst, new String[]{"self", "--lobby"}));
+        assertTrue(history.hatRecht(selbst, new String[]{"self", "--lobby"}));
+        assertFalse(befehl.hatRecht(selbst, new String[]{"player:Self", "--lobby"}));
+        assertFalse(history.hatRecht(selbst, new String[]{"player:Self", "--lobby"}));
+    }
+
+    @Test
+    void expliziteSpielernamenDuerfenWieAbfrageoptionenHeissen() {
+        for (String name : List.of("Server", "Self", "12345")) {
+            var query = PunishmentsQueryParser.parsen(new String[]{"player:" + name}).query();
+            assertEquals(PunishmentsQuery.ZielTyp.SPIELER, query.zielTyp());
+            assertEquals(name, query.spielerName());
+        }
     }
 }

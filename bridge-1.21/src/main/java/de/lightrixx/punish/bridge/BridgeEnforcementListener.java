@@ -379,16 +379,9 @@ public final class BridgeEnforcementListener implements Listener {
         }
         try {
             Player spieler = event.getPlayer();
-            Optional<Protokoll.MuteEintrag> mute = findeAktiv(spieler.getUniqueId());
-            if (mute.isPresent()) {
-                sendeBlockiert(spieler, mute.get());
-                return;
-            }
-            var ipMute = findeAktivenIpMute(spieler);
-            ipMute.ifPresent(eintrag -> sendeIpBlockiert(spieler, eintrag));
             findeAktivenFreeze(spieler).ifPresent(eintrag -> sendeFreezeBlockiert(spieler, eintrag));
         } catch (Exception e) {
-            LOG.debug("Mute-Join-Hinweis fehlgeschlagen.", e);
+            LOG.debug("Freeze-Join-Hinweis fehlgeschlagen.", e);
         }
     }
 

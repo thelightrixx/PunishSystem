@@ -15,6 +15,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalMatchers.aryEq;
@@ -92,6 +94,34 @@ class BrigadierHinweisTest {
     private BridgeBefehlWeiterleitung tunnelFuer(String ziel) {
         KanalClient kanal = mock(KanalClient.class);
         return new BridgeBefehlWeiterleitung(kanal, ziel, "punish.test", true, null);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"verstoss, add Steve Spam im Chat, ''", "verstoss, add Steve Spam im Chat, l",
+            "punish-edit, verstoss Steve 2 grund=Spam im Chat, ''",
+            "punish-edit, verstoss Steve 2 grund=Spam im Chat, l"})
+    void verstossStufenStehenAmEndeDesGrundes(String name, String rest, String praefix) throws Exception {
+        var dispatcher = new CommandDispatcher<CommandSourceStack>();
+        var registrar = mock(Commands.class);
+        var sender = mock(CommandSender.class);
+        var quelle = mock(CommandSourceStack.class);
+        when(quelle.getSender()).thenReturn(sender);
+        when(sender.hasPermission(anyString())).thenReturn(true);
+        doAnswer(aufruf -> {
+            LiteralCommandNode<CommandSourceStack> node = aufruf.getArgument(0);
+            dispatcher.getRoot().addChild(node);
+            return Set.of(node.getLiteral());
+        }).when(registrar).register(any(), anyString(), anyCollection());
+        BridgeBrigadierBefehle.registrieren(registrar,
+                List.of(new BridgeBrigadierBefehle.Eintrag(name, List.of(), "Test", tunnelFuer(name))), false);
+
+        String basis = name + " " + rest + " ";
+        String eingabe = basis + praefix;
+        var stufen = dispatcher.getCompletionSuggestions(dispatcher.parse(eingabe, quelle)).get().getList().stream()
+                .filter(vorschlag -> vorschlag.getText().startsWith("level="))
+                .map(vorschlag -> vorschlag.apply(eingabe))
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(basis + "level=low", basis + "level=medium", basis + "level=high"), stufen);
     }
 
     @Test

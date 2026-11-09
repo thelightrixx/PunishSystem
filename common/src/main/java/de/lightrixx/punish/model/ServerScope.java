@@ -76,6 +76,10 @@ public record ServerScope(Typ typ, String server) {
         return speicherwert();
     }
 
+    public String alsFlag() {
+        return "server".equals(server) ? "--server=server" : "--" + speicherwert();
+    }
+
     public boolean giltFuer(String aktuellerServer) {
         if (typ == Typ.GLOBAL || typ == Typ.UNBEKANNT) {
             return true;

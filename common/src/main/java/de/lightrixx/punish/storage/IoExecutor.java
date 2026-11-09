@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
+import java.sql.SQLRecoverableException;
+import java.sql.SQLTransientException;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -147,19 +150,13 @@ public final class IoExecutor {
                 fehlerZaehler.incrementAndGet();
                 letzterFehlerZeit = System.currentTimeMillis();
                 letzterFehlerText = String.valueOf(t.getMessage());
-                LOG.error("I/O-Auftrag fehlgeschlagen; SQL-Aufträge werden vor nachfolgenden Aufträgen wiederholt.", t);
-                boolean sqlFehler = false;
-                for (Throwable ursache = t; ursache != null; ursache = ursache.getCause()) {
-                    if (ursache instanceof java.sql.SQLException) {
-                        sqlFehler = true;
-                        break;
-                    }
-                }
-                if (!sqlFehler || executor.isShutdown() || Thread.currentThread().isInterrupted()) {
+                if (!istWiederholbarerSqlFehler(t) || executor.isShutdown()
+                        || Thread.currentThread().isInterrupted()) {
                     nichtGespeichert = true;
-                    LOG.error("I/O-Auftrag bleibt ungespeichert; Speicherstatus erfordert manuelle Prüfung.");
+                    LOG.error("I/O-Auftrag bleibt ungespeichert; Speicherstatus erfordert manuelle Prüfung.", t);
                     return;
                 }
+                LOG.error("I/O-Auftrag fehlgeschlagen; vorübergehender SQL-Fehler, wiederhole vor Folgeaufträgen.", t);
                 try {
                     TimeUnit.SECONDS.sleep(1L);
                 } catch (InterruptedException e) {
@@ -170,6 +167,19 @@ public final class IoExecutor {
                 }
             }
         }
+    }
+
+    private static boolean istWiederholbarerSqlFehler(Throwable fehler) {
+        for (Throwable ursache = fehler; ursache != null; ursache = ursache.getCause()) {
+            if (ursache instanceof SQLException sql) {
+                String sqlState = sql.getSQLState();
+                if (sql instanceof SQLTransientException || sql instanceof SQLRecoverableException
+                        || (sqlState != null && (sqlState.startsWith("08") || sqlState.startsWith("40")))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void ausfuehren(Runnable aufgabe) {
@@ -198,9 +208,17 @@ public final class IoExecutor {
     }
 
     public boolean warteAufIdle(long wartezeit, TimeUnit einheit) {
+        return warteAufAbarbeitung(wartezeit, einheit) && !nichtGespeichert && geplanteNeueste.isEmpty();
+    }
+
+    boolean hatAusstehendeAuftraege() {
+        return pumpeAktiv.get() || anzahlAusstehend() != 0;
+    }
+
+    boolean warteAufAbarbeitung(long wartezeit, TimeUnit einheit) {
         Objects.requireNonNull(einheit, "Die Zeiteinheit darf nicht null sein.");
         if (executor.isShutdown()) {
-            return !nichtGespeichert && anzahlAusstehend() == 0;
+            return !hatAusstehendeAuftraege();
         }
 
         if (Thread.currentThread().getName().startsWith("PunishSystem-IO-")) {
@@ -211,11 +229,11 @@ public final class IoExecutor {
             barriere = executor.submit(() -> {
             });
         } catch (RejectedExecutionException e) {
-            return true;
+            return !hatAusstehendeAuftraege();
         }
         try {
             barriere.get(wartezeit, einheit);
-            return !nichtGespeichert && geplanteNeueste.isEmpty();
+            return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;

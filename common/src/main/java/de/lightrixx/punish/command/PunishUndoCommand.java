@@ -146,7 +146,7 @@ public final class PunishUndoCommand extends PunishCommand {
         if (ziel == null || ziel.isBlank()) {
             return null;
         }
-        String scope = "--" + eintrag.scopeAlsObjekt().speicherwert();
+        String scope = eintrag.scopeAlsObjekt().alsFlag();
         return switch (eintrag.typ()) {
             case BAN, PERMABANN, AUTO_BANN -> new Delegation("pardon", new String[]{ziel, scope});
             case MUTE -> new Delegation("unmute", new String[]{ziel, scope});
@@ -169,7 +169,8 @@ public final class PunishUndoCommand extends PunishCommand {
         long besteAbweichung = Long.MAX_VALUE;
         try {
             for (WarnRecord warn : warnService.findeWarns(ziel.get().uuid())) {
-                if (warn == null || !warn.grund().equals(eintrag.grund())) {
+                if (warn == null || !warn.grund().equals(eintrag.grund())
+                        || !warn.ausfuehrer().equalsIgnoreCase(eintrag.ausfuehrer())) {
                     continue;
                 }
                 long abweichung = Math.abs(warn.erstelltAm() - eintrag.zeitstempel());

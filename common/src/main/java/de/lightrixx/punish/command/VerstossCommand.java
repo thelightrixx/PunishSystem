@@ -13,6 +13,7 @@ import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.service.VerstossService;
 import de.lightrixx.punish.storage.PlayerCache;
+import de.lightrixx.punish.util.TabHinweis;
 import de.lightrixx.punish.util.MiniMessageUtil;
 
 import java.util.ArrayList;
@@ -31,8 +32,6 @@ public final class VerstossCommand extends PunishCommand {
     private static final String UNTERBEFEHL_CLEAR = "clear";
 
     private static final String LEVEL_PRAEFIX = "level=";
-    private static final List<String> LEVEL_VORSCHLAEGE = List.of(
-            "level=low", "level=medium", "level=high");
 
     private final VerstossService verstossService;
 
@@ -142,14 +141,10 @@ public final class VerstossCommand extends PunishCommand {
         return switch (unterbefehl) {
             case UNTERBEFEHL_ADD -> {
                 String aktuell = args[args.length - 1];
-                if (beginntMitLevelPraefix(aktuell)) {
-                    yield filtere(LEVEL_VORSCHLAEGE, aktuell);
+                List<String> gemischt = new ArrayList<>(TabHinweis.VERSTOSS_LEVEL_VORSCHLAEGE);
+                if (args.length == 3 && !beginntMitLevelPraefix(aktuell)) {
+                    gemischt.addAll(grundVorschlaege("verstoss"));
                 }
-                if (args.length > 3) {
-                    yield silentVorschlag(sender, aktuell);
-                }
-                List<String> gemischt = new ArrayList<>(grundVorschlaege("verstoss"));
-                gemischt.addAll(LEVEL_VORSCHLAEGE);
                 gemischt.addAll(silentVorschlag(sender, ""));
                 yield filtere(gemischt, aktuell);
             }

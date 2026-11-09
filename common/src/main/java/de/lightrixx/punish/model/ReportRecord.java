@@ -32,7 +32,7 @@ public record ReportRecord(
         if (grund.isBlank()) {
             throw new IllegalArgumentException("Der Grund darf nicht leer sein.");
         }
-        if (grund.length() > 256) {
+        if (grund.codePointCount(0, grund.length()) > 256) {
             throw new IllegalArgumentException("Der Grund ist zu lang (max. 256 Zeichen).");
         }
         if (server == null || server.isBlank()) {

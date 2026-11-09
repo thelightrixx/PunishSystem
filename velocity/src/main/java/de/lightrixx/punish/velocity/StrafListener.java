@@ -12,13 +12,13 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import de.lightrixx.punish.core.AuftragsPlaner;
+import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.core.Permissions;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.BanRecord;
 import de.lightrixx.punish.model.CachedPlayer;
 import de.lightrixx.punish.model.IpBanRecord;
 import de.lightrixx.punish.model.IpTimeoutRecord;
-import de.lightrixx.punish.model.MuteRecord;
 import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.model.TimeoutRecord;
 import de.lightrixx.punish.model.VerpassteNachricht;
@@ -37,6 +37,7 @@ import de.lightrixx.punish.service.TimeoutService;
 import de.lightrixx.punish.storage.BanRepository;
 import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.storage.VerpassteBroadcastsRepository;
+import de.lightrixx.punish.util.ZeitFormat;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,10 @@ public final class StrafListener {
     private volatile SpielerVerzeichnis verpasstVerzeichnis;
     private volatile BroadcastService verpasstBroadcast;
     private volatile FreezeService freezeService;
-    private final java.util.concurrent.ConcurrentHashMap<UUID, Long> loginBasis =
+    private record LoginFenster(Player spieler, long seit, long bis) {
+    }
+
+    private final java.util.concurrent.ConcurrentHashMap<UUID, LoginFenster> loginBasis =
             new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.ConcurrentHashMap<String, TunnelRateBegrenzer> befehlTempo =
             new java.util.concurrent.ConcurrentHashMap<>();
@@ -207,8 +211,11 @@ public final class StrafListener {
         this.verpasstBroadcast = broadcastService;
     }
 
-    @Subscribe
+    @Subscribe(priority = -32767)
     public void onLogin(LoginEvent event) {
+        if (!event.getResult().isAllowed()) {
+            return;
+        }
         Player spieler;
         UUID uuid;
         String name;
@@ -276,7 +283,7 @@ public final class StrafListener {
             logger.debug("PlayerCache-Update beim Login für '{}' fehlgeschlagen.", name, e);
         }
         pruefeAltWache(uuid, name, ip);
-        loginBasis.put(uuid, basis);
+        loginBasis.put(uuid, new LoginFenster(spieler, basis, jetzt));
     }
 
     private void pruefeAltWache(UUID uuid, String name, String ip) {
@@ -333,7 +340,11 @@ public final class StrafListener {
                 if (aktiveAlts.isEmpty()) {
                     return;
                 }
-                altWacheCooldown.put(uuid, zeit);
+                Long vorher = altWacheCooldown.get(uuid);
+                if (vorher == null ? altWacheCooldown.putIfAbsent(uuid, zeit) != null
+                        : zeit - vorher < cooldownMillis || !altWacheCooldown.replace(uuid, vorher, zeit)) {
+                    return;
+                }
                 Map<String, String> platzhalter = new HashMap<>();
                 platzhalter.put("spieler", name);
                 platzhalter.put("alt", String.join(", ", aktiveAlts));
@@ -344,6 +355,11 @@ public final class StrafListener {
                 logger.debug("Alt-Wache-Prüfung für '{}' fehlgeschlagen.", name, e);
             }
         });
+    }
+
+    void bereinigeAltWacheCooldowns(long jetzt) {
+        long cooldownMillis = Math.max(1L, config.altWacheCooldownMinuten()) * 60_000L;
+        altWacheCooldown.values().removeIf(zeit -> jetzt - zeit >= cooldownMillis);
     }
 
     private boolean istAltGeschuetzt(UUID zielUuid) {
@@ -535,94 +551,6 @@ public final class StrafListener {
                     }
                 });
             }
-        }
-        try {
-            var mute = muteService.findeAktivenMuteFuer(uuid, jetzt, "unbekannt");
-            if (mute.isEmpty()) {
-                mute = muteService.findeAbdeckend(uuid, ServerScope.global());
-            }
-            if (mute.isPresent()) {
-                MuteRecord rec = mute.get();
-                java.util.Map<String, String> ph = new java.util.HashMap<>();
-                ph.put("spieler", name);
-                ph.put("ausfuehrer", rec.ausfuehrer());
-                ph.put("grund", rec.grund());
-                ph.put("dauer", de.lightrixx.punish.util.ZeitFormat.formatRestzeit(
-                        rec.verbleibendeMillis(jetzt)));
-                ph.put("verbleibend", de.lightrixx.punish.util.ZeitFormat.formatRestzeit(
-                        rec.verbleibendeMillis(jetzt)));
-                ph.put("ablauf", de.lightrixx.punish.util.ZeitFormat.formatZeitpunkt(rec.ablaufAm()));
-                Component hinweis;
-                try {
-                    hinweis = messageService.komponente(
-                            de.lightrixx.punish.core.MessageKeys.ZIEL_GEMUTET, ph);
-                } catch (Exception e) {
-                    hinweis = null;
-                }
-                if (hinweis != null) {
-                    Component senden = hinweis;
-                    planer.spaeter(() -> {
-                        try {
-                            proxy.getPlayer(uuid).ifPresent(p -> {
-                                try {
-                                    p.sendMessage(senden);
-                                } catch (Exception ex) {
-                                    logger.debug("Mute-Hinweis sendMessage fehlgeschlagen.", ex);
-                                }
-                            });
-                        } catch (Exception ex) {
-                            logger.debug("Mute-Hinweis Zustellung fehlgeschlagen.", ex);
-                        }
-                    }, 20L);
-                }
-            }
-        } catch (Exception e) {
-            logger.debug("Mute-Join-Hinweis fehlgeschlagen.", e);
-        }
-        try {
-            if (ipMuteService != null && !"unbekannt".equals(ip)) {                var ipMute = ipMuteService.findeAktivenMuteFuer(ip, jetzt, "unbekannt");
-                if (ipMute.isEmpty()) {
-                    ipMute = ipMuteService.findeAbdeckend(ip, ServerScope.global());
-                }
-                if (ipMute.isPresent() && ipMute.get().istAktiv(jetzt)) {
-                    var rec = ipMute.get();
-                    java.util.Map<String, String> ph = new java.util.HashMap<>();
-                    ph.put("ip", rec.ip());
-                    ph.put("spieler", name);
-                    ph.put("ausfuehrer", rec.ausfuehrer());
-                    ph.put("grund", rec.grund());
-                    ph.put("dauer", de.lightrixx.punish.util.ZeitFormat.formatRestzeit(
-                            rec.verbleibendeMillis(jetzt)));
-                    ph.put("verbleibend", de.lightrixx.punish.util.ZeitFormat.formatRestzeit(
-                            rec.verbleibendeMillis(jetzt)));
-                    ph.put("ablauf", de.lightrixx.punish.util.ZeitFormat.formatZeitpunkt(rec.ablaufAm()));
-                    Component hinweis;
-                    try {
-                        hinweis = messageService.komponente(
-                                de.lightrixx.punish.core.MessageKeys.ZIEL_GEMUTET_IP, ph);
-                    } catch (Exception e) {
-                        hinweis = null;
-                    }
-                    if (hinweis != null) {
-                        Component senden = hinweis;
-                        planer.spaeter(() -> {
-                            try {
-                                proxy.getPlayer(uuid).ifPresent(p -> {
-                                    try {
-                                        p.sendMessage(senden);
-                                    } catch (Exception ex) {
-                                        logger.debug("IP-Mute-Hinweis sendMessage fehlgeschlagen.", ex);
-                                    }
-                                });
-                            } catch (Exception ex) {
-                                logger.debug("IP-Mute-Hinweis Zustellung fehlgeschlagen.", ex);
-                            }
-                        }, 20L);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            logger.debug("IP-Mute-Join-Hinweis fehlgeschlagen.", e);
         }
         return null;
     }
@@ -843,8 +771,10 @@ public final class StrafListener {
     public void onDisconnect(DisconnectEvent event) {
         Player spieler = event.getPlayer();
         UUID uuid = spieler.getUniqueId();
-        loginBasis.remove(uuid);
-        altWacheCooldown.remove(uuid);
+        var fenster = loginBasis.get(uuid);
+        if (fenster != null && fenster.spieler() == spieler) {
+            loginBasis.remove(uuid, fenster);
+        }
         long jetzt = System.currentTimeMillis();
         try {
             playerCache.finden(uuid).ifPresent(alt -> {
@@ -873,20 +803,68 @@ public final class StrafListener {
             logger.debug("ServerConnected ohne Spielerdaten, keine Verpasst-Nachsendung.", e);
             return;
         }
-        sendeVerpassteNach(uuid);
+        var fenster = loginBasis.get(uuid);
+        if (fenster != null && fenster.spieler() == event.getPlayer() && loginBasis.remove(uuid, fenster)) {
+            sendeVerpassteNach(uuid, fenster);
+        }
+        try {
+            Player spieler = event.getPlayer();
+            String server = event.getServer().getServerInfo().getName();
+            boolean erstbeitritt = event.getPreviousServer().isEmpty();
+            planer.spaeter(() -> sendeMuteBeimBeitritt(spieler, server, erstbeitritt), 20L);
+        } catch (Exception e) {
+            logger.debug("Mute-Hinweis beim Serverbeitritt konnte nicht geplant werden.", e);
+        }
     }
 
-    private void sendeVerpassteNach(UUID uuid) {
+    private void sendeMuteBeimBeitritt(Player spieler, String server, boolean erstbeitritt) {
+        UUID uuid = spieler.getUniqueId();
+        try {
+            if (proxy.getPlayer(uuid).orElse(null) != spieler || spieler.getCurrentServer()
+                    .map(v -> v.getServerInfo().getName()).filter(server::equalsIgnoreCase).isEmpty()) {
+                return;
+            }
+            long jetzt = System.currentTimeMillis();
+            var mute = muteService.findeAktivenMuteFuer(uuid, jetzt, server);
+            if (mute.isPresent()) {
+                var record = mute.get();
+                if (erstbeitritt || record.scope().typ() == ServerScope.Typ.SERVER) {
+                    sendeMuteHinweis(spieler, MessageKeys.ZIEL_GEMUTET, record.scope(), record.ausfuehrer(),
+                            record.grund(), record.ablaufAm(), record.verbleibendeMillis(jetzt), "");
+                }
+                return;
+            }
+            if (ipMuteService != null) {
+                ipMuteService.findeAktivenMuteFuer(ipVon(spieler), jetzt, server).ifPresent(record -> {
+                    if (erstbeitritt || record.scope().typ() == ServerScope.Typ.SERVER) {
+                        sendeMuteHinweis(spieler, MessageKeys.ZIEL_GEMUTET_IP, record.scope(), record.ausfuehrer(),
+                                record.grund(), record.ablaufAm(), record.verbleibendeMillis(jetzt), record.ip());
+                    }
+                });
+            }
+        } catch (Exception e) {
+            logger.debug("Mute-Hinweis beim Serverbeitritt fehlgeschlagen.", e);
+        }
+    }
+
+    private void sendeMuteHinweis(Player spieler, String schluessel, ServerScope scope, String ausfuehrer,
+                                  String grund, long ablauf, long verbleibend, String ip) {
+        String restzeit = ZeitFormat.formatRestzeit(verbleibend);
+        messageService.senden(new VelocitySender(spieler), schluessel, Map.of(
+                "spieler", spieler.getUsername(), "ausfuehrer", ausfuehrer, "grund", grund,
+                "ip", ip, "scope", scope.anzeige(), "dauer", restzeit,
+                "verbleibend", restzeit, "ablauf", ZeitFormat.formatZeitpunkt(ablauf)));
+    }
+
+    private void sendeVerpassteNach(UUID uuid, LoginFenster fenster) {
         VerpassteBroadcastsRepository ablage = verpasstAblage;
         SpielerVerzeichnis verzeichnis = verpasstVerzeichnis;
         BroadcastService broadcast = verpasstBroadcast;
         if (ablage == null || verzeichnis == null || broadcast == null) {
-            loginBasis.remove(uuid);
             return;
         }
         try {
             if (!config.verpassteBroadcastsAktiv()) {
-                loginBasis.remove(uuid);
                 return;
             }
         } catch (Exception e) {
@@ -894,22 +872,21 @@ public final class StrafListener {
             return;
         }
         try {
-            planer.spaeter(() -> liefereVerpasst(uuid, ablage, verzeichnis, broadcast), 20L);
+            planer.spaeter(() -> liefereVerpasst(uuid, fenster, ablage, verzeichnis, broadcast), 20L);
         } catch (IllegalStateException e) {
             logger.debug("Verpasst-Nachsendung konnte nicht eingeplant werden.");
         }
     }
 
-    private void liefereVerpasst(UUID uuid, VerpassteBroadcastsRepository ablage,
+    private void liefereVerpasst(UUID uuid, LoginFenster fenster, VerpassteBroadcastsRepository ablage,
                                  SpielerVerzeichnis verzeichnis, BroadcastService broadcast) {
-        Long gemerkt = loginBasis.remove(uuid);
         try {
-            if (proxy.getPlayer(uuid).isEmpty()) {
+            if (proxy.getPlayer(uuid).orElse(null) != fenster.spieler()) {
                 return;
             }
             if (!verzeichnis.hatRecht(uuid, Permissions.BROADCAST_RECEIVE_ALL.node())) {
                 try {
-                    ablage.cursorSetzen(uuid, System.currentTimeMillis());
+                    ablage.cursorSetzen(uuid, fenster.bis());
                 } catch (Exception e) {
                     logger.debug("Missed-Cursor-Update (ohne Recht) fehlgeschlagen.", e);
                 }
@@ -921,22 +898,9 @@ public final class StrafListener {
             } catch (Exception e) {
                 logger.debug("Missed-Cursor-Lookup fehlgeschlagen.", e);
             }
-            long seit;
-            if (gemerkt != null) {
-                seit = Math.max(gemerkt, cursor);
-            } else if (cursor > 0) {
-                seit = cursor;
-            } else {
-                try {
-                    ablage.cursorSetzen(uuid, System.currentTimeMillis());
-                } catch (Exception e) {
-                    logger.debug("Missed-Cursor-Init fehlgeschlagen.", e);
-                }
-                return;
-            }
             java.util.List<VerpassteNachricht> offen;
-            long stand = System.currentTimeMillis() - 1L;
-            long ab = seit;
+            long stand = fenster.bis() - 1L;
+            long ab = Math.max(fenster.seit(), cursor);
             try {
                 offen = ablage.momentaufnahme().stream()
                         .filter(e -> e.zeitstempel() > ab && e.zeitstempel() <= stand).toList();
@@ -955,7 +919,7 @@ public final class StrafListener {
                     return;
                 }
             }
-            if (proxy.getPlayer(uuid).isEmpty() || verzeichnis.onlineSpieler(uuid).isEmpty()
+            if (proxy.getPlayer(uuid).orElse(null) != fenster.spieler() || verzeichnis.onlineSpieler(uuid).isEmpty()
                     || !verzeichnis.hatRecht(uuid, Permissions.BROADCAST_RECEIVE_ALL.node())
                     || !config.verpassteBroadcastsAktiv()) {
                 return;

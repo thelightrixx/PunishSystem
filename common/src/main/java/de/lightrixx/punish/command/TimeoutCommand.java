@@ -7,6 +7,7 @@ import de.lightrixx.punish.core.BefehlsSender;
 import de.lightrixx.punish.core.Konfiguration;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.CachedPlayer;
+import de.lightrixx.punish.model.HistoryType;
 import de.lightrixx.punish.model.ParseResult;
 import de.lightrixx.punish.service.MessageService;
 import de.lightrixx.punish.service.ProtectionService;
@@ -110,7 +111,9 @@ public final class TimeoutCommand extends PunishCommand {
                     grund,
                     ausfuehrerName(sender),
                     scope, herkunftVon(sender), silent, sender);
-            if (!erfolg) {
+            if (erfolg) {
+                bestaetigeStrafe(sender, HistoryType.TIMEOUT, spieler.name(), scope, silent);
+            } else {
                 try {
                     if (!protectionService.istErlaubteSelbstbestrafung(sender, spieler.uuid())
                             && schutzFehlerSenden(sender, spieler, protectionService.pruefeSchutz(spieler.uuid(), ProtectionService.IgnoreTyp.TIMEOUT))) {

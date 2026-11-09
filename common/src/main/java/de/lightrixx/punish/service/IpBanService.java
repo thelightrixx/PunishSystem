@@ -238,7 +238,8 @@ public final class IpBanService {
             }
         }
 
-        Optional<IpBanRecord> alt = ipBanRepository.findeAbdeckend(ip, scopeSelektor, jetzt);
+        Optional<IpBanRecord> alt = ipBanRepository.finden(ip, scopeSelektor)
+                .filter(eintrag -> eintrag.istAktiv(jetzt));
         if (alt.isEmpty()) {
             return Optional.empty();
         }

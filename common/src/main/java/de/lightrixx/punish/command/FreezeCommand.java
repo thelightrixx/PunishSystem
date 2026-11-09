@@ -7,6 +7,7 @@ import de.lightrixx.punish.core.BefehlsSender;
 import de.lightrixx.punish.core.Konfiguration;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.CachedPlayer;
+import de.lightrixx.punish.model.HistoryType;
 import de.lightrixx.punish.model.ParseResult;
 import de.lightrixx.punish.service.FreezeService;
 import de.lightrixx.punish.service.MessageService;
@@ -102,7 +103,9 @@ public final class FreezeCommand extends PunishCommand {
                         grund,
                         ausfuehrerName(sender),
                         scope, herkunftVon(sender), silent, sender);
-                if (!erfolg) {
+                if (erfolg) {
+                    bestaetigeStrafe(sender, HistoryType.FREEZE, spieler.name(), scope, silent);
+                } else {
                     freezeFehlerSenden(sender, spieler, scope);
                 }
                 return;
@@ -129,7 +132,9 @@ public final class FreezeCommand extends PunishCommand {
                 grund,
                 ausfuehrerName(sender),
                 scope, herkunftVon(sender), silent, sender);
-        if (!erfolg) {
+        if (erfolg) {
+            bestaetigeStrafe(sender, HistoryType.FREEZE, spieler.name(), scope, silent);
+        } else {
             freezeFehlerSenden(sender, spieler, scope);
         }
     }

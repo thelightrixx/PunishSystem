@@ -98,4 +98,25 @@ class MassenRueckstauTest {
             io.herunterfahren(2, java.util.concurrent.TimeUnit.SECONDS);
         }
     }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {
+            "--server=", "--server=lobby!", "--", "--unbekannt", "--lobby --global", "--lobby Grund"
+    })
+    void fehlerhaftesScopeFlagHebtKeineBannsAuf(String flags) {
+        var nachrichten = mock(MessageService.class);
+        var config = mock(Konfiguration.class);
+        when(config.standardScope()).thenReturn(de.lightrixx.punish.model.ServerScope.global());
+        when(config.bestaetigungPardonAll()).thenReturn(true);
+        when(config.bekannteServer()).thenReturn(java.util.List.of("lobby"));
+        var banns = mock(BanService.class);
+        var sender = mock(BefehlsSender.class);
+        var befehl = new PardonAllCommand(nachrichten, config, mock(ProtectionService.class),
+                mock(PlayerCache.class), banns, mock(AuftragsPlaner.class), mock(SpielerVerzeichnis.class));
+
+        befehl.ausfuehren(sender, ("confirm " + flags).split(" "));
+
+        verify(nachrichten).senden(eq(sender), eq(MessageKeys.SCOPE_UNGUELTIG), anyMap());
+        verifyNoInteractions(banns);
+    }
 }

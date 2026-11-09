@@ -8,6 +8,9 @@ import java.util.Set;
 
 public final class TabHinweis {
 
+    public static final List<String> VERSTOSS_LEVEL_VORSCHLAEGE =
+            List.of("level=low", "level=medium", "level=high");
+
     private TabHinweis() {
     }
 

@@ -203,7 +203,7 @@ public final class GuiBrueckenDienst {
                             "Bann [" + bann.scope().anzeige() + "]",
                             "Grund: " + bann.grund() + "\nVon: " + bann.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(bann.ablaufAm()),
-                            "pardon " + name + " --" + bann.scope().speicherwert(), name));
+                            "pardon " + name + " " + bann.scope().alsFlag(), name));
                 }
             }
         } catch (Exception e) {
@@ -216,7 +216,7 @@ public final class GuiBrueckenDienst {
                             "Mute [" + mute.scope().anzeige() + "]",
                             "Grund: " + mute.grund() + "\nVon: " + mute.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(mute.ablaufAm()),
-                            "unmute " + name + " --" + mute.scope().speicherwert(), name));
+                            "unmute " + name + " " + mute.scope().alsFlag(), name));
                 }
             }
         } catch (Exception e) {
@@ -229,7 +229,7 @@ public final class GuiBrueckenDienst {
                             "Timeout [" + timeout.scope().anzeige() + "]",
                             "Grund: " + timeout.grund() + "\nVon: " + timeout.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(timeout.ablaufAm()),
-                            "untimeout " + name + " --" + timeout.scope().speicherwert(), name));
+                            "untimeout " + name + " " + timeout.scope().alsFlag(), name));
                 }
             }
         } catch (Exception e) {
@@ -245,7 +245,7 @@ public final class GuiBrueckenDienst {
                                 "Grund: " + freeze.grund() + "\nVon: " + freeze.ausfuehrer()
                                         + "\nAblauf: " + (freeze.istPermanent() ? "Permanent"
                                                 : formatAblauf(freeze.ablaufAm())),
-                                "unfreeze " + name + " --" + freeze.scope().speicherwert(), name));
+                                "unfreeze " + name + " " + freeze.scope().alsFlag(), name));
                     }
                 }
             }
@@ -325,10 +325,10 @@ public final class GuiBrueckenDienst {
 
     private String klickFuerHistory(HistoryEntry eintrag) {
         String ziel = eintrag.ziel();
-        if (ziel == null || ziel.isBlank()) {
+        if (ziel == null || ziel.isBlank() || !eintrag.istEffektivAktiv(System.currentTimeMillis())) {
             return null;
         }
-        String scope = " --" + eintrag.scopeAlsObjekt().speicherwert();
+        String scope = " " + eintrag.scopeAlsObjekt().alsFlag();
         return switch (eintrag.typ()) {
             case BAN, BAN_EDIT, PERMABANN, AUTO_BANN -> "pardon " + ziel + scope;
             case MUTE, MUTE_EDIT -> "unmute " + ziel + scope;
@@ -398,21 +398,29 @@ public final class GuiBrueckenDienst {
                     "Report #" + id + " existiert nicht.", 1, 1, 0, List.of());
         }
         ReportRecord report = gefunden.get();
-        List<Protokoll.GuiZeile> zeilen = List.of(
-                new Protokoll.GuiZeile("REPORT",
-                        "#" + report.id() + " " + report.zielName(),
-                        "Grund: " + report.grund() + "\nVon: " + report.reporterName()
-                                + "\nServer: " + report.server() + "\nStatus: " + report.status().name(),
-                        "", String.valueOf(report.id())),
-                new Protokoll.GuiZeile("REPORT_AKTION", "Annehmen",
-                        "Report #" + report.id() + " annehmen.", "reports accept " + report.id(),
-                        String.valueOf(report.id())),
-                new Protokoll.GuiZeile("REPORT_AKTION", "Ablehnen",
-                        "Report #" + report.id() + " ablehnen.", "reports deny " + report.id(),
-                        String.valueOf(report.id())),
-                new Protokoll.GuiZeile("REPORT_AKTION", "Erledigt",
-                        "Report #" + report.id() + " schließen.", "reports close " + report.id(),
-                        String.valueOf(report.id())));
+        String reportId = String.valueOf(report.id());
+        String details = "Grund: " + report.grund() + "\nVon: " + report.reporterName()
+                + "\nServer: " + report.server() + "\nStatus: " + report.status().name();
+        if (!report.bearbeiter().isBlank()) {
+            details += "\nBearbeitet von: " + report.bearbeiter();
+        }
+        if (!report.closeGrund().isBlank()) {
+            details += "\nBegründung: " + report.closeGrund();
+        }
+        List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
+        zeilen.add(new Protokoll.GuiZeile("REPORT", "#" + reportId + " " + report.zielName(),
+                details, "", reportId));
+        if (report.istOffen()) {
+            boolean uebernommen = !report.bearbeiter().isBlank()
+                    && report.status() == de.lightrixx.punish.model.ReportStatus.ANGENOMMEN;
+            zeilen.add(new Protokoll.GuiZeile("REPORT_AKTION", uebernommen ? "Übernommen" : "Annehmen",
+                    uebernommen ? report.bearbeiter() : "Report #" + reportId + " annehmen.",
+                    uebernommen ? "" : "reports accept " + reportId, reportId));
+            zeilen.add(new Protokoll.GuiZeile("REPORT_AKTION", "Ablehnen",
+                    "Report #" + reportId + " ablehnen.", "reports deny " + reportId, reportId));
+            zeilen.add(new Protokoll.GuiZeile("REPORT_AKTION", "Erledigt",
+                    "Report #" + reportId + " schließen.", "reports close " + reportId, reportId));
+        }
         return new Protokoll.GuiAntwort(anfrage.requestId(), true, "Report #" + id, 1, 1, zeilen.size(), zeilen);
     }
 
@@ -520,7 +528,7 @@ public final class GuiBrueckenDienst {
                             "Bann [" + bann.scope().anzeige() + "]",
                             "Grund: " + bann.grund() + "\nVon: " + bann.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(bann.ablaufAm()),
-                            "pardon " + name + " --" + bann.scope().speicherwert(), name));
+                            "pardon " + name + " " + bann.scope().alsFlag(), name));
                 }
             }
         } catch (Exception e) {
@@ -534,7 +542,7 @@ public final class GuiBrueckenDienst {
                             "Mute [" + mute.scope().anzeige() + "]",
                             "Grund: " + mute.grund() + "\nVon: " + mute.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(mute.ablaufAm()),
-                            "unmute " + name + " --" + mute.scope().speicherwert(), name));
+                            "unmute " + name + " " + mute.scope().alsFlag(), name));
                 }
             }
         } catch (Exception e) {
@@ -548,7 +556,7 @@ public final class GuiBrueckenDienst {
                             "Timeout [" + timeout.scope().anzeige() + "]",
                             "Grund: " + timeout.grund() + "\nVon: " + timeout.ausfuehrer()
                                     + "\nAblauf: " + formatAblauf(timeout.ablaufAm()),
-                            "untimeout " + name + " --" + timeout.scope().speicherwert(), name));
+                            "untimeout " + name + " " + timeout.scope().alsFlag(), name));
                 }
             }
         } catch (Exception e) {
@@ -565,7 +573,7 @@ public final class GuiBrueckenDienst {
                                 "Grund: " + freeze.grund() + "\nVon: " + freeze.ausfuehrer()
                                         + "\nAblauf: " + (freeze.istPermanent() ? "Permanent"
                                                 : formatAblauf(freeze.ablaufAm())),
-                                "unfreeze " + name + " --" + freeze.scope().speicherwert(), name));
+                                "unfreeze " + name + " " + freeze.scope().alsFlag(), name));
                     }
                 }
             }

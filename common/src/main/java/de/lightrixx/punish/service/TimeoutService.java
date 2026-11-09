@@ -655,7 +655,8 @@ public final class TimeoutService {
             return Optional.empty();
         }
 
-        Optional<TimeoutRecord> alt = timeoutRepository.findeAbdeckend(zielUuid, scopeSelektor, jetzt);
+        Optional<TimeoutRecord> alt = timeoutRepository.finden(zielUuid, scopeSelektor)
+                .filter(eintrag -> eintrag.istAktiv(jetzt));
         if (alt.isEmpty()) {
             return Optional.empty();
         }

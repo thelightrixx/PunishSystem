@@ -1,15 +1,26 @@
 package de.lightrixx.punish.velocity;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.ProxyServer;
+import de.lightrixx.punish.command.PunishCommand;
+import de.lightrixx.punish.service.MessageService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_SELF;
@@ -20,6 +31,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class BridgeSicherheitRegressionTest {
+
+    @Test
+    void expliziterScopeVorSilentErhaeltKeinenZusaetzlichenStandardScope() {
+        var sender = mock(de.lightrixx.punish.core.BefehlsSender.class);
+        when(sender.istSpieler()).thenReturn(true);
+        when(sender.herkunft()).thenReturn("lobby");
+
+        assertArrayEquals(new String[]{"Steve", "5m", "Test", "--survival", "-s"},
+                VelocityBefehle.zuArgs(sender, "Steve 5m Test --survival -s"));
+        assertArrayEquals(new String[]{"Steve", "5m", "Test", "-s", "--lobby"},
+                VelocityBefehle.zuArgs(sender, "Steve 5m Test -s"));
+    }
 
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({"kick,ekick,true", "ban,tempban,true", "ban-ip,banip,true",
@@ -36,15 +59,7 @@ class BridgeSicherheitRegressionTest {
         var befehl = mock(de.lightrixx.punish.command.PunishCommand.class);
         when(befehl.uebernimmtFremdeBefehle()).thenReturn(ueberschreiben);
         var nachrichten = mock(de.lightrixx.punish.service.MessageService.class);
-        var registrieren = VelocityBefehle.class.getDeclaredMethod("registrar",
-                com.velocitypowered.api.command.CommandManager.class, PunishVelocity.class,
-                com.velocitypowered.api.proxy.ProxyServer.class,
-                de.lightrixx.punish.service.MessageService.class, String.class,
-                java.util.List.class, de.lightrixx.punish.command.PunishCommand.class);
-        registrieren.setAccessible(true);
-        registrieren.invoke(null, manager, mock(PunishVelocity.class),
-                mock(com.velocitypowered.api.proxy.ProxyServer.class), nachrichten,
-                name, java.util.List.of(alias), befehl);
+        registriereBefehl(manager, nachrichten, name, List.of(alias), befehl);
 
         var aliase = org.mockito.ArgumentCaptor.forClass(String[].class);
         verify(builder).aliases(aliase.capture());
@@ -74,6 +89,42 @@ class BridgeSicherheitRegressionTest {
         assertEquals(0, dispatcher.execute(name + " Notch Grund", quelle));
         verify(befehl, never()).ausfuehren(any(), any());
         verify(nachrichten).senden(any(), eq(de.lightrixx.punish.core.MessageKeys.KEIN_RECHT));
+    }
+
+    @Test
+    void proxySchlaegtStufeAmEndeDesGrundesVor() throws Exception {
+        var manager = mock(CommandManager.class);
+        var builder = mock(CommandMeta.Builder.class, RETURNS_SELF);
+        var meta = mock(CommandMeta.class);
+        when(manager.metaBuilder("verstoss")).thenReturn(builder);
+        when(builder.build()).thenReturn(meta);
+        var befehl = mock(PunishCommand.class);
+        when(befehl.sichtbarFuer(any())).thenReturn(true);
+        when(befehl.vervollstaendigen(any(), aryEq(new String[]{"add", "Steve", "Spam", "im", "Chat", "l"})))
+                .thenReturn(List.of("level=low"));
+        registriereBefehl(manager, mock(MessageService.class), "verstoss", List.of(), befehl);
+
+        var registriert = ArgumentCaptor.forClass(BrigadierCommand.class);
+        verify(manager).register(eq(meta), registriert.capture());
+        var dispatcher = new CommandDispatcher<CommandSource>();
+        dispatcher.getRoot().addChild(registriert.getValue().getNode());
+        String basis = "verstoss add Steve Spam im Chat ";
+        String eingabe = basis + "l";
+        var vorschlaege = dispatcher.getCompletionSuggestions(
+                dispatcher.parse(eingabe, mock(CommandSource.class))).get().getList();
+        assertEquals(1, vorschlaege.size());
+        assertEquals("level=low", vorschlaege.getFirst().getText());
+        assertEquals(basis + "level=low", vorschlaege.getFirst().apply(eingabe));
+    }
+
+    private static void registriereBefehl(CommandManager manager, MessageService nachrichten,
+                                           String name, List<String> aliase, PunishCommand befehl) throws Exception {
+        var registrieren = VelocityBefehle.class.getDeclaredMethod("registrar",
+                CommandManager.class, PunishVelocity.class, ProxyServer.class,
+                MessageService.class, String.class, List.class, PunishCommand.class);
+        registrieren.setAccessible(true);
+        registrieren.invoke(null, manager, mock(PunishVelocity.class), mock(ProxyServer.class),
+                nachrichten, name, aliase, befehl);
     }
 
     @Test
@@ -294,15 +345,25 @@ class BridgeSicherheitRegressionTest {
             de.lightrixx.punish.service.IpTimeoutService ipTimeout,
             de.lightrixx.punish.service.MuteService mutes,
             de.lightrixx.punish.service.IpMuteService ipMutes, VelocityKonfiguration config) {
+        return listener(proxy, ipTimeout, mutes, ipMutes, config,
+                mock(de.lightrixx.punish.service.MessageService.class),
+                mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                mock(de.lightrixx.punish.storage.PlayerCache.class));
+    }
+
+    private static StrafListener listener(com.velocitypowered.api.proxy.ProxyServer proxy,
+            de.lightrixx.punish.service.IpTimeoutService ipTimeout,
+            de.lightrixx.punish.service.MuteService mutes, de.lightrixx.punish.service.IpMuteService ipMutes,
+            VelocityKonfiguration config, de.lightrixx.punish.service.MessageService nachrichten,
+            de.lightrixx.punish.core.AuftragsPlaner planer, de.lightrixx.punish.storage.PlayerCache spielerCache) {
         return new StrafListener(proxy, mock(org.slf4j.Logger.class),
-                mock(de.lightrixx.punish.storage.PlayerCache.class),
+                spielerCache,
                 mock(de.lightrixx.punish.service.BanService.class),
                 mock(de.lightrixx.punish.service.IpBanService.class),
                 mock(de.lightrixx.punish.service.TimeoutService.class),
                 mutes, ipMutes, ipTimeout,
                 mock(de.lightrixx.punish.service.AutoBannService.class),
-                config, mock(de.lightrixx.punish.service.MessageService.class),
-                mock(de.lightrixx.punish.core.AuftragsPlaner.class),
+                config, nachrichten, planer,
                 mock(de.lightrixx.punish.storage.BanRepository.class), mock(BrueckenKanal.class));
     }
 
@@ -386,34 +447,44 @@ class BridgeSicherheitRegressionTest {
 
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-    void verpassteBroadcastsVerlierenWederDenRestNochBestaetigenSieEinenDisconnect(boolean getrennt) throws Exception {
+    void verpassteBroadcastsWerdenNurBeimLoginUndNurBisZumLoginNachgesendet(boolean getrennt) {
         var uuid = java.util.UUID.randomUUID();
         var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
         var player = mock(com.velocitypowered.api.proxy.Player.class);
+        when(player.getUniqueId()).thenReturn(uuid);
+        when(player.getUsername()).thenReturn("Team");
+        when(player.getRemoteAddress()).thenReturn(new java.net.InetSocketAddress("127.0.0.1", 12345));
         when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player))
                 .thenReturn(getrennt ? java.util.Optional.empty() : java.util.Optional.of(player));
         var config = mock(VelocityKonfiguration.class);
         when(config.verpassteBroadcastsAktiv()).thenReturn(true);
-        var listener = listener(proxy, null, mock(de.lightrixx.punish.service.MuteService.class), null, config);
+        var planer = mock(de.lightrixx.punish.core.AuftragsPlaner.class);
+        var spielerCache = mock(de.lightrixx.punish.storage.PlayerCache.class);
+        when(spielerCache.finden(uuid)).thenReturn(java.util.Optional.of(
+                new de.lightrixx.punish.model.CachedPlayer(uuid, "Team", "127.0.0.1", 1L)));
+        var listener = listener(proxy, null, mock(de.lightrixx.punish.service.MuteService.class),
+                null, config, mock(de.lightrixx.punish.service.MessageService.class), planer, spielerCache);
         var ablage = mock(de.lightrixx.punish.storage.VerpassteBroadcastsRepository.class);
         var verzeichnis = mock(de.lightrixx.punish.core.SpielerVerzeichnis.class);
         when(verzeichnis.hatRecht(org.mockito.ArgumentMatchers.eq(uuid), any())).thenReturn(true);
         when(verzeichnis.onlineSpieler(uuid)).thenReturn(java.util.Optional.of(
                 new de.lightrixx.punish.core.OnlineSpieler(uuid, "Team", "127.0.0.1", false)));
         when(ablage.cursorFuer(uuid)).thenReturn(java.util.Optional.of(1L));
-        var snapshot = java.util.stream.LongStream.rangeClosed(1, 5001)
-                .mapToObj(i -> new de.lightrixx.punish.model.VerpassteNachricht(i, "mute", "Eintrag " + i, 2L)).toList();
-        var leseZeit = new java.util.concurrent.atomic.AtomicLong();
-        when(ablage.momentaufnahme()).thenAnswer(inv -> {
-            leseZeit.set(System.currentTimeMillis());
-            return snapshot;
-        });
+        var snapshot = new java.util.ArrayList<>(java.util.stream.LongStream.rangeClosed(1, 5001)
+                .mapToObj(i -> new de.lightrixx.punish.model.VerpassteNachricht(i, "mute", "Eintrag " + i, 2L)).toList());
+        when(ablage.momentaufnahme()).thenReturn(snapshot);
         var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
-        var methode = StrafListener.class.getDeclaredMethod("liefereVerpasst", java.util.UUID.class,
-                de.lightrixx.punish.storage.VerpassteBroadcastsRepository.class,
-                de.lightrixx.punish.core.SpielerVerzeichnis.class, de.lightrixx.punish.service.BroadcastService.class);
-        methode.setAccessible(true);
-        methode.invoke(listener, uuid, ablage, verzeichnis, broadcast);
+        listener.setVerpasstNachsendung(ablage, verzeichnis, broadcast);
+        listener.onLogin(new com.velocitypowered.api.event.connection.LoginEvent(player));
+        long liveZeit = System.currentTimeMillis();
+        snapshot.add(new de.lightrixx.punish.model.VerpassteNachricht(5002L, "mute", "Live", liveZeit));
+        var lobby = server("lobby");
+        var survival = server("survival");
+        listener.onServerConnected(new com.velocitypowered.api.event.player.ServerConnectedEvent(player, lobby, null));
+        listener.onServerConnected(new com.velocitypowered.api.event.player.ServerConnectedEvent(player, survival, lobby));
+        var aufgaben = org.mockito.ArgumentCaptor.forClass(Runnable.class);
+        verify(planer, org.mockito.Mockito.times(3)).spaeter(aufgaben.capture(), eq(20L));
+        aufgaben.getAllValues().getFirst().run();
         org.mockito.ArgumentCaptor<java.util.List<de.lightrixx.punish.model.VerpassteNachricht>> teile =
                 org.mockito.ArgumentCaptor.captor();
         verify(broadcast, org.mockito.Mockito.times(2)).liefereVerpassteNach(
@@ -423,8 +494,43 @@ class BridgeSicherheitRegressionTest {
             verify(ablage, org.mockito.Mockito.never()).cursorSetzen(any(), org.mockito.ArgumentMatchers.anyLong());
         } else {
             verify(ablage).cursorSetzen(org.mockito.ArgumentMatchers.eq(uuid),
-                    org.mockito.ArgumentMatchers.longThat(wert -> wert < leseZeit.get()));
+                    org.mockito.ArgumentMatchers.longThat(wert -> wert < liveZeit));
         }
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"lobby", "survival"})
+    void lokalerMuteWirdNurAmBetroffenenBackendAngekuendigt(String zielserver) {
+        var uuid = java.util.UUID.randomUUID();
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var player = mock(com.velocitypowered.api.proxy.Player.class);
+        var verbindung = mock(com.velocitypowered.api.proxy.ServerConnection.class);
+        var ziel = server(zielserver);
+        var serverInfo = ziel.getServerInfo();
+        when(verbindung.getServerInfo()).thenReturn(serverInfo);
+        when(player.getCurrentServer()).thenReturn(java.util.Optional.of(verbindung));
+        when(player.getUniqueId()).thenReturn(uuid);
+        when(player.getUsername()).thenReturn("Steve");
+        when(proxy.getPlayer(uuid)).thenReturn(java.util.Optional.of(player));
+        var planer = mock(de.lightrixx.punish.core.AuftragsPlaner.class);
+        var nachrichten = mock(de.lightrixx.punish.service.MessageService.class);
+        var mutes = mock(de.lightrixx.punish.service.MuteService.class);
+        long jetzt = System.currentTimeMillis();
+        var mute = new de.lightrixx.punish.model.MuteRecord(uuid, "Steve", "Spam", "Mod",
+                jetzt, jetzt + 60_000L, de.lightrixx.punish.model.ServerScope.server("survival"));
+        when(mutes.findeAktivenMuteFuer(eq(uuid), org.mockito.ArgumentMatchers.anyLong(), eq("survival")))
+                .thenReturn(java.util.Optional.of(mute));
+        var listener = listener(proxy, null, mutes, null, mock(VelocityKonfiguration.class),
+                nachrichten, planer, mock(de.lightrixx.punish.storage.PlayerCache.class));
+
+        listener.onServerConnected(new com.velocitypowered.api.event.player.ServerConnectedEvent(player, ziel, null));
+        var aufgabe = org.mockito.ArgumentCaptor.forClass(Runnable.class);
+        verify(planer).spaeter(aufgabe.capture(), eq(20L));
+        aufgabe.getValue().run();
+
+        verify(nachrichten, org.mockito.Mockito.times(zielserver.equals("survival") ? 1 : 0))
+                .senden(any(), eq(de.lightrixx.punish.core.MessageKeys.ZIEL_GEMUTET),
+                        org.mockito.ArgumentMatchers.argThat(ph -> "survival".equals(ph.get("scope"))));
     }
 
     @Test

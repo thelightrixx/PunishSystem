@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -131,6 +132,61 @@ class MysqlBanRepositoryTest {
         assertThrows(NullPointerException.class, () -> repository.migrationImport(null));
         List<BanRecord> leer = List.of();
         assertEquals(0, repository.migrationImport(leer));
+    }
+
+    @Test
+    void permanenterSqlFehlerBlockiertKeineNachfolgendenSchreibauftraege() throws Exception {
+        var geschrieben = new java.util.concurrent.CountDownLatch(1);
+        io.ausfuehren(() -> {
+            throw new IllegalStateException("Konflikt", new java.sql.SQLIntegrityConstraintViolationException(
+                    "Eindeutiger Schlüssel verletzt", "23000"));
+        });
+        io.ausfuehren(geschrieben::countDown);
+
+        assertTrue(geschrieben.await(5, TimeUnit.SECONDS));
+        assertEquals(1, io.anzahlFehler());
+        assertFalse(io.istGesund());
+    }
+
+    @Test
+    void dauerhafterBannUeberholtKeinenVorherigenPardon() throws Exception {
+        var loeschen = mock(PreparedStatement.class);
+        when(verbindung.prepareStatement(anyString())).thenAnswer(inv ->
+                inv.<String>getArgument(0).startsWith("DELETE") ? loeschen : prepared);
+        var repository = new BanRepository(mysql, io);
+        var uuid = UUID.randomUUID();
+        var scope = ServerScope.global();
+        var alt = new BanRecord(uuid, "Steve", "Alt", "Mod", 1L, null, false, scope);
+        var neu = new BanRecord(uuid, "Steve", "Neu", "Mod", 2L, null, false, scope);
+        assertTrue(repository.bannenWennFrei(alt));
+        assertTrue(io.warteAufIdle(5, TimeUnit.SECONDS));
+        org.mockito.Mockito.clearInvocations(prepared);
+
+        var schreibeWeiter = new java.util.concurrent.CountDownLatch(1);
+        io.ausfuehren(() -> {
+            try {
+                if (!schreibeWeiter.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Testschranke nicht freigegeben");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Testschranke unterbrochen", e);
+            }
+        });
+        try {
+            assertTrue(repository.entbannen(uuid, scope).isPresent());
+            var vorgang = java.util.concurrent.CompletableFuture.supplyAsync(
+                    () -> repository.bannenWennFreiDauerhaft(neu));
+            assertThrows(java.util.concurrent.TimeoutException.class,
+                    () -> vorgang.get(200, TimeUnit.MILLISECONDS));
+            schreibeWeiter.countDown();
+            assertEquals(BanRepository.BannPersistenz.ERFOLG, vorgang.get(5, TimeUnit.SECONDS));
+            var reihenfolge = org.mockito.Mockito.inOrder(loeschen, prepared);
+            reihenfolge.verify(loeschen).executeUpdate();
+            reihenfolge.verify(prepared).executeUpdate();
+        } finally {
+            schreibeWeiter.countDown();
+        }
     }
 
     @Test

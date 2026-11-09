@@ -182,7 +182,7 @@ public final class FreezeService {
         platzhalter.put("scope", wirksam.anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zielInformieren(zielUuid, MessageKeys.ZIEL_GEFROR, platzhalter);
+        zielInformieren(zielUuid, MessageKeys.ZIEL_GEFROR, platzhalter, wirksam);
 
         try {
             historyService.hinzufuegen(HistoryType.FREEZE, ausfuehrer, zielUuid, zielName, grund,
@@ -237,7 +237,7 @@ public final class FreezeService {
         platzhalter.put("scope", entfernt.get().scope().anzeige());
         platzhalter.put("herkunft", herkunftNorm);
 
-        zielInformieren(zielUuid, MessageKeys.ZIEL_ENTFROR, platzhalter);
+        zielInformieren(zielUuid, MessageKeys.ZIEL_ENTFROR, platzhalter, entfernt.get().scope());
 
         try {
             historyService.hinzufuegen(HistoryType.UNFREEZE, ausfuehrer, zielUuid, zielName,
@@ -364,16 +364,19 @@ public final class FreezeService {
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
-    private void zielInformieren(UUID zielUuid, String schluessel, Map<String, String> platzhalter) {
+    private void zielInformieren(UUID zielUuid, String schluessel, Map<String, String> platzhalter,
+                                 ServerScope scope) {
         if (!verzeichnis.darfDirektAusfuehren()) {
             try {
-                taskScheduler.aufgabe(() -> zielInformieren(zielUuid, schluessel, platzhalter));
+                taskScheduler.aufgabe(() -> zielInformieren(zielUuid, schluessel, platzhalter, scope));
             } catch (IllegalStateException e) {
                 LOG.debug(
                         "Ziel-Info nach Shutdown verworfen für {}", zielUuid);
             }
             return;
         }
-        messageService.anSpieler(zielUuid, schluessel, platzhalter, verzeichnis);
+        if (scope.typ() != ServerScope.Typ.SERVER || scope.server().equalsIgnoreCase(verzeichnis.serverName(zielUuid))) {
+            messageService.anSpieler(zielUuid, schluessel, platzhalter, verzeichnis);
+        }
     }
 }

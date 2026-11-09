@@ -57,6 +57,24 @@ class HistoryNebenlaeufigkeitTest {
         ioExecutor.herunterfahren(10, TimeUnit.SECONDS);
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"global", "unbekannt", "server:lobby"})
+    void aufhebungDeaktiviertNurDenBetroffenenScope(String scope) {
+        UUID uuid = UUID.randomUUID();
+        for (String eintragScope : List.of("global", "unbekannt", "lobby")) {
+            repository.hinzufuegenNeu(HistoryType.BAN, "Mod", uuid, "Steve", "Test",
+                    null, eintragScope, "lobby");
+        }
+        repository.hinzufuegenNeu(HistoryType.PARDON, "Mod", uuid, "Steve", "Test",
+                null, scope, "lobby");
+
+        var banns = repository.finden(uuid, 10).stream()
+                .filter(eintrag -> eintrag.typ() == HistoryType.BAN).toList();
+        assertEquals(3, banns.size());
+        assertEquals(List.of(scope.replace("server:", "")), banns.stream()
+                .filter(eintrag -> !eintrag.aktiv()).map(HistoryEntry::scope).toList());
+    }
+
     @Test
     @DisplayName("A-002: gleichzeitige Einträge desselben Ziels gehen nicht verloren (Snapshot unter Lock)")
     void gleichzeitigeEintraegeGehenNichtVerloren() throws Exception {

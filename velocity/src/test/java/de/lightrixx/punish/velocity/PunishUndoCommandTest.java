@@ -38,6 +38,8 @@ class PunishUndoCommandTest {
     private PunishCommand pardon;
     private PunishCommand unmute;
     private PunishCommand warn;
+    private PlayerCache playerCache;
+    private WarnService warnService;
     private PunishUndoCommand befehl;
 
     @BeforeEach
@@ -46,9 +48,9 @@ class PunishUndoCommandTest {
         historyService = Mockito.mock(HistoryService.class);
         var config = Mockito.mock(Konfiguration.class);
         var protection = Mockito.mock(ProtectionService.class);
-        var playerCache = Mockito.mock(PlayerCache.class);
+        playerCache = Mockito.mock(PlayerCache.class);
         var verzeichnis = Mockito.mock(SpielerVerzeichnis.class);
-        var warnService = Mockito.mock(WarnService.class);
+        warnService = Mockito.mock(WarnService.class);
         sender = Mockito.mock(BefehlsSender.class);
         pardon = Mockito.mock(PunishCommand.class);
         unmute = Mockito.mock(PunishCommand.class);
@@ -151,5 +153,22 @@ class PunishUndoCommandTest {
         befehl.ausfuehren(sender, new String[0]);
         verify(pardon).ausfuehren(eq(sender),
                 AdditionalMatchers.aryEq(new String[]{"Steve", "--survival"}));
+    }
+
+    @Test
+    void undoWaehltBeiGleichemGrundKeineVerwarnungEinesAnderenModerators() {
+        var uuid = java.util.UUID.randomUUID();
+        var eintrag = eintrag(1L, HistoryType.WARN_ADD, "ModA", "Steve", "Spam");
+        when(historyService.findeAlle()).thenReturn(List.of(eintrag));
+        when(playerCache.istFrischeNamensZuordnung("Steve")).thenReturn(true);
+        when(playerCache.findenNachName("Steve")).thenReturn(java.util.Optional.of(
+                new de.lightrixx.punish.model.CachedPlayer(uuid, "Steve", "unbekannt", eintrag.zeitstempel())));
+        when(warnService.findeWarns(uuid)).thenReturn(List.of(
+                new de.lightrixx.punish.model.WarnRecord(2, "Steve", "Spam", "ModB", eintrag.zeitstempel()),
+                new de.lightrixx.punish.model.WarnRecord(1, "Steve", "Spam", "ModA", eintrag.zeitstempel() - 10L)));
+
+        befehl.ausfuehren(sender, new String[0]);
+
+        verify(warn).ausfuehren(eq(sender), AdditionalMatchers.aryEq(new String[]{"delete", "Steve", "1"}));
     }
 }

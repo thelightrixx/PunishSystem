@@ -368,7 +368,8 @@ public final class BanService {
             return Optional.empty();
         }
 
-        Optional<BanRecord> alt = banRepository.findeAbdeckend(zielUuid, scopeSelektor, jetzt)
+        Optional<BanRecord> alt = banRepository.finden(zielUuid, scopeSelektor)
+                .filter(bann -> bann.istAktiv(jetzt))
                 .filter(bann -> !bann.autoBann());
         if (alt.isEmpty()) {
             return Optional.empty();
@@ -424,7 +425,8 @@ public final class BanService {
             return Optional.empty();
         }
         long jetzt = System.currentTimeMillis();
-        Optional<BanRecord> alt = banRepository.findeAbdeckend(zielUuid, scopeSelektor, jetzt)
+        Optional<BanRecord> alt = banRepository.finden(zielUuid, scopeSelektor)
+                .filter(bann -> bann.istAktiv(jetzt))
                 .filter(bann -> !bann.autoBann());
         if (alt.isEmpty()) {
             return Optional.empty();

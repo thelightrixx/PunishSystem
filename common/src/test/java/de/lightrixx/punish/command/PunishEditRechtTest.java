@@ -2,10 +2,13 @@ package de.lightrixx.punish.command;
 
 import de.lightrixx.punish.core.BefehlsSender;
 import de.lightrixx.punish.core.Permissions;
+import de.lightrixx.punish.util.TabHinweis;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -79,5 +82,17 @@ class PunishEditRechtTest {
     @Test
     void nullSenderAbgelehnt() {
         assertFalse(befehl().hatRecht(null, new String[]{"ban", "X"}));
+    }
+
+    @Test
+    void verstossStufenNachNummerUndGrund() {
+        var befehl = befehl();
+        var sender = senderMit(Set.of(Permissions.PUNISH_EDIT.node()));
+        var stufen = List.of("level=low", "level=medium", "level=high");
+
+        assertTrue(befehl.vervollstaendigen(sender, TabHinweis.teile("verstoss Steve 2 ")).containsAll(stufen));
+        String basis = "verstoss Steve 2 grund=Spam im Chat ";
+        assertTrue(befehl.vervollstaendigen(sender, TabHinweis.teile(basis)).containsAll(stufen));
+        assertEquals(stufen, befehl.vervollstaendigen(sender, TabHinweis.teile(basis + "l")));
     }
 }

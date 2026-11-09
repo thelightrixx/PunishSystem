@@ -56,6 +56,7 @@ class ScopeParserTest {
         assertFalse(ergebnis.hatteFlag());
         assertEquals(ServerScope.server("survival"), ergebnis.scope());
         assertArrayEquals(new String[]{"Notch", "--unbekannt"}, ergebnis.bereinigteArgs());
+        assertEquals("--unbekannt", ergebnis.ungueltigesFlag());
     }
 
     @Test
@@ -100,6 +101,23 @@ class ScopeParserTest {
         assertTrue(treffer.contains("--lobby"));
         assertFalse(treffer.contains("--survival"));
         assertFalse(treffer.contains("--global"));
+    }
+
+    @Test
+    void langeScopeSyntaxSchlaegtVollstaendigeFlagsVor() {
+        assertEquals(List.of("--server=lobby"),
+                ScopeParser.vorschlaege("--server=l", List.of("survival", "lobby")));
+        assertEquals(List.of("--server=server"),
+                ScopeParser.vorschlaege("--server", List.of("server")));
+    }
+
+    @Test
+    void aequivalenteScopeFlagsSindKeinKonflikt() {
+        var ergebnis = ScopeParser.parsen(new String[]{"Notch", "--lobby", "--server=lobby"},
+                ServerScope.global(), List.of("lobby"));
+        assertTrue(ergebnis.hatteFlag());
+        assertEquals(ServerScope.server("lobby"), ergebnis.scope());
+        assertEquals("", ergebnis.ungueltigesFlag());
     }
 
     @Test

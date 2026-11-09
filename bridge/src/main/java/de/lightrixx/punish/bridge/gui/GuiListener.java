@@ -22,7 +22,8 @@ public final class GuiListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void beiKlick(InventoryClickEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof GuiMenues.GuiHolder holder)) {
+        var inventar = event.getView().getTopInventory();
+        if (!(inventar.getHolder() instanceof GuiMenues.GuiHolder holder)) {
             return;
         }
         if (!(event.getWhoClicked() instanceof Player spieler)) {
@@ -30,14 +31,10 @@ public final class GuiListener implements Listener {
         }
         event.setCancelled(true);
         if (event.getClickedInventory() == null
-                || !event.getClickedInventory().equals(event.getView().getTopInventory())) {
+                || !event.getClickedInventory().equals(inventar)) {
             return;
         }
-        try {
-            manager.klick(spieler, holder, event.getSlot());
-        } catch (Exception e) {
-            org.slf4j.LoggerFactory.getLogger(GuiListener.class).debug("GUI-Klick konnte nicht verarbeitet werden.", e);
-        }
+        manager.klickNaechsterTick(spieler, inventar, holder, event.getSlot());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)

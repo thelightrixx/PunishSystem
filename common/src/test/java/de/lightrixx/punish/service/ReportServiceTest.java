@@ -286,6 +286,18 @@ class ReportServiceTest {
     }
 
     @Test
+    void reportMitUnicodeZeichenWirdOhneKaputtesSurrogatGekuerzt() {
+        ReportService service = service(0, 3, 0);
+        String grund = "a".repeat(255) + "\uD83D\uDE00" + "b";
+
+        var ergebnis = service.melden(UUID.randomUUID(), "Steve", UUID.randomUUID(),
+                "Alex", grund, "lobby");
+
+        assertTrue(ergebnis.erfolg());
+        assertEquals("a".repeat(255) + "\uD83D\uDE00", ergebnis.report().grund());
+    }
+
+    @Test
     void geschlossenerReportKannNichtNeuBewertetWerden() {
         ReportService service = service(0, 3, 0);
         var erstellt = service.melden(UUID.randomUUID(), "Steve", UUID.randomUUID(),
@@ -299,8 +311,10 @@ class ReportServiceTest {
         assertEquals(ReportStatus.ERLEDIGT, service.findenNachId(id).orElseThrow().status());
         assertThrows(ReportService.BereitsGeschlossen.class,
                 () -> service.schliessen(id, ReportStatus.ANGENOMMEN, "AndererMod", "erneut"));
+        assertThrows(ReportService.BereitsGeschlossen.class,
+                () -> service.schliessen(id, ReportStatus.ERLEDIGT, "AndererMod", "überschreiben"));
         assertEquals(0, service.anzahlOffen());
-        assertEquals(ReportStatus.ERLEDIGT, service.findenNachId(id).orElseThrow().status());
+        assertEquals("Mod", service.findenNachId(id).orElseThrow().bearbeiter());
     }
 
     @Test
