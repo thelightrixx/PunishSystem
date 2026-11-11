@@ -205,6 +205,18 @@ public interface Konfiguration {
 
     long reportCooldownSekunden();
 
+    default long reportCooldownIpSekunden() {
+        return 60L;
+    }
+
+    default long reportErinnerungMinuten() {
+        return 15L;
+    }
+
+    default long reportUebernahmeTimeoutMinuten() {
+        return 0L;
+    }
+
     int reportMaxOffenProReporter();
 
     long reportDuplikatSperreMinuten();

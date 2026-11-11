@@ -120,4 +120,9 @@ class PermissionsKonsistenzTest {
     void punishExportInAllenQuellen() {
         pruefeDreiQuellen("punish.export");
     }
+
+    @Test
+    void punishSearchInAllenQuellen() {
+        pruefeDreiQuellen("punish.search");
+    }
 }

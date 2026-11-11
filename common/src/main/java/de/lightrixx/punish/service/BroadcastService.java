@@ -2,6 +2,7 @@ package de.lightrixx.punish.service;
 
 import de.lightrixx.punish.core.AuftragsPlaner;
 import de.lightrixx.punish.core.Konfiguration;
+import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.core.OnlineSpieler;
 import de.lightrixx.punish.core.Permissions;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
@@ -73,7 +74,9 @@ public final class BroadcastService {
             return;
         }
         LOG.info("[Broadcast:{}] {}", typ, sanierenFuerLog(ersetzt));
-        ablegenFuerOffline(typ, ersetzt);
+        if (!MessageKeys.BROADCAST_REPORT_ERINNERUNG.equals(typ)) {
+            ablegenFuerOffline(typ, ersetzt);
+        }
 
         if (verzeichnis.darfDirektAusfuehren()) {
             sendenAnTeam(nachricht);

@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-preview+091126-2101",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-preview+111126-1741",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
@@ -373,6 +373,9 @@ public final class PunishVelocity {
             logger.warn("Expiry-Cleanup konnte nicht geplant werden.", e);
         }
         startePersistenzWaechter(verzeichnis);
+        long reportWartungTicks = 30L * 20L;
+        planer.intervallAsync(() -> reportService.wartung(System.currentTimeMillis()),
+                reportWartungTicks, reportWartungTicks);
         logger.info("PunishSystemVelocity by lightrixx aktiviert. Scope-Default: "
                 + (config.serverName().equals(ServerScope.UNBEKANNT_WERT)
                         ? "aktueller Server (Auto)"

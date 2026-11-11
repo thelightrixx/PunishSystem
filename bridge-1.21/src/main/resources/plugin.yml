@@ -40,6 +40,10 @@ commands:
     aliases: [psexport]
     permission: punish.export
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-search:
+    description: Durchsucht Historie, Notizen und Reports über den Proxy.
+    usage: /punish-search <Text> [page:<Nr>]
+    permission: punish.search
   punish:
     description: Führt eine Straf-Vorlage aus (wird an den Proxy weitergeleitet).
     usage: /punish <Spieler> <Vorlage> [Text]
@@ -265,6 +269,7 @@ permissions:
   punish.undo: { description: Letzte eigene Strafaktion zurücknehmen (via Proxy)., default: false }
   punish.stats: { description: Team-Statistik einsehen (via Proxy)., default: false }
   punish.export: { description: JSON-Backup der Strafdaten schreiben (via Proxy)., default: false }
+  punish.search: { description: Historie und Moderationsdaten durchsuchen (via Proxy)., default: false }
   punish.allow-silent-syntax: { description: Stille Strafen mit -s ausführen (GUI-Toggle + Tunnel)., default: false }
   punish.mute: { description: Spieler muten (via Proxy)., default: false }
   punish.muteall: { description: Alle Spieler muten (via Proxy)., default: false }

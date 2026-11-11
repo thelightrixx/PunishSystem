@@ -1190,7 +1190,8 @@ details>div{padding:14px 18px 2px}
   <div class="tbl"><table>
     <thead><tr><th>Regel</th><th>Standard</th></tr></thead>
     <tbody>
-      <tr><td>Wartezeit zwischen zwei Reports</td><td>60 Sekunden</td></tr>
+      <tr><td>Wartezeit pro Spielerkonto (<code>reports.cooldown-sekunden</code>)</td><td>60 Sekunden</td></tr>
+      <tr><td>Wartezeit pro aktueller Verbindungs-IP (<code>reports.cooldown-ip-sekunden</code>)</td><td>60 Sekunden. Gilt auch für mehrere Konten mit gemeinsamer IP. <code>0</code> schaltet sie aus.</td></tr>
       <tr><td>Gleichzeitig offene Reports pro Melder</td><td>3</td></tr>
       <tr><td>Doppelte Meldung gegen dasselbe Ziel</td><td>10 Minuten gesperrt</td></tr>
     </tbody>
@@ -1220,6 +1221,8 @@ details>div{padding:14px 18px 2px}
     </tbody>
   </table></div>
   <p>Ohne Unterbefehl listet <code>/reports</code> die offenen Reports, <code>list alle</code> zeigt alle. Der Melder erhält eine Nachricht, sobald sein Report bearbeitet wurde. <code>delete</code> entfernt einen Report endgültig. Statt <code>/reports info &lt;Id&gt;</code> genügt die nackte Nummer.</p>
+  <p><code>reports.erinnerung-minuten</code> legt das Erinnerungsintervall fest (Standard 15 Minuten, <code>0</code> schaltet die Erinnerung aus). Bei offenen Reports erhalten Teammitglieder mit <code>punish.message.all-punishes</code> online eine Meldung. Den Text kannst du unter <code>broadcasts.report-erinnerung</code> anpassen.</p>
+  <p><code>reports.uebernahme-timeout-minuten</code> gibt übernommene Reports nach der eingestellten Zeit seit der Übernahme wieder frei. Andere Teammitglieder können sie dann übernehmen. Mit dem Standardwert <code>0</code> ist die automatische Freigabe aus.</p>
 </section>
 
 <!-- =============================== BEFEHLSREFERENZ =============================== -->
@@ -1271,6 +1274,7 @@ details>div{padding:14px 18px 2px}
       <tr><td><a href="#/befehle-einsicht/punish-status"><code>/punish-status</code></a></td><td>Aktive Strafen und Punkte ansehen</td><td><code>punish.status</code></td></tr>
       <tr><td><a href="#/befehle-einsicht/pscheck"><code>/pscheck</code></a></td><td>Kompakte Spielerakte ansehen</td><td><code>punish.status</code></td></tr>
       <tr><td><a href="#/befehle-einsicht/punish-history"><code>/punish-history</code></a></td><td>Hauptverlauf ansehen</td><td><code>punish.history</code></td></tr>
+      <tr><td><a href="#/befehle-einsicht/punish-search"><code>/punish-search</code></a></td><td>Historie, Notizen und Reports durchsuchen</td><td><code>punish.search</code></td></tr>
       <tr><td><a href="#/befehle-einsicht/alts"><code>/alts</code></a></td><td>Accounts mit gemeinsam genutzter IP finden</td><td><code>punish.alts</code></td></tr>
       <tr><td><a href="#/befehle-bearbeiten/punish-edit"><code>/punish-edit</code></a></td><td>Grund, Dauer oder Stufe korrigieren</td><td><code>punish.edit</code></td></tr>
       <tr><td><a href="#/befehle-vorlagen/punish"><code>/punish</code></a></td><td>Vorlage ausführen; braucht zusätzlich das Zielbefehlsrecht</td><td><code>punish.templates</code></td></tr>
@@ -1646,6 +1650,14 @@ details>div{padding:14px 18px 2px}
   </table></div>
   <p>Wie viele Einträge eine Seite in <code>/punish-history</code> und <code>/punish-status</code> hat, stellt ein Admin unter <code>history.eintraege-pro-seite</code> ein (Standard: 10).</p>
 
+  <article class="cmd-card" data-cmd="/punish-search" data-perm="punish.search" data-scope="nein">
+    <p class="desc">Durchsucht geladene Historie, Notizen und Reports im ganzen Netzwerk. Der Befehl ist schreibgeschützt. Ausgelagerte History-Archive liegen außerhalb der Suche.</p>
+    <pre data-lang="cmd">/punish-search &lt;Text&gt; [page:&lt;Nr&gt;]</pre>
+    <pre data-lang="cmd">/punish-search Spam im Chat
+/punish-search Spam im Chat page:2</pre>
+    <p>Die Suche ignoriert Groß- und Kleinschreibung. Sie zeigt bis zu 200 Treffer, neueste zuerst. Die Seitengröße folgt <code>history.eintraege-pro-seite</code> (Standard 10). <code>punish.search</code> gehört zu den Bündeln <code>admin</code> und <code>p-admin</code>.</p>
+  </article>
+
   <article class="cmd-card" data-cmd="/alts" data-perm="punish.alts" data-scope="ja">
     <p class="desc">Findet Accounts, die dieselbe IP genutzt haben, und zeigt für jeden den letzten Besuch und den Bann-Status. Damit lassen sich Umgehungsversuche erkennen.</p>
     <pre data-lang="cmd">/alts &lt;Spieler|IP&gt; [--Scope]</pre>
@@ -1731,7 +1743,7 @@ details>div{padding:14px 18px 2px}
   <article class="cmd-card" data-cmd="/punish-export" data-alias="/psexport" data-perm="punish.export" data-scope="nein">
     <p class="desc">Exportiert History, Warns, Notizen und Reports als JSON nach <code>plugins/PunishSystemVelocity/exports/</code>; die Erfolgsmeldung nennt den vollständigen Pfad.</p>
     <pre data-lang="cmd">/punish-export</pre>
-    <p>Der Verlauf ist auf 100.000 Einträge begrenzt. Der Export ersetzt keine vollständige Sicherung: Aktive Straf-Repositories, Spieler-Cache, Konfiguration und Archive sind nicht als vollständiges Backup enthalten. Der Dateiname lautet <code>punish-export-JJJJMMTT-HHMMSS-MMM.json</code>. Das Recht steckt in den Bündeln <code>admin</code> und <code>p-admin</code>.</p>
+    <p>Der Export enthält bis zu 5.000 Einträge aus dem Hauptverlauf. Für einen wiederherstellbaren Systemstand siehe <a href="#/betrieb/sicherung-erstellen">Sicherung erstellen</a>. Der Dateiname lautet <code>punish-export-JJJJMMTT-HHMMSS-MMM.json</code>. Das Recht steckt in den Bündeln <code>admin</code> und <code>p-admin</code>.</p>
   </article>
 </section>
 
@@ -2009,6 +2021,7 @@ details>div{padding:14px 18px 2px}
     <tbody>
       <tr><td><code>punish.report</code></td><td><code>/report</code> (für alle Spieler vorgesehen)</td></tr>
       <tr><td><code>punish.reports</code></td><td><code>/reports</code></td></tr>
+      <tr><td><code>punish.search</code></td><td><code>/punish-search</code></td></tr>
       <tr><td><code>punish.gui</code></td><td><code>/punish-gui</code> und <code>/punish-dossier</code> (PunishGUI)</td></tr>
       <tr><td><code>punish.undo</code>, <code>punish.stats</code>, <code>punish.export</code></td><td><code>/punish-undo</code>, <code>/punish-stats</code>, <code>/punish-export</code></td></tr>
       <tr><td><code>punish.chatfilter</code></td><td><code>/chatfilter</code> (<code>on</code>, <code>off</code>, <code>ai_on</code>, <code>ai_off</code>, <code>add</code>, <code>remove</code>, <code>list</code>, <code>test</code>)</td></tr>
@@ -2176,6 +2189,9 @@ history:
     <div>
       <pre data-lang="yaml">reports:
   cooldown-sekunden: 60
+  cooldown-ip-sekunden: 60
+  erinnerung-minuten: 15
+  uebernahme-timeout-minuten: 0
   max-offen-pro-reporter: 3
   duplikat-sperre-minuten: 10</pre>
       <p>Siehe <a href="#/reports">Reports</a>.</p>
@@ -2412,7 +2428,7 @@ vorschlaege:
       <tr><td>Verstöße</td><td><code>verstoss-add</code>, <code>verstoss-remove</code>, <code>verstoss-edit</code>, <code>verstoss-clear</code>, <code>auto-bann</code>, <code>auto-pardon</code>, <code>auto-bann-abgelaufen</code></td></tr>
       <tr><td>Warns und Notizen</td><td><code>warn-add</code>, <code>warn-edit</code>, <code>warn-delete</code>, <code>warn-eskalation</code>, <code>note-add</code>, <code>note-edit</code>, <code>note-delete</code></td></tr>
       <tr><td>Alt-Wache</td><td><code>alt-wache</code></td></tr>
-      <tr><td>Reports, Chatfilter, Versionen</td><td><code>report-neu</code>, <code>report-close</code>, <code>chatfilter-treffer</code>, <code>version-mismatch</code></td></tr>
+      <tr><td>Reports, Chatfilter, Versionen</td><td><code>report-neu</code>, <code>report-erinnerung</code> (mit <code>%anzahl%</code>), <code>report-close</code>, <code>chatfilter-treffer</code>, <code>version-mismatch</code></td></tr>
     </tbody>
   </table></div>
   <div class="callout"><div><span class="ttl">Warn-Eskalation ersetzt die Verstoß-Meldung</span><p>Löst eine Verwarnung automatisch einen Verstoß aus, sendet das System nur die Meldung <code>warn-eskalation</code>. Wird sie abgeschaltet, erscheint stattdessen die normale <code>verstoss-add</code>-Meldung.</p></div></div>
@@ -2723,7 +2739,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Updates einspielen</h2>
-  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard: <code>thelightrixx/PunishSystem</code>). <code>Release</code> berücksichtigt stabile Releases; <code>Beta</code> und <code>Snapshot</code> berücksichtigen auch Vorabversionen. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
+  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Der Kanal <code>Release</code> berücksichtigt stabile Releases. Für Preview-Updates setze <code>update.channel</code> auf <code>Beta</code> oder <code>Snapshot</code> und lade die Proxy-Konfiguration mit <code>/punish-reload</code> neu. Bei gleicher Preview-Version entscheidet die Buildnummer, welcher Build neuer ist. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
   <ol class="steps">
     <li><strong>Update prüfen und bereitstellen</strong>
       <pre data-lang="cmd">/punish-update check
@@ -2751,7 +2767,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <div class="callout warn"><div><span class="ttl">Neustart allein installiert kein Update</span><p><code>apply</code> stellt Dateien bereit. Erst das manuelle Ersetzen und der anschließende Neustart aktivieren die neue Version. Ein Reload ersetzt keine Jars.</p></div></div>
 
   <h2>Sicherung erstellen</h2>
-  <div class="callout warn"><div><span class="ttl">JSON-Export ersetzt keine Sicherung</span><p><code>/punish-export</code> enthält History (höchstens 100.000 Einträge), Warns, Notizen und Reports. Aktive Strafbestände, Spieler-Cache, Konfiguration und Archive bilden damit keinen vollständig wiederherstellbaren Systemstand. Für eine Wiederherstellung die folgenden Bestände zusammen sichern.</p></div></div>
+  <div class="callout warn"><div><span class="ttl">Umfang des JSON-Exports</span><p><code>/punish-export</code> enthält bis zu 5.000 Einträge aus dem Hauptverlauf sowie Warns, Notizen und Reports. Für einen wiederherstellbaren Systemstand die folgenden Bestände zusammen sichern.</p></div></div>
   <p>Für einen zusammenpassenden Stand zuerst Proxy und Backends sauber stoppen. Anschließend die folgenden Bestände zusammen mit der verwendeten Buildnummer sichern:</p>
   <div class="tbl"><table>
     <thead><tr><th>Bestand</th><th>Was sichern?</th></tr></thead>

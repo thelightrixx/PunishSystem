@@ -303,6 +303,33 @@ public final class ReportRepository {
         }
     }
 
+    public void gibUebernahmenFrei(long stichtag) {
+        StoreLock.LOCK.writeLock().lock();
+        try {
+            boolean geaendert = false;
+            for (ReportRecord report : reports.values()) {
+                if (report.status() != ReportStatus.ANGENOMMEN) {
+                    continue;
+                }
+                long uebernommenAm = report.bearbeitetAm() > 0 ? report.bearbeitetAm() : report.erstelltAm();
+                if (uebernommenAm > stichtag) {
+                    continue;
+                }
+                ReportRecord offen = report.mitStatus(ReportStatus.OFFEN, "", "");
+                reports.put(offen.id(), offen);
+                if (mysql != null) {
+                    ioExecutor.ausfuehren(() -> upsertZeileNachMysql(offen));
+                }
+                geaendert = true;
+            }
+            if (geaendert && mysql == null) {
+                persistiere();
+            }
+        } finally {
+            StoreLock.LOCK.writeLock().unlock();
+        }
+    }
+
     public int anzahlOffen() {
         int anzahl = 0;
         for (ReportRecord record : reports.values()) {

@@ -50,7 +50,10 @@ import de.lightrixx.punish.command.UntimeoutCommand;
 import de.lightrixx.punish.command.UntimeoutIpCommand;
 import de.lightrixx.punish.command.VerstossCommand;
 import de.lightrixx.punish.core.BefehlsSender;
+import de.lightrixx.punish.core.Konfiguration;
 import de.lightrixx.punish.core.MessageKeys;
+import de.lightrixx.punish.core.Permissions;
+import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.ServerScope;
 import de.lightrixx.punish.service.AutoBannService;
 import de.lightrixx.punish.service.BanService;
@@ -85,10 +88,17 @@ import de.lightrixx.punish.storage.VerstossRepository;
 import de.lightrixx.punish.storage.WarnRepository;
 import de.lightrixx.punish.util.TimeParser;
 import de.lightrixx.punish.util.PluginVersion;
+import de.lightrixx.punish.util.ZeitFormat;
+import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.PriorityQueue;
 
 public final class VelocityBefehle {
 
@@ -278,6 +288,9 @@ public final class VelocityBefehle {
         registrar(manager, plugin, proxy, messageService, "punish-stats", List.of("psstats"),
                 new PunishStatsCommand(messageService, config, protectionService, playerCache,
                         verzeichnis, historyService, reportService, timeParser));
+        registrar(manager, plugin, proxy, messageService, "punish-search", List.of(),
+                new Suche(messageService, config, protectionService, playerCache,
+                        verzeichnis, historyRepository, noteRepository, reportRepository));
         if (datenOrdner != null) {
             registrar(manager, plugin, proxy, messageService, "punish-export", List.of("psexport"),
                     new PunishExportCommand(messageService, config, protectionService, playerCache,
@@ -370,6 +383,117 @@ public final class VelocityBefehle {
                 new PunishVorlageCommand(messageService, config, protectionService, playerCache,
                         planer, verzeichnis, vorlagenZiele));
         logger.info("Proxy-Befehle registriert (Scopes via --global / --server).");
+    }
+
+    static final class Suche extends PunishCommand {
+
+        private static final int LIMIT = 200;
+        private static final Comparator<Treffer> NACH_ZEIT = Comparator.comparingLong(Treffer::zeit)
+                .thenComparing(Treffer::typ).thenComparingLong(Treffer::id)
+                .thenComparing(Treffer::ziel).thenComparing(Treffer::text);
+
+        private record Treffer(long zeit, String typ, long id, String ziel, String text) {
+            boolean passt(String suche) {
+                return (typ + " " + ziel + " " + text).toLowerCase(Locale.ROOT).contains(suche);
+            }
+        }
+
+        private final HistoryRepository history;
+        private final NoteRepository notizen;
+        private final ReportRepository reports;
+
+        Suche(MessageService messageService, Konfiguration config, ProtectionService schutz,
+              PlayerCache playerCache, SpielerVerzeichnis verzeichnis, HistoryRepository history,
+              NoteRepository notizen, ReportRepository reports) {
+            super(messageService, config, schutz, playerCache, null, verzeichnis);
+            this.history = history;
+            this.notizen = notizen;
+            this.reports = reports;
+        }
+
+        @Override
+        protected String recht() {
+            return Permissions.PUNISH_SEARCH.node();
+        }
+
+        @Override
+        public boolean unterstuetztScope() {
+            return false;
+        }
+
+        @Override
+        public List<String> vervollstaendigen(BefehlsSender sender, String[] args) {
+            return List.of();
+        }
+
+        @Override
+        public void ausfuehren(BefehlsSender sender, String[] args) {
+            int textEnde = args.length;
+            int seite = 1;
+            if (textEnde > 0 && args[textEnde - 1].regionMatches(true, 0, "page:", 0, 5)) {
+                try {
+                    seite = Integer.parseInt(args[--textEnde].substring(5));
+                } catch (NumberFormatException e) {
+                    messageService.senden(sender, MessageKeys.PUNISH_SEARCH_SYNTAX);
+                    return;
+                }
+            }
+            String text = String.join(" ", Arrays.copyOf(args, textEnde)).strip();
+            if (seite < 1 || text.isEmpty()) {
+                messageService.senden(sender, MessageKeys.PUNISH_SEARCH_SYNTAX);
+                return;
+            }
+            List<Treffer> treffer = suche(text.toLowerCase(Locale.ROOT));
+            if (treffer.isEmpty()) {
+                messageService.senden(sender, MessageKeys.PUNISH_SEARCH_LEER);
+                return;
+            }
+            int groesse = Math.clamp(configManager.historyEintraegeProSeite(), 1, 100);
+            int anzahl = Math.min(treffer.size(), LIMIT);
+            int seiten = (anzahl + groesse - 1) / groesse;
+            seite = Math.min(seite, seiten);
+            List<Component> zeilen = new ArrayList<>();
+            zeilen.add(messageService.komponente(MessageKeys.PUNISH_SEARCH_KOPF, Map.of(
+                    "anzahl", String.valueOf(anzahl), "mehr", treffer.size() > LIMIT ? "+" : "",
+                    "seite", String.valueOf(seite), "seiten", String.valueOf(seiten))));
+            int start = (seite - 1) * groesse;
+            for (Treffer eintrag : treffer.subList(start, Math.min(start + groesse, anzahl))) {
+                zeilen.add(messageService.komponenteOhnePraefix(MessageKeys.PUNISH_SEARCH_ZEILE, Map.of(
+                        "typ", eintrag.typ(), "id", String.valueOf(eintrag.id()),
+                        "ziel", eintrag.ziel(), "text", eintrag.text(),
+                        "datum", ZeitFormat.formatZeitpunkt(eintrag.zeit()))));
+            }
+            messageService.sendeBlock(sender, zeilen);
+        }
+
+        private List<Treffer> suche(String suchtext) {
+            PriorityQueue<Treffer> treffer = new PriorityQueue<>(LIMIT + 1, NACH_ZEIT);
+            history.alleSchluessel().values().forEach(eintraege -> eintraege.forEach(eintrag ->
+                    aufnehmen(treffer, suchtext, new Treffer(eintrag.zeitstempel(),
+                            eintrag.typ().anzeigename(), eintrag.id(), eintrag.ziel(),
+                            eintrag.ausfuehrer() + " · " + eintrag.grund()))));
+            notizen.alle().values().forEach(eintraege -> eintraege.forEach(eintrag ->
+                    aufnehmen(treffer, suchtext, new Treffer(eintrag.erstelltAm(), "Notiz",
+                            eintrag.nummer(), eintrag.spielerName(), eintrag.ausfuehrer() + " · " + eintrag.text()))));
+            for (var report : reports.alle()) {
+                String text = report.reporterName() + " · " + report.grund();
+                if (!report.closeGrund().isBlank()) {
+                    text += " · " + report.closeGrund();
+                }
+                aufnehmen(treffer, suchtext, new Treffer(report.erstelltAm(), "Report",
+                        report.id(), report.zielName(), text));
+            }
+            return treffer.stream().sorted(NACH_ZEIT.reversed()).toList();
+        }
+
+        private static void aufnehmen(PriorityQueue<Treffer> treffer, String suchtext, Treffer eintrag) {
+            if (eintrag.passt(suchtext)) {
+                treffer.add(eintrag);
+                if (treffer.size() > LIMIT + 1) {
+                    treffer.poll();
+                }
+            }
+        }
     }
 
     private static de.lightrixx.punish.command.PunishDiagnosticsCommand.Kontext diagnoseKontext(

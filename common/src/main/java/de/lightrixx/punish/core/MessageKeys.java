@@ -92,6 +92,10 @@ public final class MessageKeys {
     public static final String PUNISH_EXPORT_SYNTAX = "punish-export-syntax";
     public static final String PUNISH_EXPORT_ERFOLG = "punish-export-erfolg";
     public static final String PUNISH_EXPORT_FEHLER = "punish-export-fehler";
+    public static final String PUNISH_SEARCH_SYNTAX = "punish-search-syntax";
+    public static final String PUNISH_SEARCH_LEER = "punish-search-leer";
+    public static final String PUNISH_SEARCH_KOPF = "punish-search-kopf";
+    public static final String PUNISH_SEARCH_ZEILE = "punish-search-zeile";
     public static final String SYNTAX_VERSTOSS = "syntax-verstoss";
     public static final String SYNTAX_PUNISH_EDIT = "syntax-punish-edit";
     public static final String PUNISH_EDIT_KEIN_FELD = "punish-edit-kein-feld";
@@ -312,6 +316,7 @@ public final class MessageKeys {
     public static final String BROADCAST_NOTE_EDIT = "note-edit";
     public static final String BROADCAST_NOTE_DELETE = "note-delete";
     public static final String BROADCAST_REPORT_NEU = "report-neu";
+    public static final String BROADCAST_REPORT_ERINNERUNG = "report-erinnerung";
     public static final String BROADCAST_REPORT_CLOSE = "report-close";
     public static final String BROADCAST_BAN_EDIT = "ban-edit";
     public static final String BROADCAST_MUTE_EDIT = "mute-edit";

@@ -59,6 +59,7 @@ public final class PunishHelpCommand extends PunishCommand {
             new Eintrag("punish-undo (psundo)", "[Spieler]", Permissions.PUNISH_UNDO.node()),
             new Eintrag("punish-stats (psstats)", "[7d|30d|all] [Staff]", Permissions.PUNISH_STATS.node()),
             new Eintrag("punish-export (psexport)", "", Permissions.PUNISH_EXPORT.node()),
+            new Eintrag("punish-search", "<Text> [page:<Nr>]", Permissions.PUNISH_SEARCH.node()),
             new Eintrag("punish-dossier (psdossier)", "<Spieler>", Permissions.PUNISH_GUI.node()),
             new Eintrag("punish-status (psstatus)", "[Spieler|server] [filter:...]", Permissions.PUNISH_STATUS.node(),
                     Permissions.PUNISH_OWN.node()),

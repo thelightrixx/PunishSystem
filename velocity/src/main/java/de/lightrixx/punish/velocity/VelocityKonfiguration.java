@@ -914,6 +914,21 @@ public final class VelocityKonfiguration implements Konfiguration {
     }
 
     @Override
+    public long reportCooldownIpSekunden() {
+        return Math.clamp(holeLang("reports", "cooldown-ip-sekunden", 60L), 0L, 3600L);
+    }
+
+    @Override
+    public long reportErinnerungMinuten() {
+        return Math.clamp(holeLang("reports", "erinnerung-minuten", 15L), 0L, 1440L);
+    }
+
+    @Override
+    public long reportUebernahmeTimeoutMinuten() {
+        return Math.clamp(holeLang("reports", "uebernahme-timeout-minuten", 0L), 0L, 10_080L);
+    }
+
+    @Override
     public int reportMaxOffenProReporter() {
         return Math.min(50, Math.max(1, holeInt("reports", "max-offen-pro-reporter", 3)));
     }

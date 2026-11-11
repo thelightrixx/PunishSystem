@@ -122,6 +122,10 @@ messages:
   punish-export-syntax: "<red>Verwendung: /punish-export"
   punish-export-erfolg: "<green>Backup geschrieben: <white>%pfad% <gray>(<white>%eintraege%<gray> Datensätze)"
   punish-export-fehler: "<red>Backup fehlgeschlagen: <white>%fehler%"
+  punish-search-syntax: "<red>Verwendung: /punish-search <Text> [page:2]"
+  punish-search-leer: "<gray>Keine Treffer gefunden."
+  punish-search-kopf: "<yellow>Suche <gray>(<white>%anzahl%%mehr% <gray>Treffer, Seite <white>%seite%/%seiten%<gray>)"
+  punish-search-zeile: "<gray>[%datum%] <white>%typ% #%id% <gray>· <white>%ziel% <gray>· %text%"
 
   # Verstoß-System
   syntax-verstoss: "<red>Verwendung: /verstoss add <Spieler> <Grund> [level=low|medium|high] | remove <Spieler> <Nr> | clear <Spieler> (Bearbeiten via /punish-edit)"

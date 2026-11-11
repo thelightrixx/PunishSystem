@@ -3,8 +3,10 @@ package de.lightrixx.punish.service;
 import de.lightrixx.punish.core.AuftragsPlaner;
 import de.lightrixx.punish.core.Konfiguration;
 import de.lightrixx.punish.core.MessageKeys;
+import de.lightrixx.punish.core.OnlineSpieler;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.HistoryType;
+import de.lightrixx.punish.model.IpBanRecord;
 import de.lightrixx.punish.model.ReportRecord;
 import de.lightrixx.punish.model.ReportStatus;
 import de.lightrixx.punish.storage.LogWriter;
@@ -66,6 +68,8 @@ public final class ReportService {
     private final SpielerVerzeichnis verzeichnis;
 
     private final ConcurrentHashMap<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> ipCooldowns = new ConcurrentHashMap<>();
+    private long letzteErinnerung = System.currentTimeMillis();
 
     public ReportService(ReportRepository reportRepository, Konfiguration config) {
         this(reportRepository, config, null, null, null, null, null, null);
@@ -161,12 +165,21 @@ public final class ReportService {
         if (reporterUuid != null && reporterUuid.equals(zielUuid)) {
             return new Ergebnis(false, null, 0L, MessageKeys.REPORT_SELBST);
         }
+        long ipCooldown = config.reportCooldownIpSekunden();
+        Optional<String> reporterIp = ipCooldown > 0 ? reporterIp(reporterUuid) : Optional.empty();
         ReportRecord record;
         de.lightrixx.punish.storage.StoreLock.LOCK.writeLock().lock();
         try {
             if (reporterUuid != null) {
                 long rest = cooldownRest(reporterUuid);
                 if (rest > 0) {
+                    return new Ergebnis(false, null, rest, MessageKeys.REPORT_COOLDOWN);
+                }
+            }
+            Long letzterReport = reporterIp.map(ipCooldowns::get).orElse(null);
+            if (letzterReport != null) {
+                long rest = ipCooldown - (System.currentTimeMillis() - letzterReport) / 1000L;
+                if (rest > 0L) {
                     return new Ergebnis(false, null, rest, MessageKeys.REPORT_COOLDOWN);
                 }
             }
@@ -208,6 +221,7 @@ public final class ReportService {
                     evictAbgelaufeneCooldowns();
                 }
             }
+            reporterIp.ifPresent(ip -> ipCooldowns.put(ip, System.currentTimeMillis()));
         } finally {
             de.lightrixx.punish.storage.StoreLock.LOCK.writeLock().unlock();
         }
@@ -236,6 +250,43 @@ public final class ReportService {
                     "Grund: " + sauber + ", ID: " + record.id());
         }
         return new Ergebnis(true, record, 0L, null);
+    }
+
+    private Optional<String> reporterIp(UUID reporterUuid) {
+        if (reporterUuid == null || verzeichnis == null) {
+            return Optional.empty();
+        }
+        return verzeichnis.onlineSpieler(reporterUuid).map(OnlineSpieler::ip).flatMap(ip -> {
+            if ("unbekannt".equals(ip)) {
+                return Optional.empty();
+            }
+            try {
+                return Optional.of(IpBanRecord.kanonisieren(ip));
+            } catch (IllegalArgumentException e) {
+                LOG.debug("Report-IP für {} konnte nicht kanonisiert werden.", reporterUuid);
+                return Optional.empty();
+            }
+        });
+    }
+
+    public synchronized void wartung(long jetzt) {
+        long ipCooldown = config.reportCooldownIpSekunden();
+        ipCooldowns.entrySet().removeIf(eintrag ->
+                ipCooldown <= 0 || (jetzt - eintrag.getValue()) / 1000L >= ipCooldown);
+        long timeout = config.reportUebernahmeTimeoutMinuten();
+        if (timeout > 0) {
+            reportRepository.gibUebernahmenFrei(jetzt - timeout * 60_000L);
+        }
+        long intervall = config.reportErinnerungMinuten();
+        if (intervall <= 0) {
+            letzteErinnerung = jetzt;
+        } else if (jetzt - letzteErinnerung >= intervall * 60_000L) {
+            letzteErinnerung = jetzt;
+            int offen = anzahlOffen();
+            if (offen > 0) {
+                broadcasten(MessageKeys.BROADCAST_REPORT_ERINNERUNG, Map.of("anzahl", String.valueOf(offen)));
+            }
+        }
     }
 
     public Optional<ReportRecord> schliessen(long id, ReportStatus status,

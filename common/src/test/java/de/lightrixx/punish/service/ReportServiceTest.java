@@ -2,6 +2,8 @@ package de.lightrixx.punish.service;
 
 import de.lightrixx.punish.core.Konfiguration;
 import de.lightrixx.punish.core.MessageKeys;
+import de.lightrixx.punish.core.OnlineSpieler;
+import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.model.ReportStatus;
 import de.lightrixx.punish.storage.IoExecutor;
 import de.lightrixx.punish.storage.ReportRepository;
@@ -14,11 +16,13 @@ import java.io.File;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class ReportServiceTest {
 
@@ -250,6 +254,84 @@ class ReportServiceTest {
         assertFalse(zweites.erfolg());
         assertEquals(MessageKeys.REPORT_COOLDOWN, zweites.fehler());
         assertTrue(zweites.cooldownRestSekunden() > 0);
+    }
+
+    @Test
+    void ipCooldownGiltKanonischFuerZweiKontenUndIstAbschaltbar() {
+        ioExecutor = new IoExecutor();
+        var repository = new ReportRepository(temp, new FakeSpeicher(), ioExecutor);
+        var config = mock(Konfiguration.class);
+        when(config.reportCooldownIpSekunden()).thenReturn(60L);
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        UUID erster = UUID.randomUUID();
+        UUID zweiter = UUID.randomUUID();
+        UUID dritter = UUID.randomUUID();
+        when(verzeichnis.onlineSpieler(erster))
+                .thenReturn(Optional.of(new OnlineSpieler(erster, "Alex", "2001:db8::1", false)));
+        when(verzeichnis.onlineSpieler(zweiter))
+                .thenReturn(Optional.of(new OnlineSpieler(zweiter, "Sam", "2001:db8:0:0:0:0:0:1", false)));
+        when(verzeichnis.onlineSpieler(dritter))
+                .thenReturn(Optional.of(new OnlineSpieler(dritter, "Robin", "2001:db8::2", false)));
+        var service = new ReportService(repository, config, null, null, null, null, null, verzeichnis);
+
+        assertTrue(service.melden(UUID.randomUUID(), "Steve", erster, "Alex", "Spam", "lobby").erfolg());
+        var abgewiesen = service.melden(UUID.randomUUID(), "Steve", zweiter, "Sam", "Spam", "lobby");
+        assertEquals(MessageKeys.REPORT_COOLDOWN, abgewiesen.fehler());
+        assertTrue(abgewiesen.cooldownRestSekunden() > 0L);
+        assertTrue(service.melden(UUID.randomUUID(), "Steve", dritter, "Robin", "Spam", "lobby").erfolg());
+        when(config.reportCooldownIpSekunden()).thenReturn(0L);
+        assertTrue(service.melden(UUID.randomUUID(), "Steve", zweiter, "Sam", "Spam", "lobby").erfolg());
+    }
+
+    @Test
+    void wartungGibtNurAbgelaufeneUebernahmenFreiUndSpeichertSie() {
+        ioExecutor = new IoExecutor();
+        var speicher = new FakeSpeicher();
+        var repository = new ReportRepository(temp, speicher, ioExecutor);
+        var config = mock(Konfiguration.class);
+        when(config.reportUebernahmeTimeoutMinuten()).thenReturn(1L);
+        var service = new ReportService(repository, config);
+        long abgelaufen = repository.hinzufuegen(UUID.randomUUID(), "Steve", null,
+                "Konsole", "Spam", "lobby").id();
+        long geschlossen = repository.hinzufuegen(UUID.randomUUID(), "Alex", null,
+                "Konsole", "Spam", "lobby").id();
+        long uebernommenAm = repository.statusSetzen(abgelaufen, ReportStatus.ANGENOMMEN, "Mod", "")
+                .orElseThrow().bearbeitetAm();
+        repository.statusSetzen(geschlossen, ReportStatus.ERLEDIGT, "Mod", "geprüft");
+
+        service.wartung(uebernommenAm + 59_999L);
+        assertEquals(ReportStatus.ANGENOMMEN, service.findenNachId(abgelaufen).orElseThrow().status());
+        service.wartung(uebernommenAm + 60_000L);
+        assertTrue(ioExecutor.warteAufIdle(5, TimeUnit.SECONDS));
+
+        var neuGeladen = new ReportRepository(temp, speicher, ioExecutor);
+        neuGeladen.laden();
+        var offen = neuGeladen.findenNachId(abgelaufen).orElseThrow();
+        assertEquals(ReportStatus.OFFEN, offen.status());
+        assertEquals("", offen.bearbeiter());
+        assertEquals(ReportStatus.ERLEDIGT, neuGeladen.findenNachId(geschlossen).orElseThrow().status());
+    }
+
+    @Test
+    void erinnerungKommtNurBeiOffenenReportsUndNachDemIntervall() {
+        ioExecutor = new IoExecutor();
+        var repository = new ReportRepository(temp, new FakeSpeicher(), ioExecutor);
+        var config = mock(Konfiguration.class);
+        var broadcasts = mock(BroadcastService.class);
+        var service = new ReportService(repository, config, null, broadcasts, null, null, null, null);
+        long start = System.currentTimeMillis();
+        service.wartung(start);
+        when(config.reportErinnerungMinuten()).thenReturn(15L);
+        service.wartung(start + 900_000L);
+        verifyNoInteractions(broadcasts);
+
+        repository.hinzufuegen(UUID.randomUUID(), "Steve", null, "Konsole", "Spam", "lobby");
+        service.wartung(start + 1_799_999L);
+        verifyNoInteractions(broadcasts);
+        service.wartung(start + 1_800_000L);
+        service.wartung(start + 1_830_000L);
+        verify(broadcasts).senden(MessageKeys.BROADCAST_REPORT_ERINNERUNG, Map.of("anzahl", "1"), false);
+        verifyNoMoreInteractions(broadcasts);
     }
 
     @Test

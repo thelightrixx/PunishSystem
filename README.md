@@ -11,6 +11,7 @@ Die vollständige Dokumentation liegt in [docs/index.html](docs/index.html). Öf
 | Netzwerk zum ersten Mal einrichten | [Installation und Voraussetzungen](docs/index.html#/installation) |
 | Einen Moderationsfall durchspielen | [Moderations-Schnellstart](docs/index.html#/schnellstart) |
 | Syntax, Beispiele oder Aliase finden | [Befehlsreferenz](docs/index.html#/befehle) |
+| Meldungen bearbeiten oder Moderationsdaten durchsuchen | [Reports](docs/index.html#/reports), [Suche](docs/index.html#/befehle-einsicht/punish-search) |
 | Rechte an Teamgruppen vergeben | [Rang-Bündel und LuckPerms](docs/index.html#/rang-buendel), [alle Permissions](docs/index.html#/rechte) |
 | Eine Einstellung oder Nachricht ändern | [Dateien und Zuständigkeiten](docs/index.html#/config-uebersicht) |
 | MySQL einrichten oder YAML-Daten übernehmen | [Speicher und Migration](docs/index.html#/speicher) |
@@ -48,10 +49,12 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 
 - Banns, Timeouts, Mutes, Freezes, Kicks und IP-Strafen mit globalem oder serverbezogenem Scope.
 - Verwarnungen, Verstoß-Punkte mit Auto-Bann, interne Notizen, Reports und IP-basierte Alt-Erkennung.
-- Status, Hauptverlauf, Bearbeitung, Vorlagen, Undo, Statistik und JSON-Export.
+- Status, Hauptverlauf, Bearbeitung, Vorlagen, Undo, Statistik, JSON-Export und Suche über Historie, Notizen und Reports.
 - PunishGUI, Wortlistenfilter und optionales lokales KI-Modell für den Chatfilter.
 - MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
 - GitHub-Updates mit SHA-256-Prüfung: Jars werden bereitgestellt und anschließend manuell ausgetauscht; danach alle Server neu starten.
+
+Für Preview-Updates im Spiel auf dem Proxy `update.channel` auf `Beta` oder `Snapshot` setzen. Danach `/punish-reload` und `/punish-update check` ausführen. Der Update-Befehl berücksichtigt die Buildnummer der Preview.
 
 ## Aus dem Quellcode bauen
 

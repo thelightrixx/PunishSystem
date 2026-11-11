@@ -1215,6 +1215,7 @@ public final class BrueckenKanal {
             java.util.Map.entry("punish-undo", "punish.undo"),
             java.util.Map.entry("punish-stats", "punish.stats"),
             java.util.Map.entry("punish-export", "punish.export"),
+            java.util.Map.entry("punish-search", "punish.search"),
             java.util.Map.entry("verstoss", "punish.verstoss"),
             java.util.Map.entry("verstoß", "punish.verstoss"),
             java.util.Map.entry("punish-note", "punish.note"),

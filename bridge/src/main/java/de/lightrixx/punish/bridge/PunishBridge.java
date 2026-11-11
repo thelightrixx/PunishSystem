@@ -234,6 +234,7 @@ public final class PunishBridge extends JavaPlugin {
         brigadierEintraege.add(tunnel("punish-undo", new BridgeBefehlWeiterleitung(kanalClient, "punish-undo", "punish.undo", false, config)));
         brigadierEintraege.add(tunnel("punish-stats", new BridgeBefehlWeiterleitung(kanalClient, "punish-stats", "punish.stats", false, config)));
         brigadierEintraege.add(tunnel("punish-export", new BridgeBefehlWeiterleitung(kanalClient, "punish-export", "punish.export", false, config)));
+        brigadierEintraege.add(tunnel("punish-search", new BridgeBefehlWeiterleitung(kanalClient, "punish-search", "punish.search", false, config)));
         registriereDiagnose(config, kanalClient, muteCache);
         try {
             var datenDienst = new de.lightrixx.punish.bridge.gui.GuiDatenDienst(kanalClient, config);

@@ -229,6 +229,12 @@ history:
 # duplikat-sperre-minuten: Gleiches Ziel + gleicher Reporter wird in diesem Fenster als Duplikat abgelehnt.
 reports:
   cooldown-sekunden: 60
+  # Mindestabstand zwischen Reports von derselben IP-Adresse. 0 = aus.
+  cooldown-ip-sekunden: 60
+  # Intervall für Team-Erinnerungen bei offenen Reports. 0 = aus.
+  erinnerung-minuten: 15
+  # Minuten seit der Übernahme bis zur Freigabe des Reports. 0 = aus.
+  uebernahme-timeout-minuten: 0
   max-offen-pro-reporter: 3
   duplikat-sperre-minuten: 10
 
@@ -385,7 +391,7 @@ rang-buendel:
     "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
     "punish.verstoss.edit", "punish.verstoss.clear",
     "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
-    "punish.undo", "punish.stats", "punish.export"]
+    "punish.undo", "punish.stats", "punish.export", "punish.search"]
   p-admin: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
@@ -399,7 +405,7 @@ rang-buendel:
     "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
     "punish.verstoss.edit", "punish.verstoss.clear",
     "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
-    "punish.undo", "punish.stats", "punish.export"]
+    "punish.undo", "punish.stats", "punish.export", "punish.search"]
   developer: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.history", "punish.reload"]
   präsident: ["punish.*"]

@@ -57,6 +57,7 @@ public enum Permissions {
     PUNISH_UNDO("punish.undo"),
     PUNISH_STATS("punish.stats"),
     PUNISH_EXPORT("punish.export"),
+    PUNISH_SEARCH("punish.search"),
     ALLOW_SILENT("punish.allow-silent-syntax"),
 
     BROADCAST_RECEIVE_ALL("punish.message.all-punishes"),
