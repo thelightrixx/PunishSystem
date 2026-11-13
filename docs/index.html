@@ -2717,7 +2717,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
       <p>Proxy neu starten. Bei leerer Datenbank und <code>migration-beim-start: true</code> werden Spieler- und IP-Strafen einschließlich Freezes, Warns, Verstöße, Notizen, Reports samt Zähler, History samt Archiv, Spieler-Cache und verpasste Broadcasts samt Cursor übernommen. Unterbrochene Migrationen werden fortgesetzt und die importierten Bestände geprüft. Die YAML-Dateien bleiben als alter Stand liegen. Ein automatischer Rückweg von MySQL nach YAML existiert nicht.</p>
     </li>
   </ol>
-  <div class="callout warn"><div><span class="ttl">Vorher den data-Ordner sichern</span><p>Vor der Umstellung wird der Ordner <code>data/</code> des Proxys als Sicherung kopiert.</p></div></div>
+  <div class="callout warn"><div><span class="ttl">Vorher den Proxy-Plugin-Ordner sichern</span><p>Vor der Umstellung <code>plugins/PunishSystemVelocity/</code> vollständig sichern. Im YAML-Betrieb gehören der Ordner <code>data/</code> und die Datei <code>player_cache.yml</code> im Plugin-Ordner zur Sicherung.</p></div></div>
   <div class="callout warn"><div><span class="ttl">TLS für entfernte Datenbanken</span><p>Mit <code>use-ssl: true</code> verlangt der Treiber ab v4.0.0-RC TLS. Ist TLS auf dem MySQL-Server deaktiviert, scheitert der Verbindungsaufbau. Dieser Modus erzwingt Verschlüsselung. Die Identität des Datenbankservers bleibt ungeprüft. <code>use-ssl: false</code> verwendet eine unverschlüsselte Verbindung und ist für lokale Datenbanken vorgesehen.</p></div></div>
 
   <h2>Wenn der Proxy nicht startet</h2>
@@ -2773,7 +2773,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <thead><tr><th>Bestand</th><th>Was sichern?</th></tr></thead>
     <tbody>
       <tr><td>Proxy-Dateien</td><td>Die installierte Proxy-Jar und den vollständigen Ordner <code>plugins/PunishSystemVelocity/</code>, einschließlich Konfiguration, Logs, Exporten und gegebenenfalls Chatfilter-Dateien.</td></tr>
-      <tr><td>YAML-Speicher</td><td>Insbesondere <code>plugins/PunishSystemVelocity/data/</code> einschließlich History-Archiven. Das ist Bestandteil des vollständigen Proxy-Ordners.</td></tr>
+      <tr><td>YAML-Speicher</td><td>Der Ordner <code>data/</code> einschließlich History-Archiven und die Datei <code>player_cache.yml</code> im Proxy-Plugin-Ordner.</td></tr>
       <tr><td>MySQL-Speicher</td><td>Zusätzlich eine vollständige Datenbanksicherung. Eine Kopie des Plugin-Ordners enthält den aktuellen MySQL-Datenbestand nicht.</td></tr>
       <tr><td>Backends</td><td>Die jeweils passende Bridge-Jar und <code>plugins/PunishSystemBridge/</code>. Lokale Servernamen, Secrets und Chatfilter-Ausnahmen werden für die Wiederherstellung benötigt.</td></tr>
     </tbody>
