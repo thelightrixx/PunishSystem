@@ -112,8 +112,8 @@ speicher:
     benutzer: "punish"
     passwort: ""
     use-ssl: false
-    # use-ssl: nur fuer lokale Datenbanken gedacht. Bei remote MySQL auf true
-    # setzen, sonst laufen Zugangsdaten und Inhalte unverschluesselt.
+    # false nur für lokale Datenbanken. Bei entfernten Datenbanken true setzen.
+    # Mit true ist TLS zwingend und der Verbindungsaufbau scheitert ohne TLS.
     pool-max: 10
 
 # --- Datenschutz / Retention (DSGVO) ---

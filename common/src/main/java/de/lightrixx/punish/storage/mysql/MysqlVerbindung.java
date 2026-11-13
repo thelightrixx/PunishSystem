@@ -26,9 +26,9 @@ public final class MysqlVerbindung implements AutoCloseable {
     public static MysqlVerbindung oeffnen(MysqlKonfiguration konfiguration) {
         Objects.requireNonNull(konfiguration, "Die MySQL-Konfiguration darf nicht null sein.");
         if (konfiguration.sslWarnungNoetig()) {
-            LOG.warn("MySQL läuft ohne TLS (useSSL=false): Zugangsdaten und Daten gehen unverschlüsselt "
+            LOG.warn("MySQL läuft ohne TLS (speicher.mysql.use-ssl=false): Zugangsdaten und Daten gehen unverschlüsselt "
                     + "über das Netz, allowPublicKeyRetrieval=true erlaubt Schlüsselabfragen ohne TLS. "
-                    + "In Produktion useSSL=true verwenden.");
+                    + "Bei entfernten Datenbanken speicher.mysql.use-ssl auf true setzen.");
         }
         treiberRegistrieren();
         HikariConfig poolConfig = new HikariConfig();

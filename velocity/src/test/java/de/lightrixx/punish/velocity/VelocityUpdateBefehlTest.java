@@ -212,6 +212,30 @@ class VelocityUpdateBefehlTest {
     }
 
     @Test
+    void githubFindetReleaseCandidateMitBuildnummerVorDerPreview() throws Exception {
+        String version = "4.0.0-RC+131126-2200";
+        String json = release(version, false, true);
+        String manifest = summen(version);
+        for (String variante : java.util.List.of("velocity", "bridge", "bridge-1.21")) {
+            String lokal = "PunishSystem-v4.0.0-RC-(" + variante + ")+131126_2200.jar";
+            String github = "PunishSystem-v" + version + "-" + variante + ".jar";
+            json = json.replace(lokal, github);
+            manifest = manifest.replace(lokal, github);
+        }
+        String urlVersion = version.replace("+", "%2B");
+        json = json.replace("/releases/download/v" + version, "/releases/download/v" + urlVersion)
+                .replace("/PunishSystem-v" + version, "/PunishSystem-v" + urlVersion);
+        String preview = "4.0.0-preview+111126-1741";
+        var info = VelocityUpdateBefehl.pruefeGithub(githubConfig("Beta"),
+                githubAntwort("[" + release(preview, false, true) + "," + json + "]", manifest));
+
+        assertEquals(version, info.version());
+        assertTrue(de.lightrixx.punish.update.UpdateVergleich.neuerVerfuegbar(preview, info.version()));
+        assertEquals(java.util.List.of("VELOCITY", "BRIDGE", "BRIDGE-1.21"),
+                info.downloads().stream().map(de.lightrixx.punish.update.HangarUpdateService.Artefakt::plattform).toList());
+    }
+
+    @Test
     void githubStableIgnoriertDraftsUndVorabversionen() throws Exception {
         String antwort = "[" + release("99.0.0", true, false) + ","
                 + release("5.0.0-beta", false, true) + "," + release("4.1.0", false, false) + "]";

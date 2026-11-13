@@ -1,5 +1,9 @@
 package de.lightrixx.punish.storage.mysql;
 
+import com.mysql.cj.conf.ConnectionUrl;
+import com.mysql.cj.conf.DefaultPropertySet;
+import com.mysql.cj.conf.PropertyDefinitions.SslMode;
+import com.mysql.cj.conf.PropertyKey;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,6 +32,15 @@ class MysqlKonfigurationUrlTest {
     }
 
     @Test
+    void aktiviertesTlsIstFuerConnectorJVerbindlich() {
+        var konfiguration = new MysqlKonfiguration("db.example", 3306, "db", "u", "", true, 5);
+        var url = ConnectionUrl.getConnectionUrlInstance(konfiguration.jdbcUrl(), null);
+        var eigenschaften = new DefaultPropertySet();
+        eigenschaften.initializeProperties(url.getMainHost().exposeAsProperties());
+        assertEquals(SslMode.REQUIRED, eigenschaften.getEnumProperty(PropertyKey.sslMode).getValue());
+    }
+
+    @Test
     void publicKeyAbrufNurOhneTls() {
         assertEquals("true", wert(new MysqlKonfiguration(
                 "127.0.0.1", 3306, "db", "u", "p", false, 5), "allowPublicKeyRetrieval"));
@@ -48,10 +61,10 @@ class MysqlKonfigurationUrlTest {
 
     @Test
     void ipv6UndNormaleNamenBleibenGueltig() {
-        assertEquals("jdbc:mysql://[::1]:3306/db?useSSL=false", new MysqlKonfiguration(
+        assertEquals("jdbc:mysql://[::1]:3306/db?sslMode=DISABLED", new MysqlKonfiguration(
                 "[::1]", 3306, "db", "u", "p", false, 5).jdbcUrl()
                 .split("&")[0]);
-        assertEquals("jdbc:mysql://db-host:3306/my_db.1?useSSL=false", new MysqlKonfiguration(
+        assertEquals("jdbc:mysql://db-host:3306/my_db.1?sslMode=DISABLED", new MysqlKonfiguration(
                 "db-host", 3306, "my_db.1", "u", "p", false, 5).jdbcUrl()
                 .split("&")[0]);
     }

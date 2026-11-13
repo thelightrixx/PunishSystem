@@ -1,4 +1,4 @@
-# PunishSystem v4.0.0-preview
+# PunishSystem v4.0.0-RC
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
@@ -23,6 +23,8 @@ Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=
 
 ## Voraussetzungen und Jars
 
+Der [Release Candidate v4.0.0-RC+131126-2233](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.0-RC%2B131126-2233) enthält alle drei Jars und `SHA256SUMS.txt`.
+
 | Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
 | Proxy | Velocity 3.4.0+, Java 21 | `velocity` |
@@ -34,7 +36,7 @@ Installiere die Proxy-Jar und **genau eine passende Bridge pro Backend** in den 
 ## Reihenfolge der Ersteinrichtung
 
 1. Jars einspielen, Proxy und Backends einmal starten und wieder stoppen, damit die Konfigurationsdateien entstehen.
-2. **Zuerst den Proxy-Speicher einrichten:** MySQL ist Standard und benötigt eine erreichbare Datenbank samt Benutzer. Alternativ `speicher.typ: "yaml"` setzen. Scheitert der Speicherstart, läuft Velocity ohne PunishSystem-Strafverwaltung weiter.
+2. **Proxy-Speicher einrichten.** MySQL ist Standard und benötigt eine erreichbare Datenbank samt Benutzer. Für entfernte Datenbanken `speicher.mysql.use-ssl: true` setzen. Der Release Candidate verlangt mit dieser Einstellung eine TLS-Verbindung. Als Dateispeicher ist `speicher.typ: "yaml"` verfügbar. Scheitert der Speicherstart, läuft Velocity ohne PunishSystem-Strafverwaltung weiter.
 3. **Pro Bridge ein eigenes zufälliges Tunnel-Secret** mit mindestens 16 Zeichen nach dem Trimmen setzen. Auf dem Proxy steht es unter `netzwerk.bridge-secrets.<Servername>`, auf der passenden Bridge unter `netzwerk.tunnel-secret`. Der Bridge-`server-name` muss zum registrierten Velocity-Server passen. Bei laufendem Proxy-Plugin kann `/punish-setup secrets` fehlende Secrets erzeugen.
 4. Rechte auf dem Proxy vergeben, Server starten und `/punish-setup check` sowie `/punish-diagnostics` prüfen. Für Sync und Tunnel muss auf dem betroffenen Backend mindestens ein Spieler verbunden sein.
 5. Mit einem ungeschützten Testaccount eine Strafe setzen, ihre Wirkung prüfen und im gleichen Scope wieder aufheben.
@@ -54,7 +56,7 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 - MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
 - GitHub-Updates mit SHA-256-Prüfung: Jars werden bereitgestellt und anschließend manuell ausgetauscht; danach alle Server neu starten.
 
-Für Preview-Updates im Spiel auf dem Proxy `update.channel` auf `Beta` oder `Snapshot` setzen. Danach `/punish-reload` und `/punish-update check` ausführen. Der Update-Befehl berücksichtigt die Buildnummer der Preview.
+Für das Update auf den Release Candidate auf dem Proxy in `plugins/PunishSystemVelocity/config/general.yml` den Wert `update.channel` auf `Beta` setzen. Im Spiel `/punish-reload` und `/punish-update check` ausführen. `/punish-update apply confirm` stellt die geprüften Jars zum Austausch bereit. Bei gleicher RC-Version entscheidet die Buildnummer.
 
 ## Aus dem Quellcode bauen
 

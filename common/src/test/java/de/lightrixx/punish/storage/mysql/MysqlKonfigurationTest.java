@@ -23,7 +23,7 @@ class MysqlKonfigurationTest {
                 false, 5);
         String url = config.jdbcUrl();
         assertTrue(url.startsWith("jdbc:mysql://db.example:3307/punish"));
-        assertTrue(url.contains("useSSL=false"));
+        assertTrue(url.contains("sslMode=DISABLED"));
     }
 
     @Test

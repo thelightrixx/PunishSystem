@@ -61,7 +61,7 @@ public record MysqlKonfiguration(
 
     public String jdbcUrl() {
         return "jdbc:mysql://" + host + ":" + port + "/" + datenbank
-                + "?useSSL=" + useSsl
+                + "?sslMode=" + (useSsl ? "REQUIRED" : "DISABLED")
                 + "&allowPublicKeyRetrieval=" + !useSsl
                 + "&serverTimezone=UTC"
                 + "&useUnicode=true&characterEncoding=UTF-8";

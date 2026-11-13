@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Dokumentation</title>
-<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.0-preview.">
+<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.0-RC.">
 <script>
 (function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
@@ -506,7 +506,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite der Dokumentation"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Dokumentation</small></button>
-  <span class="ver">v4.0.0-preview</span>
+  <span class="ver">v4.0.0-RC</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Dokumentation durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -530,7 +530,7 @@ details>div{padding:14px 18px 2px}
   <div class="hero">
     <div class="hero-copy">
       <h1>PunishSystem Dokumentation</h1>
-      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.0.0-preview auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.0.0-RC auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
       <div class="hero-actions">
         <a class="hero-action primary" href="#/installation">
           Installation starten
@@ -717,7 +717,7 @@ details>div{padding:14px 18px 2px}
     use-ssl: false
     pool-max: 10</pre>
   <ul>
-    <li><code>use-ssl</code> bleibt nur bei einer lokalen Datenbank <code>false</code>. Bei einer entfernten Datenbank auf <code>true</code> setzen, sonst laufen Zugangsdaten und Inhalte unverschlüsselt.</li>
+    <li>Für eine entfernte Datenbank <code>use-ssl: true</code> setzen. MySQL muss dann TLS anbieten. <code>use-ssl: false</code> ist für eine lokale Datenbank vorgesehen.</li>
     <li><code>pool-max</code> ist die Größe des Verbindungs-Pools. Der Standardwert 10 reicht für übliche Netzwerke.</li>
     <li><code>migration-beim-start: true</code> übernimmt vorhandene YAML-Daten in eine leere Datenbank. Eine unterbrochene Migration wird beim nächsten Start fortgesetzt und auf Vollständigkeit geprüft.</li>
   </ul>
@@ -2718,7 +2718,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     </li>
   </ol>
   <div class="callout warn"><div><span class="ttl">Vorher den data-Ordner sichern</span><p>Vor der Umstellung wird der Ordner <code>data/</code> des Proxys als Sicherung kopiert.</p></div></div>
-  <div class="callout warn"><div><span class="ttl">Verbindung absichern</span><p>Standardmäßig läuft MySQL ohne TLS (<code>use-ssl: false</code>), Zugangsdaten gehen dann unverschlüsselt über das Netz. Für Produktivbetrieb <code>use-ssl: true</code> setzen. Das Plugin warnt im Log, solange TLS aus ist.</p></div></div>
+  <div class="callout warn"><div><span class="ttl">TLS für entfernte Datenbanken</span><p>Mit <code>use-ssl: true</code> verlangt der Treiber ab v4.0.0-RC TLS. Ist TLS auf dem MySQL-Server deaktiviert, scheitert der Verbindungsaufbau. Dieser Modus erzwingt Verschlüsselung. Die Identität des Datenbankservers bleibt ungeprüft. <code>use-ssl: false</code> verwendet eine unverschlüsselte Verbindung und ist für lokale Datenbanken vorgesehen.</p></div></div>
 
   <h2>Wenn der Proxy nicht startet</h2>
   <p>Mit <code>typ: "mysql"</code> bricht die Plugin-Initialisierung ab, wenn die Datenbank nicht erreichbar ist, das Schema nicht angelegt werden kann oder die Migration scheitert. Velocity selbst läuft dabei weiter, ohne die Strafverwaltung dieses Plugins. Die Konsole nennt die genaue Ursache. <code>pool-max</code> begrenzt die Verbindungen (Standard 10; gültig sind 1 bis 20 – Werte außerhalb dieses Bereichs werden auf 10 zurückgesetzt).</p>
@@ -2739,7 +2739,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Updates einspielen</h2>
-  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Der Kanal <code>Release</code> berücksichtigt stabile Releases. Für Preview-Updates setze <code>update.channel</code> auf <code>Beta</code> oder <code>Snapshot</code> und lade die Proxy-Konfiguration mit <code>/punish-reload</code> neu. Bei gleicher Preview-Version entscheidet die Buildnummer, welcher Build neuer ist. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
+  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Setze für den <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.0-RC%2B131126-2233">Release Candidate v4.0.0-RC+131126-2233</a> den Wert <code>update.channel</code> in der <code>general.yml</code> des Proxys auf <code>Beta</code> und lade die Konfiguration mit <code>/punish-reload</code> neu. Auch <code>Snapshot</code> berücksichtigt Vorabversionen. Der Kanal <code>Release</code> zeigt stabile Releases. Bei gleicher RC-Version entscheidet die Buildnummer. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
   <ol class="steps">
     <li><strong>Update prüfen und bereitstellen</strong>
       <pre data-lang="cmd">/punish-update check
@@ -3070,7 +3070,7 @@ build_all_jars.bat nobump skiptests</pre>
     <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer oder eine Vorabversion (<code>-alpha</code>, <code>-beta</code>, <code>-preview</code>, <code>-RC</code>, <code>-SNAPSHOT</code>) auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Finale Versionen ohne Buildnummer bleiben unverändert.</li>
     <li><code>nobump</code> lässt die Version unverändert. <code>skiptests</code> überspringt die Tests.</li>
     <li>Das Skript synchronisiert die Parent-Version in den Modul-Poms und die Versionsangabe der Proxy-Plugin-Klasse; die Plugin-Metadaten werden beim Maven-Build verarbeitet.</li>
-    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.0-preview-(velocity)+081126_1929.jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
+    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.0-RC-(velocity)+131126_2233.jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
   </ul>
   <p>Maven baut ohne das Hilfsskript direkt in die <code>target/</code>-Ordner der Module:</p>
   <pre data-lang="shell">mvn -pl velocity,bridge,bridge-1.21 -am clean package</pre>
@@ -3326,7 +3326,7 @@ mvn verify</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.0.0-preview. Dokumentation für Admins und Moderatoren.</div>');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.0.0-RC. Dokumentation für Admins und Moderatoren.</div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');
