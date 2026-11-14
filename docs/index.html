@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>PunishSystem Dokumentation</title>
 <meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.0-RC.">
 <script>
@@ -477,7 +476,7 @@ details>div{padding:14px 18px 2px}
 
 /* ---------- Druck ---------- */
 @media print{
-  .header,.sidebar,.toc,.page-toc,.pager,.copy,.wk,.scrim,#progress,.hero-actions,.command-tools,#commandEmpty,.hash,#docChatToggle,#docChat{display:none!important}
+  .header,.sidebar,.toc,.page-toc,.pager,.copy,.wk,.scrim,#progress,.hero-actions,.command-tools,#commandEmpty,.hash{display:none!important}
   .shell{display:block;padding:0}
   main{padding:0}
   body{background:#fff;color:#000}
@@ -497,7 +496,6 @@ details>div{padding:14px 18px 2px}
   .tbl tr,.cmd-card,.callout,details{break-inside:avoid}
 }
 </style>
-<link rel="stylesheet" href="./doc-chat.css">
 </head>
 <body>
 <a class="skip" href="#main">Zum Inhalt springen</a>
@@ -3089,69 +3087,6 @@ mvn verify</pre>
   <aside class="toc" id="toc" aria-label="Auf dieser Seite"></aside>
 </div>
 
-<button type="button" class="doc-chat-toggle" id="docChatToggle" aria-controls="docChat" aria-expanded="false" hidden>
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8 8 0 0 1-8 8H5l1.3-3.1a8 8 0 1 1 14.2-4.9Z"/><path d="M9 10h7m-7 4h4"/></svg>
-  <span>Doku-Chat</span>
-</button>
-<section class="doc-chat" id="docChat" role="dialog" aria-labelledby="docChatTitle" hidden>
-  <header class="doc-chat-head">
-    <span class="doc-chat-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 19H5l1.2-3a7.5 7.5 0 1 1 12.5 1M9 10h7m-7 4h4"/></svg></span>
-    <div><h2 id="docChatTitle">Doku-Chat</h2><p>Qwen3.5</p></div>
-    <button type="button" class="doc-chat-icon" id="docChatHistoryToggle" title="Chatverläufe" aria-label="Chatverläufe" aria-controls="docChatHistory" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg></button>
-    <button type="button" class="doc-chat-icon" id="docChatReset" title="Neuer Chat" aria-label="Neuer Chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7v14"/></svg></button>
-    <button type="button" class="doc-chat-icon" id="docChatClose" title="Chat schließen" aria-label="Chat schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
-  </header>
-  <div class="doc-chat-body" id="docChatBody">
-    <div class="doc-chat-start" id="docChatStart">
-      <h3>Wie kann ich dir helfen?</h3>
-      <div class="doc-chat-suggestions">
-        <button type="button">Wie hebe ich einen Mute nur auf Survival auf?</button>
-        <button type="button">Wie richte ich MySQL ein?</button>
-        <button type="button">Wie schalte ich Team-Meldungen für eine Strafe aus?</button>
-      </div>
-    </div>
-    <div id="docChatLog" class="doc-chat-log" role="log" aria-label="Chatverlauf" tabindex="0"></div>
-    <div class="doc-chat-history" id="docChatHistory" hidden>
-      <h3 tabindex="-1">Chatverläufe</h3>
-      <p id="docChatHistoryEmpty">Hier erscheinen deine bisherigen Chats.</p>
-      <ul id="docChatHistoryList" aria-label="Gespeicherte Chats"></ul>
-    </div>
-  </div>
-  <div class="doc-chat-footer" id="docChatFooter">
-    <div class="doc-chat-status" id="docChatStatus" hidden>
-      <div>
-        <span class="doc-chat-pulse" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span id="docChatPhase" role="status"></span>
-        <span id="docChatProgressText" aria-hidden="true"></span>
-      </div>
-      <progress id="docChatProgress" aria-label="Fortschritt" max="100" hidden></progress>
-    </div>
-    <form class="doc-chat-form" id="docChatForm">
-      <label class="doc-chat-sr" for="docChatInput">Frage an die Dokumentation</label>
-      <input type="text" id="docChatInput" placeholder="Frage eingeben …" maxlength="500" autocomplete="off" spellcheck="false" required>
-      <button type="submit" title="Frage senden" aria-label="Frage senden" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
-    </form>
-    <button type="button" class="doc-chat-stop" id="docChatStop" hidden>Antwort stoppen</button>
-    <p class="doc-chat-note">Fragen und Chatverläufe bleiben in diesem Browser.</p>
-    <p class="doc-chat-note" id="docChatStorageStatus" role="status" hidden>Der Browser konnte den Chatverlauf nicht speichern.</p>
-  </div>
-</section>
-
-<dialog class="doc-chat-download" id="docChatDownload" aria-labelledby="docChatDownloadTitle" aria-describedby="docChatDownloadWarning">
-  <div class="doc-chat-download-heading">
-    <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Zm0 6v5m0 3v.1"/></svg></span>
-    <h2 id="docChatDownloadTitle">KI-Modell herunterladen?</h2>
-  </div>
-  <p>Beim ersten Start benötigt Qwen3.5 einen Download von <strong>rund 450 MB</strong>. Danach kann der Browser das gespeicherte Modell erneut verwenden.</p>
-  <p id="docChatDownloadWarning">Über mobile Daten kann das viel Datenvolumen verbrauchen. Wenn du im WLAN laden möchtest, wähle „Abbrechen“.</p>
-  <div class="doc-chat-download-actions">
-    <button type="button" id="docChatDownloadCancel" autofocus>Abbrechen</button>
-    <button type="button" id="docChatDownloadConfirm">Modell herunterladen</button>
-  </div>
-</dialog>
-
-<script defer src="./doc-search-data.js"></script>
-<script defer src="./doc-chat.js"></script>
 <script>
 (function () {
   'use strict';
@@ -3302,7 +3237,6 @@ mvn verify</pre>
     });
     var wrap = document.createElement('div');
     wrap.className = 'code';
-    wrap.dataset.lang = lang;
     wrap.innerHTML = '<div class="code-head"><span>' + (LABEL[lang] || 'Text') + '</span>' +
       '<button class="copy" type="button" aria-label="Code kopieren">' + ICON.copy + '<span>Kopieren</span></button></div>' +
       '<pre><code>' + lines.join('\n') + '</code></pre>';
@@ -3608,29 +3542,21 @@ mvn verify</pre>
   function buildIndex() {
     if (index.length) return index;
     pages.forEach(function (p) {
-      var intro = { kind: 'page', page: p, anchor: '', title: p.title, text: '', content: [] };
+      var intro = { kind: 'page', page: p, anchor: '', title: p.title, text: '' };
       var sec = intro;
-      var sub;
       index.push(intro);
       Array.prototype.forEach.call(p.el.children, function (ch) {
         if (ch.classList.contains('crumb') || ch.classList.contains('pager') || ch.classList.contains('page-toc') || ch.classList.contains('command-tools') || ch.id === 'commandEmpty') return;
         if (ch.tagName === 'H2') {
-          sec = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), text: '', content: [] };
-          sub = undefined;
+          sec = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), text: '' };
           index.push(sec);
-        } else if (ch.tagName === 'H3') {
-          sub = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), parentTitle: sec.title, text: '', content: [] };
-          index.push(sub);
         } else if (ch.classList.contains('cmd-card')) {
-          var permission = ch.getAttribute('data-perm') || '';
-          index.push({ kind: 'cmd', page: p, anchor: ch.getAttribute('data-anchor'), title: ch.getAttribute('data-cmd') + ' ' + (ch.getAttribute('data-alias') || ''), text: permission + ' ' + plain(ch), content: [ch], permission: permission });
+          index.push({ kind: 'cmd', page: p, anchor: ch.getAttribute('data-anchor'), title: ch.getAttribute('data-cmd') + ' ' + (ch.getAttribute('data-alias') || ''), text: (ch.getAttribute('data-perm') || '') + ' ' + plain(ch) });
         } else if (ch.tagName === 'DETAILS') {
           var sm = $('summary', ch);
-          index.push({ kind: 'faq', page: p, anchor: ch.getAttribute('data-anchor'), title: sm ? sm.textContent.trim() : '', text: plain(ch), content: [ch] });
+          index.push({ kind: 'faq', page: p, anchor: ch.getAttribute('data-anchor'), title: sm ? sm.textContent.trim() : '', text: plain(ch) });
         } else {
-          var target = sub || sec;
-          target.text += ' ' + plain(ch);
-          target.content.push(ch);
+          sec.text += ' ' + plain(ch);
         }
       });
     });
@@ -3655,9 +3581,6 @@ mvn verify</pre>
     '<div class="hint"><span><kbd>↑</kbd><kbd>↓</kbd> auswählen</span><span><kbd>Enter</kbd> öffnen</span><span><kbd>Esc</kbd> schließen</span></div></div>';
   document.body.appendChild(overlay);
   var input = $('#q'), results = $('#results'), sel = 0, lastFocus = null;
-  var queuedSearch = debounce(function (query) {
-    if (overlay.classList.contains('on') && input.value === query) render(query, true);
-  }, 110);
 
   function hl(text, toks) {
     var parts = toks.map(function (t) { return String(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
@@ -3671,7 +3594,7 @@ mvn verify</pre>
     }
     return out + esc(text.slice(last));
   }
-  function render(q, related) {
+  function render(q) {
     var idx = buildIndex();
     var toks = searchText(q).split(/\s+/).filter(Boolean);
     var html = '';
@@ -3698,13 +3621,7 @@ mvn verify</pre>
       });
       res.sort(function (a, b) { return b.s - a.s; });
       res = res.slice(0, 12);
-      var extra = [];
-      if (related && window.DokuChat && res.length < 6) {
-        extra = window.DokuChat.find(buildIndex, q, res.map(function (hit) {
-          return '#/' + hit.e.page.id + (hit.e.anchor ? '/' + hit.e.anchor : '');
-        }));
-      }
-      if (!res.length && !extra.length) {
+      if (!res.length) {
         updateMarkup(results, '<div class="empty">Nichts gefunden für „' + esc(q) + '“. Ein anderer Suchbegriff könnte helfen.</div>', true);
         sel = -1; return;
       }
@@ -3722,12 +3639,6 @@ mvn verify</pre>
         html += '<a href="' + href + '" role="option"><small>' + esc(top) + '</small>' + hl(e.title, toks) +
           (snip ? '<span class="sn">' + hl(snip, toks) + '</span>' : '') + '</a>';
       });
-      if (extra.length) {
-        html += '<div class="semantic-heading" role="presentation">Ähnliche Fundstellen</div>';
-        extra.forEach(function (source) {
-          html += '<a href="' + source.href + '" role="option"><small>' + esc(source.page) + '</small>' + esc(source.title) + '</a>';
-        });
-      }
     }
     updateMarkup(results, html, true);
     sel = 0; mark();
@@ -3741,7 +3652,6 @@ mvn verify</pre>
     if (s && s.scrollIntoView) s.scrollIntoView({ block: 'nearest', behavior: smooth && motion.matches ? 'smooth' : 'auto' });
   }
   function openSearch() {
-    if (!$('#docChat').hidden) $('#docChatClose').click();
     lastFocus = document.activeElement;
     overlay.classList.add('on');
     overlay.inert = false;
@@ -3765,7 +3675,7 @@ mvn verify</pre>
     var i = $$('a', results).indexOf(a);
     if (i >= 0 && i !== sel) { sel = i; mark(); }
   });
-  input.addEventListener('input', function () { queuedSearch(input.value); });
+  input.addEventListener('input', debounce(function () { render(input.value); }, 120));
   overlay.addEventListener('keydown', function (e) {
     if (e.key !== 'Tab') return;
     var f = $$('input, a[href]', overlay).filter(function (el) { return el.offsetParent !== null; });
@@ -3784,14 +3694,13 @@ mvn verify</pre>
     }
   });
   document.addEventListener('keydown', function (e) {
-    if ($('#docChatDownload').open) return;
     var tag = (document.activeElement && document.activeElement.tagName) || '';
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       if (overlay.classList.contains('on')) closeSearch(); else openSearch();
     } else if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(tag) && !overlay.classList.contains('on')) {
       e.preventDefault(); openSearch();
-    } else if (e.key === 'Escape' && !e.defaultPrevented) {
+    } else if (e.key === 'Escape') {
       if (overlay.classList.contains('on')) closeSearch(); else closeNav();
     }
   });
@@ -3869,11 +3778,6 @@ mvn verify</pre>
     mo: 2592000, monat: 2592000, monate: 2592000, monaten: 2592000,
     y: 31536000, j: 31536000, jahr: 31536000, jahre: 31536000, jahren: 31536000
   };
-  var BANN_MINIMUM = 86400, BANN_MAXIMUM = 31536000;
-  function isBanDuration(raw) {
-    var duration = dauerParse(raw);
-    return duration.sek >= BANN_MINIMUM && duration.sek <= BANN_MAXIMUM;
-  }
   function dauerParse(raw) {
     var s = String(raw || '').toLowerCase().trim();
     if (!s) return { fehler: 'Bitte eine Dauer angeben.' };
@@ -3917,7 +3821,7 @@ mvn verify</pre>
       warn: { dauer: false, scope: false, presets: [] },
       kick: { dauer: false, scope: false, presets: [] }
     };
-    var LIMIT = { timeout: 86400, mute: 2592000, freeze: 2592000 };
+    var LIMIT = { timeout: 86400, banMin: 86400, banMax: 31536000, mute: 2592000, freeze: 2592000 };
     var typ = $('#bkTyp'), spieler = $('#bkSpieler'), dauer = $('#bkDauer'), grund = $('#bkGrund'),
         scope = $('#bkScope'), server = $('#bkServer'), silent = $('#bkSilent'),
         dauerFeld = $('#bkDauerFeld'), scopeFeld = $('#bkScopeFeld'), serverFeld = $('#bkServerFeld'),
@@ -3970,8 +3874,8 @@ mvn verify</pre>
             }
             else notiz('perm ist hier nicht erlaubt.', 'err');
           } else {
-            if (typ.value === 'ban' && d.sek < BANN_MINIMUM) notiz('Ein Bann dauert mindestens 24 Stunden. Für kürzer gibt es /timeout.', 'err');
-            else if (typ.value === 'ban' && d.sek > BANN_MAXIMUM) notiz('Ein Bann dauert höchstens ein Jahr.', 'err');
+            if (typ.value === 'ban' && d.sek < LIMIT.banMin) notiz('Ein Bann dauert mindestens 24 Stunden. Für kürzer gibt es /timeout.', 'err');
+            else if (typ.value === 'ban' && d.sek > LIMIT.banMax) notiz('Ein Bann dauert höchstens ein Jahr.', 'err');
             else if (typ.value === 'timeout' && d.sek > LIMIT.timeout) notiz('Ein Timeout dauert höchstens 24 Stunden.', 'err');
             else if (typ.value === 'mute' && d.sek > LIMIT.mute) notiz('Ein Mute dauert höchstens 30 Tage.', 'err');
             else if (typ.value === 'freeze' && d.sek > LIMIT.freeze) notiz('Ein Freeze dauert höchstens 30 Tage (ohne Dauer permanent).', 'err');
@@ -4190,21 +4094,6 @@ mvn verify</pre>
   })();
 
   route();
-  document.addEventListener('DOMContentLoaded', function () {
-    if (!window.DokuChat) return;
-    var chatToggle = $('#docChatToggle');
-    chatToggle.hidden = false;
-    chatToggle.addEventListener('click', function () {
-      window.DokuChat.open(buildIndex, route, isBanDuration);
-    });
-  });
-  if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./doc-sw.js').catch(function (error) {
-        console.debug('Offline-Speicher der Doku nicht verfügbar', error);
-      });
-    });
-  }
 })();
 </script>
 </body>

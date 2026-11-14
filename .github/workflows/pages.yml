@@ -19,18 +19,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Doku-Chat prüfen
-        env:
-          CHROME_BIN: google-chrome
-        run: node scripts/doku-chat-benchmark.cjs
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - name: Lokales Sprachmodell bereitstellen
-        run: |
-          cp -R docs "$RUNNER_TEMP/punishsystem-pages"
-          python3 scripts/pages-chat-assets.py "$RUNNER_TEMP/punishsystem-pages/chat-model"
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: ${{ runner.temp }}/punishsystem-pages
+          path: docs
   deploy:
     needs: publish
     runs-on: ubuntu-latest
