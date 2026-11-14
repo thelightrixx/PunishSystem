@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-RC+131126-2233",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "4.0.0-RC+141126-1242",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
