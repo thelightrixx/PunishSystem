@@ -6,6 +6,84 @@ const EMPTY_RULES = 'Beantworte allgemeine Fragen, Begrüßungen und Gespräche.
 let engine;
 let active;
 
+function modelFetch(report) {
+  const original = globalThis.fetch.bind(globalThis);
+  const weights = new URL('./chat-model/qwen/resolve/main/', import.meta.url).href;
+  let bytes = 0;
+  let lastUpdate = 0;
+  globalThis.fetch = async (request, options) => {
+    if (!(request instanceof Request) || !request.url.startsWith(weights) || !request.url.endsWith('.bin')) {
+      return original(request, options);
+    }
+
+    const transfer = new AbortController();
+    return new Response(new ReadableStream({
+      async start(stream) {
+        let fileBytes = 0;
+        let total;
+        let version;
+        let lastError;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const controller = new AbortController();
+          const abort = () => controller.abort();
+          const headers = new Headers(request.headers);
+          if (fileBytes) {
+            headers.set('Range', 'bytes=' + fileBytes + '-');
+            if (version) headers.set('If-Range', version);
+          }
+          let timer = setTimeout(abort, 18000);
+          let reader;
+          try {
+            const response = await original(request, {
+              ...options, headers, cache: attempt ? 'reload' : request.cache,
+              signal: AbortSignal.any([controller.signal, request.signal, transfer.signal])
+            });
+            if (!response.ok || !response.body) throw new Error('HTTP ' + response.status);
+            if (fileBytes) {
+              const range = response.headers.get('Content-Range');
+              if (response.status !== 206 || !range?.startsWith('bytes ' + fileBytes + '-') || !range.endsWith('/' + total)) {
+                throw new Error('Modell-Download lieferte einen falschen Bytebereich.');
+              }
+            } else {
+              total = Number(response.headers.get('Content-Length')) || undefined;
+              version = response.headers.get('ETag');
+            }
+            reader = response.body.getReader();
+            while (true) {
+              clearTimeout(timer);
+              timer = setTimeout(abort, 18000);
+              const { done, value } = await reader.read();
+              if (done) break;
+              fileBytes += value.byteLength;
+              if (transfer.signal.aborted) return;
+              bytes += value.byteLength;
+              stream.enqueue(value);
+              if (performance.now() - lastUpdate >= 400) {
+                lastUpdate = performance.now();
+                report('transfer', Math.floor(bytes / 1000000));
+              }
+            }
+            if (total && total !== fileBytes) throw new Error('Modell-Datei ist unvollständig.');
+            stream.close();
+            return;
+          } catch (error) {
+            lastError = error;
+            if (transfer.signal.aborted) return;
+            if (request.signal.aborted || (fileBytes && !total)) break;
+          } finally {
+            clearTimeout(timer);
+            controller.abort();
+            reader?.releaseLock();
+          }
+        }
+        stream.error(lastError);
+      },
+      cancel() { transfer.abort(); }
+    }), { headers: { 'Content-Type': 'application/octet-stream' } });
+  };
+  return () => { globalThis.fetch = original; };
+}
+
 async function load(progress) {
   if (engine) return engine;
   const adapter = await navigator.gpu?.requestAdapter();
@@ -13,20 +91,26 @@ async function load(progress) {
 
   const { CreateMLCEngine, prebuiltAppConfig } = await import('./chat-model/web-llm.mjs');
   const model = prebuiltAppConfig.model_list.find((entry) => entry.model_id === MODEL);
-  engine = await CreateMLCEngine(MODEL, {
-    appConfig: {
-      cacheBackend: 'opfs',
-      model_list: [{
-        ...model,
-        model: new URL('./chat-model/qwen/resolve/main/', import.meta.url).href,
-        model_lib: new URL('./chat-model/qwen.wasm', import.meta.url).href
-      }]
-    },
-    initProgressCallback(report) {
-      const local = /^Loading model from cache/i.test(report.text);
-      progress(local ? 'load' : 'download', Math.floor(report.progress * 100));
-    }
-  }, { context_window_size: 2048 });
+  const restoreFetch = modelFetch(progress);
+  try {
+    engine = await CreateMLCEngine(MODEL, {
+      appConfig: {
+        cacheBackend: 'opfs',
+        opfsAccessMode: 'auto',
+        model_list: [{
+          ...model,
+          model: new URL('./chat-model/qwen/resolve/main/', import.meta.url).href,
+          model_lib: new URL('./chat-model/qwen.wasm', import.meta.url).href
+        }]
+      },
+      initProgressCallback(report) {
+        const local = /^Loading model from cache/i.test(report.text);
+        if (local || report.progress === 1) progress('load', Math.floor(report.progress * 100));
+      }
+    }, { context_window_size: 2048 });
+  } finally {
+    restoreFetch();
+  }
   return engine;
 }
 

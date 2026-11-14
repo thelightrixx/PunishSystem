@@ -220,21 +220,24 @@
     if (!commands.length && followUp) commands.push(...commandsFor(previous.content));
     const permission = commands.length === 1 && words(question).has('recht')
       ? index.find((source) => source.permission && source.titleIds.has(commands[0])) : undefined;
+    const settings = [...technical(question)].filter((term) => term.includes('.') && !term.startsWith('/'));
+    const explicit = (source) => settings.some((term) => source.bodyIds.has(term) || source.titleIds.has(term));
     const matches = compare(index, query, commands)
       .filter(({ source, supported, score }) => supported && score >= 6 && source.blocks.length)
       .slice(0, 2)
       .map(({ source }) => {
-        const blocks = matchedBlocks(source, query, commands).slice(0, 3).sort((a, b) => a.i - b.i);
-        const excerpt = blocks.map(({ block }) => {
+        const blocks = matchedBlocks(source, query, commands).slice(0, 3).sort((a, b) => a.i - b.i).map(({ block }) => block);
+        const excerpt = blocks.map((block) => {
           const text = block.textContent.trim();
           if (block.dataset.lang !== 'cmd' || !commands.length) return text;
           const lines = text.split('\n').filter((line) => commands.some((command) => technical(line).has(command)));
           return lines.length ? lines.join('\n') : text;
         }).join('\n');
         const permission = source.permission ? '\nHauptrecht: ' + source.permission : '';
-        return { source, text: source.title + permission + '\n' + excerpt.slice(0, 510) };
+        return { source, blocks, text: source.title + permission + '\n' + excerpt.slice(0, 510) };
       });
-    if (!permission) return { matches };
+    const settingMatch = matches.find(({ source }) => explicit(source));
+    if (!permission) return { matches, settingMatch };
     const command = commands[0];
     const fact = 'Das dokumentierte Hauptrecht für ' + command + ' ist ' + permission.permission;
     return { matches: [{ source: permission, text: fact }], fact, permission: permission.permission };
@@ -326,6 +329,15 @@
       load: 'Qwen konnte nicht geladen werden. Prüfe beim ersten Start die Internetverbindung und sende die Frage erneut.'
     };
 
+    function appendExtract(view, match) {
+      view.caption.textContent = 'Doku-Auszug';
+      const key = technical(current.question);
+      const blocks = match.source.blocks.filter((block) => [...technical(block.textContent)].some((name) => key.has(name)))
+        .slice(0, 3);
+      if (!blocks.length) blocks.push(...match.blocks.slice(0, 2));
+      view.copy.replaceChildren(...blocks.map((block) => block.cloneNode(true)));
+    }
+
     function finish(text, message) {
       const { view, question, evidence } = current;
       view.reply.setAttribute('aria-busy', 'false');
@@ -335,7 +347,7 @@
       } else {
         view.caption.textContent = text ? 'Qwen3.5 · Lokal erzeugt' : 'Qwen hat diesmal keine Antwort erzeugt.';
         renderText(view.copy, text);
-        if (text || evidence.permission) {
+        if (text || evidence.permission || evidence.settingMatch) {
           const references = new Set([...text.matchAll(/\[(\d+)\]/g)].map((match) => evidence.matches[Number(match[1]) - 1]?.source).filter(Boolean));
           if (evidence.permission) {
             references.add(evidence.matches[0].source);
@@ -343,6 +355,12 @@
               renderText(view.copy, evidence.fact + '.');
               view.caption.textContent = 'Permission aus der Doku';
             }
+          }
+          const hasCompleteSentence = /[.!?](?:\s*\[\d+\])*\s*$/.test(text);
+          if (evidence.settingMatch && (!references.size || !hasCompleteSentence)) {
+            appendExtract(view, evidence.settingMatch);
+            references.clear();
+            references.add(evidence.settingMatch.source);
           }
           addSources(view.reply, [...references]);
           const content = view.copy.textContent.slice(0, 650);
@@ -361,6 +379,7 @@
 
     function startupMessage(phase, percent) {
       if (phase === 'answer') return 'Qwen schreibt …';
+      if (phase === 'transfer') return 'Modell-Download · ' + percent + ' MB geladen …';
       const action = phase === 'load' ? 'Qwen wird geladen' : 'Qwen wird einmalig geladen';
       const value = Number.isFinite(percent) && percent > 0 ? ' · ' + Math.min(100, percent) + ' %' : '';
       return action + value + ' …';
@@ -379,7 +398,7 @@
           if (data.phase === 'answer') modelReady = true;
           const message = startupMessage(data.phase, data.percent);
           if (current.view.caption.textContent !== message) current.view.caption.textContent = message;
-        } else if (typeof data.text === 'string' && !current.evidence.permission) {
+        } else if (typeof data.text === 'string' && !current.evidence.permission && !current.evidence.settingMatch) {
           renderText(current.view.copy, data.text);
           if (!panel.hidden) scrollToBottom();
         }
