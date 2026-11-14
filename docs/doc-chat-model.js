@@ -12,7 +12,7 @@ function modelFetch(report) {
   let bytes = 0;
   let lastUpdate = 0;
   globalThis.fetch = async (request, options) => {
-    if (!(request instanceof Request) || !request.url.startsWith(weights) || !request.url.endsWith('.bin')) {
+    if (!(request instanceof Request) || !request.url.startsWith(weights) || !/params_shard_\d+\.bin$/.test(request.url)) {
       return original(request, options);
     }
 
@@ -21,17 +21,13 @@ function modelFetch(report) {
       async start(stream) {
         let fileBytes = 0;
         let total;
-        let version;
         let lastError;
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 4; attempt++) {
           const controller = new AbortController();
           const abort = () => controller.abort();
           const headers = new Headers(request.headers);
-          if (fileBytes) {
-            headers.set('Range', 'bytes=' + fileBytes + '-');
-            if (version) headers.set('If-Range', version);
-          }
-          let timer = setTimeout(abort, 18000);
+          if (fileBytes) headers.set('Range', 'bytes=' + fileBytes + '-');
+          let timer = setTimeout(abort, 25000);
           let reader;
           try {
             const response = await original(request, {
@@ -39,31 +35,37 @@ function modelFetch(report) {
               signal: AbortSignal.any([controller.signal, request.signal, transfer.signal])
             });
             if (!response.ok || !response.body) throw new Error('HTTP ' + response.status);
+            let skip = 0;
             if (fileBytes) {
               const range = response.headers.get('Content-Range');
-              if (response.status !== 206 || !range?.startsWith('bytes ' + fileBytes + '-') || !range.endsWith('/' + total)) {
+              if (response.status === 200 && Number(response.headers.get('Content-Length')) === total) {
+                skip = fileBytes;
+              } else if (response.status !== 206 || !range?.startsWith('bytes ' + fileBytes + '-') || !range.endsWith('/' + total)) {
                 throw new Error('Modell-Download lieferte einen falschen Bytebereich.');
               }
             } else {
               total = Number(response.headers.get('Content-Length')) || undefined;
-              version = response.headers.get('ETag');
             }
             reader = response.body.getReader();
             while (true) {
               clearTimeout(timer);
-              timer = setTimeout(abort, 18000);
+              timer = setTimeout(abort, 25000);
               const { done, value } = await reader.read();
               if (done) break;
-              fileBytes += value.byteLength;
+              const until = Math.min(skip, value.byteLength);
+              skip -= until;
+              const received = value.subarray(until);
+              if (!received.length) continue;
+              fileBytes += received.byteLength;
               if (transfer.signal.aborted) return;
-              bytes += value.byteLength;
-              stream.enqueue(value);
+              bytes += received.byteLength;
+              stream.enqueue(received);
               if (performance.now() - lastUpdate >= 400) {
                 lastUpdate = performance.now();
                 report('transfer', Math.floor(bytes / 1000000));
               }
             }
-            if (total && total !== fileBytes) throw new Error('Modell-Datei ist unvollständig.');
+            if (skip || (total && total !== fileBytes)) throw new Error('Modell-Datei ist unvollständig.');
             stream.close();
             return;
           } catch (error) {
