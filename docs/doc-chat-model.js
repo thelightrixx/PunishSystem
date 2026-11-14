@@ -4,10 +4,12 @@ const runtime = new URL('web-llm.mjs', assets);
 const wasm = new URL('qwen.wasm', assets);
 const weights = new URL('qwen/resolve/main/', assets);
 const manifest = new URL('tensor-cache.json', weights);
-const RULES = 'Du bist der PunishSystem-Assistent. Antworte kurz und in der Sprache des Nutzers. ';
-const DOC_RULES = 'Beantworte die aktuelle Frage mit den Doku-Auszügen. Verwende den Gesprächskontext für Rückfragen. ' +
-  'Spielernamen sind Parameter und müssen nicht in der Doku vorkommen. Übernimm Befehle, Optionen und Rechte exakt. ' +
-  'Nutze Markdown: Befehle im Codeblock, mehrere Schritte als Liste. Zitiere Quellen mit [1]. Frage bei fehlenden Angaben gezielt nach.';
+const RULES = 'Du bist der PunishSystem-Assistent. Antworte kurz, sachlich und in der Sprache des Nutzers. ' +
+  'Beginne direkt mit der Antwort. Wiederhole die Frage nicht und gib keine Meta-Kommentare aus. ';
+const DOC_RULES = 'Beantworte die aktuelle Frage ausschließlich mit den Doku-Auszügen. Verwende den Gesprächskontext für Rückfragen. ' +
+  'Spielernamen sind Parameter und müssen nicht in der Doku vorkommen. Übernimm Befehle, Optionen, Rechte und Schlüssel exakt. ' +
+  'Erfinde keine Befehle, Optionen, Rechte, Dateien oder Werte. Nutze Markdown: Befehle im Codeblock, mehrere Schritte als Liste. ' +
+  'Zitiere jede sachliche Aussage mit der passenden Nummer wie [1] oder [2]. Wenn die Auszüge die Frage nicht beantworten, sage das kurz.';
 const EMPTY_RULES = 'Beantworte allgemeine Fragen, Begrüßungen und Gespräche. Frage bei unklaren Plugin-Fragen nach Details.';
 let engine;
 let active;
@@ -194,11 +196,36 @@ async function load(allowDownload, progress) {
   return engine;
 }
 
-function answerText(raw, sourceCount) {
-  const cleaned = raw.replace(/<think>[\s\S]*?(?:<\/think>|$)|\[(\d+)\]/gi,
-    (match, citation) => citation && Number(citation) <= sourceCount && Number(citation) > 0 ? match : '');
-  return cleaned.split(/\n\s*(?:Frage\s*:|Doku-Auszüge\s*:|Erfinde keine)/i, 1)[0]
-    .replace(/\n\s*(?:Frage|Doku-Auszüge|Antwort)\s*$/i, '').trimStart();
+function answerText(raw) {
+  const cleaned = raw.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '')
+    .replace(/<\/?think>/gi, '');
+  const meta = /^\s*(?:Der (?:Nutzer|User|Benutzer)(?:in)?\s+(?:fragt|schreibt|möchte|will)|Doku-Auszüge?|Fundstellen?|Quellen?|Kontext|Bisherige Frage|Frage)\b\s*:?\s*/i;
+  const answerLabel = /^\s*(?:Antwort|Assistent)\s*:\s*/i;
+  const lines = [];
+  let started = false;
+  let fence;
+  for (const original of cleaned.split(/\r?\n/)) {
+    let line = original;
+    const marker = line.match(/^\s*(\x60{3,}|~{3,})/);
+    if (fence || marker) {
+      if (!fence) fence = marker[1];
+      else if (line.trim() === fence) fence = undefined;
+      lines.push(line);
+      started = true;
+      continue;
+    }
+    const answerIndex = line.search(/\bAntwort\s*:/i);
+    if (meta.test(line)) {
+      if (started) break;
+      if (answerIndex < 0) continue;
+      line = line.slice(answerIndex + line.slice(answerIndex).indexOf(':') + 1);
+    }
+    line = line.replace(answerLabel, '');
+    if (/\bDer (?:Nutzer|User|Benutzer)(?:in)?\s+(?:fragt|schreibt|möchte|will)\b/i.test(line)) continue;
+    if (line.trim()) started = true;
+    lines.push(line);
+  }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 self.addEventListener('message', async ({ data }) => {
@@ -220,14 +247,13 @@ self.addEventListener('message', async ({ data }) => {
       const sources = data.sources.map((text, i) => '[' + (i + 1) + '] ' + text).join('\n\n');
       const context = data.context ? 'Bisherige Frage zum selben Thema: ' + data.context + '\n\n' : '';
       let input = sources ? context + 'Doku-Auszüge:\n' + sources + '\n\nFrage: ' + data.question : data.question;
-      if (data.permission) input = sources + '\nFrage: Wie lautet das Hauptrecht? Nenne es in genau einem Satz.';
       const stream = await model.chat.completions.create({
         messages: [{ role: 'system', content: RULES + (sources ? DOC_RULES : EMPTY_RULES) }, ...data.history, { role: 'user', content: input }],
         stream: true,
         temperature: 0.2,
         frequency_penalty: 0.3,
         presence_penalty: 0,
-        max_tokens: data.permission ? 42 : 180,
+        max_tokens: 180,
         stop: ['\nFrage:', '\nDoku-Auszüge:', '\n Erfinde keine', '\nErfinde keine'],
         extra_body: { enable_thinking: false }
       });
@@ -237,7 +263,7 @@ self.addEventListener('message', async ({ data }) => {
         if (turn.stopped) { await model.interruptGenerate(); break; }
         raw += chunk.choices[0]?.delta.content || '';
         if (performance.now() >= nextUpdate) {
-          const text = answerText(raw, data.sources.length);
+          const text = answerText(raw);
           if (text && !writing) {
             send({ phase: 'writing' });
             writing = true;
@@ -247,7 +273,7 @@ self.addEventListener('message', async ({ data }) => {
         }
       }
     }
-    send({ done: true, stopped: turn.stopped, text: answerText(raw, data.sources.length).trim() });
+    send({ done: true, stopped: turn.stopped, text: answerText(raw) });
   } catch (error) {
     if (error.message === 'DOWNLOAD') {
       send({ needsDownload: true });

@@ -1,4 +1,4 @@
-const cacheName = 'punishsystem-docs-v6';
+const cacheName = 'punishsystem-docs-v7';
 const runtime = new URL('./chat-model/web-llm.mjs', self.location).href;
 const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js', './doc-chat-model.js']
   .map((path) => new URL(path, self.location).href);
@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(cacheName);
     await cache.addAll(urls.map((url) => new Request(url, { cache: 'reload' })));
-    const installedRuntime = await caches.match(runtime, { cacheName: 'punishsystem-docs-v5' });
+    const installedRuntime = await caches.match(runtime);
     if (installedRuntime) await cache.put(runtime, installedRuntime);
     await self.skipWaiting();
   })());

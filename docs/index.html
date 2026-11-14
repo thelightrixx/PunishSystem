@@ -3610,12 +3610,17 @@ mvn verify</pre>
     pages.forEach(function (p) {
       var intro = { kind: 'page', page: p, anchor: '', title: p.title, text: '', content: [] };
       var sec = intro;
+      var sub;
       index.push(intro);
       Array.prototype.forEach.call(p.el.children, function (ch) {
         if (ch.classList.contains('crumb') || ch.classList.contains('pager') || ch.classList.contains('page-toc') || ch.classList.contains('command-tools') || ch.id === 'commandEmpty') return;
         if (ch.tagName === 'H2') {
           sec = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), text: '', content: [] };
+          sub = undefined;
           index.push(sec);
+        } else if (ch.tagName === 'H3') {
+          sub = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), parentTitle: sec.title, text: '', content: [] };
+          index.push(sub);
         } else if (ch.classList.contains('cmd-card')) {
           var permission = ch.getAttribute('data-perm') || '';
           index.push({ kind: 'cmd', page: p, anchor: ch.getAttribute('data-anchor'), title: ch.getAttribute('data-cmd') + ' ' + (ch.getAttribute('data-alias') || ''), text: permission + ' ' + plain(ch), content: [ch], permission: permission });
@@ -3623,8 +3628,9 @@ mvn verify</pre>
           var sm = $('summary', ch);
           index.push({ kind: 'faq', page: p, anchor: ch.getAttribute('data-anchor'), title: sm ? sm.textContent.trim() : '', text: plain(ch), content: [ch] });
         } else {
-          sec.text += ' ' + plain(ch);
-          sec.content.push(ch);
+          var target = sub || sec;
+          target.text += ' ' + plain(ch);
+          target.content.push(ch);
         }
       });
     });

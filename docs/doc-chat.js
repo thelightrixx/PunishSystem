@@ -1,28 +1,34 @@
 (function () {
   'use strict';
 
-  const stopWords = new Set(('aber alle als am an auch auf aus bei beim bin bis da dabei dafuer daher damit dann das dass dem den der des die dir doch du durch ein eine einem einen einer eines einfach er es etwas euch fuer geht gilt haben hat hier ich im in ins ist kann kannst kein keine koennen man mehr mich mir mit muss nach noch nun nur oder per schon sein sind so soll ueber um und uns unter vom von vor wann warum was weg weil welche welchem welchen welcher welches wem wen wenn wer wie wieder wir wird wo wohl wozu zu zum zur bitte punishsystem documentation doku frage hilfe heb hebe heben richt richte richten schalt schalte schalten').split(' '));
+  const stopWords = new Set(('aber alle als am an auch auf aus bei beim bin bis da dabei dafuer daher damit dann das dass dem den der des die dir doch du durch ein eine einem einen einer eines einfach er es etwas euch fuer geht gilt haben hat hier ich im in ins ist kann kannst kein keine koennen man mehr mich mir mit muss nach noch nun nur oder per schon sein sind so soll ueber um und uns unter vom von vor wann warum was weg weil welche welchem welchen welcher welches wem wen wenn wer wie wieder wir wird wo wohl wozu zu zum zur bitte punishsystem documentation doku frage hilfe heb hebe heben richt richte richten schalt schalte schalten antwort antworte antworten kurz kurze kurzen mal rechnung rechne ergebnis zahl zahlen mathe danke hallo hi hey servus').split(' '));
   const synonyms = new Map();
   const undoCommands = new Map(['unmute', 'unmute-ip', 'unban', 'unban-ip', 'pardon', 'untimeout', 'untimeout-ip', 'unfreeze'].map((name) => [name, '/' + name]));
   for (const group of [
     'mute muten stumm stummschalten stummschaltung schreibsperre',
     'aufheben aufhebung entfernen loesen beenden rueckgaengig ruecknahme entmut entbann entsperr wegnehmen',
     'bann bannen ban sperre sperren ausschluss verbannen runterbannen herunterbannen rausbannen wegbannen',
-    'scope servername server backend teilserver gueltigkeitsbereich',
+    'scope servername server servern teilserver gueltigkeitsbereich',
     'recht rechte berechtigung berechtigungen permission permissions hauptrecht erlaubnis',
     'mysql datenbank datenbanken sql speicher datenbankspeicher',
     'einrichten installieren einrichtung installation konfiguration konfigurieren',
     'silent still leise unauffaellig unterdruecken ausschalten -s',
     'meldung meldungen benachrichtigung benachrichtigungen ankuendigung broadcast broadcasts',
-    'bridge backend bruecke paper',
+    'bridge bridges backend backends bruecke paper',
     'proxy velocity',
     'net netz netzwerk netzwerkweit netzweit global ueberall',
     'konsole konsolen terminal console',
-    'backup sicherung sicherungskopie sichern',
+    'sichern backup sicherung sicherungen sicherungskopie sichere gesichert datenbanksicherung',
     'update aktualisieren aktualisierung',
     'neuladen reload einlesen uebernehmen',
     'report reports melden meldung',
     'verlagern uebertragen uebernehmen migrieren migration umziehen umstieg',
+    'bearbeiten aendern veraendern verkuerzen verlaengern anpassen korrigieren',
+    'dauer dauern restdauer laufzeit',
+    'punkt punkte punkten punktesumme',
+    'offline abgemeldet offline-spieler',
+    'maximal hoechstens maximum',
+    'vorlage vorlagen template templates',
     'bisher bisherig vorher existierend vorhanden bestehend'
   ]) {
     const [key, ...words] = group.split(' ');
@@ -32,23 +38,41 @@
   }
 
   const normalize = (text) => text.toLowerCase().replace(/[äöüß]/g, (letter) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' })[letter]);
-  const technical = (text) => new Set(normalize(text).match(/(?<![\w/.-])(?:\/[a-z]|--?[a-z])[a-z0-9_-]*(?:=[a-z0-9_-]+)?|\b[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+\b/g) || []);
+  const technical = (text) => new Set(normalize(text).match(
+    /(?<![\w/.-])(?:\/[a-z][a-z0-9_:-]*|--?[a-z][a-z0-9_-]*(?:=[a-z0-9_-]*)?|[a-z][a-z0-9_-]*(?:\/[a-z0-9_.-]+)+\/?)|\b[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+(?:\.\*)?|\b[a-z][a-z0-9_-]*=(?!=)/g
+  ) || []);
+  const fileName = /\.(?:ya?ml|json|txt|jar|db|onnx|log|properties|xml|toml|csv|sql|ini|conf|md)$/;
   const timePattern = /\b(?:(?:\d+(?:mo|[smhdwy]))+|\d+\s+(?:sekunden?|minuten?|stunden?|tag(?:en?)?|wochen?|monat(?:en?)?|jahr(?:en?)?))\b/i;
-  const scopePattern = /\b(?:global|netzwerkweit|netzweit|ueberall|ganzen netzwerk|alle[nr]? server[n]?)\b/;
+  const scopePattern = /\b(?:global|netzwerkweit|netzweit|ueberall|ganzen netzwerk|alle[nr]? servern?)\b/;
+  const fileQuestion = /\b(?:welch\w* datei|wo .{0,25}(?:konfigurier|stell|aender)\w*|welch\w* konfiguration)\b/;
+  const fileCoordinates = /\b(?:datei(?:en)?|enthaelt|liegt|steh\w*|find\w*|platziere\w*|aender\w*|konfigurier\w*|speicher\w*|bearbeit\w*)\b/g;
+  const localScopePattern = /\b(?:nur auf|einzelnen server|nicht global|verhinder\w*|vermeid\w*|beschraenk\w*|begrenz\w*)\b/;
   const at = (id) => document.getElementById(id);
   const state = {};
 
-  function words(text) {
+  function tokenList(text) {
     const normalized = normalize(text)
       .replace(/\bheb\w*\s+[^.!?\n]{0,80}\bauf\b/g, ' aufheben $&')
       .replace(/\bricht\w*\s+[^.!?\n]{0,80}\bein\b/g, ' einrichten $&')
       .replace(/\bschalt\w*\s+[^.!?\n]{0,80}\baus\b/g, ' ausschalten $&');
     const tokens = normalized.match(/[a-z][a-z0-9]{1,}/g) || [];
-    const result = new Set();
+    const result = [];
     for (const token of tokens) {
-      if (!stopWords.has(token)) result.add(synonyms.get(token) || token.replace(/(?:ungen|ung|ern|en|er|e|s)$/, (suffix) => token.length - suffix.length > 3 ? '' : suffix));
+      if (stopWords.has(token)) continue;
+      const stem = token.replace(/(?:ungen|ung|ern|en|er|e|s)$/, (suffix) => token.length - suffix.length > 3 ? '' : suffix);
+      result.push(synonyms.get(token) || synonyms.get(stem) || stem);
     }
     return result;
+  }
+
+  function words(text) {
+    return new Set(tokenList(text));
+  }
+
+  function termCounts(text) {
+    const counts = new Map();
+    for (const token of tokenList(text)) counts.set(token, (counts.get(token) || 0) + 1);
+    return counts;
   }
 
   function commandsFor(question) {
@@ -58,15 +82,20 @@
     if (ids.length) return ids;
     const bare = (text.match(/[a-z][a-z-]+/g) || []).find((word) => undoCommands.has(word));
     if (bare) return [undoCommands.get(bare)];
+    if (/\bver(?:kuerz|laenger)\w*\b/.test(text) && /\b(?:strafe|dauer|bann|mute|timeout)\w*\b/.test(text)) return ['/punish-edit'];
     const undo = terms.has('aufheben') || /\b(?:entmut|entbann|entsperr)\w*/.test(text);
     const ip = terms.has('ip');
     if (terms.has('mute') || /\bentmut\w*\b/.test(text)) return [undo ? (ip ? '/unmute-ip' : '/unmute') : (ip ? '/mute-ip' : '/mute')];
+    const banAction = /\b(?:bannen|gebannt|runterbannen|herunterbannen|rausbannen|wegbannen|verbannen|sperren|gesperrt|ban)\b/.test(text);
     if (terms.has('bann') || /\b(?:(?:ent|herunter|runter|raus|weg|ver)?bann(?:en|e|st|t)?|entsperr\w*)\b/.test(text)) {
       if (undo) return [ip ? '/unban-ip' : '/pardon'];
+      if (!banAction) return [];
       if (/\b(?:dauerhaft|permanent|fuer immer)\b/.test(text) && !ip) return ['/permabann'];
       return [ip ? '/ban-ip' : '/ban'];
     }
-    if (terms.has('timeout') || terms.has('auszeit')) return [undo ? (ip ? '/untimeout-ip' : '/untimeout') : (ip ? '/timeout-ip' : '/timeout')];
+    if (/(?<![\w-])timeouts?(?![\w-])/.test(text) || terms.has('auszeit')) {
+      return [undo ? (ip ? '/untimeout-ip' : '/untimeout') : (ip ? '/timeout-ip' : '/timeout')];
+    }
     if (terms.has('freez') || terms.has('freeze') || terms.has('einfrier') || /\b(?:auftau|entfrier|eingefror)\w*/.test(text)) return [undo || /auftau|entfrier/.test(text) ? '/unfreeze' : '/freeze'];
     return [];
   }
@@ -74,6 +103,7 @@
   function makeDocElement(node, name) {
     const el = document.createElement(name || node.tagName.toLowerCase());
     const from = node.tagName === 'PRE' ? node.querySelector('code') || node : node;
+    if (node.matches('.desc')) el.dataset.role = 'description';
     if (name === 'pre') {
       const code = document.createElement('code');
       code.textContent = from.textContent.trim();
@@ -95,12 +125,15 @@
       case 'TABLE':
         return Array.from(element.querySelectorAll('tbody tr')).map((row) => {
           const p = document.createElement('p');
+          p.dataset.role = 'row';
           Array.from(row.cells).forEach((cell, i) => {
-            if (i) p.appendChild(document.createTextNode(' – '));
+            if (i) p.append(' – ');
             p.append(...makeDocElement(cell, 'span').childNodes);
           });
           return p;
         });
+      case 'H3':
+        return [makeDocElement(element, 'p')];
       case 'P':
       case 'UL':
       case 'OL':
@@ -113,12 +146,20 @@
       case 'DETAILS':
       case 'DIV':
         if (element.matches('.wk,.mc,.hero-art,.cards,.shots,.command-tools')) return [];
-      if (element.classList.contains('code')) {
-        const pre = element.querySelector('pre');
-        if (!pre) return [];
-        const block = makeDocElement(pre, 'pre');
+        if (element.classList.contains('code')) {
+          const pre = element.querySelector('pre');
+          if (!pre) return [];
+          const block = makeDocElement(pre, 'pre');
           block.dataset.lang = element.dataset.lang || '';
           return [block];
+        }
+        if (element.classList.contains('callout')) {
+          const blocks = Array.from(element.children).flatMap(docBlocks);
+          const title = element.querySelector('.ttl');
+          if (title && blocks[0]?.tagName === 'P') {
+            blocks[0].prepend(makeDocElement(title, 'strong'), ' – ');
+          }
+          return blocks;
         }
         return Array.from(element.children).flatMap(docBlocks);
       default:
@@ -131,6 +172,16 @@
       const blocks = entry.content.flatMap(docBlocks).filter((block) => block.textContent.trim());
       const title = entry.title.trim();
       const page = entry.page.title;
+      const titleIds = technical(title);
+      const files = [...titleIds, ...technical(entry.parentTitle || ''), ...technical(page)].filter((id) => fileName.test(id));
+      const blocksWithIndex = blocks.map((block) => ({
+        block, terms: words(block.textContent), ids: technical(block.textContent),
+        keys: new Set(Array.from(block.querySelectorAll('code'), (code) => normalize(code.textContent.trim()))),
+        text: block.textContent.trim()
+      }));
+      const text = [entry.permission, ...blocksWithIndex.map((block) => block.text)].filter(Boolean).join('\n');
+      const bodyCounts = termCounts(text);
+      const keys = new Set(blocksWithIndex.flatMap((entry) => [...entry.keys]).filter((key) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(key)));
       return {
         title,
         page,
@@ -138,21 +189,27 @@
         kind: entry.kind,
         permission: entry.permission,
         blocks,
+        blocksWithIndex,
+        file: files[0],
         titleWords: words(title),
         pageWords: words(page),
-        bodyWords: words(entry.text),
-        titleIds: technical(title),
-        bodyIds: technical(entry.text),
-        text: entry.text
+        bodyWords: new Set(bodyCounts.keys()),
+        bodyCounts,
+        bodyLength: [...bodyCounts.values()].reduce((sum, count) => sum + count, 0),
+        titleIds,
+        bodyIds: new Set([...files, ...technical(entry.permission || ''), ...blocksWithIndex.flatMap(({ ids }) => [...ids])]),
+        keys,
+        text
       };
     });
   }
 
   function loadConcepts() {
     const entries = window.PunishSearchData || [];
+    const seeded = new Set(synonyms.keys());
     for (const [a, b, similarity] of entries) {
-      if (!synonyms.has(a) && similarity >= 91 && synonyms.has(b)) synonyms.set(a, synonyms.get(b));
-      if (!synonyms.has(b) && similarity >= 91 && synonyms.has(a)) synonyms.set(b, synonyms.get(a));
+      if (!synonyms.has(a) && similarity >= 91 && seeded.has(b)) synonyms.set(a, synonyms.get(b));
+      if (!synonyms.has(b) && similarity >= 91 && seeded.has(a)) synonyms.set(b, synonyms.get(a));
     }
     const neighbors = new Map();
     for (const [a, b, similarity] of entries) {
@@ -168,16 +225,82 @@
     return neighbors;
   }
 
+  function indexStats(index) {
+    const df = new Map();
+    let total = 0;
+    for (const source of index) {
+      total += source.bodyLength;
+      for (const term of new Set([...source.titleWords, ...source.pageWords, ...source.bodyWords])) {
+        df.set(term, (df.get(term) || 0) + 1);
+      }
+    }
+    return { df, size: index.length, averageLength: total / Math.max(1, index.length) };
+  }
+
+  function bestTermMatch(term, candidates) {
+    if (term.length < 5) return 0;
+    for (const candidate of candidates) {
+      const shorter = term.length <= candidate.length ? term : candidate;
+      const longer = term.length <= candidate.length ? candidate : term;
+      if (shorter.length >= 5 && longer.length - shorter.length >= 3 && (longer.startsWith(shorter) || longer.endsWith(shorter))) return .5;
+    }
+    return 0;
+  }
+
+  function fileIntent(question) {
+    const text = normalize(question);
+    return fileQuestion.test(text) ? words(text.replace(fileCoordinates, ' ')) : undefined;
+  }
+
   function compare(index, question, commands) {
     const exact = technical(question);
-    const terms = words(question);
+    const query = normalize(question);
+    const fileTerms = fileIntent(question);
+    const terms = fileTerms?.size ? fileTerms : words(question);
+    const scopedAction = localScopePattern.test(query) || scopePattern.test(query);
+    const bridgeSetup = terms.has('bridge') && (terms.has('einrichten') || /\b(?:neue[mnrs]?|weiter[eimnrs]+)\b/.test(query));
+    const hyphenated = new Set(query.match(/(?<![\w/.-])[a-z][a-z0-9]*(?:-[a-z0-9]+)+\b/g) || []);
+    const explicitCommand = [...exact].some((id) => id.startsWith('/'));
+    const stats = state.stats || indexStats(index);
+    const k1 = 1.2;
+    const b = 0.75;
+    const idfs = new Map([...terms].map((term) => {
+      const frequency = stats.df.get(term) || 0;
+      return [term, Math.log(1 + (stats.size - frequency + .5) / (frequency + .5))];
+    }));
     const scored = index.map((source) => {
-      const hits = [...terms].filter((term) => source.titleWords.has(term) || source.bodyWords.has(term));
-      const title = hits.filter((term) => source.titleWords.has(term)).length;
+      let lexical = 0;
+      let hits = 0;
+      let titleHits = 0;
+      let pageHits = 0;
       let semantic = 0;
       let semanticHits = 0;
+      let literalHits = 0;
       for (const term of terms) {
-        if (source.titleWords.has(term) || source.bodyWords.has(term)) continue;
+        const idf = idfs.get(term);
+        const bodyCount = source.bodyCounts.get(term) || 0;
+        const titleHit = source.titleWords.has(term);
+        const pageHit = source.pageWords.has(term);
+        let termScore = 0;
+        if (bodyCount) {
+          termScore += idf * (bodyCount * (k1 + 1)) / (bodyCount + k1 * (1 - b + b * source.bodyLength / Math.max(1, stats.averageLength)));
+        }
+        if (titleHit) termScore += idf * 2.6;
+        if (pageHit) termScore += idf * .6;
+        if (termScore) {
+          lexical += termScore;
+          hits++;
+          if (bodyCount || titleHit) literalHits++;
+          if (titleHit) titleHits++;
+          if (pageHit) pageHits++;
+          continue;
+        }
+        const compound = Math.max(bestTermMatch(term, source.titleWords) * 1.25, bestTermMatch(term, source.bodyWords) * .6);
+        if (compound) {
+          lexical += idf * compound;
+          hits++;
+          continue;
+        }
         let best = 0;
         for (const [similar, weight] of (state.neighbors.get(term) || [])) {
           if (source.titleWords.has(similar)) best = Math.max(best, weight);
@@ -186,35 +309,60 @@
         semantic += best;
         if (best >= .4) semanticHits++;
       }
-      const citations = [...exact].filter((id) => source.bodyIds.has(id));
+      const citations = [...exact].filter((id) => source.bodyIds.has(id) || source.titleIds.has(id));
       const command = commands.some((id) => source.titleIds.has(id));
-      const commandExample = source.blocks.some((block) => block.tagName === 'PRE' && commands.some((id) => technical(block.textContent).has(id)));
-      const pageMatch = hits.filter((term) => source.pageWords.has(term) && !source.titleWords.has(term)).length;
-      const score = hits.length * 2 + title * 2.6 + Math.min(2, pageMatch) * 0.6 + Math.min(3, semantic)
-        + citations.length * 4 + (command ? 13 : 0) + (commandExample ? 6 : 0) - Math.min(3, source.text.length / 1500);
-      return { source, score, supported: command || citations.length || hits.length >= 2 || (hits.length === 1 && (terms.size === 1 || semanticHits || title > 0 && terms.size === 2)) };
+      const commandExample = source.blocksWithIndex.some(({ block, ids }) => block.dataset.lang === 'cmd' && commands.some((id) => ids.has(id)));
+      const exactTitle = [...exact].filter((id) => source.titleIds.has(id)).length;
+      const fileScore = fileTerms?.size && (literalHits || titleHits) && source.file ? 9 + (source.titleIds.has(source.file) ? 7 : 0) : 0;
+      const backupScore = terms.has('sichern') ? (source.titleWords.has('sichern') ? 10 : 0) - (source.bodyWords.has('sichern') ? 0 : 8) : 0;
+      const scopeScore = scopedAction && !explicitCommand && source.titleWords.has('scope')
+        && source.blocksWithIndex.some(({ block, ids }) => block.dataset.role === 'row' && ids.has('--global')) ? 30 : 0;
+      const setupScore = bridgeSetup && source.bodyWords.has('bridge') && source.blocksWithIndex.some(({ keys, text }) => keys.has('tunnel-secret') || /\btunnel-secret\s*:/.test(text))
+        ? 9 + (source.titleWords.has('bridge') ? 6 : 0) + (source.titleWords.has('einrichten') ? 6 : 0) : 0;
+      const offlineScore = terms.has('offline') && source.titleWords.has('offline') && source.bodyIds.has('schutz.fail-closed') ? 12 : 0;
+      const numberScore = /\b(?:wie (?:viele|viel|hoch)|wie lange|wieviel\w*)\b/.test(query) && source.kind !== 'page'
+        && source.blocksWithIndex.some(({ text, terms: blockTerms }) => /\b\d+\s+\p{L}/u.test(text) && !/:\s*$/.test(text)
+          && [...terms].filter((term) => blockTerms.has(term)).length >= 2)
+        ? 6 : 0;
+      const keyScore = [...hyphenated].filter((key) => source.keys.has(key)).length * 7;
+      const demoPenalty = source.title.startsWith('Ausprobieren:') && !/\b(?:ausprobieren|rechner|vorschau)\b/.test(query) ? -8 : 0;
+      const commandPenalty = source.kind === 'cmd' && !explicitCommand && !commands.length ? -6 : 0;
+      const coverage = terms.size ? hits / terms.size : 0;
+      const score = lexical + Math.min(3, semantic) + coverage * 7 + Math.min(2, pageHits) * .6
+        + titleHits * 1.8 + citations.length * 5 + exactTitle * 7 + fileScore + backupScore + scopeScore + setupScore + offlineScore
+        + (command ? 13 : 0) + (commandExample ? 6 : 0) + commandPenalty + keyScore + demoPenalty + numberScore
+        - Math.min(3, source.text.length / 1500);
+      const supported = Boolean(command || citations.length || fileScore || scopeScore || setupScore || keyScore
+        || literalHits >= 2 && (coverage >= .4 || titleHits > 0)
+        || literalHits === 1 && terms.size === 1
+        || literalHits >= 1 && (titleHits > 0 && coverage >= .25 || hits + semanticHits >= 2 && coverage >= .4));
+      return { source, score, supported, literalHits, coverage, fileScore, scopeScore, setupScore, offlineScore };
     });
     return scored.sort((a, b) => b.score - a.score);
   }
 
   function matchedBlocks(source, question, commands) {
-    const query = words(question);
-    const flags = technical(question);
+    const fileTerms = fileIntent(question);
+    const query = fileTerms?.size ? fileTerms : words(question);
+    const hyphenated = normalize(question).match(/(?<![\w/.-])[a-z][a-z0-9]*(?:-[a-z0-9]+)+\b/g) || [];
+    const flags = new Set([...technical(question), ...hyphenated.filter((key) => state.keys.has(key))]);
     const databaseSetup = query.has('mysql') && query.has('einrichten');
     const yamlRequested = query.has('yaml');
-    return source.blocks
-      .map((block, i) => {
-        const text = block.textContent;
-        const ids = technical(text);
-        const terms = words(text);
+    return source.blocksWithIndex
+      .map(({ block, text, ids, keys, terms }, i) => {
         const hits = [...query].filter((word) => terms.has(word)).length;
-        const exact = [...flags].filter((word) => ids.has(word)).length;
-        const example = block.tagName === 'PRE' && commands.some((id) => ids.has(id));
+        const related = [...query].filter((word) => !terms.has(word) && bestTermMatch(word, terms)).length;
+        const exact = [...flags].filter((word) => ids.has(word) || keys.has(word)).length;
+        const example = block.dataset.lang === 'cmd' && commands.some((id) => ids.has(id));
         const configuration = block.dataset.lang === 'yaml' && databaseSetup
           && (yamlRequested ? /typ:\s*["']?yaml\b/i : /typ:\s*["']?mysql\b/i).test(text);
-        return { block, i, score: hits * 2 + exact * 3 + (example ? 5 : 0) + (configuration ? 6 : 0) - text.length / 900 };
+        const row = block.dataset.role === 'row' && hits > 0;
+        const backup = row && query.has('sichern') && terms.has('mysql') ? 2 : 0;
+        const setup = query.has('bridge') && (terms.has('tunnel') || /\btunnel-secret\b/.test(text)) ? 2 : 0;
+        return { block, i, score: hits * 3 + related * .7 + exact * 5 + (row ? 1 : 0)
+          + backup + setup + (example ? 2 : 0) + (configuration ? 6 : 0) - text.length / 900 };
       })
-      .filter(({ block }) => block.textContent.length <= 1050)
+      .filter(({ block }) => block.textContent.length <= 1400)
       .sort((a, b) => b.score - a.score || a.i - b.i);
   }
 
@@ -238,9 +386,11 @@
   function playerName(question) {
     const explicit = question.match(/\/(?:ban|permabann|pardon|unban|unmute)\s+["'„]?([a-z0-9_]{3,16})\b/i)?.[1];
     if (explicit) return explicit;
-    const tokens = /(?:\bspieler(?:name)?\s+(?:(?:ist|heißt|heisst|namens)\s+)?|\b(?:er|sie|der name)\s+(?:heißt|heisst|ist namens)\s+|\bwie\s+(?:(?:kann|soll|muss)\s+ich|(?:ent|ver)?banne\s+ich|sperre\s+ich)\s+|\bmute\s+f[üu]r\s+)["'„]?([a-z0-9_]{3,16})\b/gi;
-    return [...question.matchAll(tokens)].map((match) => match[1]).find((name) => !stopWords.has(normalize(name))
-      && !/^(?:spieler(?:namen?)?|jemanden|irgendwen|jemand|personen?|global|runterbannen|bannen|entbannen|ihn|euch|mehrere|alle|wirklich|dauerhaft)$/i.test(name));
+    const named = /\b(?:spieler(?:name)?\s+(?:(?:ist|heißt|heisst|namens)\s+)?|(?:er|sie|der name)\s+(?:heißt|heisst|ist namens)\s+)["'„]?([a-z0-9_]{3,16})\b/gi;
+    const target = /\b(?:wie\s+(?:(?:kann|soll|muss)\s+ich|(?:ent|ver)?banne\s+ich|sperre\s+ich)\s+|mute\s+f[üu]r\s+)["'„]?([a-z0-9_]{3,16})\b/gi;
+    return [...question.matchAll(named), ...question.matchAll(target)].map((match) => match[1])
+      .find((name) => !stopWords.has(normalize(name))
+        && !/^(?:spieler(?:namen?)?|jemanden|irgendwen|jemand|personen?|global|runterbannen|bannen|entbannen|ihn|euch|mehrere|alle|wirklich|dauerhaft)$/i.test(name));
   }
 
   function commandGuide(index, questions, commands, validateBanDuration) {
@@ -283,7 +433,6 @@
     if (canonical === '/ban' && !duration) return undefined;
     if (time && canonical === '/ban' && !validateBanDuration(time)) return undefined;
     const target = [canonical, player, duration].filter(Boolean).join(' ');
-    const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const exampleDuration = Boolean(duration && !time);
     const place = server ? 'nur auf `' + server + '`' : 'auf allen Servern';
     let explanation = 'So sperrst du ' + player + (canonical === '/permabann' ? ' dauerhaft' : '') + ' ' + place + '.';
@@ -292,8 +441,7 @@
     const exampleNote = exampleDuration ? '\n\n`' + duration + '` ist eine Beispieldauer. Setze die gewünschte Dauer ein.'
       : examplePlayer ? '\n\n`' + player + '` ist ein Beispielname. Setze den Spielernamen ein.' : '';
     return {
-      source, canonical, examplePlayer, exampleDuration,
-      expected: new RegExp(escapedTarget + '(?: [^\\n]+)? ' + flag + '(?=$|[\\s.,;])', 'im'),
+      source,
       text: explanation + '\n\n```text\n' + target + ' ' + flag + '\n```' + exampleNote
     };
   }
@@ -315,26 +463,47 @@
       return { matches: [{ source: permission, text: fact }], fact, permission: permission.permission };
     }
     const guide = commandGuide(index, [question, ...previous], commands, validateBanDuration);
-    const settings = [...technical(question)].filter((term) => term.includes('.') && !term.startsWith('/'));
-    const explicit = (source) => settings.some((term) => source.bodyIds.has(term) || source.titleIds.has(term));
+    const requestedCommands = [...technical(question)].filter((term) => term.startsWith('/'));
+    const settings = [...technical(question)].filter((term) => term.endsWith('=') || term.includes('.') && !term.startsWith('/'));
+    for (const key of normalize(question).match(/(?<![\w/-])[a-z][a-z0-9]*(?:-[a-z0-9]+)+\b/g) || []) {
+      if (state.keys.has(key) && !/(?:^|-)bann(?:-|$)/.test(key)) settings.push(key);
+    }
+    const exactSettings = (source) => settings.filter((term) => source.blocksWithIndex.some(({ ids, keys }) => ids.has(term) || keys.has(term)) || source.titleIds.has(term)).length;
+    const fileTerms = fileIntent(question);
     const ranked = compare(index, query, commands)
-      .filter(({ source, supported, score }) => supported && score >= 6 && source.blocks.length)
-      .map(({ source }) => source);
-    const matches = (guide ? [guide.source] : ranked.slice(0, 2))
-      .map((source) => {
-        const blocks = matchedBlocks(source, query, commands).slice(0, 3).sort((a, b) => a.i - b.i).map(({ block }) => block);
-        if (guide?.source === source) return { source, blocks, text: source.title + '\n' + guide.text };
-        const excerpt = blocks.map((block) => {
-          const text = block.textContent.trim();
-          if (block.dataset.lang !== 'cmd' || !commands.length) return text;
-          const lines = text.split('\n').filter((line) => commands.some((command) => technical(line).has(command)));
-          return lines.length ? lines.join('\n') : text;
-        }).join('\n');
-        const permission = source.permission ? '\nHauptrecht: ' + source.permission : '';
-        return { source, blocks, text: source.title + permission + '\n' + excerpt.slice(0, 510) };
+      .filter(({ source, supported, score }) => supported && score >= 5 && source.blocks.length);
+    const selected = guide ? [{ source: guide.source }] : ranked.slice(0, 4);
+    if (!guide && settings.length && !selected.some(({ source }) => exactSettings(source))) {
+      const exact = ranked.find(({ source }) => exactSettings(source));
+      if (exact) selected.splice(3, 1, exact);
+    }
+    const matches = selected.map(({ source, literalHits, fileScore, scopeScore, setupScore, offlineScore }, i) => {
+      const best = matchedBlocks(source, query, commands).slice(0, 4);
+      const blocks = best.filter((item, index) => index === 0 || item.score > 0).map(({ block }) => block);
+      if (guide) return { source, blocks, text: guide.text };
+      const heading = [source.title, source.file, source.permission].filter(Boolean);
+      const lines = best.map(({ block }) => {
+        const text = block.textContent.trim();
+        if (block.dataset.lang !== 'cmd' || !commands.length) return text;
+        return text.split('\n').filter((line) => commands.some((command) => technical(line).has(command))).join('\n') || text;
       });
-    const settingMatch = matches.find(({ source }) => explicit(source));
-    return { matches, settingMatch, guide, context, settings, followUp: Boolean(previous.length) };
+      const excerpt = lines.join('\n');
+      const limit = i === 0 ? 470 : 260;
+      const body = excerpt.length > limit ? excerpt.slice(0, limit).replace(/\s+\S*$/, '') : excerpt;
+      const text = [...heading, body].join('\n');
+      const allowed = technical(text);
+      for (const key of source.keys) if (normalize(body).includes(key)) allowed.add(key);
+      return { source, blocks, text, allowed, literalHits, fileScore, scopeScore, setupScore, offlineScore };
+    });
+    const settingMatch = settings.length && !requestedCommands.length ? matches.find(({ source }) => exactSettings(source) === settings.length) : undefined;
+    const fileMatch = fileTerms?.size && !requestedCommands.length ? matches.find(({ fileScore }) => fileScore > 0) : undefined;
+    return {
+      matches, settingMatch, fileMatch, guide, context, settings, terms: words(question),
+      commands, requestedCommands,
+      query,
+      localScope: localScopePattern.test(normalize(question)),
+      followUp: Boolean(previous.length)
+    };
   }
 
   function appendText(node, text) {
@@ -413,7 +582,7 @@
     const fence = /^\s*(\x60{3,}|~{3,})[a-z0-9_-]*\s*$/i;
     const heading = /^ *(#{1,6}) +(.+)$/;
     const item = /^ *(?:([-+*])|(\d+)[.)]) +(.+)$/;
-    const command = /^ *\x60?(\/[a-z][\w-]*(?: +.+?)?)\x60? *$/i;
+    const command = /^ *(?:\x60(\/[a-z][\w:-]*(?: +[^\x60]+)?)\x60|(\/[a-z][\w:-]*(?: +[^\x60]+)?)) *$/i;
     const lines = raw.trim().split(/\r?\n/);
     let paragraph = [];
     let list;
@@ -460,7 +629,7 @@
         appendText(li, entry[3]);
         list.appendChild(li);
       } else if (commandLine) {
-        result.appendChild(codeBlock(commandLine[1], interactive));
+        result.appendChild(codeBlock(commandLine[1] || commandLine[2], interactive));
       } else if (line.trim()) {
         list = undefined;
         paragraph.push(line);
@@ -513,18 +682,33 @@
     return { turns: [] };
   }
 
-  function extractText(settings, match) {
-    function inline(node) {
-      if (node.nodeType === Node.TEXT_NODE) return node.textContent;
-      const content = Array.from(node.childNodes, inline).join('');
-      if (node.tagName === 'CODE') return '\x60' + content + '\x60';
-      if (node.tagName === 'STRONG') return '**' + content + '**';
-      if (node.tagName === 'EM') return '*' + content + '*';
-      if (node.tagName === 'BR') return '\n';
-      return content;
+  function inlineText(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    const content = Array.from(node.childNodes, inlineText).join('');
+    if (node.tagName === 'CODE') return '\x60' + content + '\x60';
+    if (node.tagName === 'STRONG') return '**' + content + '**';
+    if (node.tagName === 'EM') return '*' + content + '*';
+    if (node.tagName === 'BR') return '\n';
+    return content;
+  }
+
+  function blockText(block) {
+    if (block.tagName === 'PRE') return '\x60\x60\x60' + (block.dataset.lang || 'text') + '\n' + block.textContent.trim() + '\n\x60\x60\x60';
+    if (block.tagName === 'UL' || block.tagName === 'OL') {
+      return Array.from(block.children, (li, i) => (block.tagName === 'OL' ? (i + 1) + '. ' : '- ') + inlineText(li).trim()).join('\n');
     }
-    const key = new Set(settings);
-    const selected = match.source.blocks.filter((block) => [...technical(block.textContent)].some((name) => key.has(name))).slice(0, 3);
+    return inlineText(block).trim();
+  }
+
+  function blocksText(blocks) {
+    return blocks.map(blockText).filter(Boolean).join('\n\n');
+  }
+
+  function extractText(settings, match) {
+    const selected = match.blocks.filter((block) => {
+      const entry = match.source.blocksWithIndex.find((item) => item.block === block);
+      return settings.some((key) => entry.ids.has(key) || entry.keys.has(key));
+    }).slice(0, 2);
     const blocks = selected.length ? selected : match.blocks.slice(0, 2);
     const expanded = new Set(blocks);
     for (const block of blocks) {
@@ -535,16 +719,107 @@
         if (next) expanded.add(next);
       }
     }
-    return [...expanded].sort((a, b) => match.source.blocks.indexOf(a) - match.source.blocks.indexOf(b)).map((block) => {
-      if (block.tagName === 'PRE') return '\x60\x60\x60' + (block.dataset.lang || 'text') + '\n' + block.textContent + '\n\x60\x60\x60';
-      if (block.tagName === 'UL' || block.tagName === 'OL') {
-        return Array.from(block.children, (li, i) => (block.tagName === 'OL' ? (i + 1) + '. ' : '- ') + inline(li).trim()).join('\n');
-      }
-      return inline(block).trim();
-    }).join('\n\n');
+    return blocksText([...expanded].sort((a, b) => match.source.blocks.indexOf(a) - match.source.blocks.indexOf(b)));
   }
 
-  function start(buildIndex, route, validateBanDuration) {
+  function documentaryAnswer(evidence, { generic = false } = {}) {
+    if (evidence.permission) {
+      const source = evidence.matches[0]?.source;
+      return { label: 'Permission aus der Doku', text: evidence.fact, sources: source ? [source.href] : [] };
+    }
+    if (evidence.guide) {
+      return { label: 'Doku-Beispiel', text: evidence.guide.text, sources: [evidence.guide.source.href] };
+    }
+    if (evidence.fileMatch) {
+      const { source, blocks } = evidence.fileMatch;
+      const description = blocks.find((block) => block.tagName !== 'PRE' && !/:\s*$/.test(block.textContent));
+      const text = '\x60' + source.file + '\x60' + (description ? '\n\n' + blockText(description) : '');
+      return { label: 'Doku-Auszug', text, sources: [source.href] };
+    }
+    if (evidence.settingMatch) {
+      const text = extractText(evidence.settings, evidence.settingMatch);
+      if (text) return { label: 'Doku-Auszug', text, sources: [evidence.settingMatch.source.href] };
+    }
+    const terms = evidence.terms;
+    const scopeMatch = evidence.matches.find(({ scopeScore }) => scopeScore);
+    if (scopeMatch) {
+      const rows = scopeMatch.source.blocksWithIndex.filter(({ block, ids }) => block.dataset.role === 'row'
+        && (evidence.localScope ? (ids.has('--survival') || ids.has('--server=survival')) && !ids.has('--global') : ids.has('--global')));
+      if (rows.length) return { label: 'Doku-Auszug', text: blocksText(rows.map(({ block }) => block)), sources: [scopeMatch.source.href] };
+    }
+    const first = evidence.matches[0];
+    const commandMatch = evidence.requestedCommands?.length === 1 && evidence.matches.find(({ source }) => source.kind === 'cmd'
+      && source.titleIds.has(evidence.requestedCommands[0]));
+    if (commandMatch || first?.source.kind === 'cmd' && evidence.commands?.length === 1 && /^(?:was (?:macht|tut|ist|bewirkt)|wofuer)\b/.test(normalize(evidence.query))) {
+      const match = commandMatch || first;
+      const description = match.source.blocks.find((block) => block.dataset.role === 'description');
+      const blocks = new Set([description, ...match.blocks.slice(0, 3)].filter(Boolean));
+      const text = blocksText([...blocks].slice(0, 3));
+      if (text) return { label: 'Doku-Auszug', text, sources: [match.source.href] };
+    }
+    const faq = evidence.matches.find(({ source }) => {
+      if (source.kind !== 'faq') return false;
+      if (terms.has('offline') && !source.titleWords.has('offline')) return false;
+      const overlap = [...terms].filter((term) => source.titleWords.has(term)).length;
+      return overlap >= 2 && overlap >= Math.ceil(terms.size * .5);
+    });
+    if (faq) {
+      const text = blocksText(faq.blocks.slice(0, 2));
+      if (text) return { label: 'Doku-Auszug', text, sources: [faq.source.href] };
+    }
+    const topic = evidence.matches.find(({ setupScore, offlineScore, source }) => setupScore
+      || offlineScore && evidence.commands?.includes('/ban')
+      || source.kind === 'cmd' && source.titleIds.has('/punish-edit') && evidence.commands?.includes('/punish-edit'));
+    if (topic) {
+      const blocks = topic.blocks.slice(0, 2);
+      if (topic.source.kind === 'cmd' && topic.source.titleIds.has('/punish-edit')) {
+        const syntax = topic.source.blocks.find((block) => block.dataset.lang === 'cmd' && block.textContent.includes('dauer='));
+        if (syntax && !blocks.includes(syntax)) blocks.push(syntax);
+      }
+      if (blocks.length) return { label: 'Doku-Auszug', text: blocksText(blocks), sources: [topic.source.href] };
+    }
+    if (first && terms.has('sichern') && first.source.titleWords.has('sichern')) {
+      const blocks = first.blocks.filter((block) => block.tagName !== 'PRE');
+      if (blocks.length) return { label: 'Doku-Auszug', text: blocksText(blocks.slice(0, 2)), sources: [first.source.href] };
+    }
+    if (generic) {
+      if (!first || (!first.literalHits && !evidence.commands?.some((command) => first.source.titleIds.has(command)))) return undefined;
+      const text = blocksText(first.blocks.slice(0, 2));
+      if (text) return { label: 'Doku-Auszug', text, sources: [first.source.href] };
+    }
+    return undefined;
+  }
+
+  function guardAnswer(text, evidence) {
+    if (!text || /^\s*(?:\[\d+\]|(?:Der (?:Nutzer|User|Benutzer)(?:in)?|Doku-Auszüge?|Fundstellen?|Quellen?|Kontext|Bisherige Frage|Frage)\s*:)/im.test(text)
+      || /\bDer (?:Nutzer|User|Benutzer)(?:in)?\s+(?:fragt|schreibt|möchte|will|ist)\b/i.test(text)) return false;
+    const identifiers = technical(text);
+    for (const entry of normalize(text).matchAll(/\x60([a-z][a-z0-9]*(?:-[a-z0-9]+)+)\x60|^\s*([a-z][a-z0-9_-]*):\s*(?=\S)/gm)) {
+      if (entry[1]) identifiers.add(entry[1]);
+      else if (!/^https?$/.test(entry[2]) && /^\s*(?:\x60{3,}|~{3,})/m.test(text)) identifiers.add(entry[2] + ':');
+    }
+    if (!evidence.matches.length) return !identifiers.size;
+    const citations = [...text.matchAll(/\[(\d+)\]/g)].map((match) => Number(match[1]));
+    if (!citations.length || citations.some((index) => index < 1 || index > evidence.matches.length)) return false;
+    const cited = [...new Set(citations)].map((index) => evidence.matches[index - 1]);
+    const support = new Set(cited.flatMap(({ allowed }) => [...allowed]));
+    const evidenceText = cited.map((match) => match.text).join('\n');
+    for (const [, key] of normalize(evidenceText).matchAll(/\b([a-z][a-z0-9_-]*):(?=\s|$)/g)) support.add(key + ':');
+    if ([...identifiers].some((id) => !support.has(id))) return false;
+    const claims = text.replace(/\[(\d+)\]/g, '').replace(/^\s*(?:\d+[.)]\s|\x60{3,}.*$|~{3,}.*$)/gm, '');
+    const numbers = (value) => normalize(value).match(/\b\d+(?:[.,]\d+)*(?:mo|[smhdwy]|%)?(?![\w-])/g) || [];
+    const expected = new Set(numbers(evidenceText));
+    if (numbers(claims).some((value) => !expected.has(value))) return false;
+    const facts = words(evidenceText);
+    return claims.split(/(?:[.!?](?=\s|$)|\n)+/).every((line) => {
+      if (!line.trim() || /^\s*\/[a-z]/.test(line)) return true;
+      const terms = words(line);
+      const overlap = [...terms].filter((term) => facts.has(term) || bestTermMatch(term, facts)).length;
+      return overlap >= Math.min(2, terms.size) && overlap >= terms.size * .35;
+    });
+  }
+
+  function start(sources, route, validateBanDuration) {
     const panel = at('docChat');
     const form = at('docChatForm');
     const input = at('docChatInput');
@@ -563,7 +838,6 @@
     const progressBar = at('docChatProgress');
     const notice = at('docChatStorageStatus');
     const download = at('docChatDownload');
-    const sources = indexFor(buildIndex);
     const byHref = new Map(sources.map((source) => [source.href, source]));
     const date = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
     const formatMB = (bytes) => (bytes / 1000000).toLocaleString('de-DE', { maximumFractionDigits: 0 });
@@ -757,50 +1031,33 @@
       scrollToBottom();
     }
 
-    function finish(text, label, feedback) {
+    function finish(text, label, feedback, sourceOverride) {
       beginTurn();
       const { view, question, evidence, entry } = current;
-      const references = new Set([...text.matchAll(/\[(\d+)\]/g)].map((match) => evidence.matches[Number(match[1]) - 1]?.source).filter(Boolean));
-      if (!label && evidence.permission) {
-        references.clear();
-        references.add(evidence.matches[0].source);
-        label = 'Permission aus der Doku';
-        text = evidence.fact;
-      }
-      const guide = evidence.guide;
-      if (!label && guide) {
-        references.clear();
-        references.add(guide.source);
-        const command = guide.expected.test(text.replaceAll('\x60', ''));
-        const commandIds = [...technical(text)].filter((id) => id.startsWith('/'));
-        const differentCommand = commandIds.some((id) => !guide.source.titleIds.has(id));
-        const commandCount = (text.match(/(?<![\w/.-])\/[a-z][a-z0-9_-]*/g) || []).length;
-        const refusal = /nicht beantwort|keine (?:doku|anleitung|quelle|information|m[öo]glichkeit)|keinen zugriff|doku-ausz[üu]ge verwenden|doku-aufforderungen|kann ich nicht/i.test(text);
-        const missingExample = (guide.exampleDuration || guide.examplePlayer) && !/beispiel|gew[üu]nschte dauer|setze .+ ein/i.test(text);
-        if (refusal || !command || differentCommand || commandCount > 1 || missingExample) {
-          label = 'Doku-Beispiel';
-          text = guide.text;
+      if ((!label && !guardAnswer(text, evidence)) || label === 'Fehler') {
+        const fallback = documentaryAnswer(evidence, { generic: true });
+        if (fallback) {
+          text = fallback.text;
+          label = fallback.label;
+          sourceOverride = fallback.sources;
+        } else if (!label) {
+          label = 'Keine belegte Antwort';
+          text = '';
+          feedback = 'Dazu habe ich keine passende Fundstelle gefunden. Formuliere die Frage etwas genauer.';
         }
       }
-      const completeSentence = /[.!?](?:\s*\[\d+\])*\s*$/.test(text);
-      const asksBack = /\?\s*(?:\[\d+\])*\s*$/.test(text) || /\bR[üu]ckfrage\b/i.test(text);
-      const echoesSources = /(?:^|\n)\s*\[\d+\]\s/.test(text);
-      if (!label && evidence.settingMatch && (!references.size || !completeSentence || asksBack || echoesSources)) {
-        label = 'Doku-Auszug';
-        text = extractText(evidence.settings, evidence.settingMatch);
-        references.clear();
-        references.add(evidence.settingMatch.source);
-      }
+      const references = sourceOverride || (!label || label === 'Abgebrochen' ? [...text.matchAll(/\[(\d+)\]/g)]
+        .map((match) => evidence.matches[Number(match[1]) - 1]?.source.href).filter(Boolean) : []);
       const answer = {
         label: label || (text ? 'Qwen3.5' : 'Keine Antwort'),
         text: text || feedback || 'Sende die Frage erneut.',
-        sources: [...references].map((source) => source.href)
+        sources: [...new Set(references)]
       };
       if (label === 'Abgebrochen' || label === 'Fehler' || !text) answer.incomplete = true;
       entry.answer = answer;
       renderAnswer(view, answer);
       saveChat(entry);
-      if (feedback || !text) input.value = question;
+      if (!text || label === 'Abgebrochen') input.value = question;
       allowInput(Boolean(feedback) || document.activeElement === stop);
     }
 
@@ -829,14 +1086,16 @@
           }
           finish('', 'Fehler', errors[data.error] || errors.load);
         } else if (data.done) {
-          finish(data.text || '', data.stopped ? 'Abgebrochen' : undefined, data.stopped ? 'Antwort abgebrochen.' : undefined);
+          const text = data.text || '';
+          if (data.stopped) finish(guardAnswer(text, current.evidence) ? text : '', 'Abgebrochen', 'Antwort abgebrochen.');
+          else finish(text);
         } else if (data.phase) {
           beginTurn();
           if (current.phase !== 'stopping') updateStatus(data.phase, data);
         } else if (typeof data.text === 'string' && current.phase !== 'stopping') {
           beginTurn();
           const { evidence, view } = current;
-          if (!evidence.permission && !evidence.settingMatch && !evidence.guide) renderText(view.copy, data.text);
+          if (!evidence.matches.length && guardAnswer(data.text, evidence)) renderText(view.copy, data.text);
           if (!panel.hidden) scrollToBottom();
         }
       });
@@ -855,7 +1114,7 @@
       try {
         modelWorker().postMessage({
           id, question, allowDownload, history: messages, context: evidence.context,
-          sources: evidence.matches.map((match) => match.text), permission: evidence.permission
+          sources: evidence.matches.map((match) => match.text)
         });
       } catch (error) {
         console.warn('Qwen-Worker konnte nicht geöffnet werden', error);
@@ -871,6 +1130,7 @@
         { role: 'user', content: turn.question.slice(0, 280) },
         { role: 'assistant', content: turn.answer.text.slice(0, 320) }
       ]);
+      const direct = documentaryAnswer(evidence);
       current = { id: ++sequence, question, evidence, messages };
       input.value = question;
       input.readOnly = true;
@@ -882,6 +1142,7 @@
       stop.hidden = false;
       updateStatus('check');
       if (location.protocol === 'file:') finish('', 'Fehler', errors.file);
+      else if (direct) finish(direct.text, direct.label, undefined, direct.sources);
       else requestAnswer(false);
     }
 
@@ -903,7 +1164,9 @@
       } else if (current.view) {
         finish('', 'Abgebrochen', 'Modelldownload abgebrochen.');
       } else {
-        allowInput(true);
+        const fallback = documentaryAnswer(current.evidence, { generic: true });
+        if (fallback) finish(fallback.text, fallback.label, undefined, fallback.sources);
+        else allowInput(true);
       }
     });
 
@@ -974,6 +1237,8 @@
     if (!state.sources) {
       state.neighbors = loadConcepts();
       state.sources = sourceIndex(buildIndex());
+      state.stats = indexStats(state.sources);
+      state.keys = new Set(state.sources.flatMap((source) => [...source.keys]));
     }
     return state.sources;
   }
@@ -993,7 +1258,7 @@
         return;
       }
       if (!state.started) {
-        start(buildIndex, route, validateBanDuration);
+        start(indexFor(buildIndex), route, validateBanDuration);
         state.started = true;
       }
       panel.hidden = false;
