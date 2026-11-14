@@ -1,5 +1,6 @@
-const cacheName = 'punishsystem-docs-v4';
-const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js', './doc-chat-model.js', './chat-model/web-llm.mjs']
+const cacheName = 'punishsystem-docs-v5';
+const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js', './doc-chat-model.js', './chat-model/web-llm.mjs',
+  './chat-model/qwen/resolve/main/tensor-cache.json']
   .map((path) => new URL(path, self.location).href);
 
 self.addEventListener('install', (event) => {

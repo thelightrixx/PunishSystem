@@ -6,82 +6,69 @@ const EMPTY_RULES = 'Beantworte allgemeine Fragen, Begrüßungen und Gespräche.
 let engine;
 let active;
 
-function modelFetch(report) {
+async function retryFetch(request, options, original, expected, report) {
+  const data = new Uint8Array(expected);
+  let offset = 0;
+  let lastError;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, request.signal]);
+    const headers = new Headers(request.headers);
+    if (attempt && offset) headers.set('Range', 'bytes=' + offset + '-' + (expected - 1));
+    const url = new URL(request.url);
+    if (attempt) url.searchParams.set('retry', String(attempt) + '-' + offset);
+    const timeout = () => setTimeout(() => controller.abort(), 22000);
+    let timer = timeout();
+    let reader;
+    try {
+      const response = await original(url, { ...options, headers, signal, cache: attempt ? 'reload' : request.cache });
+      if (!response.ok || !response.body) throw new Error('HTTP ' + response.status + ' für ' + url.pathname);
+      if (response.status === 200) {
+        offset = 0;
+      } else if (response.status !== 206 ||
+          response.headers.get('Content-Range') !== 'bytes ' + offset + '-' + (expected - 1) + '/' + expected) {
+        throw new Error('Ungültiger Bytebereich für ' + url.pathname.split('/').at(-1));
+      }
+      reader = response.body.getReader();
+      while (offset !== expected) {
+        clearTimeout(timer);
+        timer = timeout();
+        const { done, value } = await reader.read();
+        if (done || offset + value.byteLength > expected) throw new Error('Unvollständige oder ungültige Modelldatei.');
+        data.set(value, offset);
+        offset += value.byteLength;
+        report(request.url, offset);
+      }
+      return new Response(data, { headers: { 'Content-Type': 'application/octet-stream' } });
+    } catch (error) {
+      lastError = error;
+      if (request.signal.aborted) break;
+      if (offset === expected) offset = 0;
+    } finally {
+      clearTimeout(timer);
+      controller.abort();
+      reader?.releaseLock();
+    }
+  }
+  throw lastError;
+}
+
+function modelFetch(report, sizes) {
   const original = globalThis.fetch.bind(globalThis);
-  const weights = new URL('./chat-model/qwen/resolve/main/', import.meta.url).href;
-  let bytes = 0;
+  const seen = new Map();
   let lastUpdate = 0;
   globalThis.fetch = async (request, options) => {
-    if (!(request instanceof Request) || !request.url.startsWith(weights) || !/params_shard_\d+\.bin$/.test(request.url)) {
+    if (!(request instanceof Request) || !sizes.has(request.url)) {
       return original(request, options);
     }
-
-    const transfer = new AbortController();
-    return new Response(new ReadableStream({
-      async start(stream) {
-        let fileBytes = 0;
-        let total;
-        let lastError;
-        for (let attempt = 0; attempt < 4; attempt++) {
-          const controller = new AbortController();
-          const abort = () => controller.abort();
-          const headers = new Headers(request.headers);
-          if (fileBytes) headers.set('Range', 'bytes=' + fileBytes + '-');
-          let timer = setTimeout(abort, 25000);
-          let reader;
-          try {
-            const response = await original(request, {
-              ...options, headers, cache: attempt ? 'reload' : request.cache,
-              signal: AbortSignal.any([controller.signal, request.signal, transfer.signal])
-            });
-            if (!response.ok || !response.body) throw new Error('HTTP ' + response.status);
-            let skip = 0;
-            if (fileBytes) {
-              const range = response.headers.get('Content-Range');
-              if (response.status === 200 && Number(response.headers.get('Content-Length')) === total) {
-                skip = fileBytes;
-              } else if (response.status !== 206 || !range?.startsWith('bytes ' + fileBytes + '-') || !range.endsWith('/' + total)) {
-                throw new Error('Modell-Download lieferte einen falschen Bytebereich.');
-              }
-            } else {
-              total = Number(response.headers.get('Content-Length')) || undefined;
-            }
-            reader = response.body.getReader();
-            while (true) {
-              clearTimeout(timer);
-              timer = setTimeout(abort, 25000);
-              const { done, value } = await reader.read();
-              if (done) break;
-              const until = Math.min(skip, value.byteLength);
-              skip -= until;
-              const received = value.subarray(until);
-              if (!received.length) continue;
-              fileBytes += received.byteLength;
-              if (transfer.signal.aborted) return;
-              bytes += received.byteLength;
-              stream.enqueue(received);
-              if (performance.now() - lastUpdate >= 400) {
-                lastUpdate = performance.now();
-                report('transfer', Math.floor(bytes / 1000000));
-              }
-            }
-            if (skip || (total && total !== fileBytes)) throw new Error('Modell-Datei ist unvollständig.');
-            stream.close();
-            return;
-          } catch (error) {
-            lastError = error;
-            if (transfer.signal.aborted) return;
-            if (request.signal.aborted || (fileBytes && !total)) break;
-          } finally {
-            clearTimeout(timer);
-            controller.abort();
-            reader?.releaseLock();
-          }
-        }
-        stream.error(lastError);
-      },
-      cancel() { transfer.abort(); }
-    }), { headers: { 'Content-Type': 'application/octet-stream' } });
+    return retryFetch(request, options, original, sizes.get(request.url), (url, bytes) => {
+      seen.set(url, Math.max(bytes, seen.get(url) || 0));
+      if (performance.now() - lastUpdate >= 400) {
+        lastUpdate = performance.now();
+        const total = [...seen.values()].reduce((sum, amount) => sum + amount, 0);
+        report('transfer', Math.floor(total / 1000000));
+      }
+    });
   };
   return () => { globalThis.fetch = original; };
 }
@@ -93,7 +80,12 @@ async function load(progress) {
 
   const { CreateMLCEngine, prebuiltAppConfig } = await import('./chat-model/web-llm.mjs');
   const model = prebuiltAppConfig.model_list.find((entry) => entry.model_id === MODEL);
-  const restoreFetch = modelFetch(progress);
+  const weights = new URL('./chat-model/qwen/resolve/main/', import.meta.url);
+  const manifest = await fetch(new URL('tensor-cache.json', weights));
+  if (!manifest.ok) throw new Error('Modellmanifest: HTTP ' + manifest.status);
+  const { records } = await manifest.json();
+  const sizes = new Map(records.map((file) => [new URL(file.dataPath, weights).href, file.nbytes]));
+  const restoreFetch = modelFetch(progress, sizes);
   try {
     engine = await CreateMLCEngine(MODEL, {
       appConfig: {
@@ -101,7 +93,7 @@ async function load(progress) {
         opfsAccessMode: 'auto',
         model_list: [{
           ...model,
-          model: new URL('./chat-model/qwen/resolve/main/', import.meta.url).href,
+          model: weights.href,
           model_lib: new URL('./chat-model/qwen.wasm', import.meta.url).href
         }]
       },
