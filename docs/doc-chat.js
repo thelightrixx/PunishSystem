@@ -34,7 +34,7 @@
   const normalize = (text) => text.toLowerCase().replace(/[äöüß]/g, (letter) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' })[letter]);
   const technical = (text) => new Set(normalize(text).match(/(?<![\w/.-])(?:\/[a-z]|--?[a-z])[a-z0-9_-]*(?:=[a-z0-9_-]+)?|\b[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+\b/g) || []);
   const at = (id) => document.getElementById(id);
-  const state = { memory: '', current: undefined, sources: undefined };
+  const state = { history: [], sources: undefined };
 
   function words(text) {
     const normalized = normalize(text)
@@ -212,76 +212,32 @@
       .sort((a, b) => b.score - a.score || a.i - b.i);
   }
 
-  function bestExamples(ranked, commands, question) {
-    if (!commands.length) return [];
-    const text = normalize(question);
-    if (!/\b(?:nur|scope|server|survival|global|lobby)\b/.test(text)) return [];
-    const examples = [];
-    for (const { source } of ranked.slice(0, 14)) {
-      if (source.kind === 'cmd') continue;
-      for (const block of source.blocks) {
-        if (block.tagName !== 'PRE') continue;
-        for (const row of block.textContent.split('\n')) {
-          const line = row.trim();
-          const ids = technical(line);
-          if (!commands.some((command) => ids.has(command))) continue;
-          const flags = [...ids].filter((id) => id.startsWith('--'));
-          const flag = flags.find((item) => text.includes(item.slice(2)));
-          if (flag) examples.push({ source, line });
-        }
-      }
-    }
-    return examples;
-  }
-
-  function answer(question, index) {
-    const followUp = state.memory && /^(und|auch|oder)\b|\b(dabei|dafuer|daran|damit|dasselbe)\b/.test(normalize(question));
-    const query = followUp ? question + '\n' + state.memory : question;
+  function passages(question, index) {
+    const previous = state.history.slice(-2).find((message) => message.role === 'user');
+    const followUp = previous && /^(und|auch|oder)\b|\b(dabei|dafuer|daran|damit|dasselbe)\b/.test(normalize(question));
+    const query = followUp ? question + '\n' + previous.content : question;
     const commands = commandsFor(question);
-    if (!commands.length && followUp) commands.push(...commandsFor(state.memory));
-    const ranked = compare(index, query, commands);
-    const source = ranked.find((match) => match.supported && match.source.blocks.length)?.source;
-    if (!source) return { text: 'Dazu habe ich keine passende Stelle in der PunishSystem-Doku gefunden.', sources: [], blocks: [], followUp };
-
-    const command = commands.map((id) => index.find((entry) => entry.permission && entry.titleIds.has(id))).find(Boolean);
-    const asksForPermission = words(question).has('recht');
-    if (command && asksForPermission) {
-      const p = document.createElement('p');
-      const code = document.createElement('code');
-      code.textContent = command.permission;
-      p.append('Das dokumentierte Hauptrecht ist ', code, '.');
-      return { sources: [command], blocks: [p], precise: true, followUp };
-    }
-
-    const example = bestExamples(ranked, commands, question)[0];
-    if (example) {
-      const p = document.createElement('p');
-      const code = document.createElement('code');
-      code.textContent = example.line;
-      p.append('Beispiel aus der Doku', document.createElement('br'), code);
-      const context = example.source.blocks.find((block) => block.tagName === 'P' && /aus anderen Scopes|im selben Scope|passende Flag/.test(block.textContent));
-      const explanation = document.createElement('p');
-      explanation.textContent = context?.textContent.split(/(?<=\.)\s+(?=[A-ZÄÖÜ])/).find((sentence) => sentence.includes('anderen Scopes')) || '';
-      const blocks = explanation.textContent ? [p, explanation] : [p];
-      return { sources: [example.source, ...[command].filter((entry) => entry && entry !== example.source)], blocks, precise: true, followUp };
-    }
-
-    const target = commands.length && command && !/\b(?:was bedeutet|was macht|meldung|still|schutz|limit|dauer|mehrere)\b/.test(normalize(question)) ? command : source;
-    const matching = matchedBlocks(target, query, commands);
-    const selected = matching.slice(0, 2);
-    const exampleIndex = selected.findIndex(({ block }) => block.tagName === 'PRE');
-    if (exampleIndex >= 0) {
-      const example = selected[exampleIndex];
-      const intro = target.blocks[example.i - 1];
-      if (intro?.tagName === 'P' && intro.textContent.trimEnd().endsWith(':')) selected.splice(0, selected.length, { block: intro, i: example.i - 1 }, example);
-    }
-    const blocks = selected.sort((a, b) => a.i - b.i).map(({ block }) => block);
-    return {
-      text: blocks.length ? '' : 'In diesem Abschnitt findest du die Details.',
-      sources: [target],
-      blocks,
-      followUp
-    };
+    if (!commands.length && followUp) commands.push(...commandsFor(previous.content));
+    const permission = commands.length === 1 && words(question).has('recht')
+      ? index.find((source) => source.permission && source.titleIds.has(commands[0])) : undefined;
+    const matches = compare(index, query, commands)
+      .filter(({ source, supported, score }) => supported && score >= 6 && source.blocks.length)
+      .slice(0, 2)
+      .map(({ source }) => {
+        const blocks = matchedBlocks(source, query, commands).slice(0, 3).sort((a, b) => a.i - b.i);
+        const excerpt = blocks.map(({ block }) => {
+          const text = block.textContent.trim();
+          if (block.dataset.lang !== 'cmd' || !commands.length) return text;
+          const lines = text.split('\n').filter((line) => commands.some((command) => technical(line).has(command)));
+          return lines.length ? lines.join('\n') : text;
+        }).join('\n');
+        const permission = source.permission ? '\nHauptrecht: ' + source.permission : '';
+        return { source, text: source.title + permission + '\n' + excerpt.slice(0, 510) };
+      });
+    if (!permission) return { matches };
+    const command = commands[0];
+    const fact = 'Das dokumentierte Hauptrecht für ' + command + ' ist ' + permission.permission;
+    return { matches: [{ source: permission, text: fact }], fact, permission: permission.permission };
   }
 
   function appendText(node, text) {
@@ -313,72 +269,28 @@
     container.appendChild(list);
   }
 
-  function showAnswer(result) {
+  function showAnswer() {
     const reply = document.createElement('article');
     reply.className = 'doc-chat-reply';
     const copy = document.createElement('div');
     copy.className = 'doc-chat-copy';
-    if (result.text) {
-      const p = document.createElement('p');
-      p.textContent = result.text;
-      copy.appendChild(p);
-    }
-    if (result.blocks.length) copy.append(...result.blocks.map((block) => block.cloneNode(true)));
-    reply.appendChild(copy);
-    addSources(reply, result.sources);
+    const caption = document.createElement('p');
+    caption.className = 'doc-chat-caption';
+    caption.setAttribute('role', 'status');
+    caption.textContent = 'Qwen wird vorbereitet …';
+    reply.append(caption, copy);
+    reply.setAttribute('aria-busy', 'true');
     at('docChatLog').appendChild(reply);
-    return { reply, copy };
+    return { reply, copy, caption };
   }
 
-  function modelOptions() {
-    const german = { type: 'text', languages: ['de'] };
-    return { expectedInputs: [german], expectedOutputs: [german] };
-  }
-
-  async function refine(result, view, question, memory, controller) {
-    if (!result.sources.length || !window.LanguageModel || !isSecureContext) return;
-    let session;
-    let status;
-    const signal = controller.signal;
-    try {
-      const options = modelOptions();
-      if (await window.LanguageModel.availability(options) !== 'available' || signal.aborted) return;
-      session = await window.LanguageModel.create({
-        ...options,
-        signal,
-        initialPrompts: [{ role: 'system', content: 'Beantworte Fragen zur PunishSystem-Doku auf Deutsch in höchstens zwei kurzen Sätzen. Nutze nur die angegebenen Doku-Auszüge. Kennzeichne Befehle, Einstellungen und Permissions als Inline-Code. Nenne jede Fundstelle mit ihrer Nummer in eckigen Klammern. Sind die Stellen unzureichend, antworte nur KEIN_BELEG.' }]
-      });
-      if (signal.aborted) return;
-      status = document.createElement('p');
-      status.className = 'doc-chat-caption';
-      status.textContent = 'Lokale KI formuliert …';
-      view.reply.prepend(status);
-      const snippets = result.sources.map((source, i) => {
-        const evidence = i === 0 && result.blocks.length ? result.blocks.map((block) => block.textContent).join('\n') : source.text;
-        return '[' + (i + 1) + '] ' + source.page + ' · ' + source.title + '\n' + evidence.slice(0, 660);
-      }).join('\n\n');
-      const prompt = snippets + (memory ? '\nVorherige Frage: ' + memory : '') + '\nFrage: ' + question;
-      const raw = (await session.prompt(prompt, { signal })).trim();
-      if (signal.aborted || !raw || raw.length > 600 || raw.includes('KEIN_BELEG')) return;
-      const numbers = [...raw.matchAll(/\[(\d+)\]/g)].map((match) => Number(match[1]));
-      if (!numbers.length || numbers.some((number) => !result.sources[number - 1])) return;
-      const cited = [...new Set(numbers)].map((number) => result.sources[number - 1]);
-      const ids = new Set(cited.flatMap(({ bodyIds, titleIds }) => [...bodyIds, ...titleIds]));
-      if ([...technical(raw)].some((id) => !ids.has(id))) return;
+  function renderText(copy, text) {
+    copy.replaceChildren();
+    for (const paragraph of text.trim().split(/\n\n+/)) {
+      if (!paragraph) continue;
       const p = document.createElement('p');
-      appendText(p, raw.replace(/\s*\[\d+\]/g, '').trim());
-      const summary = document.createElement('div');
-      summary.className = 'doc-chat-summary';
-      summary.appendChild(p);
-      view.copy.prepend(summary);
-      status.textContent = 'Lokal formuliert';
-      status = undefined;
-      if (!at('docChat').hidden && view.reply === at('docChatLog').lastElementChild) scrollToBottom();
-    } catch (error) {
-      if (!signal.aborted) console.debug('Lokale Formulierung nicht verfügbar', error);
-    } finally {
-      status?.remove();
-      session?.destroy();
+      appendText(p, paragraph);
+      copy.appendChild(p);
     }
   }
 
@@ -401,50 +313,161 @@
     const log = at('docChatLog');
     const reset = at('docChatReset');
     const welcome = at('docChatStart');
+    const stop = at('docChatStop');
+    const initial = at('docChatModelInfo');
+    let worker;
+    let current;
+    let sequence = 0;
+    let modelReady = false;
+
+    const errors = {
+      webgpu: 'Dieser Browser stellt das benötigte WebGPU nicht bereit. Öffne die Seite in Chrome oder Edge mit aktiver Grafikbeschleunigung.',
+      storage: 'Der Browser hat zu wenig freien Speicher für Qwen. Öffne die Doku in einem normalen Browserfenster und versuche es erneut.',
+      load: 'Qwen konnte nicht geladen werden. Prüfe beim ersten Start die Internetverbindung und sende die Frage erneut.'
+    };
+
+    function finish(text, message) {
+      const { view, question, evidence } = current;
+      view.reply.setAttribute('aria-busy', 'false');
+      if (message) {
+        view.caption.textContent = message;
+        view.copy.replaceChildren();
+      } else {
+        view.caption.textContent = text ? 'Qwen3.5 · Lokal erzeugt' : 'Qwen hat diesmal keine Antwort erzeugt.';
+        renderText(view.copy, text);
+        if (text || evidence.permission) {
+          const references = new Set([...text.matchAll(/\[(\d+)\]/g)].map((match) => evidence.matches[Number(match[1]) - 1]?.source).filter(Boolean));
+          if (evidence.permission) {
+            references.add(evidence.matches[0].source);
+            if (!technical(text).has(evidence.permission.toLowerCase())) {
+              renderText(view.copy, evidence.fact + '.');
+              view.caption.textContent = 'Permission aus der Doku';
+            }
+          }
+          addSources(view.reply, [...references]);
+          const content = view.copy.textContent.slice(0, 650);
+          state.history.push({ role: 'user', content: question }, { role: 'assistant', content });
+          state.history = state.history.slice(-4);
+        }
+      }
+      if (message) input.value = question;
+      current = undefined;
+      input.readOnly = false;
+      send.disabled = !input.value.trim();
+      stop.hidden = true;
+      if (panel.contains(document.activeElement) && document.activeElement === stop) input.focus({ preventScroll: true });
+      if (!panel.hidden) scrollToBottom();
+    }
+
+    function startupMessage(phase, percent) {
+      if (phase === 'answer') return 'Qwen schreibt …';
+      const action = phase === 'load' ? 'Qwen wird geladen' : 'Qwen wird einmalig geladen';
+      const value = Number.isFinite(percent) && percent > 0 ? ' · ' + Math.min(100, percent) + ' %' : '';
+      return action + value + ' …';
+    }
+
+    function modelWorker() {
+      if (worker) return worker;
+      worker = new Worker(new URL('./doc-chat-model.js', document.baseURI), { type: 'module' });
+      worker.addEventListener('message', ({ data }) => {
+        if (!current || data.id !== current.id) return;
+        if (data.error) {
+          finish('', errors[data.error] || errors.load);
+        } else if (data.done) {
+          finish(data.text || '', data.stopped ? 'Antwort abgebrochen.' : '');
+        } else if (data.phase) {
+          if (data.phase === 'answer') modelReady = true;
+          const message = startupMessage(data.phase, data.percent);
+          if (current.view.caption.textContent !== message) current.view.caption.textContent = message;
+        } else if (typeof data.text === 'string' && !current.evidence.permission) {
+          renderText(current.view.copy, data.text);
+          if (!panel.hidden) scrollToBottom();
+        }
+      });
+      worker.addEventListener('error', (event) => {
+        console.warn('Qwen-Worker wurde beendet', event.message);
+        worker.terminate();
+        worker = undefined;
+        modelReady = false;
+        if (current) finish('', errors.load);
+      });
+      return worker;
+    }
 
     function submit(question) {
-      if (!question) return;
-      state.current?.abort();
-      const controller = new AbortController();
-      state.current = controller;
+      if (!question || current) return;
       const user = document.createElement('p');
       user.className = 'doc-chat-question';
       user.textContent = question;
       welcome.hidden = true;
       reset.hidden = false;
       log.appendChild(user);
-      const memory = state.memory;
-      const result = answer(question, state.sources);
-      const view = showAnswer(result);
-      if (result.sources.length && !result.followUp) state.memory = question;
+      const evidence = passages(question, state.sources);
+      const id = ++sequence;
+      current = { id, question, view: showAnswer(), evidence };
+      if (modelReady) current.view.caption.textContent = 'Qwen schreibt …';
       input.value = '';
+      input.readOnly = true;
       send.disabled = true;
+      stop.disabled = false;
+      stop.hidden = false;
       scrollToBottom();
-      if (result.sources.length && !result.precise) {
-        void refine(result, view, question, result.followUp ? memory : '', controller);
+      if (location.protocol === 'file:') {
+        finish('', 'Öffne die Dokumentation über GitHub Pages, um Qwen im Browser zu starten.');
+        return;
+      }
+      try {
+        modelWorker().postMessage({
+          id, question, history: evidence.permission ? [] : state.history.slice(-2),
+          sources: evidence.matches.map((source) => source.text), permission: evidence.permission
+        });
+      } catch (error) {
+        console.warn('Qwen-Worker konnte nicht geöffnet werden', error);
+        finish('', errors.load);
       }
     }
 
     indexFor(buildIndex);
+    if (location.protocol === 'file:') initial.textContent = 'Den lokalen KI-Chat kannst du über GitHub Pages öffnen.';
+    stop.addEventListener('click', () => {
+      if (!current) return;
+      if (modelReady) {
+        current.view.caption.textContent = 'Antwort wird gestoppt …';
+        stop.disabled = true;
+        worker?.postMessage({ id: current.id, stop: true });
+        return;
+      }
+      worker?.terminate();
+      worker = undefined;
+      finish('', 'Modellladen abgebrochen.');
+    });
     at('docChatClose').addEventListener('click', close);
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       submit(input.value.trim());
     });
-    input.addEventListener('input', () => { send.disabled = !input.value.trim(); });
+    input.addEventListener('input', () => { send.disabled = Boolean(current) || !input.value.trim(); });
     at('docChatStart').querySelectorAll('button').forEach((button) => button.addEventListener('click', () => {
       submit(button.textContent.trim());
       if (matchMedia('(pointer: coarse)').matches) log.focus({ preventScroll: true });
       else input.focus({ preventScroll: true });
     }));
     reset.addEventListener('click', () => {
-      state.current?.abort();
-      state.memory = '';
+      if (current) {
+        worker?.terminate();
+        worker = undefined;
+        current = undefined;
+        modelReady = false;
+      }
+      state.history = [];
       log.replaceChildren();
       welcome.hidden = false;
       reset.hidden = true;
       input.value = '';
+      input.readOnly = false;
       send.disabled = true;
+      stop.hidden = true;
+      stop.disabled = false;
       input.focus();
     });
     log.addEventListener('click', (event) => {

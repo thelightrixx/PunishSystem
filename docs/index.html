@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>PunishSystem Dokumentation</title>
 <meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.0-RC.">
 <script>
@@ -3096,14 +3096,14 @@ mvn verify</pre>
 <section class="doc-chat" id="docChat" role="dialog" aria-labelledby="docChatTitle" hidden>
   <header class="doc-chat-head">
     <span class="doc-chat-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 19H5l1.2-3a7.5 7.5 0 1 1 12.5 1M9 10h7m-7 4h4"/></svg></span>
-    <div><h2 id="docChatTitle">Doku-Chat</h2><p>PunishSystem · Lokal im Browser</p></div>
+    <div><h2 id="docChatTitle">Doku-Chat</h2><p>Qwen3.5 · Lokal im Browser</p></div>
     <button type="button" class="doc-chat-icon" id="docChatReset" title="Neuen Chat beginnen" aria-label="Neuen Chat beginnen" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 9m0-5v5h5"/></svg></button>
     <button type="button" class="doc-chat-icon" id="docChatClose" title="Chat schließen" aria-label="Chat schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
   </header>
   <div class="doc-chat-body" id="docChatBody">
     <div class="doc-chat-start" id="docChatStart">
       <h3>Wie kann ich dir helfen?</h3>
-      <p>Frag nach Befehlen, Berechtigungen oder Einstellungen.</p>
+      <p id="docChatModelInfo">Beim ersten Senden lädt der Browser einmalig rund 450 MB für das lokale Modell.</p>
       <div class="doc-chat-suggestions">
         <button type="button">Wie hebe ich einen Mute nur auf Survival auf?</button>
         <button type="button">Wie richte ich MySQL ein?</button>
@@ -3118,6 +3118,7 @@ mvn verify</pre>
       <input type="text" id="docChatInput" placeholder="Frage eingeben …" maxlength="500" autocomplete="off" spellcheck="false" required>
       <button type="submit" title="Frage senden" aria-label="Frage senden" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
     </form>
+    <button type="button" class="doc-chat-stop" id="docChatStop" hidden>Antwort stoppen</button>
     <p class="doc-chat-note">Deine Fragen bleiben auf diesem Gerät.</p>
   </div>
 </section>

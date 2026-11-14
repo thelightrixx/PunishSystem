@@ -1,5 +1,5 @@
-const cacheName = 'punishsystem-docs-v1';
-const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js']
+const cacheName = 'punishsystem-docs-v2';
+const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js', './doc-chat-model.js', './chat-model/web-llm.mjs']
   .map((path) => new URL(path, self.location).href);
 
 self.addEventListener('install', (event) => {
