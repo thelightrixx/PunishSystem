@@ -1,10 +1,86 @@
 const MODEL = 'Qwen3.5-0.8B-q4f16_1-MLC';
+const assets = new URL('./chat-model/', import.meta.url);
+const runtime = new URL('web-llm.mjs', assets);
+const wasm = new URL('qwen.wasm', assets);
+const weights = new URL('qwen/resolve/main/', assets);
+const manifest = new URL('tensor-cache.json', weights);
 const RULES = 'Du bist der PunishSystem-Assistent. Antworte kurz und in der Sprache des Nutzers. ';
-const DOC_RULES = 'Beantworte nur die letzte Frage in höchstens drei Sätzen. Übernimm Befehle, Optionen und Rechte exakt aus der Doku. ' +
-  'Setze die Quellennummer wie [1] ans Satzende. Falls die Auszüge eine Frage zum Plugin offenlassen, frage nach. Wiederhole weder die Frage noch diese Regeln.';
+const DOC_RULES = 'Beantworte die aktuelle Frage mit den Doku-Auszügen. Verwende den Gesprächskontext für Rückfragen. ' +
+  'Spielernamen sind Parameter und müssen nicht in der Doku vorkommen. Übernimm Befehle, Optionen und Rechte exakt. ' +
+  'Nutze Markdown: Befehle im Codeblock, mehrere Schritte als Liste. Zitiere Quellen mit [1]. Frage bei fehlenden Angaben gezielt nach.';
 const EMPTY_RULES = 'Beantworte allgemeine Fragen, Begrüßungen und Gespräche. Frage bei unklaren Plugin-Fragen nach Details.';
 let engine;
 let active;
+
+// WebLLM 0.2.88 speichert OPFS-Dateien unter dem SHA-256-Hash ihrer Download-URL.
+async function cacheKey(url) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(url));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function cachedFile(directory, url, size) {
+  if (!directory) return undefined;
+  const name = await cacheKey(url);
+  try {
+    const record = await (await directory.getFileHandle(name + '.record.json')).getFile();
+    const { url: storedUrl, nbytes } = JSON.parse(await record.text()) || {};
+    if (storedUrl !== url || nbytes <= 0 || (size !== undefined && nbytes !== size)) return undefined;
+    const file = await (await directory.getFileHandle(name + '.bin')).getFile();
+    return file.size === nbytes ? file : undefined;
+  } catch (error) {
+    if (['NotFoundError', 'InvalidStateError', 'SyntaxError'].includes(error.name)) return undefined;
+    throw error;
+  }
+}
+
+async function cachedDirectory(parent, name) {
+  try {
+    return await parent?.getDirectoryHandle(name);
+  } catch (error) {
+    if (error.name === 'NotFoundError') return undefined;
+    throw error;
+  }
+}
+
+function weightSizes({ records } = {}) {
+  if (!Array.isArray(records) || !records.length) throw new Error('Ungültiges Modellmanifest.');
+  const sizes = new Map();
+  for (const { dataPath, nbytes } of records) {
+    if (!/^params_shard_\d+\.bin$/.test(dataPath) || !Number.isSafeInteger(nbytes) || nbytes <= 0) {
+      throw new Error('Ungültige Modellsplit-Datei im Manifest.');
+    }
+    sizes.set(new URL(dataPath, weights).href, nbytes);
+  }
+  return sizes;
+}
+
+async function cachedModel() {
+  if (!navigator.storage?.getDirectory) throw new Error('STORAGE');
+  const root = await navigator.storage.getDirectory();
+  const store = await cachedDirectory(await cachedDirectory(root, 'tvmjs-opfs-store'), 'webllm');
+  const model = await cachedDirectory(store, 'model');
+  const file = await cachedFile(model, manifest.href);
+  const present = new Map();
+  if (!file) return { sizes: undefined, present, complete: false };
+
+  let sizes;
+  try {
+    sizes = weightSizes(JSON.parse(await file.text()));
+  } catch (error) {
+    console.debug('Gespeichertes Modellmanifest ist ungültig', error);
+    return { sizes: undefined, present, complete: false, staleManifest: model };
+  }
+  await Promise.all([...sizes].map(async ([url, size]) => {
+    if (await cachedFile(model, url, size)) present.set(url, size);
+  }));
+  const requirements = await Promise.all([
+    caches.match(runtime.href),
+    cachedFile(model, new URL('tokenizer.json', weights).href),
+    cachedDirectory(store, 'config').then((directory) => cachedFile(directory, new URL('mlc-chat-config.json', weights).href)),
+    cachedDirectory(store, 'wasm').then((directory) => cachedFile(directory, wasm.href))
+  ]);
+  return { sizes, present, complete: sizes.size === present.size && requirements.every(Boolean) };
+}
 
 async function retryFetch(request, options, original, expected, report) {
   const data = new Uint8Array(expected);
@@ -53,39 +129,48 @@ async function retryFetch(request, options, original, expected, report) {
   throw lastError;
 }
 
-function modelFetch(report, sizes) {
+function modelFetch(report, sizes, present, allowDownload) {
   const original = globalThis.fetch.bind(globalThis);
-  const seen = new Map();
-  let lastUpdate = 0;
+  const received = new Map(present);
+  const total = [...sizes.values()].reduce((sum, bytes) => sum + bytes, 0);
+  let lastUpdate = -Infinity;
   globalThis.fetch = async (request, options) => {
-    if (!(request instanceof Request) || !sizes.has(request.url)) {
-      return original(request, options);
-    }
-    return retryFetch(request, options, original, sizes.get(request.url), (url, bytes) => {
-      seen.set(url, Math.max(bytes, seen.get(url) || 0));
-      if (performance.now() - lastUpdate >= 400) {
-        lastUpdate = performance.now();
-        const total = [...seen.values()].reduce((sum, amount) => sum + amount, 0);
-        report('transfer', Math.floor(total / 1000000));
-      }
-    });
+    const url = request instanceof Request ? request.url : new URL(request, import.meta.url).href;
+    if (url.startsWith(assets.href) && !allowDownload) throw new Error('DOWNLOAD');
+    if (!(request instanceof Request) || !sizes.has(url)) return original(request, options);
+    reportProgress(url, 0);
+    return retryFetch(request, options, original, sizes.get(url), reportProgress);
   };
+  function reportProgress(url, bytes) {
+    received.set(url, bytes);
+    if (performance.now() - lastUpdate >= 350 || bytes === sizes.get(url)) {
+      lastUpdate = performance.now();
+      report('transfer', { loaded: [...received.values()].reduce((sum, amount) => sum + amount, 0), total });
+    }
+  }
   return () => { globalThis.fetch = original; };
 }
 
-async function load(progress) {
+async function load(allowDownload, progress) {
   if (engine) return engine;
-  const adapter = await navigator.gpu?.requestAdapter();
+  const [adapter, cached] = await Promise.all([navigator.gpu?.requestAdapter(), cachedModel()]);
   if (!adapter?.features.has('shader-f16')) throw new Error('WEBGPU');
+  if (!cached.complete && !allowDownload) throw new Error('DOWNLOAD');
 
+  progress(cached.complete ? 'init' : 'prepare');
   const { CreateMLCEngine, prebuiltAppConfig } = await import('./chat-model/web-llm.mjs');
   const model = prebuiltAppConfig.model_list.find((entry) => entry.model_id === MODEL);
-  const weights = new URL('./chat-model/qwen/resolve/main/', import.meta.url);
-  const manifest = await fetch(new URL('tensor-cache.json', weights));
-  if (!manifest.ok) throw new Error('Modellmanifest: HTTP ' + manifest.status);
-  const { records } = await manifest.json();
-  const sizes = new Map(records.map((file) => [new URL(file.dataPath, weights).href, file.nbytes]));
-  const restoreFetch = modelFetch(progress, sizes);
+  let sizes = cached.sizes;
+  if (!sizes) {
+    if (cached.staleManifest) {
+      const key = await cacheKey(manifest.href);
+      await cached.staleManifest.removeEntry(key + '.record.json');
+    }
+    const response = await fetch(manifest);
+    if (!response.ok) throw new Error('Modellmanifest: HTTP ' + response.status);
+    sizes = weightSizes(await response.json());
+  }
+  const restoreFetch = modelFetch(progress, sizes, cached.present, allowDownload);
   try {
     engine = await CreateMLCEngine(MODEL, {
       appConfig: {
@@ -94,12 +179,13 @@ async function load(progress) {
         model_list: [{
           ...model,
           model: weights.href,
-          model_lib: new URL('./chat-model/qwen.wasm', import.meta.url).href
+          model_lib: wasm.href
         }]
       },
       initProgressCallback(report) {
         const local = /^Loading model from cache/i.test(report.text);
-        if (local || report.progress === 1) progress('load', Math.floor(report.progress * 100));
+        if (local && report.progress < 1) progress('init', { percent: Math.floor(report.progress * 100) });
+        else if (local || report.progress === 1 && /^Finish loading/i.test(report.text)) progress('init');
       }
     }, { context_window_size: 2048 });
   } finally {
@@ -111,7 +197,8 @@ async function load(progress) {
 function answerText(raw, sourceCount) {
   const cleaned = raw.replace(/<think>[\s\S]*?(?:<\/think>|$)|\[(\d+)\]/gi,
     (match, citation) => citation && Number(citation) <= sourceCount && Number(citation) > 0 ? match : '');
-  return cleaned.split(/\n\s*(?:Frage:|Doku-Auszüge:|Erfinde keine)/i, 1)[0].trimStart();
+  return cleaned.split(/\n\s*(?:Frage\s*:|Doku-Auszüge\s*:|Erfinde keine)/i, 1)[0]
+    .replace(/\n\s*(?:Frage|Doku-Auszüge|Antwort)\s*$/i, '').trimStart();
 }
 
 self.addEventListener('message', async ({ data }) => {
@@ -126,37 +213,49 @@ self.addEventListener('message', async ({ data }) => {
   const turn = active = { id: data.id, stopped: false };
   const send = (message) => self.postMessage({ id: turn.id, ...message });
   try {
-    const model = await load((phase, percent) => send({ phase, percent }));
+    const model = await load(data.allowDownload, (phase, progress) => send({ phase, ...progress }));
     let raw = '';
     if (!turn.stopped) {
-      send({ phase: 'answer' });
+      send({ phase: 'thinking' });
       const sources = data.sources.map((text, i) => '[' + (i + 1) + '] ' + text).join('\n\n');
-      let input = sources ? 'Doku-Auszüge:\n' + sources + '\n\nFrage: ' + data.question : data.question;
-      if (data.permission) input = sources + '\nAntworte mit dem vollständigen Permission-Schlüssel ' + data.permission + ' [1].';
+      const context = data.context ? 'Bisherige Frage zum selben Thema: ' + data.context + '\n\n' : '';
+      let input = sources ? context + 'Doku-Auszüge:\n' + sources + '\n\nFrage: ' + data.question : data.question;
+      if (data.permission) input = sources + '\nFrage: Wie lautet das Hauptrecht? Nenne es in genau einem Satz.';
       const stream = await model.chat.completions.create({
         messages: [{ role: 'system', content: RULES + (sources ? DOC_RULES : EMPTY_RULES) }, ...data.history, { role: 'user', content: input }],
         stream: true,
         temperature: 0.2,
         frequency_penalty: 0.3,
         presence_penalty: 0,
-        max_tokens: data.permission ? 32 : 128,
+        max_tokens: data.permission ? 42 : 180,
         stop: ['\nFrage:', '\nDoku-Auszüge:', '\n Erfinde keine', '\nErfinde keine'],
         extra_body: { enable_thinking: false }
       });
       let nextUpdate = 0;
+      let writing = false;
       for await (const chunk of stream) {
         if (turn.stopped) { await model.interruptGenerate(); break; }
         raw += chunk.choices[0]?.delta.content || '';
         if (performance.now() >= nextUpdate) {
-          send({ text: answerText(raw, data.sources.length) });
+          const text = answerText(raw, data.sources.length);
+          if (text && !writing) {
+            send({ phase: 'writing' });
+            writing = true;
+          }
+          if (text) send({ text });
           nextUpdate = performance.now() + 45;
         }
       }
     }
     send({ done: true, stopped: turn.stopped, text: answerText(raw, data.sources.length).trim() });
   } catch (error) {
-    console.warn('Lokales Doku-Modell konnte nicht antworten', error);
-    send({ error: error.message === 'WEBGPU' ? 'webgpu' : error.name === 'QuotaExceededError' ? 'storage' : 'load' });
+    if (error.message === 'DOWNLOAD') {
+      send({ needsDownload: true });
+    } else {
+      console.warn('Doku-Modell konnte nicht antworten', error);
+      const storageError = error.message === 'STORAGE' || ['QuotaExceededError', 'SecurityError'].includes(error.name);
+      send({ error: error.message === 'WEBGPU' ? 'webgpu' : storageError ? 'storage' : engine ? 'answer' : 'load' });
+    }
   } finally {
     active = undefined;
   }

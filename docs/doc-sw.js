@@ -1,12 +1,14 @@
-const cacheName = 'punishsystem-docs-v5';
-const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js', './doc-chat-model.js', './chat-model/web-llm.mjs',
-  './chat-model/qwen/resolve/main/tensor-cache.json']
+const cacheName = 'punishsystem-docs-v6';
+const runtime = new URL('./chat-model/web-llm.mjs', self.location).href;
+const urls = ['./', './index.html', './doc-chat.css', './doc-chat.js', './doc-search-data.js', './doc-chat-model.js']
   .map((path) => new URL(path, self.location).href);
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(cacheName);
     await cache.addAll(urls.map((url) => new Request(url, { cache: 'reload' })));
+    const installedRuntime = await caches.match(runtime, { cacheName: 'punishsystem-docs-v5' });
+    if (installedRuntime) await cache.put(runtime, installedRuntime);
     await self.skipWaiting();
   })());
 });
@@ -25,9 +27,13 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   url.search = '';
-  if (!urls.includes(url.href)) return;
+  if (!urls.includes(url.href) && url.href !== runtime) return;
   event.respondWith((async () => {
     const cache = await caches.open(cacheName);
+    if (url.href === runtime) {
+      const installedRuntime = await cache.match(runtime);
+      if (installedRuntime) return installedRuntime;
+    }
     try {
       const response = await fetch(request);
       if (response.ok) {
