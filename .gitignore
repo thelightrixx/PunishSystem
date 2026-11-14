@@ -9,6 +9,7 @@ AGENTS.md
 *.log
 PunishSystem-*.jar
 test-server/
+/test-doku-ki/
 dist/
 .idea/
 *.iml

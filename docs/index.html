@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>PunishSystem Dokumentation</title>
 <meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.0-RC.">
 <script>
@@ -476,7 +477,7 @@ details>div{padding:14px 18px 2px}
 
 /* ---------- Druck ---------- */
 @media print{
-  .header,.sidebar,.toc,.page-toc,.pager,.copy,.wk,.scrim,#progress,.hero-actions,.command-tools,#commandEmpty,.hash{display:none!important}
+  .header,.sidebar,.toc,.page-toc,.pager,.copy,.wk,.scrim,#progress,.hero-actions,.command-tools,#commandEmpty,.hash,#docChatToggle,#docChat{display:none!important}
   .shell{display:block;padding:0}
   main{padding:0}
   body{background:#fff;color:#000}
@@ -496,6 +497,7 @@ details>div{padding:14px 18px 2px}
   .tbl tr,.cmd-card,.callout,details{break-inside:avoid}
 }
 </style>
+<link rel="stylesheet" href="./doc-chat.css">
 </head>
 <body>
 <a class="skip" href="#main">Zum Inhalt springen</a>
@@ -3087,6 +3089,41 @@ mvn verify</pre>
   <aside class="toc" id="toc" aria-label="Auf dieser Seite"></aside>
 </div>
 
+<button type="button" class="doc-chat-toggle" id="docChatToggle" aria-controls="docChat" aria-expanded="false" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8 8 0 0 1-8 8H5l1.3-3.1a8 8 0 1 1 14.2-4.9Z"/><path d="M9 10h7m-7 4h4"/></svg>
+  <span>Doku-Chat</span>
+</button>
+<section class="doc-chat" id="docChat" role="dialog" aria-labelledby="docChatTitle" hidden>
+  <header class="doc-chat-head">
+    <span class="doc-chat-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 19H5l1.2-3a7.5 7.5 0 1 1 12.5 1M9 10h7m-7 4h4"/></svg></span>
+    <div><h2 id="docChatTitle">Doku-Chat</h2><p>PunishSystem · Lokal im Browser</p></div>
+    <button type="button" class="doc-chat-icon" id="docChatReset" title="Neuen Chat beginnen" aria-label="Neuen Chat beginnen" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 9m0-5v5h5"/></svg></button>
+    <button type="button" class="doc-chat-icon" id="docChatClose" title="Chat schließen" aria-label="Chat schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+  </header>
+  <div class="doc-chat-body" id="docChatBody">
+    <div class="doc-chat-start" id="docChatStart">
+      <h3>Wie kann ich dir helfen?</h3>
+      <p>Frag nach Befehlen, Berechtigungen oder Einstellungen.</p>
+      <div class="doc-chat-suggestions">
+        <button type="button">Wie hebe ich einen Mute nur auf Survival auf?</button>
+        <button type="button">Wie richte ich MySQL ein?</button>
+        <button type="button">Wie schalte ich Team-Meldungen für eine Strafe aus?</button>
+      </div>
+    </div>
+    <div id="docChatLog" class="doc-chat-log" role="log" aria-label="Chatverlauf" tabindex="0"></div>
+  </div>
+  <div class="doc-chat-footer">
+    <form class="doc-chat-form" id="docChatForm">
+      <label class="doc-chat-sr" for="docChatInput">Frage an die Dokumentation</label>
+      <input type="text" id="docChatInput" placeholder="Frage eingeben …" maxlength="500" autocomplete="off" spellcheck="false" required>
+      <button type="submit" title="Frage senden" aria-label="Frage senden" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+    </form>
+    <p class="doc-chat-note">Deine Fragen bleiben auf diesem Gerät.</p>
+  </div>
+</section>
+
+<script defer src="./doc-search-data.js"></script>
+<script defer src="./doc-chat.js"></script>
 <script>
 (function () {
   'use strict';
@@ -3237,6 +3274,7 @@ mvn verify</pre>
     });
     var wrap = document.createElement('div');
     wrap.className = 'code';
+    wrap.dataset.lang = lang;
     wrap.innerHTML = '<div class="code-head"><span>' + (LABEL[lang] || 'Text') + '</span>' +
       '<button class="copy" type="button" aria-label="Code kopieren">' + ICON.copy + '<span>Kopieren</span></button></div>' +
       '<pre><code>' + lines.join('\n') + '</code></pre>';
@@ -3542,21 +3580,23 @@ mvn verify</pre>
   function buildIndex() {
     if (index.length) return index;
     pages.forEach(function (p) {
-      var intro = { kind: 'page', page: p, anchor: '', title: p.title, text: '' };
+      var intro = { kind: 'page', page: p, anchor: '', title: p.title, text: '', content: [] };
       var sec = intro;
       index.push(intro);
       Array.prototype.forEach.call(p.el.children, function (ch) {
         if (ch.classList.contains('crumb') || ch.classList.contains('pager') || ch.classList.contains('page-toc') || ch.classList.contains('command-tools') || ch.id === 'commandEmpty') return;
         if (ch.tagName === 'H2') {
-          sec = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), text: '' };
+          sec = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), text: '', content: [] };
           index.push(sec);
         } else if (ch.classList.contains('cmd-card')) {
-          index.push({ kind: 'cmd', page: p, anchor: ch.getAttribute('data-anchor'), title: ch.getAttribute('data-cmd') + ' ' + (ch.getAttribute('data-alias') || ''), text: (ch.getAttribute('data-perm') || '') + ' ' + plain(ch) });
+          var permission = ch.getAttribute('data-perm') || '';
+          index.push({ kind: 'cmd', page: p, anchor: ch.getAttribute('data-anchor'), title: ch.getAttribute('data-cmd') + ' ' + (ch.getAttribute('data-alias') || ''), text: permission + ' ' + plain(ch), content: [ch], permission: permission });
         } else if (ch.tagName === 'DETAILS') {
           var sm = $('summary', ch);
-          index.push({ kind: 'faq', page: p, anchor: ch.getAttribute('data-anchor'), title: sm ? sm.textContent.trim() : '', text: plain(ch) });
+          index.push({ kind: 'faq', page: p, anchor: ch.getAttribute('data-anchor'), title: sm ? sm.textContent.trim() : '', text: plain(ch), content: [ch] });
         } else {
           sec.text += ' ' + plain(ch);
+          sec.content.push(ch);
         }
       });
     });
@@ -3581,6 +3621,9 @@ mvn verify</pre>
     '<div class="hint"><span><kbd>↑</kbd><kbd>↓</kbd> auswählen</span><span><kbd>Enter</kbd> öffnen</span><span><kbd>Esc</kbd> schließen</span></div></div>';
   document.body.appendChild(overlay);
   var input = $('#q'), results = $('#results'), sel = 0, lastFocus = null;
+  var queuedSearch = debounce(function (query) {
+    if (overlay.classList.contains('on') && input.value === query) render(query, true);
+  }, 110);
 
   function hl(text, toks) {
     var parts = toks.map(function (t) { return String(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
@@ -3594,7 +3637,7 @@ mvn verify</pre>
     }
     return out + esc(text.slice(last));
   }
-  function render(q) {
+  function render(q, related) {
     var idx = buildIndex();
     var toks = searchText(q).split(/\s+/).filter(Boolean);
     var html = '';
@@ -3621,7 +3664,13 @@ mvn verify</pre>
       });
       res.sort(function (a, b) { return b.s - a.s; });
       res = res.slice(0, 12);
-      if (!res.length) {
+      var extra = [];
+      if (related && window.DokuChat && res.length < 6) {
+        extra = window.DokuChat.find(buildIndex, q, res.map(function (hit) {
+          return '#/' + hit.e.page.id + (hit.e.anchor ? '/' + hit.e.anchor : '');
+        }));
+      }
+      if (!res.length && !extra.length) {
         updateMarkup(results, '<div class="empty">Nichts gefunden für „' + esc(q) + '“. Ein anderer Suchbegriff könnte helfen.</div>', true);
         sel = -1; return;
       }
@@ -3639,6 +3688,12 @@ mvn verify</pre>
         html += '<a href="' + href + '" role="option"><small>' + esc(top) + '</small>' + hl(e.title, toks) +
           (snip ? '<span class="sn">' + hl(snip, toks) + '</span>' : '') + '</a>';
       });
+      if (extra.length) {
+        html += '<div class="semantic-heading" role="presentation">Ähnliche Fundstellen</div>';
+        extra.forEach(function (source) {
+          html += '<a href="' + source.href + '" role="option"><small>' + esc(source.page) + '</small>' + esc(source.title) + '</a>';
+        });
+      }
     }
     updateMarkup(results, html, true);
     sel = 0; mark();
@@ -3652,6 +3707,7 @@ mvn verify</pre>
     if (s && s.scrollIntoView) s.scrollIntoView({ block: 'nearest', behavior: smooth && motion.matches ? 'smooth' : 'auto' });
   }
   function openSearch() {
+    if (!$('#docChat').hidden) $('#docChatClose').click();
     lastFocus = document.activeElement;
     overlay.classList.add('on');
     overlay.inert = false;
@@ -3675,7 +3731,7 @@ mvn verify</pre>
     var i = $$('a', results).indexOf(a);
     if (i >= 0 && i !== sel) { sel = i; mark(); }
   });
-  input.addEventListener('input', debounce(function () { render(input.value); }, 120));
+  input.addEventListener('input', function () { queuedSearch(input.value); });
   overlay.addEventListener('keydown', function (e) {
     if (e.key !== 'Tab') return;
     var f = $$('input, a[href]', overlay).filter(function (el) { return el.offsetParent !== null; });
@@ -3700,7 +3756,7 @@ mvn verify</pre>
       if (overlay.classList.contains('on')) closeSearch(); else openSearch();
     } else if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(tag) && !overlay.classList.contains('on')) {
       e.preventDefault(); openSearch();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' && !e.defaultPrevented) {
       if (overlay.classList.contains('on')) closeSearch(); else closeNav();
     }
   });
@@ -4094,6 +4150,21 @@ mvn verify</pre>
   })();
 
   route();
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.DokuChat) return;
+    var chatToggle = $('#docChatToggle');
+    chatToggle.hidden = false;
+    chatToggle.addEventListener('click', function () {
+      window.DokuChat.open(buildIndex, route);
+    });
+  });
+  if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./doc-sw.js').catch(function (error) {
+        console.debug('Offline-Speicher der Doku nicht verfügbar', error);
+      });
+    });
+  }
 })();
 </script>
 </body>
