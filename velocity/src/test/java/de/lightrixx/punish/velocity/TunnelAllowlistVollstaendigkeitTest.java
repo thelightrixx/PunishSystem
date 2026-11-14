@@ -116,6 +116,15 @@ class TunnelAllowlistVollstaendigkeitTest {
     }
 
     @Test
+    void punishSearchHatKurzaliasInBeidenBridgeModulen() {
+        for (String modul : List.of("bridge", "bridge-1.21")) {
+            var suche = befehle(pluginYml(modul)).get("punish-search");
+            assertNotNull(suche, modul);
+            assertTrue(suche.aliase().contains("pssearch"), modul + ": /pssearch fehlt");
+        }
+    }
+
+    @Test
     void beidePluginYmlGleicheBefehlsmenge() {
         Map<String, BefehlEintrag> bridge = befehle(pluginYml("bridge"));
         Map<String, BefehlEintrag> bridge121 = befehle(pluginYml("bridge-1.21"));

@@ -288,7 +288,7 @@ public final class VelocityBefehle {
         registrar(manager, plugin, proxy, messageService, "punish-stats", List.of("psstats"),
                 new PunishStatsCommand(messageService, config, protectionService, playerCache,
                         verzeichnis, historyService, reportService, timeParser));
-        registrar(manager, plugin, proxy, messageService, "punish-search", List.of(),
+        registrar(manager, plugin, proxy, messageService, "punish-search", List.of("pssearch"),
                 new Suche(messageService, config, protectionService, playerCache,
                         verzeichnis, historyRepository, noteRepository, reportRepository));
         if (datenOrdner != null) {

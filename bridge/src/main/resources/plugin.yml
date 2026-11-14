@@ -43,6 +43,7 @@ commands:
   punish-search:
     description: Durchsucht Historie, Notizen und Reports über den Proxy.
     usage: /punish-search <Text> [page:<Nr>]
+    aliases: [pssearch]
     permission: punish.search
   punish:
     description: Führt eine Straf-Vorlage aus (wird an den Proxy weitergeleitet).
