@@ -585,7 +585,7 @@ details>div{padding:14px 18px 2px}
       <tr><td>Befehlsreferenz</td><td><a href="#/befehle">Alle Befehle</a> mit Links zu Syntax, Rechten und Beispielen.</td></tr>
       <tr><td>Konfiguration und Rechte</td><td><a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>, <a href="#/rang-buendel">Gruppen einrichten</a>, <a href="#/rechte">Permissions</a>, <a href="#/config-general">Proxy-Einstellungen</a>, <a href="#/config-texte">Texte</a> und <a href="#/config-bridge">Bridge-Einstellungen</a>.</td></tr>
       <tr><td>Erweiterungen</td><td><a href="#/chatfilter">Chatfilter mit Wortliste und optionaler KI</a> und <a href="#/placeholderapi">PlaceholderAPI</a>.</td></tr>
-      <tr><td>Betrieb</td><td><a href="#/speicher">MySQL und Migration</a>, <a href="#/betrieb">Updates und Sicherungen</a> sowie <a href="#/datenschutz">IP-Daten und Aufbewahrung</a>.</td></tr>
+      <tr><td>Betrieb</td><td><a href="#/speicher">MySQL und Migration</a>, <a href="#/betrieb">Updates und Sicherungen</a>, <a href="#/changelog">Changelog</a> sowie <a href="#/datenschutz">IP-Daten und Aufbewahrung</a>.</td></tr>
       <tr><td>Hilfe und Entwicklung</td><td><a href="#/fehlerbehebung">Fehlerbehebung</a>, <a href="#/faq">häufige Fragen</a> und <a href="#/entwicklung">aus dem Quellcode bauen</a>.</td></tr>
     </tbody>
   </table></div>
@@ -2785,6 +2785,36 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <p>Die automatische Migration führt von YAML nach MySQL. Ein Wechsel zurück zu <code>speicher.typ: "yaml"</code> exportiert keine MySQL-Daten und würde alte YAML-Dateien wieder verwenden. Vorgehen und Grenzen stehen unter <a href="#/speicher">Speicher und MySQL</a>. Welche Änderungen einen Reload oder Neustart benötigen, zeigt <a href="#/config-uebersicht/aenderungen-anwenden">Änderungen anwenden</a>.</p>
 </section>
 
+<section class="page" data-id="changelog" data-group="Betrieb" data-title="Changelog">
+  <h1>Changelog</h1>
+  <p class="lead">Änderungen an allen neuen Plugin-Versionen ab v4.0.0. Die neueste Veröffentlichung steht oben; jeder Eintrag nennt Datum, Änderungen und nötige Update-Hinweise.</p>
+  <p>Für den Austausch der Jars gilt die Anleitung unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>. Wie Patch- und Minor-Versionen entstehen, erklärt <a href="#/entwicklung/versionen-und-releases">Versionen und Releases</a>.</p>
+
+  <h2 data-anchor="v4-0-1">v4.0.1</h2>
+  <p><time datetime="2026-11-17">17.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.1" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>Versionsangaben:</strong> Das kleine <code>v</code> ist jetzt Teil der Maven-Version und der Plugin-Metadaten. Auch Versionsanzeigen und Update-Meldungen verwenden durchgehend <code>v4.0.1</code>.</li>
+    <li><strong>Updater:</strong> Die Erkennung der Release-Dateinamen ist an die vollständige Versionsbezeichnung angepasst. Ältere Versionen mit und ohne <code>v</code> sowie bisherige Dateinamen werden weiterhin erkannt.</li>
+    <li><strong>Windows-Build:</strong> Auch bei stabilen Versionen und mit <code>nobump</code> wird die Version in alle Module und Plugin-Metadaten synchronisiert.</li>
+    <li><strong>Release-Build:</strong> Die Download-Dateinamen enthalten genau ein <code>v</code>. Der GitHub-Build bricht ab, wenn Versions-Tag und Projektversion nicht übereinstimmen.</li>
+    <li><strong>Versionierung:</strong> Das Versionsskript unterstützt <code>-Increment patch</code> und <code>-Increment minor</code>. Die Regeln für stabile Patch- und Minor-Releases sind dokumentiert.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Alle drei Jar-Varianten tragen dieselbe vollständige Version. Installiere auf dem Proxy die Velocity-Jar und auf jedem Backend genau eine zur Paper-Version passende Bridge.</p>
+
+  <h2 data-anchor="v4-0-0">v4.0.0</h2>
+  <p><time datetime="2026-11-17">17.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.0" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <p>Erste stabile Veröffentlichung der v4-Reihe und Ausgangspunkt dieses Changelogs. Enthalten sind netzwerkweite Strafen mit globalem oder serverbezogenem Scope, PunishGUI, Verlauf, Suche, Export, MySQL mit YAML-Migration und der optionale lokale Chatfilter.</p>
+  <ul>
+    <li><strong>Backend-Diagnose:</strong> <code>/punish-diagnostics</code> lässt sich auch in der Serverkonsole ausführen. Spieler benötigen weiterhin das Recht <code>punish.diagnostics</code>.</li>
+    <li><strong>Downloads:</strong> Separate Jars für Velocity, Paper/Purpur 1.21.x und Paper/Purpur 26.1+; dazu SHA-256-Prüfsummen für die Downloads.</li>
+  </ul>
+  <div class="callout">
+    <div><span class="ttl">Vergleich zur v3-Reihe folgt</span>
+    <p>Der detaillierte Änderungsvergleich zur vorherigen v3-Version wird ergänzt. Die hier genannten enthaltenen Funktionen sind noch keine vollständige Liste der Neuerungen gegenüber v3.</p></div>
+  </div>
+  <p><strong>Update-Hinweis:</strong> Vor dem Wechsel Plugin-Ordner und Datenbank sichern. Für stabile Updates auf dem Proxy <code>update.channel: Release</code> verwenden. Voraussetzungen und Ablauf stehen unter <a href="#/installation">Installation</a> und <a href="#/betrieb">Updates und Sicherungen</a>.</p>
+</section>
+
 <section class="page" data-id="datenschutz" data-group="Betrieb" data-title="Datenschutz">
   <h1>Datenschutz</h1>
   <p class="lead">Welche personenbezogenen Daten PunishSystem speichert und wie sie auf Anfrage gelöscht werden.</p>
@@ -3074,6 +3104,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <pre data-lang="shell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Increment patch
 build_all_jars.bat nobump ci</pre>
   <p>Das Versionsskript erhöht die Root-Pom. Der anschließende Build synchronisiert alle Module und Plugin-Metadaten und führt die Tests aus. Stabile Releases erhalten weder Vorabzusatz noch Datums-Buildnummer. Ein lokaler Build allein erhöht die Version nicht.</p>
+  <p>Vor jeder Veröffentlichung die betroffenen Anleitungen, Befehle, Permissions, Konfigurationen, Voraussetzungen und Update-Hinweise mit dem Plugin abgleichen und veraltete Inhalte korrigieren. Versionsangaben und Download-Links aktualisieren und im <a href="#/changelog">Changelog</a> einen datierten Eintrag mit Änderungen, Fehlerbehebungen und nötigen Update-Hinweisen ergänzen. Die Dokumentation gehört zum selben Commit wie die neue Plugin-Version und wird über GitHub Pages veröffentlicht. Der GitHub-Build prüft vor einem Release die Versionsangaben in README und Dokumentation sowie den Eintrag für die aktuelle Version im Changelog.</p>
 
   <h2>Jars selbst bauen (optional)</h2>
   <p>Im Projektordner unter Windows stehen diese Varianten zur Verfügung. Die Erläuterungen unter dem Codeblock beschreiben die Schalter:</p>

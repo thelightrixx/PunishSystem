@@ -16,6 +16,7 @@ Die vollständige Dokumentation liegt in [docs/index.html](docs/index.html). Öf
 | Eine Einstellung oder Nachricht ändern | [Dateien und Zuständigkeiten](docs/index.html#/config-uebersicht) |
 | MySQL einrichten oder YAML-Daten übernehmen | [Speicher und Migration](docs/index.html#/speicher) |
 | Eine bestehende Installation aktualisieren | [Updates und Sicherungen](docs/index.html#/betrieb) |
+| Änderungen einer Version nachlesen | [Changelog](docs/index.html#/changelog) |
 | Ein Problem untersuchen | [Fehlerbehebung](docs/index.html#/fehlerbehebung) |
 | Das Projekt bauen | [Bauen und Entwickeln](docs/index.html#/entwicklung) |
 
@@ -57,6 +58,14 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 - GitHub-Updates mit SHA-256-Prüfung: Jars werden bereitgestellt und anschließend manuell ausgetauscht; danach alle Server neu starten.
 
 Für das Update auf die stabile Version auf dem Proxy in `plugins/PunishSystemVelocity/config/general.yml` den Wert `update.channel` auf `Release` setzen. Im Spiel `/punish-reload` und `/punish-update check` ausführen. `/punish-update apply confirm` stellt die geprüften Jars zum Austausch bereit.
+
+## Versionen und Veröffentlichungen
+
+Das [Changelog](docs/index.html#/changelog) führt alle neuen Plugin-Versionen ab `v4.0.0`, mit Veröffentlichungsdatum, Änderungen, Fehlerbehebungen und nötigen Update-Hinweisen. Die neueste Version steht oben. Die Regeln für Patch- und Minor-Versionen stehen unter [Versionen und Releases](docs/index.html#/entwicklung/versionen-und-releases).
+
+Vor jeder neuen Veröffentlichung wird die Dokumentation mit den tatsächlichen Änderungen am Plugin abgeglichen. Dabei werden betroffene Anleitungen, Befehle, Permissions, Konfigurationen, Voraussetzungen und Update-Hinweise sowie Versionsangaben und Download-Links geprüft. Veraltete Inhalte werden korrigiert und der Changelog-Eintrag ergänzt, bevor der Versions-Tag veröffentlicht wird. Diese Aktualisierungen gehören zum selben Commit wie die neue Plugin-Version und werden über GitHub Pages mitveröffentlicht.
+
+Der GitHub-Build prüft zusätzlich, ob README, Versionsanzeige der Dokumentation und Changelog zur Projektversion passen; bei Abweichungen wird kein Release erstellt. Die inhaltliche Prüfung der Anleitungen gehört weiterhin zur Vorbereitung jedes Releases. Reine Dokumentationskorrekturen werden direkt veröffentlicht, ohne die Plugin-Version zu erhöhen oder ein neues Plugin-Release anzulegen.
 
 ## Aus dem Quellcode bauen
 
