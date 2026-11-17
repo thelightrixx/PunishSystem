@@ -522,11 +522,15 @@ public final class VelocityBefehle {
         boolean bridgeOk = false;
         String bridgeDetail = "kein Brückenkanal";
         if (kanal != null) {
-            var gemeldet = kanal.bridgeVersionen();
+            var gemeldet = kanal.gemeldeteBridges();
             var secrets = config.brueckenSecrets();
             var server = proxy.getAllServers();
-            long helloAnzahl = server.stream().filter(s -> gemeldet.containsKey(
-                    s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT))).count();
+            long helloAnzahl = server.stream()
+                    .map(s -> de.lightrixx.punish.model.ServerScope.normalisiereServerName(
+                            s.getServerInfo().getName()))
+                    .filter(java.util.Objects::nonNull)
+                    .filter(gemeldet::contains)
+                    .count();
             boolean secretsVollstaendig = server.stream().allMatch(s -> {
                 String secret = secrets.get(s.getServerInfo().getName().toLowerCase(java.util.Locale.ROOT));
                 return de.lightrixx.punish.net.TunnelSignatur.istKonfiguriert(secret)

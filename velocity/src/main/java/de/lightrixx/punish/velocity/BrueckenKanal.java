@@ -503,6 +503,10 @@ public final class BrueckenKanal {
         return java.util.Map.copyOf(bridgeVersionen);
     }
 
+    public java.util.Set<String> gemeldeteBridges() {
+        return java.util.Set.copyOf(helloBekannt);
+    }
+
     private final java.util.concurrent.ConcurrentHashMap<String, String> bridgeVarianten =
             new java.util.concurrent.ConcurrentHashMap<>();
     private volatile UpdateVerteilung updateVerteilung;

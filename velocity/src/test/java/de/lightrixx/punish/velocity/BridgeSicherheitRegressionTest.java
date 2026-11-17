@@ -550,6 +550,11 @@ class BridgeSicherheitRegressionTest {
                 case 1 -> java.util.Map.of("lobby", "4.0");
                 default -> java.util.Map.of("lobby", "4.0", "survival", "4.0");
             });
+            when(kanal.gemeldeteBridges()).thenReturn(switch (anzahl) {
+                case 0 -> java.util.Set.of();
+                case 1 -> java.util.Set.of("lobby");
+                default -> java.util.Set.of("lobby", "survival");
+            });
             for (String secret : java.util.List.of("", "kurz", "123456789012345", "1234567890123456",
                     " 1234567890123456 ")) {
                 when(config.brueckenSecrets()).thenReturn(secret.isEmpty() ? java.util.Map.of()
@@ -561,6 +566,39 @@ class BridgeSicherheitRegressionTest {
                 assertFalse(kontext.bridgeDetail().contains("verbunden"));
             }
         }
+    }
+
+    @Test
+    @DisplayName("Diagnose zählt HELLOs auch bei gemischt geschriebenen Velocity-Servernamen")
+    void diagnoseZaehltHelloUnabhaengigVonDerSchreibweise() throws Exception {
+        var proxy = mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var lobby = server("Lobby");
+        var survival = server("Survival");
+        when(proxy.getAllServers()).thenReturn(java.util.List.of(lobby, survival));
+        var config = mock(VelocityKonfiguration.class);
+        when(config.brueckenSecrets()).thenReturn(java.util.Map.of(
+                "lobby", "1234567890123456", "survival", "1234567890123456"));
+        var repo = mock(de.lightrixx.punish.storage.MuteRepository.class);
+        when(repo.alle()).thenReturn(java.util.List.of());
+        var kanal = new BrueckenKanal(mock(PunishVelocity.class), proxy,
+                mock(org.slf4j.Logger.class), repo);
+        kanal.setBridgeSecrets(config.brueckenSecrets());
+        when(lobby.sendPluginMessage(any(), any(byte[].class))).thenReturn(true);
+        when(survival.sendPluginMessage(any(), any(byte[].class))).thenReturn(true);
+        kanal.beantworteHello(lobby, "lobby", de.lightrixx.punish.net.Protokoll.VERSION,
+                "4.0", "bridge");
+        kanal.beantworteHello(survival, "survival", de.lightrixx.punish.net.Protokoll.VERSION,
+                "4.0", "bridge");
+
+        var methode = VelocityBefehle.class.getDeclaredMethod("diagnoseKontext",
+                com.velocitypowered.api.proxy.ProxyServer.class, VelocityKonfiguration.class,
+                BrueckenKanal.class, de.lightrixx.punish.storage.IoExecutor.class);
+        methode.setAccessible(true);
+        var kontext = (de.lightrixx.punish.command.PunishDiagnosticsCommand.Kontext)
+                methode.invoke(null, proxy, config, kanal, null);
+
+        assertTrue(kontext.bridgeOk());
+        assertTrue(kontext.bridgeDetail().contains("2/2"), kontext.bridgeDetail());
     }
     private static com.velocitypowered.api.proxy.server.RegisteredServer server(String name) {
         var server = mock(com.velocitypowered.api.proxy.server.RegisteredServer.class);
