@@ -6,6 +6,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.TabCompleter;
 
 import java.util.ArrayList;
@@ -46,6 +47,10 @@ public final class BridgeDiagnosticsBefehl implements CommandExecutor, TabComple
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof ConsoleCommandSender) && !sender.hasPermission("punish.diagnostics")) {
+            sender.sendMessage(prefixiert("<red>Dazu hast du keine Berechtigung."));
+            return true;
+        }
         List<Zeile> zeilen = pruefe();
         sender.sendMessage(kopf());
         int warnungen = 0;

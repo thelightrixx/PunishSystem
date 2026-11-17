@@ -1092,6 +1092,7 @@ public final class PunishBridge extends JavaPlugin {
                 LOG.warn("Der Befehl 'punish-diagnostics' ist nicht in der plugin.yml definiert.");
                 return;
             }
+            befehl.setPermission(null);
             befehl.setExecutor(diagnose);
             befehl.setTabCompleter(diagnose);
         } catch (Exception e) {

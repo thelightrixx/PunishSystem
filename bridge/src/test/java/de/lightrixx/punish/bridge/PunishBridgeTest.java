@@ -8,6 +8,29 @@ import static org.mockito.Mockito.*;
 
 class PunishBridgeTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"true,false,true", "false,true,true", "false,false,false"})
+    void diagnoseErlaubtKonsoleUndPrueftSpielerrechte(boolean konsole, boolean recht, boolean erlaubt) {
+        org.bukkit.command.CommandSender sender = konsole
+                ? mock(org.bukkit.command.ConsoleCommandSender.class) : mock(org.bukkit.entity.Player.class);
+        when(sender.hasPermission("punish.diagnostics")).thenReturn(recht);
+        var config = mock(BridgeKonfiguration.class);
+        when(config.praefix()).thenReturn("<gray>[Punish]");
+        var diagnose = new BridgeDiagnosticsBefehl(config, null, null, () -> "4.0.0", () -> "4.0.0",
+                () -> new BridgeDiagnosticsBefehl.ChatfilterInfo(false, "deaktiviert"));
+
+        assertTrue(diagnose.onCommand(sender, mock(org.bukkit.command.Command.class),
+                "punish-diagnostics", new String[0]));
+
+        var nachrichten = org.mockito.ArgumentCaptor.forClass(net.kyori.adventure.text.Component.class);
+        verify(sender, atLeastOnce()).sendMessage(nachrichten.capture());
+        String text = nachrichten.getAllValues().stream()
+                .map(net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()::serialize)
+                .collect(java.util.stream.Collectors.joining("\n"));
+        assertEquals(erlaubt, text.contains("Diagnose (Bridge 4.0.0)"));
+        assertEquals(!erlaubt, text.contains("Dazu hast du keine Berechtigung."));
+    }
+
     @Test
     void befehlsUeberschreibungLiestSchalterUndProxySync(
             @org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner) throws Exception {
