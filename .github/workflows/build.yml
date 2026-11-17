@@ -36,11 +36,16 @@ jobs:
         run: |
           set -euo pipefail
           V=$(grep -m1 -oP '(?<=<version>)[^<]+' pom.xml)
+          TAG_VERSION="v${V#[vV]}"
           echo "Version: ${V}"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" != "${TAG_VERSION}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} passt nicht zur Projektversion ${TAG_VERSION}."
+            exit 1
+          fi
           mkdir -p dist
-          cp velocity/target/PunishSystem-[0-9]*-velocity.jar        "dist/PunishSystem-v${V}-velocity.jar"
-          cp bridge/target/PunishSystem-[0-9]*-bridge.jar            "dist/PunishSystem-v${V}-bridge.jar"
-          cp bridge-1.21/target/PunishSystem-[0-9]*-bridge-1.21.jar  "dist/PunishSystem-v${V}-bridge-1.21.jar"
+          cp "velocity/target/PunishSystem-${V}-velocity.jar"        "dist/PunishSystem-${TAG_VERSION}-velocity.jar"
+          cp "bridge/target/PunishSystem-${V}-bridge.jar"            "dist/PunishSystem-${TAG_VERSION}-bridge.jar"
+          cp "bridge-1.21/target/PunishSystem-${V}-bridge-1.21.jar"  "dist/PunishSystem-${TAG_VERSION}-bridge-1.21.jar"
           (cd dist && sha256sum *.jar > SHA256SUMS.txt)
           ls -l dist
 

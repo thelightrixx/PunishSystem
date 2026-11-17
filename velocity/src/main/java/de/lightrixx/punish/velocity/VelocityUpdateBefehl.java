@@ -10,6 +10,7 @@ import de.lightrixx.punish.service.ProtectionService;
 import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.update.HangarUpdateService;
 import de.lightrixx.punish.update.UpdateVergleich;
+import de.lightrixx.punish.util.PluginVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -299,7 +300,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
             if (!tag.matches("[vV]?[0-9]+(\\.[0-9]+)+([-+][A-Za-z0-9]+(\\.[A-Za-z0-9]+)*)*")) {
                 continue;
             }
-            String kandidatVersion = tag.replaceFirst("^[vV]", "");
+            String kandidatVersion = "v" + tag.replaceFirst("^[vV]", "");
             if (gewaehlt == null || UpdateVergleich.neuerVerfuegbar(version, kandidatVersion)) {
                 gewaehlt = release;
                 version = kandidatVersion;
@@ -331,10 +332,10 @@ public final class VelocityUpdateBefehl extends PunishCommand {
         java.util.List<HangarUpdateService.Artefakt> downloads = new java.util.ArrayList<>();
         String[] teile = version.split("\\+", 2);
         for (String variante : java.util.List.of("velocity", "bridge", "bridge-1.21")) {
-            String name = "PunishSystem-v" + teile[0] + "-(" + variante + ")"
+            String name = "PunishSystem-" + teile[0] + "-(" + variante + ")"
                     + (teile.length == 2 ? "+" + teile[1].replace('-', '_') : "") + ".jar";
             if (!dateien.containsKey(name)) {
-                name = "PunishSystem-v" + version + "-" + variante + ".jar";
+                name = "PunishSystem-" + version + "-" + variante + ".jar";
             }
             var asset = dateien.get(name);
             String hash = summen.get(name);
@@ -368,7 +369,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
         try {
             String geliefert = versionLieferant.get();
             if (geliefert != null && !geliefert.isBlank()) {
-                return geliefert.trim();
+                return PluginVersion.tryParse(geliefert).map(PluginVersion::voll).orElse(geliefert.trim());
             }
         } catch (Exception e) {
             LOG.debug("Versionsabfrage fehlgeschlagen.", e);

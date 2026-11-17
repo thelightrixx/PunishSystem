@@ -204,7 +204,7 @@ class VelocityUpdateBefehlTest {
         var info = VelocityUpdateBefehl.pruefeGithub(githubConfig("Beta"),
                 githubAntwort("[" + release(version, false, true) + "]", summen(version)));
 
-        assertEquals(version, info.version());
+        assertEquals("v" + version, info.version());
         assertEquals("Beta", info.channel());
         assertEquals(java.util.List.of("VELOCITY", "BRIDGE", "BRIDGE-1.21"),
                 info.downloads().stream().map(de.lightrixx.punish.update.HangarUpdateService.Artefakt::plattform).toList());
@@ -229,7 +229,7 @@ class VelocityUpdateBefehlTest {
         var info = VelocityUpdateBefehl.pruefeGithub(githubConfig("Beta"),
                 githubAntwort("[" + release(preview, false, true) + "," + json + "]", manifest));
 
-        assertEquals(version, info.version());
+        assertEquals("v" + version, info.version());
         assertTrue(de.lightrixx.punish.update.UpdateVergleich.neuerVerfuegbar(preview, info.version()));
         assertEquals(java.util.List.of("VELOCITY", "BRIDGE", "BRIDGE-1.21"),
                 info.downloads().stream().map(de.lightrixx.punish.update.HangarUpdateService.Artefakt::plattform).toList());
@@ -241,7 +241,29 @@ class VelocityUpdateBefehlTest {
                 + release("5.0.0-beta", false, true) + "," + release("4.1.0", false, false) + "]";
         var info = VelocityUpdateBefehl.pruefeGithub(githubConfig("Release"),
                 githubAntwort(antwort, summen("4.1.0")));
-        assertEquals("4.1.0", info.version());
+        assertEquals("v4.1.0", info.version());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"4.0.1", "v4.0.1", "V4.0.1"})
+    void githubMeldetStabileVersionMitGenauEinemvUndFindetBestehendeDateinamen(String tag) throws Exception {
+        String antwort = release("4.0.1", false, false)
+                .replace("\"tag_name\":\"v4.0.1\"", "\"tag_name\":\"" + tag + "\"")
+                .replace("/releases/download/v4.0.1/", "/releases/download/" + tag + "/");
+        String manifest = summen("4.0.1");
+        for (String variante : java.util.List.of("velocity", "bridge", "bridge-1.21")) {
+            antwort = antwort.replace("-(" + variante + ").jar", "-" + variante + ".jar");
+            manifest = manifest.replace("-(" + variante + ").jar", "-" + variante + ".jar");
+        }
+        var info = VelocityUpdateBefehl.pruefeGithub(githubConfig("Release"),
+                githubAntwort(antwort, manifest));
+
+        assertEquals("v4.0.1", info.version());
+        assertEquals(java.util.List.of("PunishSystem-v4.0.1-velocity.jar", "PunishSystem-v4.0.1-bridge.jar",
+                "PunishSystem-v4.0.1-bridge-1.21.jar"),
+                info.downloads().stream().map(de.lightrixx.punish.update.HangarUpdateService.Artefakt::dateiname).toList());
+        assertTrue(de.lightrixx.punish.update.UpdateVergleich.neuerVerfuegbar("4.0.0", info.version()));
+        assertTrue(de.lightrixx.punish.update.UpdateVergleich.neuerVerfuegbar("v4.0.0", info.version()));
     }
 
     @Test

@@ -98,7 +98,7 @@ set "NEW_VERSION="
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim()"`) do set "NEW_VERSION=%%V"
 if not defined NEW_VERSION goto :sync_fehler
 echo [INFO] Version: %NEW_VERSION%
-goto :bauen
+goto :sync_version
 
 :final_ohne_bump
 echo [INFO] Finale Version ohne Buildnummer erkannt - kein Datums-Build.
@@ -106,7 +106,7 @@ set "NEW_VERSION="
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[xml]$x=Get-Content 'pom.xml'; $x.project.version.Trim()"`) do set "NEW_VERSION=%%V"
 if not defined NEW_VERSION goto :sync_fehler
 echo [INFO] Version: %NEW_VERSION%
-goto :bauen
+goto :sync_version
 
 rem --- 3. Neue Version in alle Modul-poms + Velocity-Dateien spiegeln ---
 :sync_version
