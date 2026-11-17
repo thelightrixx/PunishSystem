@@ -659,9 +659,9 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="installation" data-group="Start" data-title="Installation">
   <h1>Installation</h1>
-  <p class="lead">PunishSystem liefert drei Jars: eine für den Velocity-Proxy und zwei alternative Bridge-Varianten. Installiert werden die Proxy-Jar und genau eine passende Bridge pro Backend. Der Proxy verwaltet Befehle und Strafdaten; die Bridges setzen die Strafen auf den Paper-Servern durch und stellen GUI und Chatfilter bereit. Alle installierten Jars müssen aus demselben Build stammen.</p>
+  <p class="lead">Diese Anleitung richtet eine neue Installation auf einem Velocity-Proxy mit Paper- oder Purpur-Backends ein. Der Proxy verwaltet die Strafdaten; eine Bridge auf jedem Backend verbindet es mit dem Proxy. Für eine bestehende Installation gelten die Hinweise zu <a href="#/betrieb/updates-einspielen">Updates und Sicherungen</a>.</p>
 
-  <div class="callout"><div><span class="ttl">Reihenfolge</span><p>Erst die Jars einspielen und einmal starten, damit die Konfigurationsdateien entstehen. Danach Speicher, Tunnel-Secrets und Servernamen eintragen und neu starten. Ohne erreichbares MySQL bricht die Plugin-Initialisierung ab; Velocity selbst läuft weiter. Ohne Tunnel-Secret bleibt die Bridge stumm.</p></div></div>
+  <div class="callout"><div><span class="ttl">Das erwartet dich</span><p>Du installierst die Jars, wählst den Speicher und verbindest jedes Backend mit einem eigenen Secret. Plane Zugriff auf die Dateien und Konsolen von Proxy und Backends ein. Befehle für die Velocity-Konsole stehen in dieser Anleitung ohne führenden Schrägstrich.</p></div></div>
 
   <h2>Voraussetzungen</h2>
   <div class="tbl"><table>
@@ -670,27 +670,27 @@ details>div{padding:14px 18px 2px}
       <tr><td>Proxy</td><td>Velocity 3.4.0 oder neuer, Java 21</td></tr>
       <tr><td>Backend mit Minecraft 26.x</td><td>Paper oder Purpur 26.1 oder neuer, Java 25, Jar <code>bridge</code></td></tr>
       <tr><td>Backend mit Minecraft 1.21.x</td><td>Paper oder Purpur 1.21.x, Java 21, Jar <code>bridge-1.21</code></td></tr>
-      <tr><td>Speicher auf dem Proxy</td><td>MySQL 8.x mit Datenbank und Benutzer, alternativ YAML. Beide Varianten verwalten das gesamte Netzwerk eines Proxys.</td></tr>
+      <tr><td>Speicher auf dem Proxy</td><td>MySQL 8.x mit Datenbank und Benutzer; alternativ YAML-Dateien (veraltet, weiterhin nutzbar).</td></tr>
       <tr><td>Optional</td><td>LuckPerms für Rang-Bündel, PlaceholderAPI für Platzhalter. Beides wird automatisch erkannt.</td></tr>
     </tbody>
   </table></div>
   <p>Folia wird nicht unterstützt. LuckPerms ist optional, ermöglicht aber auch die Schutzprüfung bekannter Offline-Spieler; ohne diese Prüfung werden solche Aktionen standardmäßig abgelehnt. Einzelheiten stehen unter <a href="#/schutz/spieler-die-offline-sind">Offline-Schutz</a>.</p>
-  <p>Die Bridges halten Strafdaten nur im RAM. Servername und eigenes Tunnel-Secret stehen lokal; Regeln, Texte und Wortliste kommen vom Proxy. Lokale Chatfilter-Dateinamen, Befehlsausnahmen und Laufzeitschalter beschreibt die <a href="#/chatfilter">Chatfilter-Referenz</a>.</p>
+  <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Die passende Jar kommt jeweils in den <code>plugins</code>-Ordner. Auf allen Servern muss dieselbe Buildnummer laufen, gemischte Versionen sind nicht vorgesehen.</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.1">Release v4.0.1</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-…-(velocity)+….jar</code></td><td>Velocity-Proxy</td><td>alle</td></tr>
-      <tr><td><code>PunishSystem-…-(bridge)+….jar</code></td><td>Paper-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-…-(bridge-1.21)+….jar</code></td><td>Paper-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.0.1-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.0.1-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.0.1-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
-  <p>Bei einem Update werden Proxy und alle installierten Bridges gemeinsam aktualisiert. Die zweite Bridge-Variante wird nur auf Backends benötigt, deren Minecraft-Version dazu passt.</p>
+  <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
 
   <h2>Schritt 2: Einmal starten und Konfiguration anlegen</h2>
-  <p>Proxy und Backends einmal starten und wieder stoppen. Dabei entstehen die Konfigurationsordner:</p>
+  <p>Starte Proxy und Backends einmal und stoppe sie anschließend wieder. Die Plugins legen dabei ihre Konfigurationsdateien an:</p>
   <div class="tbl"><table>
     <thead><tr><th>Plugin</th><th>Ordner</th></tr></thead>
     <tbody>
@@ -698,13 +698,13 @@ details>div{padding:14px 18px 2px}
       <tr><td>PunishSystemBridge</td><td><code>plugins/PunishSystemBridge/config/</code></td></tr>
     </tbody>
   </table></div>
-  <p>Für die erste Einrichtung brauchst du die jeweilige <code>general.yml</code>. Welche weiteren Dateien erzeugt werden und wo sie maßgeblich sind, erklärt <a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>.</p>
-  <div class="callout"><div><span class="ttl">Regeln und Texte auf dem Proxy pflegen</span><p>Die Bridge übernimmt Regeln und Texte per Text-Sync in <code>plugins/PunishSystemBridge/config-sync/</code>. Diese Kopien haben Vorrang vor den lokalen Dateien in <code>config/</code>; die lokalen Dateien bleiben als Fallback erhalten. In der Bridge-<code>general.yml</code> bleiben Servername und eigenes Tunnel-Secret maßgeblich. Plugin-Nachrichten benötigen mindestens einen verbundenen Spieler pro Backend als Transport; leere Backends holen den Sync beim nächsten Beitritt nach.</p></div></div>
-  <div class="callout warn"><div><span class="ttl">Erwartete Fehlermeldung beim Probelauf</span><p>Der Proxy ist standardmäßig auf MySQL eingestellt. Ist keine erreichbare Datenbank eingetragen, meldet er das im Log und deaktiviert sich. Für den Probelauf, der nur die Dateien anlegt, ist das normal. Weiter geht es mit Schritt 3.</p></div></div>
+  <p>Für die Einrichtung bearbeitest du die jeweilige <code>config/general.yml</code>. Fehlt ein Ordner, prüfe das Startlog des betreffenden Servers auf Ladefehler und die passende Jar.</p>
+  <div class="callout warn"><div><span class="ttl">Beim ersten Start zu erwarten</span><p>Der Proxy ist zunächst auf MySQL eingestellt. Ohne passende Datenbankverbindung kann PunishSystem beim ersten Start abbrechen; Velocity läuft weiter. Auch die Bridge meldet ein fehlendes Secret. Richte beides in den nächsten Schritten ein.</p></div></div>
 
   <h2>Schritt 3: Speicher einrichten</h2>
-  <p>Die YAML-Ausschnitte dieser Anleitung gehören in die bereits vorhandenen Abschnitte. Ersetze dort die Werte; lege <code>speicher</code> oder <code>netzwerk</code> nicht ein zweites Mal in derselben Datei an. Einrückung mit Leerzeichen beibehalten.</p>
-  <p>Der Proxy speichert standardmäßig in MySQL. Datenbank und Benutzer müssen vorher angelegt sein, die Tabellen legt das Plugin selbst an. In <code>plugins/PunishSystemVelocity/config/general.yml</code>:</p>
+  <p>Öffne auf dem <strong>gestoppten Proxy</strong> <code>plugins/PunishSystemVelocity/config/general.yml</code> und wähle eine der beiden folgenden Varianten. Die Ausschnitte zeigen vorhandene Abschnitte: Ändere deren Werte, statt <code>speicher</code> oder <code>netzwerk</code> ein zweites Mal anzulegen. Verwende Leerzeichen zur Einrückung.</p>
+  <h3>Variante A: MySQL</h3>
+  <p>MySQL ist die Voreinstellung. Lege zuerst die Datenbank und einen Benutzer mit Zugriff darauf an; die Tabellen erstellt das Plugin. Trage deine Verbindungsdaten im vorhandenen Abschnitt <code>speicher</code> ein:</p>
   <pre data-lang="yaml">speicher:
   typ: "mysql"
   migration-beim-start: true
@@ -717,72 +717,76 @@ details>div{padding:14px 18px 2px}
     use-ssl: false
     pool-max: 10</pre>
   <ul>
-    <li>Für eine entfernte Datenbank <code>use-ssl: true</code> setzen. MySQL muss dann TLS anbieten. <code>use-ssl: false</code> ist für eine lokale Datenbank vorgesehen.</li>
+    <li>Für eine entfernte Datenbank <code>use-ssl: true</code> setzen. MySQL muss TLS anbieten; die Verbindung wird verschlüsselt, die Serveridentität dabei aber nicht geprüft. <code>use-ssl: false</code> ist für eine lokale Datenbank vorgesehen.</li>
     <li><code>pool-max</code> ist die Größe des Verbindungs-Pools. Der Standardwert 10 reicht für übliche Netzwerke.</li>
     <li><code>migration-beim-start: true</code> übernimmt vorhandene YAML-Daten in eine leere Datenbank. Eine unterbrochene Migration wird beim nächsten Start fortgesetzt und auf Vollständigkeit geprüft.</li>
   </ul>
-  <p>Für den Betrieb ohne MySQL wird auf dem Proxy stattdessen eingestellt:</p>
+  <h3>Variante B: YAML</h3>
+  <p>Ohne MySQL ändere nur <code>typ</code> im vorhandenen <code>speicher</code>-Abschnitt. Die übrigen Einstellungen können stehen bleiben:</p>
   <pre data-lang="yaml">speicher:
   typ: "yaml"</pre>
-  <p>Die Daten liegen dann im Datenordner des Plugins. Ein späterer Wechsel zu MySQL ist mit <code>migration-beim-start: true</code> möglich.</p>
+  <p>Die Daten liegen dann im Plugin-Ordner des Proxys. YAML gilt als veraltet, ist aber weiterhin nutzbar. Ein späterer Wechsel zu MySQL ist möglich; beachte dafür die <a href="#/speicher/auf-mysql-umstellen">Migrationsanleitung</a>.</p>
+  <p>Speichere bei beiden Varianten die Datei und starte den Proxy erneut. Prüfe sein Log: PunishSystem muss erfolgreich starten, bevor der nächste Schritt funktioniert.</p>
   <div class="callout warn"><div><span class="ttl">Fehlgeschlagener Speicherstart</span><p>Ist MySQL eingestellt, aber nicht erreichbar, bricht die Initialisierung des Plugins ab. Der Velocity-Proxy läuft weiter, jedoch ohne PunishSystem-Strafverwaltung. Es gibt keinen automatischen Wechsel auf leere YAML-Listen. Die Ursache steht im Proxy-Log; Diagnosebefehle stehen nach einem fehlgeschlagenen Start nicht zuverlässig zur Verfügung.</p></div></div>
 
   <h2>Schritt 4: Tunnel-Secrets setzen</h2>
-  <p>Proxy und Bridges signieren jede Nachricht mit HMAC-SHA256. Jede Bridge hat ein eigenes Secret; ein gemeinsames Secret für mehrere Bridges wird nicht unterstützt. Auf dem Proxy werden die Secrets den Velocity-Servernamen zugeordnet:</p>
+  <p>Ein Secret ist ein geheimes Kennwort für die Verbindung zwischen Proxy und Bridge. Die Signatur prüft Herkunft und Unversehrtheit der Nachrichten, verschlüsselt sie aber nicht. Jede Bridge benötigt ein eigenes Secret. Am einfachsten erzeugt es der gestartete Proxy: Gib in der <strong>Velocity-Konsole</strong> ein:</p>
+  <pre data-lang="text">punish-setup secrets</pre>
+  <p>Der Befehl erzeugt für registrierte Velocity-Server ohne Secret einen zufälligen Wert, speichert und aktiviert ihn auf dem Proxy. Für jeden neu erzeugten Wert schreibt er eine Datei wie <code>plugins/PunishSystemVelocity/setup/bridge-lobby.yml</code>. Den angezeigten Dateipfad benötigst du im nächsten Schritt.</p>
+  <p>Kommt die Meldung „Keine Server in Velocity registriert“, prüfe die Server in der <code>velocity.toml</code> und starte Velocity nach der Korrektur neu. Ist ein Secret bereits vorhanden, wird es nicht neu erzeugt. Um die passende Datei erneut zu schreiben, verwende in der Velocity-Konsole <code>punish-setup bridge &lt;Server&gt;</code>, zum Beispiel <code>punish-setup bridge lobby</code>. Ein zu kurzes vorhandenes Secret muss korrigiert werden; der Setup-Befehl ersetzt es nicht.</p>
+  <div class="callout warn"><div><span class="ttl">Secrets schützen</span><p>Die Setup-Dateien enthalten die Secrets im Klartext. Behandle sie wie Passwörter und gib sie nicht über Screenshots, Logs oder ein Repository weiter. Lösche die Setup-Dateien nach der Übernahme selbst; das Plugin entfernt sie nicht automatisch.</p></div></div>
+  <h3>Alternative: Secrets selbst eintragen</h3>
+  <p>Wenn du die Werte selbst verwaltest, wähle pro Backend ein eigenes zufälliges Secret mit mindestens 16 Zeichen nach dem Entfernen äußerer Leerzeichen. Trage sie auf dem Proxy in der vorhandenen <code>general.yml</code> ein; die Schlüssel entsprechen den Servernamen in der <code>velocity.toml</code>. Die folgenden Werte dienen nur zur Veranschaulichung und dürfen nicht als echte Secrets verwendet werden:</p>
   <pre data-lang="yaml">netzwerk:
   bridge-secrets:
     lobby: "langes-zufallsgeheimnis-nur-fuer-lobby"
     survival: "anderes-langes-zufallsgeheimnis-fuer-survival"</pre>
-  <p>Auf jeder Bridge steht derselbe Wert wie im passenden Proxy-Eintrag:</p>
+  <p>Auf der jeweiligen Bridge muss derselbe Wert und der zugehörige Servername stehen:</p>
   <pre data-lang="yaml">netzwerk:
   server-name: "lobby"
   tunnel-secret: "langes-zufallsgeheimnis-nur-fuer-lobby"</pre>
   <ul>
-    <li>Der Schlüssel unter <code>bridge-secrets</code> ist exakt der Servername aus der <code>velocity.toml</code>.</li>
-    <li>Mindestens 16 zufällige Zeichen nach dem Trimmen verwenden. Leere und kürzere Secrets werden abgewiesen; für diese Bridge bleibt der Tunnel deaktiviert. <code>/punish-setup secrets</code> erzeugt passende Zufallswerte automatisch.</li>
-    <li>Die Secrets erscheinen nie im Log. Sie gehören nicht in eine Dokumentation, ein Repository oder einen Screenshot.</li>
-    <li>Ein globales <code>netzwerk.tunnel-secret</code> auf dem Proxy wird nicht mehr verwendet; dort zählt nur <code>bridge-secrets</code>.</li>
+    <li>Die Beispielwerte durch eigene Zufallswerte ersetzen; niemals dasselbe Secret für mehrere Bridges verwenden.</li>
+    <li>Nach manuellen Änderungen am Proxy <code>punish-reload</code> in der Velocity-Konsole ausführen. Ein globales <code>netzwerk.tunnel-secret</code> auf dem Proxy wird nicht verwendet.</li>
   </ul>
-  <p><strong>Schneller Weg:</strong> Bei laufendem Proxy-Plugin erzeugt <code>/punish-setup secrets</code> für alle registrierten Velocity-Server fehlende Secrets, speichert und aktiviert sie auf dem Proxy und legt je Bridge einen Konfigurationsblock unter <code>plugins/PunishSystemVelocity/setup/</code> ab. Den jeweiligen Block in die Bridge-<code>config/general.yml</code> übernehmen und die Bridge neu starten. Die Setup-Dateien anschließend selbst löschen; das Plugin entfernt sie nicht automatisch. <code>/punish-setup check</code> zeigt danach Speichertyp, Secret-Abdeckung und gemeldete Bridges.</p>
-  <div class="callout warn"><div><span class="ttl">Leeres Secret bedeutet stumm</span><p>Ohne Secret ist der Tunnel deaktiviert (Fail-Closed). Befehle werden nicht an den Proxy weitergeleitet, Nachrichten des Proxys weist die Bridge ab. Im Log steht dann „Tunnel-Signatur inaktiv“ beziehungsweise ein Hinweis auf <code>netzwerk.tunnel-secret</code>.</p></div></div>
-
-  <h2>Schritt 5: Servernamen setzen</h2>
-  <p>In der <code>general.yml</code> jeder Bridge wird <code>netzwerk.server-name</code> auf den Namen gesetzt, unter dem der Server in der <code>velocity.toml</code> steht:</p>
-  <pre data-lang="yaml">netzwerk:
-  server-name: "survival"</pre>
-  <p>Bleibt der Wert leer, startet die Bridge im Lern-Modus und übernimmt den Namen automatisch vom Proxy (HELLO_ACK). Bis dahin läuft sie fail-closed und schreibt eine Warnung ins Log. Explizit setzen ist trotzdem empfohlen, damit Scopes, TAB-Vervollständigung und Meldungen vom ersten Start an stimmen. <code>server-liste</code> ist veraltet und dient auf der Bridge nur noch als lokaler Zusatz; die Scope-Vorschläge kommen live vom Proxy.</p>
+  <h2 data-anchor="schritt-5-servernamen-setzen">Schritt 5: Bridges einrichten</h2>
+  <ol>
+    <li>Wenn du den Setup-Befehl verwendet hast, öffne auf dem Proxy die Datei für das betreffende Backend, zum Beispiel <code>setup/bridge-lobby.yml</code> im Ordner <code>plugins/PunishSystemVelocity/</code>. Bei manuell eingerichteten Secrets verwende den passenden Proxy-Wert und Velocity-Servernamen.</li>
+    <li>Öffne auf diesem <strong>gestoppten Backend</strong> <code>plugins/PunishSystemBridge/config/general.yml</code>. Trage <code>server-name</code> und <code>tunnel-secret</code> in den bereits vorhandenen Abschnitt <code>netzwerk</code> ein. Den vorhandenen <code>server-liste</code>-Eintrag und andere Einstellungen stehen lassen; keinen zweiten <code>netzwerk</code>-Abschnitt einfügen.</li>
+    <li>Speichere die Datei und wiederhole dies für jedes Backend mit dessen eigenem Secret und Servernamen.</li>
+    <li>Starte alle Backends und lösche anschließend die nicht mehr benötigten Setup-Dateien auf dem Proxy.</li>
+  </ol>
+  <p>Ohne gültiges Secret bleibt der Tunnel deaktiviert. Ein falsches Secret oder ein abweichender Servername verhindert die Verbindung. Regeln und Texte werden zentral auf dem Proxy gepflegt und bei bestehender Verbindung an die Bridges verteilt; Details stehen unter <a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>.</p>
 
   <h2>Schritt 6: Rechte vergeben</h2>
-  <p>Jede LuckPerms-Gruppe erhält genau eine Node der Form <code>punish.&lt;gruppenname&gt;</code>, zum Beispiel <code>punish.moderator</code>. Das Plugin löst sie über <code>rang-buendel</code> in der Proxy-<code>general.yml</code> in echte Rechte auf. Nach Änderungen genügt <code>/punish-reload</code> auf dem Proxy.</p>
+  <p>Für die technische Prüfung kannst du die Konsolen verwenden. Für Befehle im Spiel benötigen Teammitglieder passende Rechte auf Proxy und Backend. Mit LuckPerms kann eine Gruppe eine passende Bündel-Node erhalten, zum Beispiel <code>punish.moderator</code>. Das Plugin löst sie über <code>rang-buendel</code> in der Proxy-<code>general.yml</code> in Einzelrechte auf. Nach Änderungen an der Datei <code>punish-reload</code> auf dem Proxy ausführen.</p>
   <ul>
-    <li>Die Gruppen-Node wird pro Gruppe genau einmal vergeben, nicht zusätzlich an einzelne Spieler.</li>
+    <li>Die Gruppenzuweisung muss auf Proxy und Backend verfügbar sein; bei getrennten LuckPerms-Speichern beide Seiten prüfen.</li>
     <li><code>punish.ignore.*</code>, <code>punish.ignore.&lt;typ&gt;</code> und <code>punish.chatfilter.bypass</code> niemals an Gruppen vergeben, nur direkt an einzelne Spieler.</li>
     <li><code>punish.*</code> und <code>punish.all</code> gewähren umfassende Rechte. Die mitgelieferten Bündel <code>präsident</code> und <code>vize</code> enthalten <code>punish.*</code>; für abgestufte Rollen einzelne Rechte verwenden.</li>
   </ul>
-  <p>Die vollständige Liste steht unter <a href="#/rechte">Berechtigungen</a>, die Bündel unter <a href="#/rang-buendel">Rang-Bündel und LuckPerms</a>.</p>
+  <p>Für <code>/punish-setup</code> im Spiel ist zusätzlich <code>punish.setup</code> nötig; das mitgelieferte <code>admin</code>-Bündel enthält es nicht. Ohne LuckPerms können Einzelrechte über das verwendete Rechtesystem vergeben werden. Die vollständige Liste steht unter <a href="#/rechte">Berechtigungen</a>, Beispiele stehen unter <a href="#/rang-buendel">Rang-Bündel und LuckPerms</a>.</p>
 
   <h2>Schritt 7: Starten und prüfen</h2>
-  <p>Proxy und Backends starten. Danach mit einem berechtigten Account prüfen:</p>
-  <pre data-lang="cmd">/punish-version
-/punish-help
-/punish-diagnostics
-/punish-setup check</pre>
+  <p>Verbinde einen Spieler mit jedem zu prüfenden Backend. Der Tunnel nutzt Plugin-Nachrichten und benötigt dafür einen verbundenen Spieler; ein leeres Backend kann in der Übersicht fehlen und synchronisiert sich beim nächsten Beitritt.</p>
+  <p>Gib in der <strong>Velocity-Konsole</strong> ein:</p>
+  <pre data-lang="text">punish-setup check
+punish-diagnostics
+punish-version</pre>
   <ul>
-    <li><code>/punish-version</code> zeigt auf Proxy und Bridges dieselbe Version.</li>
-    <li><code>/punish-help</code> listet die Befehle, für die die eigene Gruppe Rechte hat.</li>
-    <li><code>/punish-diagnostics</code> meldet Speicher, Schutz-Einstellungen, Bridge-Verbindung und Versionen. WARN-Zeilen sind abzuarbeiten; auf jedem Backend ausführen.</li>
-    <li><code>/punish-setup check</code> prüft Speicher, Secrets und Bridges; fehlende Secrets erzeugt <code>/punish-setup secrets</code>.</li>
-    <li>Im Proxy-Log darf keine Deaktivierung und keine Warnung zu Tunnel-Secrets stehen.</li>
+    <li><code>punish-setup check</code> zeigt den Speichertyp, die Secret-Abdeckung und gemeldete Bridges samt Version. Vergleiche die Bridge-Liste mit deinen Backends und deren Version mit der Proxy-Version. Die Secret-Zahl bezieht sich auf alle registrierten Velocity-Server.</li>
+    <li><code>punish-diagnostics</code> zeigt den Zustand des Proxys. Führe denselben Befehl zusätzlich in jeder <strong>Backend-Konsole</strong> aus und gehe WARN-Meldungen anhand des jeweiligen Logs nach.</li>
+    <li>Prüfe die Startlogs von Proxy und Backends auf Ladefehler und Warnungen zum Tunnel.</li>
   </ul>
-  <p>Zum Abschluss mit einem ungeschützten Testaccount eine globale Strafe setzen und wieder aufheben: <code>/mute Testspieler 5m Test --global</code> und <code>/unmute Testspieler --global</code>. Chat und einen blockierten Befehl auf den Backends prüfen. Für einen lokalen Test stattdessen denselben Server-Scope bei beiden Befehlen angeben.</p>
+  <p>Teste anschließend mit einem zweiten, ungeschützten und bereits bekannten Account: Führe in der Velocity-Konsole <code>mute Testspieler 5m Test --global</code> aus, prüfe mit dem Testaccount den Chat auf den Backends und hebe die Strafe mit <code>unmute Testspieler --global</code> wieder auf. Ersetze <code>Testspieler</code> durch den tatsächlichen Namen. Alternativ im Spiel mit berechtigtem Account und führendem <code>/</code> ausführen. Für einen lokalen Test bei beiden Befehlen denselben <a href="#/scopes">Server-Scope</a> verwenden.</p>
 
   <div class="tbl"><table>
-    <thead><tr><th>Beobachtung</th><th>Ursache</th></tr></thead>
+    <thead><tr><th>Beobachtung</th><th>Das kannst du prüfen</th></tr></thead>
     <tbody>
-      <tr><td>Bridge nimmt keine Befehle an, Log meldet inaktive Tunnel-Signatur</td><td><code>netzwerk.tunnel-secret</code> fehlt oder weicht vom Proxy-Eintrag ab</td></tr>
-      <tr><td>Proxy deaktiviert sich beim Start</td><td>MySQL nicht erreichbar oder Zugangsdaten falsch</td></tr>
-      <tr><td>Befehle fehlen, obwohl die Gruppe existiert</td><td>Gruppen-Node nicht gesetzt oder <code>rang-buendel</code> nicht geladen</td></tr>
-      <tr><td>Scopes und Vorschläge passen nicht</td><td><code>server-name</code> stimmt nicht mit der <code>velocity.toml</code> überein</td></tr>
+      <tr><td>Bridge meldet „Tunnel-Signatur inaktiv“</td><td>Auf der Bridge prüfen, ob <code>tunnel-secret</code> gesetzt und lang genug ist; nach Korrektur Backend neu starten.</td></tr>
+      <tr><td>Bridge verbindet sich nicht oder fehlt in der Übersicht</td><td>Spieler mit dem Backend verbinden. Servername und Secret mit dem passenden Proxy-Eintrag vergleichen; Logs beider Seiten prüfen.</td></tr>
+      <tr><td>PunishSystem startet auf dem Proxy nicht</td><td>Proxy-Log lesen; bei MySQL Host, Zugangsdaten, Datenbank und TLS prüfen. Nach einer Korrektur den Proxy neu starten.</td></tr>
+      <tr><td>Befehle fehlen für einen Spieler</td><td>Rechte auf Proxy und Backend sowie die Zuweisung und Definition des <code>rang-buendel</code> prüfen.</td></tr>
     </tbody>
   </table></div>
   <p>Weitere Fälle stehen unter <a href="#/fehlerbehebung">Fehlerbehebung</a>.</p>
