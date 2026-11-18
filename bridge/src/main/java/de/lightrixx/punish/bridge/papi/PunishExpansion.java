@@ -76,38 +76,44 @@ public final class PunishExpansion extends PlaceholderExpansion {
         if (antwort == null || !antwort.erfolg()) {
             return standardFuer(key);
         }
+        long jetzt = System.currentTimeMillis();
+        boolean muted = antwort.muted() && antwort.muteAblauf() > jetzt;
+        boolean banned = antwort.banned() && antwort.banAblauf() > jetzt;
+        boolean timeouted = antwort.timeouted() && antwort.timeoutAblauf() > jetzt;
+        boolean frozen = antwort.frozen() && antwort.freezeAblauf() > jetzt;
         return switch (key) {
-            case "muted" -> antwort.muted() ? "true" : "false";
-            case "mute_rest" -> restText(antwort.muted(), antwort.muteAblauf());
-            case "mute_rest_seconds" -> restSekunden(antwort.muted(), antwort.muteAblauf());
-            case "mute_permanent" -> permanent(antwort.muted(), antwort.muteAblauf());
-            case "mute_reason" -> detailText(antwort.muteGrund());
-            case "mute_by" -> detailText(antwort.muteVon());
-            case "mute_since" -> zeitpunktText(antwort.muted(), antwort.muteSeit());
-            case "banned" -> antwort.banned() ? "true" : "false";
-            case "ban_rest" -> restText(antwort.banned(), antwort.banAblauf());
-            case "ban_rest_seconds" -> restSekunden(antwort.banned(), antwort.banAblauf());
-            case "ban_permanent" -> permanent(antwort.banned(), antwort.banAblauf());
-            case "ban_reason" -> detailText(antwort.banGrund());
-            case "ban_by" -> detailText(antwort.banVon());
-            case "ban_since" -> zeitpunktText(antwort.banned(), antwort.banSeit());
-            case "timeouted" -> antwort.timeouted() ? "true" : "false";
-            case "timeout_rest" -> restText(antwort.timeouted(), antwort.timeoutAblauf());
-            case "timeout_rest_seconds" -> restSekunden(antwort.timeouted(), antwort.timeoutAblauf());
-            case "timeout_permanent" -> permanent(antwort.timeouted(), antwort.timeoutAblauf());
-            case "timeout_reason" -> detailText(antwort.timeoutGrund());
-            case "timeout_by" -> detailText(antwort.timeoutVon());
-            case "timeout_since" -> zeitpunktText(antwort.timeouted(), antwort.timeoutSeit());
-            case "frozen" -> antwort.frozen() ? "true" : "false";
-            case "freeze_rest" -> restText(antwort.frozen(), antwort.freezeAblauf());
-            case "freeze_rest_seconds" -> restSekunden(antwort.frozen(), antwort.freezeAblauf());
-            case "freeze_permanent" -> permanent(antwort.frozen(), antwort.freezeAblauf());
-            case "freeze_reason" -> detailText(antwort.freezeGrund());
-            case "freeze_by" -> detailText(antwort.freezeVon());
-            case "freeze_since" -> zeitpunktText(antwort.frozen(), antwort.freezeSeit());
-            case "is_punished" -> istBestraft(antwort) ? "true" : "false";
-            case "active_count" -> String.valueOf(aktiveAnzahl(antwort));
-            case "status" -> status(antwort);
+            case "muted" -> muted ? "true" : "false";
+            case "mute_rest" -> restText(muted, antwort.muteAblauf());
+            case "mute_rest_seconds" -> restSekunden(muted, antwort.muteAblauf());
+            case "mute_permanent" -> permanent(muted, antwort.muteAblauf());
+            case "mute_reason" -> muted ? detailText(antwort.muteGrund()) : "-";
+            case "mute_by" -> muted ? detailText(antwort.muteVon()) : "-";
+            case "mute_since" -> zeitpunktText(muted, antwort.muteSeit());
+            case "banned" -> banned ? "true" : "false";
+            case "ban_rest" -> restText(banned, antwort.banAblauf());
+            case "ban_rest_seconds" -> restSekunden(banned, antwort.banAblauf());
+            case "ban_permanent" -> permanent(banned, antwort.banAblauf());
+            case "ban_reason" -> banned ? detailText(antwort.banGrund()) : "-";
+            case "ban_by" -> banned ? detailText(antwort.banVon()) : "-";
+            case "ban_since" -> zeitpunktText(banned, antwort.banSeit());
+            case "timeouted" -> timeouted ? "true" : "false";
+            case "timeout_rest" -> restText(timeouted, antwort.timeoutAblauf());
+            case "timeout_rest_seconds" -> restSekunden(timeouted, antwort.timeoutAblauf());
+            case "timeout_permanent" -> permanent(timeouted, antwort.timeoutAblauf());
+            case "timeout_reason" -> timeouted ? detailText(antwort.timeoutGrund()) : "-";
+            case "timeout_by" -> timeouted ? detailText(antwort.timeoutVon()) : "-";
+            case "timeout_since" -> zeitpunktText(timeouted, antwort.timeoutSeit());
+            case "frozen" -> frozen ? "true" : "false";
+            case "freeze_rest" -> restText(frozen, antwort.freezeAblauf());
+            case "freeze_rest_seconds" -> restSekunden(frozen, antwort.freezeAblauf());
+            case "freeze_permanent" -> permanent(frozen, antwort.freezeAblauf());
+            case "freeze_reason" -> frozen ? detailText(antwort.freezeGrund()) : "-";
+            case "freeze_by" -> frozen ? detailText(antwort.freezeVon()) : "-";
+            case "freeze_since" -> zeitpunktText(frozen, antwort.freezeSeit());
+            case "is_punished" -> muted || banned || timeouted || frozen ? "true" : "false";
+            case "active_count" -> String.valueOf((muted ? 1 : 0) + (banned ? 1 : 0)
+                    + (timeouted ? 1 : 0) + (frozen ? 1 : 0));
+            case "status" -> status(muted, banned, timeouted, frozen);
             case "verstoss_anzahl" -> String.valueOf(antwort.verstossAnzahl());
             case "verstoss_punkte" -> String.valueOf(antwort.verstossPunkte());
             case "verstoss_stufe" -> detailText(antwort.verstossStufe());
@@ -188,38 +194,17 @@ public final class PunishExpansion extends PlaceholderExpansion {
         }
     }
 
-    private static boolean istBestraft(Protokoll.PlatzhalterAntwort antwort) {
-        return antwort.muted() || antwort.banned() || antwort.timeouted() || antwort.frozen();
-    }
-
-    private static int aktiveAnzahl(Protokoll.PlatzhalterAntwort antwort) {
-        int anzahl = 0;
-        if (antwort.muted()) {
-            anzahl++;
-        }
-        if (antwort.banned()) {
-            anzahl++;
-        }
-        if (antwort.timeouted()) {
-            anzahl++;
-        }
-        if (antwort.frozen()) {
-            anzahl++;
-        }
-        return anzahl;
-    }
-
-    private static String status(Protokoll.PlatzhalterAntwort antwort) {
-        if (antwort.frozen()) {
+    private static String status(boolean muted, boolean banned, boolean timeouted, boolean frozen) {
+        if (frozen) {
             return "frozen";
         }
-        if (antwort.banned()) {
+        if (banned) {
             return "banned";
         }
-        if (antwort.timeouted()) {
+        if (timeouted) {
             return "timeouted";
         }
-        if (antwort.muted()) {
+        if (muted) {
             return "muted";
         }
         return "clean";

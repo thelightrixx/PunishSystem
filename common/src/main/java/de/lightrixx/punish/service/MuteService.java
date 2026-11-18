@@ -177,7 +177,9 @@ public final class MuteService {
         Objects.requireNonNull(scope, "Der Scope darf nicht null sein.");
         Optional<MuteRecord> aktuell = muteRepository.finden(zielUuid, scope);
         if (aktuell.isPresent() && aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
-            muteRepository.entmutenWenn(zielUuid, scope, b -> b.equals(aktuell.get()));
+            if (muteRepository.entmutenWenn(zielUuid, scope, b -> b.equals(aktuell.get())).isEmpty()) {
+                return false;
+            }
             try {
                 historyService.hinzufuegen(HistoryType.UNMUTE, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,
@@ -540,7 +542,9 @@ public final class MuteService {
                 if (kandidat == null || !kandidat.istAktiv(jetzt) || kandidat.spielerUuid().equals(echteUuid)) {
                     continue;
                 }
-                if (kandidat.spielerName() != null && kandidat.spielerName().equalsIgnoreCase(name.trim())) {
+                if (kandidat.spielerName() != null && kandidat.spielerName().equalsIgnoreCase(name.trim())
+                        && de.lightrixx.punish.storage.PlayerCache.istVorabPlatzhalter(
+                                kandidat.spielerUuid(), kandidat.spielerName())) {
                     return Optional.of(kandidat);
                 }
             }

@@ -47,9 +47,6 @@ public final class PlatzhalterCache {
         if (eintrag != null && jetzt - eintrag.zeit() < TTL_MILLIS) {
             return eintrag.antwort();
         }
-        if (eintrag != null) {
-            cache.remove(schluessel, eintrag);
-        }
         begrenze(jetzt);
         aktualisierenAsync(betrachter, zielName, schluessel);
         return eintrag == null ? null : eintrag.antwort();

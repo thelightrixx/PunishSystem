@@ -291,6 +291,28 @@ class FixRegressionTest {
         verify(kanal, never()).sendeBefehl(any(), anyString());
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void buchtitelWirdAuchOhneSeitenGefiltert(boolean hatSeiten) {
+        var mute = new MuteCache();
+        mute.ersetzeAlle(List.of());
+        try (var filter = serviceMit(new WortlistenFilter(List.of("hurensohn")), 0.0d, Set.of())) {
+            var listener = listenerMit(mute, null, filter);
+            var spieler = mock(Player.class);
+            when(spieler.getUniqueId()).thenReturn(UUID.randomUUID());
+            var meta = mock(org.bukkit.inventory.meta.BookMeta.class);
+            when(meta.title()).thenReturn(net.kyori.adventure.text.Component.text("Hurensohn"));
+            when(meta.hasPages()).thenReturn(hatSeiten);
+            when(meta.pages()).thenReturn(hatSeiten
+                    ? List.of(net.kyori.adventure.text.Component.text("Hallo Welt")) : List.of());
+            var event = mock(org.bukkit.event.player.PlayerEditBookEvent.class);
+            when(event.getPlayer()).thenReturn(spieler);
+            when(event.getNewBookMeta()).thenReturn(meta);
+            listener.beiBuch(event);
+            verify(event).setCancelled(true);
+        }
+    }
+
     @Test
     void c020_fahrzeugMitGefrorenemBlockiertDritte() {
         FreezeCache freeze = new FreezeCache();

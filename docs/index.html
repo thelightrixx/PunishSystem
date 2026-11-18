@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Dokumentation</title>
-<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.0.2.">
+<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.1.0.">
 <script>
 (function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
@@ -506,7 +506,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite der Dokumentation"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Dokumentation</small></button>
-  <span class="ver">v4.0.2</span>
+  <span class="ver">v4.1.0</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Dokumentation durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -530,7 +530,7 @@ details>div{padding:14px 18px 2px}
   <div class="hero">
     <div class="hero-copy">
       <h1>PunishSystem Dokumentation</h1>
-      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.0.2 auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.1.0 auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
       <div class="hero-actions">
         <a class="hero-action primary" href="#/installation">
           Installation starten
@@ -678,13 +678,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.2">Release v4.0.2</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.0">Release v4.1.0</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.0.2-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.0.2-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.0.2-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.1.0-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.1.0-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.1.0-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -1109,7 +1109,7 @@ punish-version</pre>
     </tbody>
   </table></div>
   <ul>
-    <li>Die aktive Warn-Anzahl muss eine Schwelle <strong>genau treffen</strong>. Beim vierten Warn entsteht normalerweise kein neuer Verstoß. Eine wegen unklarem Schutzstatus vorgemerkte Eskalation kann bei einer späteren Verwarnung nachgeholt werden.</li>
+    <li>Die aktive Warn-Anzahl muss eine Schwelle <strong>genau treffen</strong>. Beim vierten Warn entsteht normalerweise kein neuer Verstoß. Eine blockierte Eskalation kann bei einer späteren Verwarnung nachgeholt werden, solange noch mindestens so viele aktive Warns vorliegen und die zugehörige Schwelle samt Stufe unverändert konfiguriert ist. Veraltete Vormerkungen werden verworfen.</li>
     <li>Die Warns bleiben bestehen.</li>
     <li>Der automatisch erzeugte Verstoß zählt Punkte wie jeder andere.</li>
     <li>Im Team-Chat erscheint eine Eskalations-Meldung statt der normalen Verstoß-Meldung.</li>
@@ -2596,6 +2596,7 @@ gratis vip rank</pre>
     </tbody>
   </table></div>
   <p>Nachgelagerte Treffer können für die Staffel zählen, obwohl der Inhalt bereits sichtbar war. Ein nachträglicher Mute entfernt diesen Inhalt nicht.</p>
+  <p>Beim Bearbeiten oder Signieren eines Buches prüft der Kanal <code>buch</code> den Titel und die Seiten gemeinsam. Ein Buchtitel wird auch dann geprüft, wenn keine Seiten vorhanden sind.</p>
 
   <h2>Die Staffel auf dem Proxy</h2>
   <p>Der Proxy zählt Treffer pro Spieler in einem Zeitfenster und löst Stufen aus.</p>
@@ -2674,7 +2675,7 @@ gratis vip rank</pre>
       <tr><td><code>%punish_reports_offen%</code></td><td>Alle offenen Reports im Netzwerk</td></tr>
     </tbody>
   </table></div>
-  <p>Gibt es nichts anzuzeigen, liefern die Restdauer-Platzhalter <code>-</code> (Sekunden <code>-1</code>), bei einer dauerhaften Strafe steht dort <code>Permanent</code> (in der Sekunden-Variante <code>permanent</code>). Zähler zeigen <code>0</code>, <code>%punish_status%</code> zeigt <code>clean</code>. Mit <code>:Name</code> lassen sich fremde Spieler abfragen, zum Beispiel <code>%punish_muted:Notch%</code>. Dafür ist <code>punish.status</code> nötig. Die Werte werden höchstens 30 Sekunden zwischengespeichert; beim allerersten Aufruf stehen kurz die Fallback-Werte, bis der Proxy geantwortet hat.</p>
+  <p>Gibt es nichts anzuzeigen, liefern die Restdauer-Platzhalter <code>-</code> (Sekunden <code>-1</code>), bei einer dauerhaften Strafe steht dort <code>Permanent</code> (in der Sekunden-Variante <code>permanent</code>). Zähler zeigen <code>0</code>, <code>%punish_status%</code> zeigt <code>clean</code>. Mit <code>:Name</code> lassen sich fremde Spieler abfragen, zum Beispiel <code>%punish_muted:Notch%</code>. Dafür ist <code>punish.status</code> nötig. Nach 30 Sekunden wird eine Aktualisierung beim Proxy angestoßen. Bis zur Antwort bleiben die bisherigen Werte verfügbar; beim allerersten Aufruf stehen kurz die Fallback-Werte. Zeitstrafen werden anhand ihres Ablaufzeitpunkts sofort als inaktiv angezeigt, auch wenn die nächste Proxy-Antwort noch aussteht. Manuelle Aufhebungen erscheinen mit der nächsten Aktualisierung.</p>
   <pre data-lang="text">Mute: %punish_mute_rest%
 Verstöße: %punish_verstoss_punkte%</pre>
 </section>
@@ -2743,7 +2744,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Updates einspielen</h2>
-  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Setze für das stabile <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.2">Release v4.0.2</a> den Wert <code>update.channel</code> in der <code>general.yml</code> des Proxys auf <code>Release</code> und lade die Konfiguration mit <code>/punish-reload</code> neu. Die Kanäle <code>Beta</code> und <code>Snapshot</code> berücksichtigen auch Vorabversionen. Bei gleicher RC-Version entscheidet die Buildnummer. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
+  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Setze für das stabile <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.0">Release v4.1.0</a> den Wert <code>update.channel</code> in der <code>general.yml</code> des Proxys auf <code>Release</code> und lade die Konfiguration mit <code>/punish-reload</code> neu. Die Kanäle <code>Beta</code> und <code>Snapshot</code> berücksichtigen auch Vorabversionen. Bei gleicher RC-Version entscheidet die Buildnummer. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
   <ol class="steps">
     <li><strong>Update prüfen und bereitstellen</strong>
       <pre data-lang="cmd">/punish-update check
@@ -2793,6 +2794,23 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <h1>Changelog</h1>
   <p class="lead">Änderungen an allen neuen Plugin-Versionen ab v4.0.0. Die neueste Veröffentlichung steht oben; jeder Eintrag nennt Datum, Änderungen und nötige Update-Hinweise.</p>
   <p>Für den Austausch der Jars gilt die Anleitung unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>. Wie Patch- und Minor-Versionen entstehen, erklärt <a href="#/entwicklung/versionen-und-releases">Versionen und Releases</a>.</p>
+
+  <h2 data-anchor="v4-1-0">v4.1.0</h2>
+  <p><time datetime="2026-11-18">18.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.0" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <p>Bugfix- und Optimierungs-Update aus dem Code-Audit. Diese Version ergänzt keine Funktionen, Befehle, Permissions oder Konfigurationsoptionen.</p>
+  <ul>
+    <li><strong>Strafverlauf:</strong> Verliert eine Ablauf-Entfernung gegen eine parallele Änderung, wird keine falsche Aufhebungs-History mehr geschrieben. Gilt für Banns, Mutes, Timeouts, Freezes, IP-Mutes und IP-Timeouts.</li>
+    <li><strong>Warn-Eskalation:</strong> Vorgemerkte Eskalationen werden nach gelöschten oder abgelaufenen Warns sowie geänderten Schwellen oder Stufen erneut geprüft. Mehrere Nachholversuche können dieselbe Vormerkung nicht gleichzeitig beanspruchen.</li>
+    <li><strong>Bridge-Sync:</strong> Sinkt die Anzahl der Mutes während eines Voll-Syncs unter die Chunkgrenze, werden die Mutes weiterhin vollständig übertragen. Der Einzel-Sync-Ausweichpfad überträgt alle Strafarten zusammen statt zwischendurch andere Straf-Caches zu leeren.</li>
+    <li><strong>Wartungsaufwand:</strong> Ablaufbereinigung und Persistenzwächter laufen wieder im vorgesehenen Fünf-Minuten-Takt statt alle 15 Sekunden. Die laufende Durchsetzung wertet Ablaufzeitpunkte weiterhin direkt aus.</li>
+    <li><strong>Vorab-Strafen:</strong> Frühere echte Namensinhaber verdecken keine Platzhalter-Strafen mehr bei der Suche nach Vorab-Banns, -Mutes und -Timeouts. Ein vorhandener lokaler Mute verhindert die Migration eines globalen Vorab-Mutes beim Login nicht mehr.</li>
+    <li><strong>IP-Schutz:</strong> Die Online-Schutzprüfung fragt nur Rechte von Spielern mit der betroffenen IP ab. Fehler bei unbeteiligten Spielern blockieren die Aktion nicht mehr; unnötige Rechteabfragen entfallen.</li>
+    <li><strong>Buchfilter:</strong> Auch Buchtitel werden zusammen mit den Seiten geprüft; leere Seitenlisten umgehen die Titelprüfung nicht.</li>
+    <li><strong>PlaceholderAPI:</strong> Bestehende Werte bleiben während einer Aktualisierung verfügbar. Abgelaufene Zeitstrafen werden sofort aus Status, Aktiv-Zähler und Strafdetails ausgeblendet, ohne auf den nächsten Cache-Refresh zu warten.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.1.0 aktualisieren und neu starten. Konfiguration und Datenbankschema bleiben kompatibel; neue Einstellungen sind nicht erforderlich.</p>
+  <p><strong>Automatisierte Prüfung:</strong> <code>build_all_jars.bat nobump ci</code> baut alle Module sauber mit Tests. Lokal bestanden 1.243 Testfälle, darunter 27 zusätzliche Regressionstestfälle; 12 optionale Fälle wurden mangels Testdatenbank beziehungsweise Referenz-Vokabular und Modell übersprungen.</p>
+  <p><strong>Prüfumfang:</strong> Quellcodeprüfung und automatisierte Regressionstests ersetzen keine Abnahme mit echten Clients. Im Testnetzwerk sind insbesondere Login und Serverwechsel, paralleles Setzen und Aufheben von Strafen, GUI, Amboss, Buchsignierung, Scoreboards und das optionale KI-Modell noch praktisch zu prüfen. Tests gegen eine reale MySQL-Instanz benötigen eine gesonderte Testdatenbank.</p>
 
   <h2 data-anchor="v4-0-2">v4.0.2</h2>
   <p><time datetime="2026-11-17">17.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.2" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3127,7 +3145,7 @@ build_all_jars.bat nobump skiptests</pre>
     <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer oder eine Vorabversion (<code>-alpha</code>, <code>-beta</code>, <code>-preview</code>, <code>-RC</code>, <code>-SNAPSHOT</code>) auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Finale Versionen ohne Buildnummer bleiben unverändert.</li>
     <li><code>nobump</code> lässt die Version unverändert. <code>skiptests</code> überspringt die Tests.</li>
     <li>Das Skript synchronisiert die Parent-Version in den Modul-Poms und die Versionsangabe der Proxy-Plugin-Klasse; die Plugin-Metadaten werden beim Maven-Build verarbeitet.</li>
-    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.0.2-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
+    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.1.0-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
   </ul>
   <p>Maven baut ohne das Hilfsskript direkt in die <code>target/</code>-Ordner der Module:</p>
   <pre data-lang="shell">mvn -pl velocity,bridge,bridge-1.21 -am clean package</pre>
@@ -3383,7 +3401,7 @@ mvn verify</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.0.2. Dokumentation für Admins und Moderatoren.</div>');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.1.0. Dokumentation für Admins und Moderatoren.</div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');

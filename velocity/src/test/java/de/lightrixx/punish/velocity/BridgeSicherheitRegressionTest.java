@@ -302,6 +302,35 @@ class BridgeSicherheitRegressionTest {
         assertTrue(rahmen.size() > 206, "Gechunkter Sync muss mehr Rahmen als Einträge senden");
     }
     @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {0, 1, 200})
+    void schrumpfenderMuteBestandWirdTrotzdemVollstaendigSynchronisiert(int verbleibend) throws Exception {
+        var repo = mock(de.lightrixx.punish.storage.MuteRepository.class);
+        var mutes = new java.util.ArrayList<de.lightrixx.punish.model.MuteRecord>();
+        for (int i = 0; i < 201; i++) {
+            mutes.add(new de.lightrixx.punish.model.MuteRecord(java.util.UUID.randomUUID(),
+                    "Spieler" + i, "Grund", "Mod", 1L, Long.MAX_VALUE,
+                    de.lightrixx.punish.model.ServerScope.global()));
+        }
+        when(repo.alle()).thenReturn(mutes, mutes.subList(0, verbleibend));
+        var kanal = new BrueckenKanal(mock(PunishVelocity.class), mock(ProxyServer.class),
+                mock(org.slf4j.Logger.class), repo);
+        kanal.setBridgeSecrets(Map.of("lobby", "punish-test-secret-lange"));
+        var server = mock(com.velocitypowered.api.proxy.server.RegisteredServer.class);
+        var info = mock(com.velocitypowered.api.proxy.server.ServerInfo.class);
+        when(info.getName()).thenReturn("lobby");
+        when(server.getServerInfo()).thenReturn(info);
+        var typen = new java.util.ArrayList<Integer>();
+        when(server.sendPluginMessage(any(), any(byte[].class))).thenAnswer(inv -> {
+            typen.add(de.lightrixx.punish.net.Protokoll.paket(inv.getArgument(1, byte[].class)).typ());
+            return true;
+        });
+        assertTrue(kanal.mutePushAn(server));
+        assertEquals(1L, typen.stream().filter(t -> t == de.lightrixx.punish.net.Protokoll.SYNC_BEGIN).count());
+        assertEquals(verbleibend, typen.stream().filter(t -> t == de.lightrixx.punish.net.Protokoll.MUTE_SETZEN).count());
+        assertEquals(de.lightrixx.punish.net.Protokoll.SYNC_END, typen.getLast());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(ints = {0, 1, 2, 206})
     void fehlenderSyncRahmenWirdNichtAlsErfolgGemeldet(int fehlerBei) throws Exception {
         var repo = mock(de.lightrixx.punish.storage.MuteRepository.class);
@@ -365,6 +394,23 @@ class BridgeSicherheitRegressionTest {
                 mock(de.lightrixx.punish.service.AutoBannService.class),
                 config, nachrichten, planer,
                 mock(de.lightrixx.punish.storage.BanRepository.class), mock(BrueckenKanal.class));
+    }
+
+    @Test
+    void lokalerMuteVerhindertKeineGlobaleVorabMigration() throws Exception {
+        var mutes = mock(de.lightrixx.punish.service.MuteService.class);
+        var uuid = java.util.UUID.randomUUID();
+        var vorabUuid = java.util.UUID.nameUUIDFromBytes("OfflinePlayer:Steve".getBytes(StandardCharsets.UTF_8));
+        var vorab = new de.lightrixx.punish.model.MuteRecord(vorabUuid, "Steve", "Vorab", "Mod",
+                1L, Long.MAX_VALUE, de.lightrixx.punish.model.ServerScope.global());
+        when(mutes.istIrgendwoGemutet(uuid)).thenReturn(true);
+        when(mutes.findeVorabMuteNachName("Steve", uuid)).thenReturn(java.util.Optional.of(vorab));
+        var listener = listener(mock(ProxyServer.class), null, mutes, null, mock(VelocityKonfiguration.class));
+        var migration = StrafListener.class.getDeclaredMethod("migriereVorab",
+                java.util.UUID.class, String.class, long.class);
+        migration.setAccessible(true);
+        migration.invoke(listener, uuid, "Steve", System.currentTimeMillis());
+        verify(mutes).migriereVorabMute(vorabUuid, uuid, "Steve");
     }
 
     @Test

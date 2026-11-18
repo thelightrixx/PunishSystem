@@ -491,6 +491,129 @@ class FixPaketRegressionTest {
                 MessageKeys.SCHUTZ_HINWEIS_UNBEKANNT_ERLAUBT, Map.of("spieler", "Steve"));
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"ban", "mute", "timeout", "freeze", "ipmute", "iptimeout"})
+    void verloreneAblaufEntfernungSchreibtKeineAufhebungsHistory(String typ) {
+        var uuid = UUID.randomUUID();
+        var scope = de.lightrixx.punish.model.ServerScope.global();
+        long ablauf = System.currentTimeMillis() - 60_000L;
+        var history = mock(de.lightrixx.punish.service.HistoryService.class);
+        var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
+        var log = mock(de.lightrixx.punish.storage.LogWriter.class);
+        var messages = mock(de.lightrixx.punish.service.MessageService.class);
+        var planer = mock(de.lightrixx.punish.core.AuftragsPlaner.class);
+        var schutz = mock(ProtectionService.class);
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        var config = mock(Konfiguration.class);
+        var kick = mock(de.lightrixx.punish.service.BanKickHelper.class);
+        boolean aufgehoben = switch (typ) {
+            case "ban" -> {
+                var repo = mock(de.lightrixx.punish.storage.BanRepository.class);
+                when(repo.finden(uuid, scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.BanRecord(
+                        uuid, "Steve", "Alt", "Mod", ablauf - 60_000L, ablauf, false, scope)));
+                yield new de.lightrixx.punish.service.BanService(repo, history, broadcast, log, schutz, kick,
+                        verzeichnis).entbannen(uuid, "Steve", "Mod", scope, "lobby");
+            }
+            case "mute" -> {
+                var repo = mock(de.lightrixx.punish.storage.MuteRepository.class);
+                when(repo.finden(uuid, scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.MuteRecord(
+                        uuid, "Steve", "Alt", "Mod", ablauf - 60_000L, ablauf, scope)));
+                yield new de.lightrixx.punish.service.MuteService(repo, history, broadcast, log, messages,
+                        planer, schutz, verzeichnis).entmuten(uuid, "Steve", "Mod", scope, "lobby");
+            }
+            case "timeout" -> {
+                var repo = mock(de.lightrixx.punish.storage.TimeoutRepository.class);
+                when(repo.finden(uuid, scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.TimeoutRecord(
+                        uuid, "Steve", "Alt", "Mod", ablauf - 60_000L, ablauf, scope)));
+                yield new de.lightrixx.punish.service.TimeoutService(repo, config, history, broadcast, log,
+                        planer, schutz, verzeichnis).timeoutAufheben(uuid, "Steve", "Mod", scope, "lobby");
+            }
+            case "freeze" -> {
+                var repo = mock(de.lightrixx.punish.storage.FreezeRepository.class);
+                when(repo.finden(uuid, scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.FreezeRecord(
+                        uuid, "Steve", "Alt", "Mod", ablauf - 60_000L, ablauf, scope)));
+                yield new de.lightrixx.punish.service.FreezeService(repo, history, broadcast, log, messages,
+                        planer, schutz, verzeichnis).entfreezen(uuid, "Steve", "Mod", scope, "lobby");
+            }
+            case "ipmute" -> {
+                var repo = mock(de.lightrixx.punish.storage.IpMuteRepository.class);
+                when(repo.finden("127.0.0.1", scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.IpMuteRecord(
+                        "127.0.0.1", "Alt", "Mod", ablauf - 60_000L, ablauf, scope)));
+                yield new de.lightrixx.punish.service.IpMuteService(repo, history, broadcast, log, messages,
+                        planer, schutz, verzeichnis).entmuten("127.0.0.1", "Mod", scope, "lobby");
+            }
+            case "iptimeout" -> {
+                var repo = mock(de.lightrixx.punish.storage.IpTimeoutRepository.class);
+                when(repo.finden("127.0.0.1", scope)).thenReturn(Optional.of(new de.lightrixx.punish.model.IpTimeoutRecord(
+                        "127.0.0.1", "Alt", "Mod", ablauf - 60_000L, ablauf, scope)));
+                yield new de.lightrixx.punish.service.IpTimeoutService(repo, config, history, broadcast, log,
+                        planer, schutz, kick, verzeichnis).timeoutAufheben("127.0.0.1", "Mod", scope, "lobby");
+            }
+            default -> throw new AssertionError(typ);
+        };
+        assertFalse(aufgehoben);
+        org.mockito.Mockito.verifyNoInteractions(history, broadcast, log, messages);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"ban", "mute", "timeout"})
+    void vorabSucheUeberspringtFruehereNamensinhaber(String typ) {
+        var echteUuid = UUID.randomUUID();
+        var alteUuid = UUID.randomUUID();
+        var vorabUuid = UUID.nameUUIDFromBytes("OfflinePlayer:Steve".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var scope = de.lightrixx.punish.model.ServerScope.global();
+        var history = mock(de.lightrixx.punish.service.HistoryService.class);
+        var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
+        var log = mock(de.lightrixx.punish.storage.LogWriter.class);
+        var schutz = mock(ProtectionService.class);
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        Optional<UUID> gefunden = switch (typ) {
+            case "ban" -> {
+                var repo = mock(de.lightrixx.punish.storage.BanRepository.class);
+                when(repo.alle()).thenReturn(List.of(
+                        new de.lightrixx.punish.model.BanRecord(alteUuid, "Steve", "Alt", "Mod", 1L, null, false, scope),
+                        new de.lightrixx.punish.model.BanRecord(vorabUuid, "Steve", "Vorab", "Mod", 1L, null, false, scope)));
+                yield new de.lightrixx.punish.service.BanService(repo, history, broadcast, log, schutz,
+                        mock(de.lightrixx.punish.service.BanKickHelper.class), verzeichnis)
+                        .findeVorabBannNachName("Steve", echteUuid).map(de.lightrixx.punish.model.BanRecord::spielerUuid);
+            }
+            case "mute" -> {
+                var repo = mock(de.lightrixx.punish.storage.MuteRepository.class);
+                when(repo.alle()).thenReturn(List.of(
+                        new de.lightrixx.punish.model.MuteRecord(alteUuid, "Steve", "Alt", "Mod", 1L, Long.MAX_VALUE, scope),
+                        new de.lightrixx.punish.model.MuteRecord(vorabUuid, "Steve", "Vorab", "Mod", 1L, Long.MAX_VALUE, scope)));
+                yield new de.lightrixx.punish.service.MuteService(repo, history, broadcast, log,
+                        mock(de.lightrixx.punish.service.MessageService.class),
+                        mock(de.lightrixx.punish.core.AuftragsPlaner.class), schutz, verzeichnis)
+                        .findeVorabMuteNachName("Steve", echteUuid).map(de.lightrixx.punish.model.MuteRecord::spielerUuid);
+            }
+            case "timeout" -> {
+                var repo = mock(de.lightrixx.punish.storage.TimeoutRepository.class);
+                when(repo.alle()).thenReturn(List.of(
+                        new de.lightrixx.punish.model.TimeoutRecord(alteUuid, "Steve", "Alt", "Mod", 1L, Long.MAX_VALUE, scope),
+                        new de.lightrixx.punish.model.TimeoutRecord(vorabUuid, "Steve", "Vorab", "Mod", 1L, Long.MAX_VALUE, scope)));
+                yield new de.lightrixx.punish.service.TimeoutService(repo, mock(Konfiguration.class), history,
+                        broadcast, log, mock(de.lightrixx.punish.core.AuftragsPlaner.class), schutz, verzeichnis)
+                        .findeVorabTimeoutNachName("Steve", echteUuid).map(de.lightrixx.punish.model.TimeoutRecord::spielerUuid);
+            }
+            default -> throw new AssertionError(typ);
+        };
+        assertEquals(Optional.of(vorabUuid), gefunden);
+    }
+
+    @Test
+    void ipSchutzPrueftKeineUnbeteiligtenSpieler() {
+        var unbeteiligt = new OnlineSpieler(UUID.randomUUID(), "Anderer", "127.0.0.2", false);
+        var verzeichnis = mock(SpielerVerzeichnis.class);
+        when(verzeichnis.onlineSpieler()).thenReturn(List.of(unbeteiligt));
+        var schutz = mock(ProtectionService.class);
+        when(schutz.istOnlineGeschuetzt(unbeteiligt, ProtectionService.IgnoreTyp.BAN))
+                .thenThrow(new IllegalStateException("Rechte dieses Spielers nicht verfügbar"));
+        assertFalse(IpSchutzHelper.istIpDurchOnlineSchutzBlockiert("127.0.0.1", schutz,
+                verzeichnis, ProtectionService.IgnoreTyp.BAN));
+        org.mockito.Mockito.verifyNoInteractions(schutz);
+    }
+
     private static final class HinweisBefehl extends PunishCommand {
         private HinweisBefehl(de.lightrixx.punish.service.MessageService messages,
                               ProtectionService schutz) {

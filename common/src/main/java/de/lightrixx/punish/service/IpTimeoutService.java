@@ -190,7 +190,9 @@ public final class IpTimeoutService {
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
         Optional<IpTimeoutRecord> aktuell = repository.finden(kanonisch, scope);
         if (aktuell.isPresent() && aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
-            repository.timeoutAufhebenWenn(kanonisch, scope, b -> b.equals(aktuell.get()));
+            if (repository.timeoutAufhebenWenn(kanonisch, scope, b -> b.equals(aktuell.get())).isEmpty()) {
+                return false;
+            }
             try {
                 historyService.hinzufuegen(HistoryType.IP_UNTIMEOUT, "System", kanonisch,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null, scope, herkunftNorm);

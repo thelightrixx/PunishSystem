@@ -264,6 +264,71 @@ class WarnEskalationTest {
                 eq(uuid), eq("Steve"), anyString(), eq("Admin"), eq(VerstossStufe.LOW), eq(true));
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"warns-geloescht", "schwelle-geaendert", "stufe-geaendert"})
+    void veralteteVormerkungWirdNichtNachgeholt(String aenderung, @TempDir File datenOrdner) {
+        var service = new WarnService(repository(datenOrdner));
+        var verstoesse = mock(VerstossService.class);
+        when(verstoesse.hinzufuegen(any(), any(), any(), any(), any(VerstossStufe.class), eq(true)))
+                .thenThrow(new IllegalStateException("Auto-Bann aktiv"));
+        var config = eskalationsConfig(Map.of(3, VerstossStufe.LOW));
+        service.mitEskalation(config, verstoesse);
+        var uuid = UUID.randomUUID();
+        service.hinzufuegen(uuid, "Steve", "Spam 1", "Admin");
+        service.hinzufuegen(uuid, "Steve", "Spam 2", "Admin");
+        service.hinzufuegen(uuid, "Steve", "Spam 3", "Admin");
+        switch (aenderung) {
+            case "warns-geloescht" -> {
+                service.entfernen(uuid, "Steve", 1, "Admin");
+                service.entfernen(uuid, "Steve", 2, "Admin");
+            }
+            case "schwelle-geaendert" -> when(config.warnEskalationsStufeFuer(3)).thenReturn(Optional.empty());
+            case "stufe-geaendert" -> when(config.warnEskalationsStufeFuer(3)).thenReturn(Optional.of(VerstossStufe.HIGH));
+            default -> throw new AssertionError(aenderung);
+        }
+        service.hinzufuegen(uuid, "Steve", "Spam 4", "Admin");
+        verify(verstoesse, times(1)).hinzufuegen(any(), any(), any(), any(), any(VerstossStufe.class), eq(true));
+    }
+
+    @Test
+    void paralleleWarnsHolenDieselbeVormerkungNurEinmalNach(@TempDir File datenOrdner) throws Exception {
+        var service = new WarnService(repository(datenOrdner));
+        var verstoesse = mock(VerstossService.class);
+        var versuche = new java.util.concurrent.atomic.AtomicInteger();
+        var gestartet = new java.util.concurrent.CountDownLatch(1);
+        var freigabe = new java.util.concurrent.CountDownLatch(1);
+        when(verstoesse.hinzufuegen(any(), any(), any(), any(), any(VerstossStufe.class), eq(true)))
+                .thenAnswer(inv -> {
+                    if (versuche.incrementAndGet() == 1) {
+                        throw new IllegalStateException("Auto-Bann aktiv");
+                    }
+                    gestartet.countDown();
+                    if (!freigabe.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                        throw new AssertionError("Nachholen wurde nicht freigegeben");
+                    }
+                    return new VerstossRecord(1, "Steve", "Auto", "Admin", 1L, VerstossStufe.LOW);
+                });
+        service.mitEskalation(eskalationsConfig(Map.of(3, VerstossStufe.LOW)), verstoesse);
+        var uuid = UUID.randomUUID();
+        for (int i = 0; i < 3; i++) {
+            service.hinzufuegen(uuid, "Steve", "Spam", "Admin");
+        }
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            try {
+                var erster = pool.submit(() -> service.hinzufuegen(uuid, "Steve", "Spam 4", "Admin"));
+                org.junit.jupiter.api.Assertions.assertTrue(gestartet.await(5, java.util.concurrent.TimeUnit.SECONDS));
+                var zweiter = pool.submit(() -> service.hinzufuegen(uuid, "Steve", "Spam 5", "Admin"));
+                zweiter.get(5, java.util.concurrent.TimeUnit.SECONDS);
+                freigabe.countDown();
+                erster.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            } finally {
+                freigabe.countDown();
+            }
+        }
+        assertEquals(5, service.anzahl(uuid));
+        assertEquals(2, versuche.get());
+    }
+
     @Test
     void standardSchwellenSindDreiFuenfZehn() {
         assertEquals(Map.of(3, VerstossStufe.LOW, 5, VerstossStufe.MEDIUM, 10, VerstossStufe.HIGH),

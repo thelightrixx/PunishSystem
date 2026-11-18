@@ -67,13 +67,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "v4.0.2",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "v4.1.0",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
 
     private static final long CLEANUP_MINUTEN = 5L;
-    private static final long CLEANUP_PERIODE_SEKUNDEN = CLEANUP_MINUTEN * 60L;
+    private static final long CLEANUP_PERIODE_TICKS = CLEANUP_MINUTEN * 60L * 20L;
     private static final long SHUTDOWN_WARTEZEIT_SEKUNDEN = 15L;
     private static final long VERPASST_RETENTION_MILLIS = 90L * 24L * 60L * 60L * 1000L;
     public static final String DATENORDNER_NAME = "PunishSystemVelocity";
@@ -368,7 +368,7 @@ public final class PunishVelocity {
                 } catch (Exception e) {
                     logger.warn("Fehler beim periodischen Expiry-Cleanup.", e);
                 }
-            }, CLEANUP_PERIODE_SEKUNDEN, CLEANUP_PERIODE_SEKUNDEN);
+            }, CLEANUP_PERIODE_TICKS, CLEANUP_PERIODE_TICKS);
         } catch (IllegalStateException e) {
             logger.warn("Expiry-Cleanup konnte nicht geplant werden.", e);
         }
@@ -401,7 +401,7 @@ public final class PunishVelocity {
                 } catch (Exception e) {
                     logger.debug("Persistenz-Wächter fehlgeschlagen.", e);
                 }
-            }, CLEANUP_PERIODE_SEKUNDEN, CLEANUP_PERIODE_SEKUNDEN);
+            }, CLEANUP_PERIODE_TICKS, CLEANUP_PERIODE_TICKS);
         } catch (IllegalStateException e) {
             logger.warn("Persistenz-Wächter konnte nicht geplant werden.", e);
         }

@@ -942,10 +942,14 @@ public final class BridgeEnforcementListener implements Listener {
     private static String buchText(PlayerEditBookEvent event) {
         try {
             var meta = event.getNewBookMeta();
-            if (meta == null || !meta.hasPages()) {
+            if (meta == null) {
                 return "";
             }
             StringBuilder sb = new StringBuilder();
+            Component titel = meta.title();
+            if (titel != null) {
+                sb.append(PlainTextComponentSerializer.plainText().serialize(titel));
+            }
             for (Component seite : meta.pages()) {
                 if (sb.length() > 0) {
                     sb.append(' ');

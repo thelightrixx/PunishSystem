@@ -229,15 +229,25 @@ public final class WarnService {
             if (!config.warnEskalationAktiv()) {
                 return;
             }
+            if (aktiveAnzahl(zielUuid) < ausstehend.schwelle()
+                    || config.warnEskalationsStufeFuer(ausstehend.schwelle())
+                            .filter(ausstehend.stufe()::equals).isEmpty()) {
+                ausstehende.remove(zielUuid, ausstehend);
+                return;
+            }
+            if (!ausstehende.remove(zielUuid, ausstehend)) {
+                return;
+            }
             feuereEskalation(config, verstoesse, zielUuid, zielName, warnGrund, ausfuehrer,
                     silent, ausstehend.schwelle(), ausstehend.stufe());
-            ausstehende.remove(zielUuid);
             LOG.info("Ausstehende Warn-Eskalation für {} nachgeholt (Schwelle {}).",
                     zielName, ausstehend.schwelle());
         } catch (IllegalStateException e) {
+            ausstehende.putIfAbsent(zielUuid, ausstehend);
             LOG.debug("Ausstehende Warn-Eskalation für {} weiter blockiert: {}",
                     zielUuid, e.getMessage());
         } catch (Exception e) {
+            ausstehende.putIfAbsent(zielUuid, ausstehend);
             LOG.warn("Ausstehende Warn-Eskalation für {} fehlgeschlagen.", zielUuid, e);
         }
     }

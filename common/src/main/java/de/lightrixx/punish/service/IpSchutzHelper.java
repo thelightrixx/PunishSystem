@@ -48,11 +48,13 @@ public final class IpSchutzHelper {
                     continue;
                 }
                 try {
+                    if (!kanonisch.equals(IpBanRecord.kanonisieren(spielerIp.trim()))) {
+                        continue;
+                    }
                     boolean geschuetzt = typ == null
                             ? protectionService.istOnlineGeschuetzt(online)
                             : protectionService.istOnlineGeschuetzt(online, typ);
-                    if (kanonisch.equals(IpBanRecord.kanonisieren(spielerIp.trim()))
-                            && geschuetzt) {
+                    if (geschuetzt) {
                         return true;
                     }
                 } catch (Exception e) {

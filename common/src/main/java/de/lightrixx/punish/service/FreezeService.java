@@ -210,7 +210,9 @@ public final class FreezeService {
         Objects.requireNonNull(scope, "Der Scope darf nicht null sein.");
         Optional<FreezeRecord> aktuell = freezeRepository.finden(zielUuid, scope);
         if (aktuell.isPresent() && aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
-            freezeRepository.entfreezenWenn(zielUuid, scope, b -> b.equals(aktuell.get()));
+            if (freezeRepository.entfreezenWenn(zielUuid, scope, b -> b.equals(aktuell.get())).isEmpty()) {
+                return false;
+            }
             try {
                 historyService.hinzufuegen(HistoryType.UNFREEZE, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,

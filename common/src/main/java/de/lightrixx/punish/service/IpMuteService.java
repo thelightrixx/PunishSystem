@@ -194,7 +194,9 @@ public final class IpMuteService {
         }
         Optional<IpMuteRecord> aktuell = repository.finden(kanonisch, scope);
         if (aktuell.isPresent() && aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
-            repository.entmutenWenn(kanonisch, scope, b -> b.equals(aktuell.get()));
+            if (repository.entmutenWenn(kanonisch, scope, b -> b.equals(aktuell.get())).isEmpty()) {
+                return false;
+            }
             try {
                 historyService.hinzufuegen(HistoryType.IP_UNMUTE, "System", kanonisch,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,

@@ -279,7 +279,9 @@ public final class BanService {
         Objects.requireNonNull(scope, "Der Scope darf nicht null sein.");
         Optional<BanRecord> aktuell = banRepository.finden(zielUuid, scope);
         if (aktuell.isPresent() && aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
-            banRepository.entbannenWenn(zielUuid, scope, b -> b.equals(aktuell.get()));
+            if (banRepository.entbannenWenn(zielUuid, scope, b -> b.equals(aktuell.get())).isEmpty()) {
+                return false;
+            }
             String ablaufHerkunft = herkunft == null || herkunft.isBlank() ? ServerScope.UNBEKANNT_WERT
                     : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
             try {
@@ -692,7 +694,9 @@ public final class BanService {
                 if (kandidat == null || !kandidat.istAktiv(jetzt) || kandidat.spielerUuid().equals(echteUuid)) {
                     continue;
                 }
-                if (kandidat.spielerName() != null && kandidat.spielerName().equalsIgnoreCase(name.trim())) {
+                if (kandidat.spielerName() != null && kandidat.spielerName().equalsIgnoreCase(name.trim())
+                        && de.lightrixx.punish.storage.PlayerCache.istVorabPlatzhalter(
+                                kandidat.spielerUuid(), kandidat.spielerName())) {
                     return Optional.of(kandidat);
                 }
             }

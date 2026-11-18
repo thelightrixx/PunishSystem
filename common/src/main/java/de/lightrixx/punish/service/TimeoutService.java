@@ -265,7 +265,9 @@ public final class TimeoutService {
                 if (kandidat == null || !kandidat.istAktiv(jetzt) || kandidat.spielerUuid().equals(echteUuid)) {
                     continue;
                 }
-                if (kandidat.spielerName() != null && kandidat.spielerName().equalsIgnoreCase(name.trim())) {
+                if (kandidat.spielerName() != null && kandidat.spielerName().equalsIgnoreCase(name.trim())
+                        && de.lightrixx.punish.storage.PlayerCache.istVorabPlatzhalter(
+                                kandidat.spielerUuid(), kandidat.spielerName())) {
                     return Optional.of(kandidat);
                 }
             }
@@ -410,8 +412,10 @@ public final class TimeoutService {
                 : herkunft.trim().toLowerCase(java.util.Locale.ROOT);
         Optional<TimeoutRecord> aktuell = timeoutRepository.finden(zielUuid, scope);
         if (aktuell.isPresent() && aktuell.get().istAbgelaufen(System.currentTimeMillis())) {
-            timeoutRepository.timeoutAufhebenWenn(zielUuid, scope,
-                    b -> b.equals(aktuell.get()));
+            if (timeoutRepository.timeoutAufhebenWenn(zielUuid, scope,
+                    b -> b.equals(aktuell.get())).isEmpty()) {
+                return false;
+            }
             try {
                 historyService.hinzufuegen(HistoryType.UNTIMEOUT, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,

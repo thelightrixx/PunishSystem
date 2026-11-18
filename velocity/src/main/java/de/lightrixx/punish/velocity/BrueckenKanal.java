@@ -657,44 +657,9 @@ public final class BrueckenKanal {
                 return sendeBanTimeoutFreezeSync(server, true);
             } catch (Exception e) {
                 logger.warn("Mute-Sync konnte nicht kodiert werden, weiche auf Einzel-Sync aus.", e);
-                sendeEinzelMutes(server, eintraege, ipEintraege);
             }
         }
         return sendeBanTimeoutFreezeSync(server, false);
-    }
-
-    private void sendeEinzelMutes(RegisteredServer server, List<Protokoll.MuteEintrag> mutes,
-                                  List<Protokoll.IpMuteEintrag> ipMutes) {
-        long generation = naechsteSyncGeneration();
-        if (!sendeSyncRahmen(server, generation, true)) {
-            return;
-        }
-        boolean abgebrochen = false;
-        for (Protokoll.MuteEintrag eintrag : mutes) {
-            try {
-                sendeAn(server, Protokoll.nachricht(Protokoll.MUTE_SETZEN,
-                        out -> Protokoll.schreibeMute(out, eintrag)));
-            } catch (Exception e) {
-                logger.warn("Mute-Einzel-Sync konnte nicht gesendet werden.", e);
-                abgebrochen = true;
-                break;
-            }
-        }
-        if (!abgebrochen) {
-            for (Protokoll.IpMuteEintrag eintrag : ipMutes) {
-                try {
-                    sendeAn(server, Protokoll.nachricht(Protokoll.IP_MUTE_SETZEN,
-                            out -> Protokoll.schreibeIpMute(out, eintrag)));
-                } catch (Exception e) {
-                    logger.warn("IP-Mute-Einzel-Sync konnte nicht gesendet werden.", e);
-                    abgebrochen = true;
-                    break;
-                }
-            }
-        }
-        if (!abgebrochen) {
-            sendeSyncRahmen(server, generation, false);
-        }
     }
 
     private boolean sendeBanTimeoutFreezeSync(RegisteredServer server, boolean mutesEingeschlossen) {
@@ -714,10 +679,8 @@ public final class BrueckenKanal {
                     + "Bridge-Caches bleiben unverändert.", e);
             return false;
         }
-        boolean mutesImBulk = mutesEingeschlossen
-                || (mutes.size() <= SYNC_CHUNK_GROESSE && ipMutes.size() <= SYNC_CHUNK_GROESSE);
         if (banns.size() <= SYNC_CHUNK_GROESSE && timeouts.size() <= SYNC_CHUNK_GROESSE
-                && freezes.size() <= SYNC_CHUNK_GROESSE && mutesImBulk) {
+                && freezes.size() <= SYNC_CHUNK_GROESSE && mutesEingeschlossen) {
             try {
                 byte[] banPaket = Protokoll.banSync(banns);
                 byte[] timeoutPaket = Protokoll.timeoutSync(timeouts);

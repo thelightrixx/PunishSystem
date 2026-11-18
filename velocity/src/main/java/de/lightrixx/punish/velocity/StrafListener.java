@@ -405,7 +405,7 @@ public final class StrafListener {
             logger.debug("Vorab-Bann-Migration für '{}' fehlgeschlagen.", name, e);
         }
         try {
-            if (!muteService.istIrgendwoGemutet(uuid)) {
+            if (muteService.findeAbdeckend(uuid, ServerScope.global()).isEmpty()) {
                 var vorabMute = muteService.findeVorabMuteNachName(name, uuid);
                 if (vorabMute.isPresent() && vorabMute.get().istAktiv(jetzt)) {
                     muteService.migriereVorabMute(vorabMute.get().spielerUuid(), uuid, name);

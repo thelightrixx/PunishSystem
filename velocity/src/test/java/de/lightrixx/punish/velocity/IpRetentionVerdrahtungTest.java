@@ -36,4 +36,26 @@ class IpRetentionVerdrahtungTest {
         assertTrue(text.contains("playerCache.setIpRetentionTage(konfiguration.ipAufbewahrungTage());"),
                 "Reload muss die Frist auf den laufenden PlayerCache anwenden.");
     }
+
+    @Test
+    void persistenzWaechterLaeuftImFuenfMinutenTakt() throws Exception {
+        var proxy = org.mockito.Mockito.mock(com.velocitypowered.api.proxy.ProxyServer.class);
+        var scheduler = org.mockito.Mockito.mock(com.velocitypowered.api.scheduler.Scheduler.class);
+        var builder = org.mockito.Mockito.mock(com.velocitypowered.api.scheduler.Scheduler.TaskBuilder.class,
+                org.mockito.Mockito.RETURNS_SELF);
+        org.mockito.Mockito.when(proxy.getScheduler()).thenReturn(scheduler);
+        org.mockito.Mockito.when(scheduler.buildTask(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(Runnable.class))).thenReturn(builder);
+        org.mockito.Mockito.when(builder.schedule()).thenReturn(
+                org.mockito.Mockito.mock(com.velocitypowered.api.scheduler.ScheduledTask.class));
+        var plugin = new PunishVelocity(proxy, org.mockito.Mockito.mock(org.slf4j.Logger.class), Path.of("."));
+        var feld = PunishVelocity.class.getDeclaredField("planer");
+        feld.setAccessible(true);
+        feld.set(plugin, new VelocityAuftragsPlaner(proxy, plugin));
+        var starten = PunishVelocity.class.getDeclaredMethod("startePersistenzWaechter", VelocityVerzeichnis.class);
+        starten.setAccessible(true);
+        starten.invoke(plugin, org.mockito.Mockito.mock(VelocityVerzeichnis.class));
+        org.mockito.Mockito.verify(builder).delay(300_000L, java.util.concurrent.TimeUnit.MILLISECONDS);
+        org.mockito.Mockito.verify(builder).repeat(300_000L, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
 }

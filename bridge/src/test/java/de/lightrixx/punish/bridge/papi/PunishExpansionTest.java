@@ -94,4 +94,60 @@ class PunishExpansionTest {
         assertEquals("0", expansion.onRequest(betrachter, "notes"));
         assertEquals("-", expansion.onRequest(betrachter, "warns_last_reason"));
     }
+
+    @Test
+    void abgelaufeneCacheStrafenWerdenSofortAlsInaktivAngezeigt() {
+        var ablauf = System.currentTimeMillis() - 1000L;
+        var antwort = new Protokoll.PlatzhalterAntwort(1L, true,
+                true, ablauf, true, ablauf, true, ablauf, true, ablauf,
+                0, 0, 0, 0, 0, "Spam", "Mod", 1L, "Bann", "Mod", 1L,
+                "Timeout", "Mod", 1L, "Freeze", "Mod", 1L, 0, 0, "", "");
+        var spieler = mock(OfflinePlayer.class);
+        var expansion = expansionMit(antwort, spieler);
+        for (var key : java.util.List.of("muted", "banned", "timeouted", "frozen", "is_punished")) {
+            assertEquals("false", expansion.onRequest(spieler, key), key);
+        }
+        assertEquals("0", expansion.onRequest(spieler, "active_count"));
+        assertEquals("clean", expansion.onRequest(spieler, "status"));
+        for (var typ : java.util.List.of("mute", "ban", "timeout", "freeze")) {
+            for (var detail : java.util.List.of("reason", "by", "since", "rest")) {
+                assertEquals("-", expansion.onRequest(spieler, typ + "_" + detail));
+            }
+            assertEquals("-1", expansion.onRequest(spieler, typ + "_rest_seconds"));
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void alteWerteBleibenWaehrendRefreshBeiAllenAbfragenVerfuegbar() throws Exception {
+        var plugin = mock(Plugin.class);
+        var server = mock(org.bukkit.Server.class);
+        var scheduler = mock(org.bukkit.scheduler.BukkitScheduler.class);
+        when(plugin.getServer()).thenReturn(server);
+        when(server.getScheduler()).thenReturn(scheduler);
+        var aufgaben = new java.util.ArrayList<Runnable>();
+        when(scheduler.runTaskAsynchronously(org.mockito.ArgumentMatchers.eq(plugin),
+                org.mockito.ArgumentMatchers.any(Runnable.class))).thenAnswer(inv -> {
+            aufgaben.add(inv.getArgument(1));
+            return mock(org.bukkit.scheduler.BukkitTask.class);
+        });
+        var kanal = mock(de.lightrixx.punish.bridge.KanalClient.class);
+        when(kanal.naechsteGuiId()).thenReturn(7L);
+        var antwort = antwortMitDetails();
+        when(kanal.fragePlatzhalterAn(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(antwort);
+        var cache = new PlatzhalterCache(plugin, kanal);
+        cache.aktuelle(null, "Steve");
+        aufgaben.getFirst().run();
+        var feld = PlatzhalterCache.class.getDeclaredField("cache");
+        feld.setAccessible(true);
+        var eintraege = (java.util.Map<java.util.UUID, Object>) feld.get(cache);
+        var schluessel = eintraege.keySet().iterator().next();
+        var konstruktor = eintraege.get(schluessel).getClass().getDeclaredConstructors()[0];
+        konstruktor.setAccessible(true);
+        eintraege.put(schluessel, konstruktor.newInstance(antwort, System.currentTimeMillis() - 31_000L));
+        assertEquals(antwort, cache.aktuelle(null, "Steve"));
+        assertEquals(antwort, cache.aktuelle(null, "Steve"));
+        assertEquals(2, aufgaben.size());
+    }
 }
