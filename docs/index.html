@@ -586,7 +586,7 @@ details>div{padding:14px 18px 2px}
       <tr><td>Konfiguration und Rechte</td><td><a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>, <a href="#/rang-buendel">Gruppen einrichten</a>, <a href="#/rechte">Permissions</a>, <a href="#/config-general">Proxy-Einstellungen</a>, <a href="#/config-texte">Texte</a> und <a href="#/config-bridge">Bridge-Einstellungen</a>.</td></tr>
       <tr><td>Erweiterungen</td><td><a href="#/chatfilter">Chatfilter mit Wortliste und optionaler KI</a> und <a href="#/placeholderapi">PlaceholderAPI</a>.</td></tr>
       <tr><td>Betrieb</td><td><a href="#/speicher">MySQL und Migration</a>, <a href="#/betrieb">Updates und Sicherungen</a>, <a href="#/changelog">Changelog</a> sowie <a href="#/datenschutz">IP-Daten und Aufbewahrung</a>.</td></tr>
-      <tr><td>Hilfe und Entwicklung</td><td><a href="#/fehlerbehebung">Fehlerbehebung</a>, <a href="#/faq">häufige Fragen</a> und <a href="#/entwicklung">aus dem Quellcode bauen</a>.</td></tr>
+      <tr><td>Hilfe</td><td><a href="#/fehlerbehebung">Fehlerbehebung</a> und <a href="#/faq">häufige Fragen</a>.</td></tr>
     </tbody>
   </table></div>
 
@@ -623,12 +623,10 @@ details>div{padding:14px 18px 2px}
       <tr><td>Proxy → YAML/MySQL</td><td>Strafen, Akten, Reports, Spieler-Cache und History</td><td>Dauerhafter Bestand; Grundlage für <a href="#/betrieb/sicherung-erstellen">Sicherung und Wiederherstellung</a>.</td></tr>
     </tbody>
   </table></div>
-  <p>Die HMAC-Signatur des Tunnels prüft Herkunft und Unversehrtheit einer Nachricht. Sie verschlüsselt die Nutzdaten nicht. Der Spielertransport und die passenden Secrets bleiben für die Verbindung erforderlich.</p>
-
   <h2>Wie ein Befehl läuft</h2>
   <ol>
     <li>Auf einem Backend-Server wird <code>/ban Notch 7d Cheating</code> eingegeben.</li>
-    <li>Die Bridge prüft die Berechtigung und schickt den Befehl über den Kanal <code>punish:main</code> an den Proxy.</li>
+    <li>Die Bridge prüft die Berechtigung und schickt den Befehl an den Proxy.</li>
     <li>Der Proxy führt den Befehl aus, speichert die Strafe und meldet sie dem Team.</li>
     <li>Der Proxy informiert die Bridges. Jede setzt die Strafe entsprechend ihrem Scope durch; ein globaler Mute sperrt den Chat auf allen synchronisierten Backends.</li>
   </ol>
@@ -792,7 +790,7 @@ punish-version</pre>
   <p>Weitere Fälle stehen unter <a href="#/fehlerbehebung">Fehlerbehebung</a>.</p>
 
   <h2>Wie geht es weiter?</h2>
-  <p>Nach erfolgreicher Prüfung folgt der <a href="#/schnellstart">Moderations-Schnellstart</a>. Änderungen an Regeln und Texten beginnen unter <a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>. Bestehende Installationen werden nach der Anleitung <a href="#/betrieb">Updates und Sicherungen</a> aktualisiert; den Eigenbau beschreibt <a href="#/entwicklung">Bauen und Entwickeln</a>.</p>
+  <p>Nach erfolgreicher Prüfung folgt der <a href="#/schnellstart">Moderations-Schnellstart</a>. Änderungen an Regeln und Texten beginnen unter <a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>. Bestehende Installationen werden nach der Anleitung <a href="#/betrieb">Updates und Sicherungen</a> aktualisiert.</p>
 </section>
 
 <!-- =============================== MODERATION =============================== -->
@@ -1047,7 +1045,7 @@ punish-version</pre>
   </table></div>
 
   <h2>Spieler, die noch nie da waren</h2>
-  <p>Das System sucht zunächst online und im Spieler-Cache. Außerhalb des Server-Hauptthreads versucht es zusätzlich, unbekannte Namen über Mojang auf eine echte UUID aufzulösen. Ein so gefundenes Profil kann auch vor dem ersten Netzwerkbeitritt verwendet werden. Schutz- und Rechteprüfungen gelten weiterhin.</p>
+  <p>Das System sucht zunächst online und unter den bereits bekannten Spielern. Unbekannte Namen versucht es zusätzlich über Mojang aufzulösen. Ein so gefundenes Profil kann auch vor dem ersten Netzwerkbeitritt verwendet werden. Schutz- und Rechteprüfungen gelten weiterhin.</p>
   <p>Erst wenn keine verlässliche Zuordnung gefunden wird, entscheidet <code>offline-resolution.allow-never-seen</code>: <code>false</code> lehnt den Namen ab, <code>true</code> erlaubt einen Vorab-Eintrag mit einer vorläufigen UUID. Dieser wird beim ersten passenden Beitritt auf die echte UUID übertragen. Namen dabei genau prüfen, da auch Tippfehler einen solchen Eintrag erzeugen können.</p>
 
   <h2>Schutz bei IP-Strafen</h2>
@@ -1760,7 +1758,7 @@ punish-version</pre>
     <pre data-lang="cmd">/punish-reload</pre>
     <ul>
       <li>Läuft gerade ein Reload, erscheint ein Hinweis, und es ist kurz zu warten.</li>
-      <li>Bei unlesbaren Konfigurationsdateien oder nicht geleerter Schreib-Queue wird vor der Übernahme abgebrochen. Schlagen später einzelne Datenbestände oder Sync-Schritte fehl, meldet das System einen teilweisen Reload; bereits übernommene Änderungen bleiben aktiv. Die Konsole nennt die betroffenen Teile.</li>
+      <li>Bei unlesbaren Konfigurationsdateien oder noch nicht abgeschlossenen Speichervorgängen wird vor der Übernahme abgebrochen. Schlagen später einzelne Datenbestände oder Sync-Schritte fehl, meldet das System einen teilweisen Reload; bereits übernommene Änderungen bleiben aktiv. Die Konsole nennt die betroffenen Teile.</li>
       <li>Ein Wechsel des Speicher-Backends (YAML zu MySQL) braucht einen Neustart.</li>
     </ul>
   </article>
@@ -1933,7 +1931,7 @@ punish-version</pre>
   <p><code>punish.setup</code>, <code>punish.templates</code> und <code>punish.chatfilter.sync</code> fehlen in den ausdrücklich aufgelisteten Rechten von <code>admin</code> und <code>p-admin</code>. Bei Bedarf direkt oder in einem passenden Bündel ergänzen. Die Wildcard-Bündel <code>präsident</code> und <code>vize</code> gewähren sie bereits.</p>
 
   <h2>LuckPerms-Kontexte auf dem Proxy</h2>
-  <p>Bei verfügbarer LuckPerms-API registriert PunishSystem diese Kontexte mit den Werten <code>true</code> und <code>false</code>:</p>
+  <p>Wenn LuckPerms auf dem Proxy installiert ist, stehen diese Kontexte mit den Werten <code>true</code> und <code>false</code> zur Verfügung:</p>
   <div class="tbl"><table>
     <thead><tr><th>Kontext</th><th>Wirkung von true</th></tr></thead>
     <tbody>
@@ -2083,7 +2081,7 @@ anzeige-zone: "Europe/Berlin"</pre>
   bridge-secrets:
     lobby: "&lt;Secret nur für lobby&gt;"
     survival: "&lt;anderes Secret nur für survival&gt;"</pre>
-      <p>Auf dem Proxy bleibt <code>server-name</code> leer. Der Standard-Scope ergibt sich aus dem Server, auf dem der Ausführende steht. Die Serverliste für die TAB-Vervollständigung nach <code>--</code> kommt live aus der Velocity-Konfiguration. <code>server-liste</code> ist veraltet und wird nur noch als Zusatz gelesen; ihre Einträge werden mit der Live-Liste zusammengeführt. <code>bridge-secrets</code> ordnet jedem Velocity-Servernamen ein eigenes Tunnel-Secret zu. Die Bridge trägt genau dieses Secret unter <code>netzwerk.tunnel-secret</code> ein. Die Tunnel-Nachrichten werden richtungsgebunden mit HMAC-SHA256 signiert; eine Bridge kann damit keine Nachrichten einer anderen Bridge fälschen. Fehlt ein Eintrag oder das Secret, bleibt die Bridge stumm (Fail-Closed).</p>
+      <p>Auf dem Proxy bleibt <code>server-name</code> leer. Der Standard-Scope ergibt sich aus dem Server, auf dem der Ausführende steht. Die Serverliste für die TAB-Vervollständigung nach <code>--</code> kommt live aus der Velocity-Konfiguration. <code>server-liste</code> ist veraltet und wird nur noch als Zusatz gelesen; ihre Einträge werden mit der Live-Liste zusammengeführt. <code>bridge-secrets</code> ordnet jedem Velocity-Servernamen ein eigenes Tunnel-Secret zu. Die Bridge trägt genau dieses Secret unter <code>netzwerk.tunnel-secret</code> ein. Fehlt ein Eintrag oder das Secret, kann sich die Bridge nicht mit dem Proxy verbinden.</p>
     </div>
   </details>
 
@@ -2502,25 +2500,20 @@ vorschlaege:
   <p>Für diesen Test wird kein KI-Modell benötigt. Gespeicherte <a href="#/chatfilter/einstellungen-der-bridge">Laufzeitschalter der Bridge</a> können die Filtervorgaben übersteuern; ein Laufzeit-<code>off</code> muss vor dem Test aufgehoben werden.</p>
 
   <h2>Einrichten</h2>
-  <p>Für den Betrieb mit Wortliste brauchst du kein KI-Modell. Die beiden Schritte zur Modellbereitstellung sind optional; Aktivierung und Staffel auf dem Proxy gelten für beide Varianten. Die <a href="#/chatfilter/einstellungen-der-bridge">Kanäle</a> legen fest, wo nur die Wortliste oder zusätzlich die KI verwendet wird.</p>
+  <p>Für den Betrieb mit Wortliste brauchst du kein KI-Modell. Die Modellbereitstellung ist optional; Aktivierung und Staffel auf dem Proxy gelten für beide Varianten. Die <a href="#/chatfilter/einstellungen-der-bridge">Kanäle</a> legen fest, wo nur die Wortliste oder zusätzlich die KI verwendet wird.</p>
   <ol class="steps">
     <li><strong>Wortliste füllen</strong>
       <p>Die zentrale Wortliste liegt auf dem Proxy unter <code>plugins/PunishSystemVelocity/chatfilter/wortliste.txt</code>. Eine Zeile pro Eintrag, mit <code>#</code> beginnen Kommentare. Die Kopien auf den Bridges werden vom Proxy überschrieben; dortige Änderungen gehen beim nächsten Sync verloren. Alternativ Einträge im Spiel mit <code>/chatfilter add</code> ergänzen.</p>
     </li>
     <li><strong>Optional: KI-Modell zentral auf dem Proxy bereitstellen</strong>
-      <p>Die Dateien <code>modell_int8.onnx</code> und <code>vocab.txt</code> kommen einmalig in den Ordner <code>chatfilter/</code> des Proxys (<code>plugins/PunishSystemVelocity/chatfilter/</code>). Der Sync verteilt beide Dateien danach automatisch an alle Bridges mit abweichendem Stand (SHA-256-Vergleich beim Join, manuell per <code>/chatfilter sync</code>).</p>
+      <p>Die Dateien <code>modell_int8.onnx</code> und <code>vocab.txt</code> kommen einmalig in den Ordner <code>chatfilter/</code> des Proxys (<code>plugins/PunishSystemVelocity/chatfilter/</code>). Der Sync verteilt beide Dateien danach automatisch beim Spielerbeitritt an alle Bridges mit abweichendem Stand; manuell lässt sich die Verteilung mit <code>/chatfilter sync</code> starten.</p>
       <div class="callout warn"><div><span class="ttl">Separates Modell mit eigener Lizenz</span><p>Das Repository sieht <code>ankekat1000/toxic-bert-german</code> mit der Lizenzangabe <code>CC-BY-NC-SA-4.0</code> vor. Modell und Vokabular werden nicht in den Plugin-Jars mitgeliefert. Lizenz und Nutzungsbedingungen des <a href="https://huggingface.co/ankekat1000/toxic-bert-german">Modellprojekts</a> sind vor dem Einsatz gesondert zu prüfen.</p></div></div>
       <ul>
         <li><code>vocab.txt</code> lädt der Proxy bei Bedarf im Hintergrund von HuggingFace (nur bei aktivem Chatfilter, der Start wartet nicht). Weicht der SHA ab, steht ein Fehler im Log und die Datei wird verworfen; ein fehlendes Modell bleibt dann inaktiv.</li>
-        <li>Das Modell lädt er nur automatisch, wenn <code>chatfilter.modell-url</code> in der Proxy-<code>general.yml</code> gesetzt ist (strikter SHA-Check, falsche Dateien werden verworfen). Ohne Downloadadresse kannst du das <a href="#/chatfilter/modell-selbst-exportieren">Modell selbst exportieren</a> und die Datei manuell ablegen.</li>
+        <li>Das Modell lädt er nur automatisch, wenn <code>chatfilter.modell-url</code> in der Proxy-<code>general.yml</code> gesetzt ist. Die Datei muss zur vom Plugin erwarteten Prüfsumme passen; abweichende Dateien werden verworfen. Ohne Downloadadresse die passenden Modelldateien manuell im oben genannten Ordner ablegen.</li>
       </ul>
-    </li>
-    <li><strong>Optional: Hilfsskript für die Modellbereitstellung nutzen</strong>
-      <p>Das Skript aus dem Repository kann auf den zentralen Proxy-Ordner oder bei manueller Verteilung auf den jeweiligen Bridge-Ordner zeigen:</p>
-      <pre data-lang="shell">.\scripts\chatfilter-modell-laden.ps1 -Zielordner "E:\Proxy\plugins\PunishSystemVelocity\chatfilter"</pre>
-      <p>Ohne <code>-ModellUrl</code> lädt es nur <code>vocab.txt</code> und gibt die Export-Anleitung aus. Mit einer eigenen Downloadadresse prüft es das Modell gegen die im Skript hinterlegte SHA-256-Prüfsumme. Beim Vokabular warnt das Skript bei einer Abweichung; der automatische Proxy-Download verwirft abweichende Dateien dagegen. Die exportierte Datei wird als <code>modell_int8.onnx</code> abgelegt.</p>
       <p>Fehlt das Modell, läuft nur die Wortliste. Fehlt die Wortliste, läuft nur die KI.</p>
-      <p>Die ONNX-Runtime wird <strong>nicht</strong> in das Plugin-Paket umgebucht (relokiert). Lädt ein anderes Plugin auf demselben Server eine abweichende ONNX-Runtime, können sich beide in die Quere kommen. Das ist ein bekannter, bewusst akzeptierter Rest-Risiko-Punkt: Der Server braucht dann eine der beiden Kombinationen ohne doppelte Runtime.</p>
+      <p>Andere Plugins mit einer abweichenden ONNX-Runtime können das Laden des KI-Modells verhindern. Bei solchen Ladefehlern die betroffenen Plugins auf Kompatibilität prüfen.</p>
     </li>
     <li><strong>Filter auf dem Proxy einschalten</strong>
       <p>In der <code>general.yml</code> des Proxys wird <code>chatfilter.aktiv: true</code> gesetzt. Dieser Wert ist der Master und wird per Text-Sync an alle Bridges verteilt; die lokale <code>chatfilter.yml</code> der Bridges ist nur Fallback vor dem ersten Sync.</p>
@@ -2532,18 +2525,6 @@ vorschlaege:
       <p>Auf dem Proxy <code>/punish-reload</code> ausführen, damit Filterregeln und Wortliste neu verteilt werden. Der Modellbestand wird beim Proxy-Start geladen; nach dem manuellen Ersetzen von Modell oder Vokabular den Proxy neu starten und bei Bedarf <code>/chatfilter sync</code> ausführen. Im Log stehen <code>Modell-Sync bereit</code> oder <code>Modell-Sync inaktiv</code>. Auf der Bridge wird ein laufender Filter erst nach erfolgreichem Aufbau des Ersatzes getauscht.</p>
     </li>
   </ol>
-
-  <details>
-    <summary>Modell selbst exportieren</summary>
-    <div>
-      <p>Das mitgelieferte Skript gibt folgende Export-Befehle aus. Die benötigten Python-Werkzeuge werden separat installiert:</p>
-      <pre data-lang="shell">pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install "optimum[onnxruntime]" transformers
-optimum-cli export onnx --model ankekat1000/toxic-bert-german --task text-classification --framework pt ./tbg-onnx
-python -c "from onnxruntime.quantization import quantize_dynamic,QuantType; quantize_dynamic('./tbg-onnx/model.onnx','./modell_int8.onnx',weight_type=QuantType.QInt8)"</pre>
-      <p>Die erzeugte Datei kommt als <code>modell_int8.onnx</code> zusammen mit dem passenden <code>vocab.txt</code> in <code>plugins/PunishSystemVelocity/chatfilter/</code>. Alternativ beide Dateien manuell auf jeder Bridge ablegen. Für die automatische Modell-Downloadadresse muss die Modell-Prüfsumme mit der im Plugin hinterlegten Prüfsumme übereinstimmen.</p>
-    </div>
-  </details>
 
   <h2>Die Wortliste</h2>
   <pre data-lang="yaml"># Werbung
@@ -2590,9 +2571,9 @@ gratis vip rank</pre>
   <div class="tbl"><table>
     <thead><tr><th>Kanal</th><th>Wortlisten-Treffer</th><th>Zusätzliche KI-Prüfung</th></tr></thead>
     <tbody>
-      <tr><td>Chat</td><td>Sofort blockiert</td><td>Wartet außerhalb des Server-Hauptthreads bis zum KI-Timeout. Bei Ausfall oder Überlastung kann der Text durchgehen.</td></tr>
+      <tr><td>Chat</td><td>Sofort blockiert</td><td>Wartet bis zur eingestellten KI-Zeitgrenze auf die Bewertung. Bei Ausfall oder Überlastung kann der Text durchgehen.</td></tr>
       <tr><td>Befehlsargumente (<code>privat</code>)</td><td>Sofort blockiert, außer bei <code>befehl-ausnahmen</code></td><td>Nachgelagerte Prüfung meldet Treffer; der bereits ausgeführte Befehl wird nicht zurückgenommen.</td></tr>
-      <tr><td>Schild, Buch, Amboss</td><td>Sofort blockiert</td><td>Standardmäßig nur Wortliste. Im Modus <code>ki</code> kann eine gecachte Bewertung blockieren; ohne Cache erfolgt im Hauptthread eine nachgelagerte Prüfung.</td></tr>
+      <tr><td>Schild, Buch, Amboss</td><td>Sofort blockiert</td><td>Standardmäßig nur Wortliste. Im Modus <code>ki</code> können bereits erkannte Treffer blockiert werden; neue Texte werden erst nachträglich geprüft und Treffer gemeldet.</td></tr>
     </tbody>
   </table></div>
   <p>Nachgelagerte Treffer können für die Staffel zählen, obwohl der Inhalt bereits sichtbar war. Ein nachträglicher Mute entfernt diesen Inhalt nicht.</p>
@@ -2800,7 +2781,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
 <section class="page" id="changelogVersions" data-id="changelog" data-group="Betrieb" data-title="Changelog">
   <h1>Changelog</h1>
   <p class="lead">Änderungen an allen neuen Plugin-Versionen ab v4.0.0. Die neueste Veröffentlichung steht oben; jeder Eintrag nennt Datum, Änderungen und nötige Update-Hinweise.</p>
-  <p>Für den Austausch der Jars gilt die Anleitung unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>. Wie Patch- und Minor-Versionen entstehen, erklärt <a href="#/entwicklung/versionen-und-releases">Versionen und Releases</a>.</p>
+  <p>Für den Austausch der Jars gilt die Anleitung unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</p>
 
   <div class="command-tools" role="search" aria-label="Changelog filtern">
     <label for="changelogFilter">Versionen filtern</label>
@@ -2818,50 +2799,45 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <ul>
     <li><strong>Automatische Backend-Updates:</strong> Beide Bridge-Varianten legen die geprüfte JAR unter dem bisherigen Dateinamen im konfigurierten Server-Update-Ordner ab. Der Server übernimmt sie beim nächsten Start.</li>
     <li><strong>Proxy-Start-Hook:</strong> Auf Linux und unter Pelican/Docker kann die Startzeile einmalig den erzeugten Hook aufrufen. Dieser prüft SHA-256 erneut, sichert die bisherige Proxy-JAR und ersetzt sie vor dem Java-Start. Bei einem Fehler bleibt der Start gestoppt.</li>
-    <li><strong>Status und Hinweise:</strong> Der Update-Status zeigt den aktiven Start-Hook. Ohne eingerichteten Hook meldet <code>apply</code>, dass die Proxy-Datei noch vorgemerkt ist. Neue Nachrichtenschlüssel vermeiden veraltete Hinweise aus bestehenden Konfigurationen.</li>
+    <li><strong>Status und Hinweise:</strong> Der Update-Status zeigt den aktiven Start-Hook. Ohne eingerichteten Hook meldet <code>apply</code>, dass die Proxy-Datei noch vorgemerkt ist. Auch bestehende Konfigurationen zeigen die aktualisierten Update-Hinweise.</li>
   </ul>
   <p><strong>Update-Hinweis:</strong> Für den Einstieg alle Module einmalig manuell auf v4.2.0 aktualisieren und neu starten. Danach den Proxy-Start-Hook wie unter <a href="#/betrieb/start-hook-fuer-linux-und-pelican-einrichten">Updates und Sicherungen</a> einrichten. Für künftige Updates nach <code>apply</code> alle Transferquittungen prüfen und Backends sowie Proxy neu starten. Konfiguration und Datenbankschema bleiben kompatibel.</p>
 
   <h2 data-anchor="v4-1-1">v4.1.1</h2>
   <p><time datetime="2026-11-18">18.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1" target="_blank" rel="noopener">Release und Downloads</a></p>
   <ul>
-    <li><strong>HELLO ohne Spieler:</strong> Beide Bridge-Varianten warten still, wenn kein Spieler für den Transport der Plugin-Nachrichten verbunden ist. Startversuche und der regelmäßige HELLO-Refresh erzeugen dadurch auf leeren oder durch eine Whitelist gesperrten Backends keine wiederkehrenden Warnungen mehr.</li>
-    <li><strong>Wiederaufnahme und Diagnose:</strong> Sobald wieder ein Spieler beitritt, läuft der vorhandene HELLO-/Sync-Ablauf automatisch weiter. Tatsächliche Versand- und Konfigurationsfehler bleiben sichtbar.</li>
+    <li><strong>Leere Backends:</strong> Beide Bridge-Varianten erzeugen keine wiederkehrenden Verbindungswarnungen mehr, solange kein Spieler auf dem Backend verbunden ist. Das gilt auch bei aktiver Whitelist.</li>
+    <li><strong>Wiederaufnahme und Diagnose:</strong> Sobald wieder ein Spieler beitritt, werden Verbindung und Synchronisierung automatisch fortgesetzt. Tatsächliche Versand- und Konfigurationsfehler bleiben sichtbar.</li>
   </ul>
   <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.1.1 aktualisieren und neu starten. Konfiguration und Datenbankschema bleiben kompatibel; neue Einstellungen sind nicht erforderlich.</p>
 
   <h2 data-anchor="v4-1-0">v4.1.0</h2>
   <p><time datetime="2026-11-18">18.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.0" target="_blank" rel="noopener">Release und Downloads</a></p>
-  <p>Bugfix- und Optimierungs-Update aus dem Code-Audit. Diese Version ergänzt keine Funktionen, Befehle, Permissions oder Konfigurationsoptionen.</p>
+  <p>Fehlerbehebungen und Optimierungen bestehender Funktionen.</p>
   <ul>
-    <li><strong>Strafverlauf:</strong> Verliert eine Ablauf-Entfernung gegen eine parallele Änderung, wird keine falsche Aufhebungs-History mehr geschrieben. Gilt für Banns, Mutes, Timeouts, Freezes, IP-Mutes und IP-Timeouts.</li>
-    <li><strong>Warn-Eskalation:</strong> Vorgemerkte Eskalationen werden nach gelöschten oder abgelaufenen Warns sowie geänderten Schwellen oder Stufen erneut geprüft. Mehrere Nachholversuche können dieselbe Vormerkung nicht gleichzeitig beanspruchen.</li>
-    <li><strong>Bridge-Sync:</strong> Sinkt die Anzahl der Mutes während eines Voll-Syncs unter die Chunkgrenze, werden die Mutes weiterhin vollständig übertragen. Der Einzel-Sync-Ausweichpfad überträgt alle Strafarten zusammen statt zwischendurch andere Straf-Caches zu leeren.</li>
-    <li><strong>Wartungsaufwand:</strong> Ablaufbereinigung und Persistenzwächter laufen wieder im vorgesehenen Fünf-Minuten-Takt statt alle 15 Sekunden. Die laufende Durchsetzung wertet Ablaufzeitpunkte weiterhin direkt aus.</li>
+    <li><strong>Strafverlauf:</strong> Gleichzeitige Änderungen und das Ablaufen einer Strafe erzeugen keine falschen Aufhebungen im Verlauf mehr. Gilt für Banns, Mutes, Timeouts, Freezes, IP-Mutes und IP-Timeouts.</li>
+    <li><strong>Warn-Eskalation:</strong> Gelöschte oder abgelaufene Warns sowie geänderte Schwellen und Stufen werden vor einer vorgemerkten Eskalation erneut berücksichtigt. Dieselbe Eskalation wird nicht mehrfach ausgeführt.</li>
+    <li><strong>Bridge-Sync:</strong> Mutes werden auch bei gleichzeitigen Änderungen vollständig übertragen. Die Synchronisierung einer Strafart entfernt keine anderen Strafen mehr von der Bridge.</li>
+    <li><strong>Serverlast:</strong> Regelmäßige Wartungsaufgaben laufen seltener. Strafen enden weiterhin zum vorgesehenen Zeitpunkt.</li>
     <li><strong>Vorab-Strafen:</strong> Frühere echte Namensinhaber verdecken keine Platzhalter-Strafen mehr bei der Suche nach Vorab-Banns, -Mutes und -Timeouts. Ein vorhandener lokaler Mute verhindert die Migration eines globalen Vorab-Mutes beim Login nicht mehr.</li>
     <li><strong>IP-Schutz:</strong> Die Online-Schutzprüfung fragt nur Rechte von Spielern mit der betroffenen IP ab. Fehler bei unbeteiligten Spielern blockieren die Aktion nicht mehr; unnötige Rechteabfragen entfallen.</li>
     <li><strong>Buchfilter:</strong> Auch Buchtitel werden zusammen mit den Seiten geprüft; leere Seitenlisten umgehen die Titelprüfung nicht.</li>
     <li><strong>PlaceholderAPI:</strong> Bestehende Werte bleiben während einer Aktualisierung verfügbar. Abgelaufene Zeitstrafen werden sofort aus Status, Aktiv-Zähler und Strafdetails ausgeblendet, ohne auf den nächsten Cache-Refresh zu warten.</li>
   </ul>
   <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.1.0 aktualisieren und neu starten. Konfiguration und Datenbankschema bleiben kompatibel; neue Einstellungen sind nicht erforderlich.</p>
-  <p><strong>Automatisierte Prüfung:</strong> <code>build_all_jars.bat nobump ci</code> baut alle Module sauber mit Tests. Lokal bestanden 1.243 Testfälle, darunter 27 zusätzliche Regressionstestfälle; 12 optionale Fälle wurden mangels Testdatenbank beziehungsweise Referenz-Vokabular und Modell übersprungen.</p>
-  <p><strong>Prüfumfang:</strong> Quellcodeprüfung und automatisierte Regressionstests ersetzen keine Abnahme mit echten Clients. Im Testnetzwerk sind insbesondere Login und Serverwechsel, paralleles Setzen und Aufheben von Strafen, GUI, Amboss, Buchsignierung, Scoreboards und das optionale KI-Modell noch praktisch zu prüfen. Tests gegen eine reale MySQL-Instanz benötigen eine gesonderte Testdatenbank.</p>
 
   <h2 data-anchor="v4-0-2">v4.0.2</h2>
   <p><time datetime="2026-11-17">17.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.2" target="_blank" rel="noopener">Release und Downloads</a></p>
   <ul>
-    <li><strong>Bridge-Diagnose:</strong> <code>/psdiagnostics</code> zählt für „Bridges per HELLO gemeldet“ jetzt die tatsächlich eingegangenen HELLOs statt der Versionsliste. Die Servernamen werden dabei normalisiert, sodass auch großgeschriebene Velocity-Namen korrekt erkannt werden.</li>
+    <li><strong>Bridge-Diagnose:</strong> <code>/psdiagnostics</code> zeigt die Anzahl der beim Proxy gemeldeten Bridges korrekt an. Auch großgeschriebene Velocity-Servernamen werden erkannt.</li>
   </ul>
-  <p><strong>Update-Hinweis:</strong> Alle drei Jars auf v4.0.2 aktualisieren. Die Zählung umfasst Bridges, die seit dem Start des Proxy-Plugins ein HELLO gesendet haben. Ein Backend ohne verbundenen Spieler kann keine Plugin-Nachricht senden; dort erscheint die Bridge erst nach dem nächsten Beitritt in der Diagnose.</p>
+  <p><strong>Update-Hinweis:</strong> Alle drei Jars auf v4.0.2 aktualisieren. Die Zählung umfasst Bridges, die sich seit dem Start des Proxy-Plugins gemeldet haben. Ein Backend ohne verbundenen Spieler kann keine Plugin-Nachricht senden; dort erscheint die Bridge erst nach dem nächsten Beitritt in der Diagnose.</p>
 
   <h2 data-anchor="v4-0-1">v4.0.1</h2>
   <p><time datetime="2026-11-17">17.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.0.1" target="_blank" rel="noopener">Release und Downloads</a></p>
   <ul>
-    <li><strong>Versionsangaben:</strong> Das kleine <code>v</code> ist jetzt Teil der Maven-Version und der Plugin-Metadaten. Auch Versionsanzeigen und Update-Meldungen verwenden durchgehend <code>v4.0.1</code>.</li>
+    <li><strong>Versionsangaben:</strong> Versionsanzeigen und Update-Meldungen verwenden durchgehend die vollständige Version einschließlich des kleinen <code>v</code>, zum Beispiel <code>v4.0.1</code>.</li>
     <li><strong>Updater:</strong> Die Erkennung der Release-Dateinamen ist an die vollständige Versionsbezeichnung angepasst. Ältere Versionen mit und ohne <code>v</code> sowie bisherige Dateinamen werden weiterhin erkannt.</li>
-    <li><strong>Windows-Build:</strong> Auch bei stabilen Versionen und mit <code>nobump</code> wird die Version in alle Module und Plugin-Metadaten synchronisiert.</li>
-    <li><strong>Release-Build:</strong> Die Download-Dateinamen enthalten genau ein <code>v</code>. Der GitHub-Build bricht ab, wenn Versions-Tag und Projektversion nicht übereinstimmen.</li>
-    <li><strong>Versionierung:</strong> Das Versionsskript unterstützt <code>-Increment patch</code> und <code>-Increment minor</code>. Die Regeln für stabile Patch- und Minor-Releases sind dokumentiert.</li>
   </ul>
   <p><strong>Update-Hinweis:</strong> Alle drei Jar-Varianten tragen dieselbe vollständige Version. Installiere auf dem Proxy die Velocity-Jar und auf jedem Backend genau eine zur Paper-Version passende Bridge.</p>
 
@@ -2873,8 +2849,8 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <li><strong>Downloads:</strong> Separate Jars für Velocity, Paper/Purpur 1.21.x und Paper/Purpur 26.1+; dazu SHA-256-Prüfsummen für die Downloads.</li>
   </ul>
   <div class="callout">
-    <div><span class="ttl">Vergleich zur v3-Reihe folgt</span>
-    <p>Der detaillierte Änderungsvergleich zur vorherigen v3-Version wird ergänzt. Die hier genannten enthaltenen Funktionen sind noch keine vollständige Liste der Neuerungen gegenüber v3.</p></div>
+    <div><span class="ttl">Vergleich zur v3-Reihe</span>
+    <p>Für diese Version liegt kein vollständiger Änderungsvergleich zur v3-Reihe vor.</p></div>
   </div>
   <p><strong>Update-Hinweis:</strong> Vor dem Wechsel Plugin-Ordner und Datenbank sichern. Für stabile Updates auf dem Proxy <code>update.channel: Release</code> verwenden. Voraussetzungen und Ablauf stehen unter <a href="#/installation">Installation</a> und <a href="#/betrieb">Updates und Sicherungen</a>.</p>
 </section>
@@ -2923,9 +2899,9 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <p>Die Ports der Backend-Server werden per Firewall nur für den Proxy geöffnet. Das gilt für Strafdaten genauso wie für alles andere.</p>
 </section>
 
-<!-- =============================== HILFE UND ENTWICKLUNG =============================== -->
+<!-- =============================== HILFE =============================== -->
 
-<section class="page" data-id="fehlerbehebung" data-group="Hilfe und Entwicklung" data-title="Fehlerbehebung">
+<section class="page" data-id="fehlerbehebung" data-group="Hilfe" data-title="Fehlerbehebung">
   <h1>Fehlerbehebung</h1>
   <p class="lead">Die häufigsten Probleme mit Ursache und Lösung. Am besten zuerst nach der angezeigten Meldung suchen.</p>
 
@@ -3076,7 +3052,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <div>
       <ul>
         <li>In den ersten 10 Sekunden nach dem Start lehnt die Bridge Logins mit „Server startet noch“ ab (Fail-Closed), solange Bann-, Timeout- oder Mute-Cache noch nicht synchron sind. Danach ist der Login fail-open.</li>
-        <li>Ohne verbundenen Spieler kann die Bridge keine Plugin-Nachrichten senden. Sie wartet bei HELLO-Versuchen still, auch auf Whitelist-Servern. Nach dem nächsten Beitritt startet der vorhandene HELLO-/Sync-Ablauf automatisch; echte Versand- oder Konfigurationsfehler werden weiterhin protokolliert.</li>
+        <li>Ohne verbundenen Spieler wartet die Bridge, auch auf Whitelist-Servern. Nach dem nächsten Beitritt werden Verbindung und Synchronisierung automatisch fortgesetzt; echte Versand- oder Konfigurationsfehler werden weiterhin protokolliert.</li>
         <li>Danach greifen synchronisierte Banns und Timeouts auch ohne Proxy-Kontakt weiter. Neue Strafen gehen nur über den Proxy.</li>
         <li><code>/punish-diagnostics</code> auf der Bridge zeigt, ob und wann der letzte Sync war (mindestens ein Spieler muss online gewesen sein).</li>
       </ul>
@@ -3087,7 +3063,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <p>Bei Problemen zuerst die Konsole des Proxys und <code>plugins/PunishSystemVelocity/punish_log.txt</code> ansehen (Rotation bei 10 MiB, bis zu fünf zusätzliche Dateien). Version und Diagnoseausgabe des betroffenen Servers angeben; Tunnel-Secrets und Zugangsdaten vor dem Weitergeben entfernen.</p>
 </section>
 
-<section class="page" data-id="faq" data-group="Hilfe und Entwicklung" data-title="Häufige Fragen">
+<section class="page" data-id="faq" data-group="Hilfe" data-title="Häufige Fragen">
   <h1>Häufige Fragen</h1>
   <p class="lead">Kurze Antworten auf Fragen, die im Alltag am häufigsten auftauchen.</p>
 
@@ -3135,62 +3111,6 @@ Verstöße: %punish_verstoss_punkte%</pre>
 
   <details><summary>Was zeigt das Spieler-Dossier?</summary>
     <div><p><code>/punish-dossier &lt;Spieler&gt;</code> öffnet als Spieler eine Übersicht mit Status, Verlauf, Warns und den Strafaktionen. Das Recht ist <code>punish.gui</code>. Siehe <a href="#/gui">PunishGUI</a>.</p></div></details>
-</section>
-
-<section class="page" data-id="entwicklung" data-group="Hilfe und Entwicklung" data-title="Bauen und Entwickeln">
-  <h1>Bauen und Entwickeln</h1>
-  <p class="lead">PunishSystem ist ein Maven-Projekt mit vier Modulen. Zum Bauen ist JDK 25 nötig; die eigenen Klassen werden mit Java-Release 21 übersetzt. Für den Betrieb der Bridge auf Paper 26.1+ ist trotzdem Java 25 erforderlich.</p>
-
-  <h2>Module und gemeinsame Quellen</h2>
-  <div class="tbl"><table>
-    <thead><tr><th>Modul</th><th>Aufgabe</th></tr></thead>
-    <tbody>
-      <tr><td><code>common</code></td><td>Gemeinsame Befehle, Modelle, Services, Speicher und Netzwerkprotokoll; keine separat zu installierende Plugin-Jar.</td></tr>
-      <tr><td><code>velocity</code></td><td>Proxy-Plugin und zentrale Strafverwaltung.</td></tr>
-      <tr><td><code>bridge</code></td><td>Bridge für Paper 26.1+; hier liegen die gemeinsamen Bridge-Quellen und -Tests.</td></tr>
-      <tr><td><code>bridge-1.21</code></td><td>Bridge für Paper 1.21.x; übernimmt gemeinsame Quellen beim Maven-Build.</td></tr>
-    </tbody>
-  </table></div>
-  <p>Gemeinsame Änderungen gehören nach <code>bridge/src/</code>. Nur <code>PunishBridge</code>, <code>BridgeEnforcementListener</code> und der API-spezifische <code>FixRegressionTest</code> werden in beiden Bridge-Modulen separat gepflegt. Dateien unter <code>target/generated-sources/bridge</code> und <code>target/generated-test-sources/bridge</code> werden erzeugt und nicht bearbeitet.</p>
-  <p>Nach einem frischen Checkout vor dem direkten IDE-Start die gemeinsamen Quellen und Tests vorbereiten:</p>
-  <pre data-lang="shell">mvn -pl bridge-1.21 -am test-compile</pre>
-
-  <h2>Versionen und Releases</h2>
-  <p>Das kleine <code>v</code> gehört zur vollständigen Version, auch in Maven und den Plugin-Metadaten. Stabile Versionen verwenden <code>v4.Minor.Patch</code>. Die Hauptversion bleibt vorerst <code>4</code>.</p>
-  <div class="tbl"><table>
-    <thead><tr><th>Änderung</th><th>Versionsschritt</th><th>Beispiel</th></tr></thead>
-    <tbody>
-      <tr><td>Fehlerbehebung, Sicherheitskorrektur oder Optimierung bestehender Funktionen</td><td>Patch erhöhen</td><td><code>v4.0.0</code> → <code>v4.0.1</code></td></tr>
-      <tr><td>Neue, zu bestehenden Installationen kompatible Funktion oder neuer Befehl</td><td>Minor erhöhen, Patch auf 0 setzen</td><td><code>v4.0.3</code> → <code>v4.1.0</code></td></tr>
-      <tr><td>Nur Dokumentation, Website oder GitHub-Beschreibung</td><td>Plugin-Version beibehalten</td><td>Keine neuen Plugin-Jars</td></tr>
-    </tbody>
-  </table></div>
-  <p>Für eine neue Patch-Version im Projektordner ausführen. Für eine neue Minor-Version <code>patch</code> durch <code>minor</code> ersetzen:</p>
-  <pre data-lang="shell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Increment patch
-build_all_jars.bat nobump ci</pre>
-  <p>Das Versionsskript erhöht die Root-Pom. Der anschließende Build synchronisiert alle Module und Plugin-Metadaten und führt die Tests aus. Stabile Releases erhalten weder Vorabzusatz noch Datums-Buildnummer. Ein lokaler Build allein erhöht die Version nicht.</p>
-  <p>Vor jeder Veröffentlichung die betroffenen Anleitungen, Befehle, Permissions, Konfigurationen, Voraussetzungen und Update-Hinweise mit dem Plugin abgleichen und veraltete Inhalte korrigieren. Versionsangaben und Download-Links aktualisieren und im <a href="#/changelog">Changelog</a> einen datierten Eintrag mit Änderungen, Fehlerbehebungen und nötigen Update-Hinweisen ergänzen. Die Dokumentation gehört zum selben Commit wie die neue Plugin-Version und wird über GitHub Pages veröffentlicht. Der GitHub-Build prüft vor einem Release die Versionsangaben in README und Dokumentation sowie den Eintrag für die aktuelle Version im Changelog.</p>
-
-  <h2>Jars selbst bauen (optional)</h2>
-  <p>Im Projektordner unter Windows stehen diese Varianten zur Verfügung. Die Erläuterungen unter dem Codeblock beschreiben die Schalter:</p>
-  <pre data-lang="shell">build_all_jars.bat
-build_all_jars.bat nobump
-build_all_jars.bat skiptests
-build_all_jars.bat nobump skiptests</pre>
-  <ul>
-    <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer oder eine Vorabversion (<code>-alpha</code>, <code>-beta</code>, <code>-preview</code>, <code>-RC</code>, <code>-SNAPSHOT</code>) auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Finale Versionen ohne Buildnummer bleiben unverändert.</li>
-    <li><code>nobump</code> lässt die Version unverändert. <code>skiptests</code> überspringt die Tests.</li>
-    <li>Das Skript synchronisiert die Parent-Version in den Modul-Poms und die Versionsangabe der Proxy-Plugin-Klasse; die Plugin-Metadaten werden beim Maven-Build verarbeitet.</li>
-    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.2.0-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
-  </ul>
-  <p>Maven baut ohne das Hilfsskript direkt in die <code>target/</code>-Ordner der Module:</p>
-  <pre data-lang="shell">mvn -pl velocity,bridge,bridge-1.21 -am clean package</pre>
-
-  <h2>Gezielt bauen und testen</h2>
-  <pre data-lang="shell">mvn -pl velocity -am compile
-mvn -pl velocity -am test
-mvn verify</pre>
-  <p>Ersetze <code>velocity</code> durch das betroffene Modul. <code>-am</code> baut die benötigten Projektmodule mit. Änderungen an gemeinsamen Bridge-Quellen mit <code>mvn -pl bridge,bridge-1.21 -am test</code> für beide APIs prüfen. <code>mvn verify</code> prüft das gesamte Projekt. Installation und Laufzeit-Voraussetzungen stehen unter <a href="#/installation">Installation</a>.</p>
 </section>
 
   </main>
@@ -3566,7 +3486,6 @@ mvn verify</pre>
     var anchor = parts[1] ? dec(parts[1]) : '';
     var moved = {
       'installation/updates-einspielen': 'betrieb/updates-einspielen',
-      'installation/jars-selbst-bauen-optional': 'entwicklung/jars-selbst-bauen-optional',
       'ueberblick/voraussetzungen': 'installation/voraussetzungen',
       'ueberblick/fuer-wen-ist-diese-dokumentation': 'ueberblick/empfohlene-lesereihenfolge'
     };

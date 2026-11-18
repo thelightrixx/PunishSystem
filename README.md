@@ -18,7 +18,6 @@ Die vollständige Dokumentation liegt in [docs/index.html](docs/index.html). Öf
 | Eine bestehende Installation aktualisieren | [Updates und Sicherungen](docs/index.html#/betrieb) |
 | Änderungen einer Version nachlesen | [Changelog](docs/index.html#/changelog) |
 | Ein Problem untersuchen | [Fehlerbehebung](docs/index.html#/fehlerbehebung) |
-| Das Projekt bauen | [Bauen und Entwickeln](docs/index.html#/entwicklung) |
 
 Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=low`, `level=medium` und `level=high`. Die Vorschläge gibt es auch beim [Bearbeiten eines Verstoßes](docs/index.html#/befehle-bearbeiten/punish-edit).
 
@@ -60,24 +59,6 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 Für den Einstieg in den neuen Ablauf alle JARs einmalig manuell auf `v4.2.0` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
 
 Für künftige stabile Updates `update.channel: "Release"` auf dem Proxy verwenden. `/punish-update apply confirm` lädt, prüft und verteilt die Dateien. Mit `/punish-update status` den aktiven Proxy-Start-Hook und die erfolgreichen Transferquittungen aller Backends prüfen, dann Backends und Proxy neu starten. Für die Verteilung muss auf jedem Backend ein Spieler verbunden sein. Ohne Start-Hook bleibt die Proxy-JAR vorgemerkt; das Plugin weist darauf hin. Die [Update-Anleitung](docs/index.html#/betrieb) beschreibt Einrichtung, Sicherung und Fehlerbehandlung.
-
-## Versionen und Veröffentlichungen
-
-Das [Changelog](docs/index.html#/changelog) führt alle neuen Plugin-Versionen ab `v4.0.0`, mit Veröffentlichungsdatum, Änderungen, Fehlerbehebungen und nötigen Update-Hinweisen. Die neueste Version steht oben. Die Regeln für Patch- und Minor-Versionen stehen unter [Versionen und Releases](docs/index.html#/entwicklung/versionen-und-releases).
-
-Vor jeder neuen Veröffentlichung wird die Dokumentation mit den tatsächlichen Änderungen am Plugin abgeglichen. Dabei werden betroffene Anleitungen, Befehle, Permissions, Konfigurationen, Voraussetzungen und Update-Hinweise sowie Versionsangaben und Download-Links geprüft. Veraltete Inhalte werden korrigiert und der Changelog-Eintrag ergänzt, bevor der Versions-Tag veröffentlicht wird. Diese Aktualisierungen gehören zum selben Commit wie die neue Plugin-Version und werden über GitHub Pages mitveröffentlicht.
-
-Der GitHub-Build prüft zusätzlich, ob README, Versionsanzeige der Dokumentation und Changelog zur Projektversion passen; bei Abweichungen wird kein Release erstellt. Die inhaltliche Prüfung der Anleitungen gehört weiterhin zur Vorbereitung jedes Releases. Reine Dokumentationskorrekturen werden direkt veröffentlicht, ohne die Plugin-Version zu erhöhen oder ein neues Plugin-Release anzulegen.
-
-## Aus dem Quellcode bauen
-
-JDK 25 und Maven werden benötigt. Die eigenen Klassen verwenden Java-Release 21. Unter Windows baut `build_all_jars.bat nobump` alle Jars mit Tests, ohne die Buildnummer zu ändern. Alternativ:
-
-```shell
-mvn verify
-```
-
-Das Projekt enthält `common`, `velocity`, `bridge` und `bridge-1.21`. Gemeinsame Bridge-Quellen und -Tests liegen unter `bridge/src/`; `bridge-1.21` übernimmt sie beim Build. Vor dem ersten IDE-Start `mvn -pl bridge-1.21 -am test-compile` ausführen. Weitere Build-Befehle und die separat gepflegten API-Klassen erklärt [Bauen und Entwickeln](docs/index.html#/entwicklung).
 
 ## Lizenz
 
