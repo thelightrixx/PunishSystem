@@ -77,6 +77,41 @@ class JarEmpfaengerTest {
         assertTrue(quittungen.get(0).erfolg());
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"bridge", "bridge-1.21"})
+    void installiertesJarBleibtBisZumNeustartUnberuehrt(String variante) throws Exception {
+        var plugins = java.nio.file.Files.createDirectories(ordner.toPath().resolve("plugins"));
+        String dateiname = "PunishSystem-v4.1.1-(" + variante + ").jar";
+        var installiert = plugins.resolve(dateiname);
+        byte[] original = "laufende-version".getBytes(StandardCharsets.UTF_8);
+        java.nio.file.Files.write(installiert, original);
+        var updates = plugins.resolve("eigener-update-ordner");
+        var empfang = new JarEmpfaenger(updates.toFile(), dateiname, new JarEmpfaenger.Rueckmeldung() {
+            @Override
+            public void quittung(String v, String version, boolean erfolg) {
+                quittungen.add(new Protokoll.UpdateQuittung(v, version, erfolg));
+            }
+
+            @Override
+            public void standMelden() {
+            }
+        });
+        for (String version : List.of("v4.2.0", "v4.3.0")) {
+            byte[] inhalt = version.getBytes(StandardCharsets.UTF_8);
+            String hash = sha256(inhalt);
+            empfang.empfangeMeta(new Protokoll.UpdateMeta(variante, version, inhalt.length, hash, 4096, 1));
+            empfang.empfangeBlock(new Protokoll.UpdateBlock(variante, 0, inhalt));
+            empfang.empfangeFertig(new Protokoll.UpdateFertig(variante, version, hash, inhalt.length));
+
+            assertArrayEquals(original, java.nio.file.Files.readAllBytes(installiert));
+            assertArrayEquals(inhalt, java.nio.file.Files.readAllBytes(updates.resolve(dateiname)));
+            assertTrue(quittungen.getLast().erfolg());
+            try (var dateien = java.nio.file.Files.list(updates)) {
+                assertEquals(1, dateien.count(), "Mehrere Updates dürfen keine doppelten JARs erzeugen.");
+            }
+        }
+    }
+
     @Test
     void transferLaesstKeinePartDateiAuseinanderHaengen() throws Exception {
         byte[] inhalt = new byte[]{1, 2, 3, 4};

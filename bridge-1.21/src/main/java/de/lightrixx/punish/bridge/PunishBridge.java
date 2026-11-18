@@ -650,9 +650,12 @@ public final class PunishBridge extends JavaPlugin {
         if (kanalClient == null) {
             return;
         }
-        java.io.File ordner = new java.io.File(getDataFolder(), "update-pending");
         try {
-            var empfaenger = new JarEmpfaenger(ordner, new JarEmpfaenger.Rueckmeldung() {
+            var ordner = getServer().getUpdateFolderFile();
+            if (getServer().getUpdateFolder().isBlank()) {
+                throw new IllegalStateException("Der Update-Ordner des Servers ist deaktiviert.");
+            }
+            var empfaenger = new JarEmpfaenger(ordner, getFile().getName(), new JarEmpfaenger.Rueckmeldung() {
                 @Override
                 public void quittung(String variante, String version, boolean erfolg) {
                     try {

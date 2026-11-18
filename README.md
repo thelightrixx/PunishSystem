@@ -1,4 +1,4 @@
-# PunishSystem v4.1.1
+# PunishSystem v4.2.0
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
@@ -24,7 +24,7 @@ Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=
 
 ## Voraussetzungen und Jars
 
-Das [Release v4.1.1](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1) enthält alle drei Jars und `SHA256SUMS.txt`. Die Bridge wartet bei HELLO-Versuchen ohne verbundenen Spieler still auf den nächsten Beitritt; dadurch entfällt der Logspam auf leeren oder durch eine Whitelist gesperrten Backends.
+Das [Release v4.2.0](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.2.0) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
 
 | Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
@@ -55,9 +55,11 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 - Status, Hauptverlauf, Bearbeitung, Vorlagen, Undo, Statistik, JSON-Export und Suche über Historie, Notizen und Reports.
 - PunishGUI, Wortlistenfilter und optionales lokales KI-Modell für den Chatfilter.
 - MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
-- GitHub-Updates mit SHA-256-Prüfung: Jars werden bereitgestellt und anschließend manuell ausgetauscht; danach alle Server neu starten.
+- GitHub-Updates mit SHA-256-Prüfung und automatischer Übernahme beim nächsten Start: nativer Update-Ordner auf den Backends, Start-Hook auf dem Linux-Proxy, auch unter Pelican/Docker.
 
-Für das Update auf die stabile Version auf dem Proxy in `plugins/PunishSystemVelocity/config/general.yml` den Wert `update.channel` auf `Release` setzen. Im Spiel `/punish-reload` und `/punish-update check` ausführen. `/punish-update apply confirm` stellt die geprüften Jars zum Austausch bereit.
+Für den Einstieg in den neuen Ablauf alle JARs einmalig manuell auf `v4.2.0` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
+
+Für künftige stabile Updates `update.channel: "Release"` auf dem Proxy verwenden. `/punish-update apply confirm` lädt, prüft und verteilt die Dateien. Mit `/punish-update status` den aktiven Proxy-Start-Hook und die erfolgreichen Transferquittungen aller Backends prüfen, dann Backends und Proxy neu starten. Für die Verteilung muss auf jedem Backend ein Spieler verbunden sein. Ohne Start-Hook bleibt die Proxy-JAR vorgemerkt; das Plugin weist darauf hin. Die [Update-Anleitung](docs/index.html#/betrieb) beschreibt Einrichtung, Sicherung und Fehlerbehandlung.
 
 ## Versionen und Veröffentlichungen
 

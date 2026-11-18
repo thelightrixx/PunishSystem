@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Dokumentation</title>
-<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.1.1.">
+<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.2.0.">
 <script>
 (function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
@@ -506,7 +506,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite der Dokumentation"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Dokumentation</small></button>
-  <span class="ver">v4.1.1</span>
+  <span class="ver">v4.2.0</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Dokumentation durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -530,7 +530,7 @@ details>div{padding:14px 18px 2px}
   <div class="hero">
     <div class="hero-copy">
       <h1>PunishSystem Dokumentation</h1>
-      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.1.1 auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.2.0 auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
       <div class="hero-actions">
         <a class="hero-action primary" href="#/installation">
           Installation starten
@@ -678,13 +678,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1">Release v4.1.1</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.2.0">Release v4.2.0</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.1.1-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.1.1-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.1.1-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.2.0-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.2.0-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.2.0-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -1766,12 +1766,12 @@ punish-version</pre>
   </article>
 
   <article class="cmd-card" data-cmd="/punish-update" data-alias="/psupdate" data-perm="punish.update" data-scope="nein">
-    <p class="desc">Prüft GitHub Releases und stellt Update-Jars bereit. Die Ausführung erfolgt auf dem Proxy.</p>
+    <p class="desc">Prüft GitHub Releases und merkt geprüfte Update-Jars für die automatische Übernahme beim nächsten Start vor. Die Ausführung erfolgt auf dem Proxy.</p>
     <pre data-lang="cmd">/punish-update check|status|apply [confirm]</pre>
     <ul>
-      <li><code>check</code> fragt <code>update.github-repository</code> ab; <code>status</code> zeigt bekannte Proxy-/Bridge-Versionen, Varianten und Transferquittungen.</li>
+      <li><code>check</code> fragt <code>update.github-repository</code> ab; <code>status</code> zeigt bekannte Proxy-/Bridge-Versionen, Varianten, Transferquittungen und ob der Proxy-Start-Hook aktiv ist.</li>
       <li><code>apply confirm</code> lädt alle drei Jars mit SHA-256-Prüfung, verteilt die passenden Bridge-Jars und legt die Proxy-Jar bereit. Nur <code>apply</code> verlangt standardmäßig die Bestätigung; <code>update.bestaetigung-fuer-apply</code> steuert diese Pflicht.</li>
-      <li>Die bereitgestellten Dateien müssen manuell die bisherigen Plugin-Jars ersetzen. Anschließend Proxy und Backends neu starten. Ein Neustart allein installiert nichts. Den Ablauf und die Zielordner beschreibt <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</li>
+      <li>Die Backends übernehmen ihre Jars beim nächsten Start aus dem konfigurierten Update-Ordner. Auf dem Linux-Proxy übernimmt ein einmalig eingerichteter Start-Hook den Austausch vor Java, auch unter Pelican/Docker. Erst die erfolgreiche Verteilung prüfen, dann neu starten. Einrichtung und Zielordner stehen unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</li>
     </ul>
   </article>
 
@@ -2734,7 +2734,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
 
 <section class="page" data-id="betrieb" data-group="Betrieb" data-title="Updates und Sicherungen">
   <h1>Updates und Sicherungen</h1>
-  <p class="lead">Anleitung für eine bestehende Installation. Update-Dateien werden zuerst geprüft und bereitgestellt, anschließend manuell ausgetauscht. Der laufende Proxy und alle Backends benötigen denselben Build.</p>
+  <p class="lead">Update-Dateien werden geprüft und für den nächsten Start vorgemerkt. Die Backends übernehmen ihre Jars über den Server-Update-Ordner; auf dem Linux-Proxy erledigt ein Start-Hook den Austausch vor Java. Proxy und alle Backends benötigen denselben Build.</p>
 
   <h2>Vor dem Update</h2>
   <ul>
@@ -2743,33 +2743,40 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <li>Die passende Bridge-Variante für jedes Backend bereithalten. Bei der automatischen Verteilung muss auf jedem Backend mindestens ein Spieler verbunden sein.</li>
   </ul>
 
+  <h2>Start-Hook für Linux und Pelican einrichten</h2>
+  <p>Beim Wechsel von einer älteren Version alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.2.0">v4.2.0</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Unter Linux, auch in einem Pelican-Docker-Container, einmalig <code>sh plugins/update-pending/apply-update.sh </code> vor den bisherigen Java-Startbefehl setzen. In Pelican erfolgt das in der Startkonfiguration des Velocity-Servers; je nach Berechtigung muss der Panel-Administrator die Startzeile ändern. Alle bisherigen Java-Argumente und die Proxy-JAR beibehalten. Beispiel:</p>
+  <pre data-lang="shell">sh plugins/update-pending/apply-update.sh java -Xms128M -Xmx1G -jar velocity.jar</pre>
+  <p>Danach den Proxy über diese Startzeile neu starten. <code>/punish-update status</code> muss <code>Proxy-Start-Hook=aktiv</code> anzeigen. Der Hook benötigt <code>sh</code>, <code>sha256sum</code>, <code>cp</code>, <code>mv</code> und <code>rm</code> im Container. Er führt keine Downloads aus, prüft die vorgemerkte Datei erneut, sichert die bisherige Proxy-JAR als <code>plugins/update-pending/previous.jar.bak</code> und ersetzt sie vor dem Java-Start. Bei einem Prüfsummen- oder Dateifehler startet Java nicht; Ursache im Panel-Log prüfen und die vorgemerkte Datei korrigieren. Die Sicherung enthält nur die vorherige Proxy-JAR.</p>
+  <p>Ohne diesen Hook bleibt die Proxy-JAR vorgemerkt und <code>apply</code> meldet die fehlende Einrichtung. Auf Systemen ohne passende Shell kann die Proxy-JAR bei gestopptem Proxy weiterhin manuell ausgetauscht werden. Auf den Backends muss der konfigurierte Server-Update-Ordner aktiviert und beschreibbar sein.</p>
+
   <h2>Updates einspielen</h2>
-  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Setze für das stabile <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1">Release v4.1.1</a> den Wert <code>update.channel</code> in der <code>general.yml</code> des Proxys auf <code>Release</code> und lade die Konfiguration mit <code>/punish-reload</code> neu. Die Kanäle <code>Beta</code> und <code>Snapshot</code> berücksichtigen auch Vorabversionen. Bei gleicher RC-Version entscheidet die Buildnummer. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
+  <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Für stabile Updates <code>update.channel</code> in der <code>general.yml</code> des Proxys auf <code>Release</code> setzen und mit <code>/punish-reload</code> neu laden. Die Kanäle <code>Beta</code> und <code>Snapshot</code> berücksichtigen auch Vorabversionen. Bei gleicher RC-Version entscheidet die Buildnummer. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
   <ol class="steps">
     <li><strong>Update prüfen und bereitstellen</strong>
       <pre data-lang="cmd">/punish-update check
 /punish-update apply confirm
 /punish-update status</pre>
-      <p><code>apply confirm</code> lädt und prüft die Jars und verteilt die passende Variante an erreichbare Bridges. Prüfe Transferquittungen und Server-Logs; ein nicht erreichbares Backend muss manuell aktualisiert werden.</p>
+      <p><code>apply confirm</code> lädt und prüft alle drei Jars und verteilt die passende Variante an erreichbare Bridges. Die Verteilung läuft asynchron. Vor dem Neustart für jedes Backend eine erfolgreiche Transferquittung und <code>Proxy-Start-Hook=aktiv</code> prüfen. Eine Quittung bestätigt die vorgemerkte Datei, noch nicht die laufende Version. Ein nicht erreichbares Backend vor dem Proxy-Neustart verbinden und die Quittung abwarten oder manuell aktualisieren.</p>
     </li>
     <li><strong>Bereitgestellte Dateien finden</strong>
       <div class="tbl"><table>
         <thead><tr><th>Server</th><th>Zielordner</th></tr></thead>
         <tbody>
           <tr><td>Velocity-Proxy</td><td><code>plugins/update-pending/</code></td></tr>
-          <tr><td>Jede erreichte Bridge</td><td><code>plugins/PunishSystemBridge/update-pending/</code></td></tr>
+          <tr><td>Jede erreichte Bridge</td><td>Konfigurierter Server-Update-Ordner, standardmäßig <code>plugins/update/</code></td></tr>
         </tbody>
       </table></div>
-      <p>Die Ordner sind Ablageorte. Das Plugin ersetzt daraus keine laufende Jar automatisch.</p>
+      <p>Die laufenden Jars bleiben bis zum Neustart unberührt. Die Backend-Datei und die spätere Proxy-Zieldatei verwenden den Namen der bereits installierten JAR; die Versionsanzeige im Plugin zeigt nach dem Start die neue Version. Dadurch entsteht keine zweite Plugin-JAR neben der bisherigen.</p>
     </li>
-    <li><strong>Server stoppen und Jars austauschen</strong>
-      <p>Proxy und Backends stoppen. Die bisherigen Plugin-Jars manuell durch die bereitgestellten Dateien ersetzen. Pro Server bleibt genau eine passende PunishSystem-Jar im <code>plugins/</code>-Ordner. Auch nicht erreichte Bridges auf denselben Build bringen.</p>
+    <li><strong>Backends und Proxy neu starten</strong>
+      <p>Nach vollständiger Verteilung die Backends und anschließend den Proxy über den eingerichteten Startbefehl neu starten. Der jeweilige Server übernimmt die Backend-JAR beim Start; der Proxy-Hook ersetzt die Proxy-JAR, bevor Java startet. Ein zusätzliches Kopieren ist für erfolgreich verteilte Updates nicht nötig. Der Befehl selbst stoppt oder startet keine Server.</p>
     </li>
     <li><strong>Starten und Ergebnis prüfen</strong>
       <p>Proxy und Backends starten. <code>/punish-diagnostics</code> auf dem Proxy und auf jedem Backend sowie <code>/punish-update status</code> prüfen. Leere Backends nach dem ersten Spielerbeitritt erneut prüfen. Konfigurationsdateien bleiben erhalten; fehlende Schlüssel werden beim Laden mit Standardwerten ergänzt.</p>
     </li>
   </ol>
-  <div class="callout warn"><div><span class="ttl">Neustart allein installiert kein Update</span><p><code>apply</code> stellt Dateien bereit. Erst das manuelle Ersetzen und der anschließende Neustart aktivieren die neue Version. Ein Reload ersetzt keine Jars.</p></div></div>
+  <div class="callout warn"><div><span class="ttl">Neustart aktiviert das vorgemerkte Update</span><p>Mit eingerichtetem Proxy-Start-Hook und erfolgreichen Backend-Quittungen genügt nach <code>apply</code> der Neustart. Ein Reload lädt keinen neuen Plugin-Code. Leere oder ausgeschaltete Backends erhalten ohne verbundenen Spieler kein Update; ihre Aktualisierung muss vorab sichergestellt sein.</p></div></div>
 
   <h2>Sicherung erstellen</h2>
   <div class="callout warn"><div><span class="ttl">Umfang des JSON-Exports</span><p><code>/punish-export</code> enthält bis zu 5.000 Einträge aus dem Hauptverlauf sowie Warns, Notizen und Reports. Für einen wiederherstellbaren Systemstand die folgenden Bestände zusammen sichern.</p></div></div>
@@ -2798,13 +2805,22 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <div class="command-tools" role="search" aria-label="Changelog filtern">
     <label for="changelogFilter">Versionen filtern</label>
     <div class="command-filter-row">
-      <input id="changelogFilter" type="search" placeholder="z. B. v4.1.1, HELLO oder 18.11.2026" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
+      <input id="changelogFilter" type="search" placeholder="z. B. v4.2.0, Update oder 18.11.2026" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
       <button type="button" id="changelogReset">Zurücksetzen</button>
     </div>
     <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">5 von 5 Versionen</p>
+    <p id="changelogCount" role="status">6 von 6 Versionen</p>
   </div>
   <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+  <h2 data-anchor="v4-2-0">v4.2.0</h2>
+  <p><time datetime="2026-11-18">18.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.2.0" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>Automatische Backend-Updates:</strong> Beide Bridge-Varianten legen die geprüfte JAR unter dem bisherigen Dateinamen im konfigurierten Server-Update-Ordner ab. Der Server übernimmt sie beim nächsten Start.</li>
+    <li><strong>Proxy-Start-Hook:</strong> Auf Linux und unter Pelican/Docker kann die Startzeile einmalig den erzeugten Hook aufrufen. Dieser prüft SHA-256 erneut, sichert die bisherige Proxy-JAR und ersetzt sie vor dem Java-Start. Bei einem Fehler bleibt der Start gestoppt.</li>
+    <li><strong>Status und Hinweise:</strong> Der Update-Status zeigt den aktiven Start-Hook. Ohne eingerichteten Hook meldet <code>apply</code>, dass die Proxy-Datei noch vorgemerkt ist. Neue Nachrichtenschlüssel vermeiden veraltete Hinweise aus bestehenden Konfigurationen.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Für den Einstieg alle Module einmalig manuell auf v4.2.0 aktualisieren und neu starten. Danach den Proxy-Start-Hook wie unter <a href="#/betrieb/start-hook-fuer-linux-und-pelican-einrichten">Updates und Sicherungen</a> einrichten. Für künftige Updates nach <code>apply</code> alle Transferquittungen prüfen und Backends sowie Proxy neu starten. Konfiguration und Datenbankschema bleiben kompatibel.</p>
 
   <h2 data-anchor="v4-1-1">v4.1.1</h2>
   <p><time datetime="2026-11-18">18.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3165,7 +3181,7 @@ build_all_jars.bat nobump skiptests</pre>
     <li>Ohne Schalter setzt das Skript eine vorhandene Buildnummer oder eine Vorabversion (<code>-alpha</code>, <code>-beta</code>, <code>-preview</code>, <code>-RC</code>, <code>-SNAPSHOT</code>) auf Datum und Minute (<code>DDMMYY-HHMM</code>), baut und führt Tests aus. Finale Versionen ohne Buildnummer bleiben unverändert.</li>
     <li><code>nobump</code> lässt die Version unverändert. <code>skiptests</code> überspringt die Tests.</li>
     <li>Das Skript synchronisiert die Parent-Version in den Modul-Poms und die Versionsangabe der Proxy-Plugin-Klasse; die Plugin-Metadaten werden beim Maven-Build verarbeitet.</li>
-    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.1.1-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
+    <li>Die Jars landen im Projektordner, zum Beispiel <code>PunishSystem-v4.2.0-(velocity).jar</code>, dazu die Varianten <code>-(bridge)</code> und <code>-(bridge-1.21)</code>.</li>
   </ul>
   <p>Maven baut ohne das Hilfsskript direkt in die <code>target/</code>-Ordner der Module:</p>
   <pre data-lang="shell">mvn -pl velocity,bridge,bridge-1.21 -am clean package</pre>
@@ -3421,7 +3437,7 @@ mvn verify</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.1.1. Dokumentation für Admins und Moderatoren.</div>');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.2.0. Dokumentation für Admins und Moderatoren.</div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');

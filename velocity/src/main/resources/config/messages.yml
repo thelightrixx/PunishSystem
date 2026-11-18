@@ -88,8 +88,10 @@ messages:
   update-fehler: "<red>Update fehlgeschlagen: <white>%detail%"
   update-laeuft-bereits: "<yellow>Es läuft bereits ein Update – bitte kurz warten."
   update-bestaetigung-noetig: "<yellow>Update auf <white>%version% <yellow>erfordert Bestätigung: <white>/punish-update apply confirm"
-  update-erfolgreich-neustart: "<green>Update <white>%version% <green>bereitgestellt. <yellow>Vor dem Neustart die bisherigen Plugin-JARs durch die Dateien aus update-pending ersetzen (Proxy: plugins/update-pending, Backends: plugins/PunishSystemBridge/update-pending)."
-  update-bereitgestellt: "<green>Update <white>%version% <green>bereitgestellt. <yellow>Vor dem Neustart die bisherigen Plugin-JARs durch die Dateien aus update-pending ersetzen (Proxy: plugins/update-pending, Backends: plugins/PunishSystemBridge/update-pending)."
+  update-erfolgreich-neustart: "<green>Update <white>%version% <green>für den nächsten Start vorgemerkt. <yellow>Verteilung mit <white>/punish-update status <yellow>prüfen; danach Backends und Proxy mit eingerichtetem Start-Hook neu starten."
+  update-bereitgestellt: "<green>Update <white>%version% <green>für den nächsten Start vorgemerkt. <yellow>Verteilung mit <white>/punish-update status <yellow>prüfen; danach Backends und Proxy mit eingerichtetem Start-Hook neu starten."
+  update-installation-vorgemerkt: "<green>Update <white>%version% <green>für den nächsten Start vorgemerkt. <yellow>Verteilung mit <white>/punish-update status <yellow>prüfen; danach Backends und Proxy neu starten. Die JARs werden automatisch übernommen."
+  update-start-hook-fehlt: "<yellow>Update <white>%version% <yellow>vorgemerkt. <red>Der Proxy-Start-Hook ist noch nicht aktiv. <yellow>Unter Linux/Pelican einmalig <white>sh plugins/update-pending/apply-update.sh <yellow>vor den bisherigen Java-Startbefehl setzen. Backend-Verteilung mit <white>/punish-update status <yellow>prüfen und anschließend neu starten."
   update-push-laufend: "<gray>Bridge-Update <white>%version% <gray>wird an alle Server verteilt …"
   update-push-fertig: "<gray>Update-Status: Remote <white>%version% <gray>%detail%"
 

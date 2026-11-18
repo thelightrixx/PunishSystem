@@ -50,6 +50,8 @@ public final class MessageKeys {
     public static final String UPDATE_BESTAETIGUNG_NOETIG = "update-bestaetigung-noetig";
     public static final String UPDATE_ERFOLGREICH_NEUSTART = "update-erfolgreich-neustart";
     public static final String UPDATE_BEREITGESTELLT = "update-bereitgestellt";
+    public static final String UPDATE_INSTALLATION_VORGEMERKT = "update-installation-vorgemerkt";
+    public static final String UPDATE_START_HOOK_FEHLT = "update-start-hook-fehlt";
     public static final String UPDATE_PUSH_LAUFEND = "update-push-laufend";
     public static final String UPDATE_PUSH_FERTIG = "update-push-fertig";
     public static final String PUNISH_VERSION = "punish-version";

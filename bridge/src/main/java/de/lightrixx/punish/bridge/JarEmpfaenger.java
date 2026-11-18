@@ -28,6 +28,7 @@ public final class JarEmpfaenger {
     }
 
     private final File updateOrdner;
+    private final String jarDateiname;
     private final Rueckmeldung rueckmeldung;
     private Transfer aktiv;
 
@@ -57,7 +58,17 @@ public final class JarEmpfaenger {
     }
 
     public JarEmpfaenger(File updateOrdner, Rueckmeldung rueckmeldung) {
+        this(updateOrdner, "", rueckmeldung);
+    }
+
+    public JarEmpfaenger(File updateOrdner, String jarDateiname, Rueckmeldung rueckmeldung) {
         this.updateOrdner = Objects.requireNonNull(updateOrdner, "Der Update-Ordner darf nicht null sein.");
+        this.jarDateiname = Objects.requireNonNull(jarDateiname, "Der JAR-Dateiname darf nicht null sein.");
+        if (!jarDateiname.isEmpty() && (jarDateiname.contains("/") || jarDateiname.contains("\\")
+                || jarDateiname.contains("\n") || jarDateiname.contains("\r")
+                || !jarDateiname.toLowerCase(java.util.Locale.ROOT).endsWith(".jar"))) {
+            throw new IllegalArgumentException("Der JAR-Dateiname muss eine einzelne JAR-Datei bezeichnen.");
+        }
         this.rueckmeldung = Objects.requireNonNull(rueckmeldung, "Die Rückmeldung darf nicht null sein.");
     }
 
@@ -71,10 +82,8 @@ public final class JarEmpfaenger {
             return;
         }
         try {
-            if (!updateOrdner.exists()) {
-                updateOrdner.mkdirs();
-            }
-            File teil = new File(updateOrdner, dateinameFuer(meta.variante(), meta.version()) + ".part");
+            Files.createDirectories(updateOrdner.toPath());
+            File teil = new File(updateOrdner, zielDateiname(meta.variante(), meta.version()) + ".part");
             try {
                 Files.deleteIfExists(teil.toPath());
             } catch (Exception e) {
@@ -157,15 +166,15 @@ public final class JarEmpfaenger {
                 meldeQuittung(variante, version, false);
                 return;
             }
-            File ziel = new File(updateOrdner, dateinameFuer(variante, version));
+            File ziel = new File(updateOrdner, zielDateiname(variante, version));
             try {
                 Files.move(laufend.teilDatei.toPath(), ziel.toPath(),
                         StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (Exception e) {
                 Files.move(laufend.teilDatei.toPath(), ziel.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
-            LOG.info("Update-Datei bereitgestellt ('{}', {} Bytes). Vor dem Neustart die bisherige Plugin-JAR "
-                    + "manuell durch diese Datei ersetzen.", ziel.getAbsolutePath(), laufend.groesse);
+            LOG.info("Update-Datei bereitgestellt ('{}', {} Bytes). Der Server übernimmt die JAR "
+                    + "beim nächsten Start aus seinem Update-Ordner.", ziel.getAbsolutePath(), laufend.groesse);
             meldeQuittung(variante, version, true);
             try {
                 rueckmeldung.standMelden();
@@ -204,6 +213,10 @@ public final class JarEmpfaenger {
         String v = variante == null || variante.isBlank() ? "bridge" : variante.trim().toLowerCase(java.util.Locale.ROOT);
         String ver = version == null || version.isBlank() ? "unbekannt" : version.trim();
         return "PunishSystem-" + ver + "-" + v + ".jar";
+    }
+
+    private String zielDateiname(String variante, String version) {
+        return jarDateiname.isEmpty() ? dateinameFuer(variante, version) : jarDateiname;
     }
 
     private void loescheStill(File datei) {

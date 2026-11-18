@@ -208,7 +208,8 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                         }
                     }
                     String installiert = info.version();
-                    taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_BEREITGESTELLT,
+                    taskScheduler.aufgabe(() -> messageService.senden(sender, startHookAktiv()
+                                    ? MessageKeys.UPDATE_INSTALLATION_VORGEMERKT : MessageKeys.UPDATE_START_HOOK_FEHLT,
                             Map.of("version", installiert)));
                 } catch (Exception e) {
                     LOG.warn("Update-Apply fehlgeschlagen.", e);
@@ -256,7 +257,8 @@ public final class VelocityUpdateBefehl extends PunishCommand {
             }
         }
         StringBuilder detail = new StringBuilder("Proxy=").append(aktuell)
-                .append(", Remote=").append(remote);
+                .append(", Remote=").append(remote)
+                .append(", Proxy-Start-Hook=").append(startHookAktiv() ? "aktiv" : "fehlt");
         if (!bruecken.isEmpty()) {
             var teile = new java.util.ArrayList<String>();
             for (var eintrag : bruecken.entrySet()) {
@@ -406,20 +408,129 @@ public final class VelocityUpdateBefehl extends PunishCommand {
 
     private void ersetzeEigeneJar(byte[] daten, String version) {
         try {
-            var quelle = VelocityUpdateBefehl.class.getProtectionDomain().getCodeSource();
-            if (quelle == null || quelle.getLocation() == null) {
-                throw new IllegalStateException("Eigene JAR-Position unbekannt, Update nicht bereitgestellt.");
-            }
-            java.nio.file.Path jar = java.nio.file.Paths.get(quelle.getLocation().toURI());
-            java.nio.file.Path ordner = jar.getParent();
-            if (ordner == null) {
-                throw new IllegalStateException("Plugin-Ordner unbekannt, Update nicht bereitgestellt.");
-            }
-            java.nio.file.Path bereit = legeUpdateBereit(ordner, daten, version);
-            LOG.warn("Velocity-Update {} bereitgestellt ({}). Vor dem Neustart die bisherige Plugin-JAR "
-                    + "manuell durch diese Datei ersetzen.", version, bereit);
+            var bereit = bereiteInstallationVor(eigeneJar(), daten, version);
+            LOG.info("Velocity-Update {} für den nächsten Start vorgemerkt ({}). "
+                    + "Startbefehl: 'sh plugins/update-pending/apply-update.sh java ...'.",
+                    version, bereit);
         } catch (Exception e) {
             throw new IllegalStateException("Velocity-Update konnte nicht bereitgestellt werden.", e);
+        }
+    }
+
+    static void richteStartHookEin() {
+        try {
+            richteStartHookEin(eigeneJar().getParent());
+        } catch (Exception e) {
+            LOG.warn("Start-Hook für automatische Proxy-Updates konnte nicht eingerichtet werden.", e);
+        }
+    }
+
+    private static boolean startHookAktiv() {
+        return "1".equals(System.getenv("PUNISH_UPDATE_START_HOOK"));
+    }
+
+    private static java.nio.file.Path eigeneJar() throws Exception {
+        var quelle = VelocityUpdateBefehl.class.getProtectionDomain().getCodeSource();
+        if (quelle == null || quelle.getLocation() == null) {
+            throw new IllegalStateException("Eigene JAR-Position unbekannt.");
+        }
+        var jar = java.nio.file.Paths.get(quelle.getLocation().toURI()).toAbsolutePath();
+        if (!java.nio.file.Files.isRegularFile(jar) || !jar.getFileName().toString().endsWith(".jar")) {
+            throw new IllegalStateException("Eigene Plugin-JAR nicht gefunden.");
+        }
+        return jar;
+    }
+
+    static java.nio.file.Path bereiteInstallationVor(java.nio.file.Path jar, byte[] daten, String version)
+            throws java.io.IOException {
+        var datei = Objects.requireNonNull(jar, "Die Plugin-JAR darf nicht null sein.").toAbsolutePath();
+        String name = datei.getFileName().toString();
+        if (!java.nio.file.Files.isRegularFile(datei) || !name.endsWith(".jar")
+                || name.startsWith(".") || name.contains("\\") || name.contains("\n") || name.contains("\r")) {
+            throw new java.io.IOException("Ungültige Position der installierten Plugin-JAR.");
+        }
+        richteStartHookEin(datei.getParent());
+        var bereit = legeUpdateBereit(datei.getParent(), daten, version);
+        var auftrag = bereit.getParent().resolve("install.txt");
+        var teil = auftrag.resolveSibling("install.txt.part");
+        java.nio.file.Files.writeString(teil, name + "\n" + bereit.getFileName() + "\n"
+                + UpdateVerteilung.hashStill(daten) + "\n");
+        verschiebeAtomar(teil, auftrag);
+        return bereit;
+    }
+
+    static void richteStartHookEin(java.nio.file.Path ordner) throws java.io.IOException {
+        var updates = ordner.resolve("update-pending");
+        java.nio.file.Files.createDirectories(updates);
+        var skript = updates.resolve("apply-update.sh");
+        var teil = updates.resolve("apply-update.sh.part");
+        java.nio.file.Files.writeString(teil, """
+                #!/bin/sh
+                set -eu
+                start_ordner=$PWD
+                cd -- "$(dirname -- "$0")"
+                fehler() {
+                    printf '%s\\n' "[PunishSystem] Update abgebrochen: $*" >&2
+                    exit 1
+                }
+                starte_proxy() {
+                    cd -- "$start_ordner"
+                    [ "$#" -gt 0 ] || exit 0
+                    export PUNISH_UPDATE_START_HOOK=1
+                    exec "$@"
+                }
+                [ -f install.txt ] || starte_proxy "$@"
+                {
+                    IFS= read -r ziel || fehler 'Zieldatei fehlt.'
+                    IFS= read -r bereit || fehler 'Update-Datei fehlt.'
+                    IFS= read -r hash || fehler 'Pruefsumme fehlt.'
+                    if IFS= read -r rest; then
+                        fehler 'Ungueltiger Installationsauftrag.'
+                    fi
+                } < install.txt
+                for name in "$ziel" "$bereit"; do
+                    case "$name" in
+                        ''|.*|*/*|*\\\\*) fehler 'Ungueltiger JAR-Dateiname.' ;;
+                        *.jar) ;;
+                        *) fehler 'Ungueltiger JAR-Dateiname.' ;;
+                    esac
+                done
+                case "$bereit" in
+                    PunishSystemVelocity-*-velocity.jar) ;;
+                    *) fehler 'Unbekannte Update-Datei.' ;;
+                esac
+                [ "${#hash}" -eq 64 ] || fehler 'Ungueltige SHA-256-Pruefsumme.'
+                case "$hash" in *[!0-9a-f]*) fehler 'Ungueltige SHA-256-Pruefsumme.' ;; esac
+                [ -f "../$ziel" ] && [ ! -L "../$ziel" ] || fehler 'Installierte JAR fehlt oder ist ein Symlink.'
+                pruefe_hash() {
+                    ist=$(sha256sum -- "$1") || return 1
+                    [ "${ist%% *}" = "$hash" ]
+                }
+                if [ ! -f "$bereit" ]; then
+                    pruefe_hash "../$ziel" || fehler 'Vorgemerkte Update-Datei fehlt.'
+                    rm -- install.txt
+                    starte_proxy "$@"
+                fi
+                [ ! -L "$bereit" ] || fehler 'Update-Datei ist ein Symlink.'
+                pruefe_hash "$bereit" || fehler 'SHA-256-Pruefsumme stimmt nicht.'
+                [ ! -L previous.jar.bak ] || fehler 'Sicherung ist ein Symlink.'
+                [ ! -e previous.jar.bak ] || [ -f previous.jar.bak ] || fehler 'Sicherung ist keine normale Datei.'
+                cp -- "../$ziel" previous.jar.bak
+                mv -f -- "$bereit" "../$ziel"
+                rm -- install.txt
+                printf '%s\\n' '[PunishSystem] Proxy-Update installiert. Bisherige JAR: plugins/update-pending/previous.jar.bak'
+                starte_proxy "$@"
+                """);
+        verschiebeAtomar(teil, skript);
+    }
+
+    private static void verschiebeAtomar(java.nio.file.Path quelle, java.nio.file.Path ziel)
+            throws java.io.IOException {
+        try {
+            java.nio.file.Files.move(quelle, ziel, java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+        } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+            java.nio.file.Files.move(quelle, ziel, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -449,8 +560,7 @@ public final class VelocityUpdateBefehl extends PunishCommand {
             }
             throw new IllegalStateException("Update-Datei unvollständig geschrieben.");
         }
-        java.nio.file.Files.move(teil, ziel,
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        verschiebeAtomar(teil, ziel);
         return ziel;
     }
 
