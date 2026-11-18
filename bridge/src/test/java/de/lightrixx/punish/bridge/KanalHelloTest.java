@@ -36,6 +36,67 @@ class KanalHelloTest {
         assertDoesNotThrow(() -> client.sendeHello("lobby"));
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"true,false", "false,false", "true,true", "false,true"})
+    void leererServerBleibtStillUndVersuchtBeimBeitrittErneut(boolean serverThread, boolean versandFehler)
+            throws Exception {
+        var plugin = mock(Plugin.class);
+        var server = mock(Server.class);
+        var spieler = mock(Player.class);
+        var online = new java.util.concurrent.atomic.AtomicReference<List<Player>>(List.of());
+        when(plugin.getServer()).thenReturn(server);
+        when(server.isPrimaryThread()).thenReturn(serverThread);
+        org.mockito.Mockito.doAnswer(inv -> online.get()).when(server).getOnlinePlayers();
+        var scheduler = mock(org.bukkit.scheduler.BukkitScheduler.class);
+        when(server.getScheduler()).thenReturn(scheduler);
+        when(scheduler.runTask(eq(plugin), org.mockito.ArgumentMatchers.any(Runnable.class))).thenAnswer(inv -> {
+            inv.getArgument(1, Runnable.class).run();
+            return mock(org.bukkit.scheduler.BukkitTask.class);
+        });
+        if (versandFehler) {
+            org.mockito.Mockito.doThrow(new IllegalStateException("Versand fehlgeschlagen"))
+                    .when(spieler).sendPluginMessage(eq(plugin), eq(Protokoll.KANAL), org.mockito.ArgumentMatchers.any());
+        }
+        byte[] klasse;
+        try (var in = KanalClient.class.getResourceAsStream("KanalClient.class")) {
+            klasse = java.util.Objects.requireNonNull(in).readAllBytes();
+        }
+        var isoliert = new ClassLoader(KanalClient.class.getClassLoader()) {
+            Class<?> laden() throws java.io.IOException {
+                for (String name : List.of("TunnelAuthBremse", "TunnelAuthBremse$Zustand")) {
+                    try (var in = KanalClient.class.getResourceAsStream(name + ".class")) {
+                        byte[] daten = java.util.Objects.requireNonNull(in).readAllBytes();
+                        defineClass("de.lightrixx.punish.bridge." + name, daten, 0, daten.length);
+                    }
+                }
+                return defineClass(KanalClient.class.getName(), klasse, 0, klasse.length);
+            }
+        }.laden();
+        var logger = mock(org.slf4j.Logger.class);
+        try (var factory = org.mockito.Mockito.mockStatic(org.slf4j.LoggerFactory.class,
+                org.mockito.Mockito.CALLS_REAL_METHODS)) {
+            factory.when(() -> org.slf4j.LoggerFactory.getLogger(isoliert)).thenReturn(logger);
+            var client = isoliert.getConstructor(Plugin.class, MuteCache.class).newInstance(plugin, new MuteCache());
+            isoliert.getMethod("setTunnelSecret", String.class).invoke(client, "test-bridge-secret");
+            var hello = isoliert.getMethod("sendeHello", String.class);
+            org.mockito.Mockito.clearInvocations(logger);
+            for (int i = 0; i < 20; i++) {
+                hello.invoke(client, "lobby");
+            }
+            org.mockito.Mockito.verifyNoInteractions(logger, spieler);
+            online.set(List.of(spieler));
+            hello.invoke(client, "lobby");
+            verify(spieler, times(versandFehler ? 1 : 4)).sendPluginMessage(
+                    eq(plugin), eq(Protokoll.KANAL), org.mockito.ArgumentMatchers.any());
+            assertEquals(versandFehler, org.mockito.Mockito.mockingDetails(logger).getInvocations().stream()
+                    .anyMatch(inv -> inv.getMethod().getName().equals("warn")));
+            online.set(List.of());
+            org.mockito.Mockito.clearInvocations(logger, spieler);
+            hello.invoke(client, "lobby");
+            org.mockito.Mockito.verifyNoInteractions(logger, spieler);
+        }
+    }
+
     @Test
     void nurAuthentifiziertesHelloAckBestaetigtProxyKontakt() throws Exception {
         var client = new KanalClient(mock(Plugin.class), new MuteCache());

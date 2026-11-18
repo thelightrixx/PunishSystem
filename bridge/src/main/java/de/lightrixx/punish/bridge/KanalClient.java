@@ -212,14 +212,16 @@ public final class KanalClient implements PluginMessageListener {
         // laufenden Sendern (Chatfilter-Treffer, GUI-Anfragen): Beide koennten dieselbe
         // Sequenz vergeben, der Proxy verwirft das zweite Paket als Replay.
         try {
-            sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante, vollSyncNoetig()));
+            if (!sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante, vollSyncNoetig()))) {
+                return;
+            }
             LOG.info("Bridge-HELLO als '{}' gesendet.", serverName);
         } catch (IllegalStateException e) {
             LOG.warn("HELLO konnte nicht gesendet werden: {}", e.getMessage());
             LOG.debug("HELLO-Details.", e);
             return;
         } catch (Exception e) {
-            LOG.warn("HELLO konnte nicht gesendet werden (kein Spieler online?).");
+            LOG.warn("HELLO konnte nicht gesendet werden.");
             LOG.debug("HELLO-Details.", e);
             return;
         }
@@ -450,7 +452,7 @@ public final class KanalClient implements PluginMessageListener {
                 eigen, proxy);
     }
 
-    private void sendeAnProxy(byte[] paket) {
+    private boolean sendeAnProxy(byte[] paket) {
         byte[] schluessel = bridgeZuProxySchluessel;
         if (schluessel == null) {
             long jetzt = System.currentTimeMillis();
@@ -472,10 +474,12 @@ public final class KanalClient implements PluginMessageListener {
                         new java.util.concurrent.CountDownLatch(1);
                 final java.util.concurrent.atomic.AtomicReference<Throwable> fehler =
                         new java.util.concurrent.atomic.AtomicReference<>();
+                final java.util.concurrent.atomic.AtomicBoolean gesendet =
+                        new java.util.concurrent.atomic.AtomicBoolean();
                 try {
                     plugin.getServer().getScheduler().runTask(plugin, () -> {
                         try {
-                            sendeAnProxySync(versandFinal);
+                            gesendet.set(sendeAnProxySync(versandFinal));
                         } catch (Throwable t) {
                             fehler.set(t);
                         } finally {
@@ -504,17 +508,17 @@ public final class KanalClient implements PluginMessageListener {
                 if (t != null) {
                     throw new IllegalStateException("Kanal-Versand fehlgeschlagen.", t);
                 }
-                return;
+                return gesendet.get();
             }
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
             LOG.debug("Main-Thread-Check fehlgeschlagen, versuche Direktversand.", e);
         }
-        sendeAnProxySync(paket);
+        return sendeAnProxySync(paket);
     }
 
-    private void sendeAnProxySync(byte[] paket) {
+    private boolean sendeAnProxySync(byte[] paket) {
         Player traeger = null;
         try {
             for (Player online : plugin.getServer().getOnlinePlayers()) {
@@ -527,6 +531,9 @@ public final class KanalClient implements PluginMessageListener {
             LOG.debug("Kein Nachrichten-Träger verfügbar.", e);
         }
         if (traeger == null) {
+            if ((paket[0] & 0xFF) == Protokoll.HELLO) {
+                return false;
+            }
             throw new IllegalStateException("Kein Online-Spieler als Nachrichten-Träger.");
         }
         byte[] versand;
@@ -545,6 +552,7 @@ public final class KanalClient implements PluginMessageListener {
             throw new IllegalStateException("Tunnel-Paket konnte nicht signiert werden.", e);
         }
         traeger.sendPluginMessage(plugin, Protokoll.KANAL, versand);
+        return true;
     }
 
     @Override

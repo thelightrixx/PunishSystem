@@ -1,4 +1,4 @@
-# PunishSystem v4.1.0
+# PunishSystem v4.1.1
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
@@ -24,7 +24,7 @@ Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=
 
 ## Voraussetzungen und Jars
 
-Das [Release v4.1.0](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.0) enthält alle drei Jars und `SHA256SUMS.txt`. Diese Version bündelt Fehlerbehebungen und Optimierungen aus dem Code-Audit; neue Funktionen kommen nicht hinzu.
+Das [Release v4.1.1](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1) enthält alle drei Jars und `SHA256SUMS.txt`. Die Bridge wartet bei HELLO-Versuchen ohne verbundenen Spieler still auf den nächsten Beitritt; dadurch entfällt der Logspam auf leeren oder durch eine Whitelist gesperrten Backends.
 
 | Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
