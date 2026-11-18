@@ -476,7 +476,7 @@ details>div{padding:14px 18px 2px}
 
 /* ---------- Druck ---------- */
 @media print{
-  .header,.sidebar,.toc,.page-toc,.pager,.copy,.wk,.scrim,#progress,.hero-actions,.command-tools,#commandEmpty,.hash{display:none!important}
+  .header,.sidebar,.toc,.page-toc,.pager,.copy,.wk,.scrim,#progress,.hero-actions,.command-tools,#commandEmpty,#changelogEmpty,.hash{display:none!important}
   .shell{display:block;padding:0}
   main{padding:0}
   body{background:#fff;color:#000}
@@ -2790,10 +2790,21 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <p>Die automatische Migration führt von YAML nach MySQL. Ein Wechsel zurück zu <code>speicher.typ: "yaml"</code> exportiert keine MySQL-Daten und würde alte YAML-Dateien wieder verwenden. Vorgehen und Grenzen stehen unter <a href="#/speicher">Speicher und MySQL</a>. Welche Änderungen einen Reload oder Neustart benötigen, zeigt <a href="#/config-uebersicht/aenderungen-anwenden">Änderungen anwenden</a>.</p>
 </section>
 
-<section class="page" data-id="changelog" data-group="Betrieb" data-title="Changelog">
+<section class="page" id="changelogVersions" data-id="changelog" data-group="Betrieb" data-title="Changelog">
   <h1>Changelog</h1>
   <p class="lead">Änderungen an allen neuen Plugin-Versionen ab v4.0.0. Die neueste Veröffentlichung steht oben; jeder Eintrag nennt Datum, Änderungen und nötige Update-Hinweise.</p>
   <p>Für den Austausch der Jars gilt die Anleitung unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>. Wie Patch- und Minor-Versionen entstehen, erklärt <a href="#/entwicklung/versionen-und-releases">Versionen und Releases</a>.</p>
+
+  <div class="command-tools" role="search" aria-label="Changelog filtern">
+    <label for="changelogFilter">Versionen filtern</label>
+    <div class="command-filter-row">
+      <input id="changelogFilter" type="search" placeholder="z. B. v4.1.1, HELLO oder 18.11.2026" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
+      <button type="button" id="changelogReset">Zurücksetzen</button>
+    </div>
+    <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
+    <p id="changelogCount" role="status">5 von 5 Versionen</p>
+  </div>
+  <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
 
   <h2 data-anchor="v4-1-1">v4.1.1</h2>
   <p><time datetime="2026-11-18">18.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.1.1" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3420,6 +3431,7 @@ mvn verify</pre>
     tocItems = [];
     var html = '';
     $$('[data-anchor]', p.el).forEach(function (el) {
+      if (el.hidden) return;
       var tag = el.tagName;
       var isCard = el.classList.contains('cmd-card');
       var isDetail = tag === 'DETAILS';
@@ -3440,6 +3452,10 @@ mvn verify</pre>
       localToc.innerHTML = '<summary>Auf dieser Seite</summary><div><nav aria-label="Abschnitte dieser Seite">' + html + '</nav></div>';
       var intro = $('.hero', p.el) || $('.lead', p.el) || $('h1', p.el);
       intro.insertAdjacentElement('afterend', localToc);
+    }
+    if (localToc) {
+      localToc.hidden = tocItems.length < 2;
+      $('nav', localToc).innerHTML = html;
     }
     tocLinks = $('.toc-links', toc);
     tocMarker = $('.toc-marker', toc);
@@ -3511,6 +3527,10 @@ mvn verify</pre>
     var target = anchor ? findAnchor(p.el, anchor) : null;
     lockAnchor = null;
     if (target) {
+      if (p.id === 'changelog' && target.hidden) {
+        $('#changelogFilter').value = '';
+        $('#changelogFilter').dispatchEvent(new Event('input'));
+      }
       if (target.tagName === 'DETAILS') {
         if (!target.open) target.open = true;
       }
@@ -3610,7 +3630,7 @@ mvn verify</pre>
   /* ---------- Suche ---------- */
   function plain(el) {
     var c = el.cloneNode(true);
-    $$('.code-head, .chips, .hash, .shot, svg, .crumb, .pager, .page-toc, .command-tools, #commandEmpty, .hero-art, .hero-actions, .cmd-card > header', c).forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+    $$('.code-head, .chips, .hash, .shot, svg, .crumb, .pager, .page-toc, .command-tools, #commandEmpty, #changelogEmpty, .hero-art, .hero-actions, .cmd-card > header', c).forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
     return c.textContent.replace(/\s+/g, ' ').trim();
   }
   function h2Title(ch) {
@@ -3620,8 +3640,9 @@ mvn verify</pre>
     return t.trim();
   }
   var index = [];
-  function searchText(s) {
-    return String(s).toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\./g, ' ');
+  function searchText(s, keepDots) {
+    var text = String(s).toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return keepDots ? text : text.replace(/\./g, ' ');
   }
   function buildIndex() {
     if (index.length) return index;
@@ -3630,7 +3651,7 @@ mvn verify</pre>
       var sec = intro;
       index.push(intro);
       Array.prototype.forEach.call(p.el.children, function (ch) {
-        if (ch.classList.contains('crumb') || ch.classList.contains('pager') || ch.classList.contains('page-toc') || ch.classList.contains('command-tools') || ch.id === 'commandEmpty') return;
+        if (ch.classList.contains('crumb') || ch.classList.contains('pager') || ch.classList.contains('page-toc') || ch.classList.contains('command-tools') || ch.id === 'commandEmpty' || ch.id === 'changelogEmpty') return;
         if (ch.tagName === 'H2') {
           sec = { kind: 'sec', page: p, anchor: ch.getAttribute('data-anchor'), title: h2Title(ch), text: '' };
           index.push(sec);
@@ -3821,12 +3842,48 @@ mvn verify</pre>
     filterCommands();
   })();
 
+  var changelogEntries = $$('[data-id="changelog"] > h2').map(function (heading) {
+    var nodes = [heading];
+    for (var node = heading.nextElementSibling; node && node.tagName !== 'H2' && !node.classList.contains('pager'); node = node.nextElementSibling) {
+      nodes.push(node);
+    }
+    return { nodes: nodes, text: searchText(nodes.map(plain).join(' '), true) };
+  });
+  (function () {
+    var field = $('#changelogFilter');
+    function filterChangelog() {
+      var tokens = searchText(field.value, true).split(/\s+/).filter(Boolean);
+      var count = 0;
+      changelogEntries.forEach(function (entry) {
+        var matches = tokens.every(function (token) { return entry.text.indexOf(token) >= 0; });
+        entry.nodes.forEach(function (node) { node.hidden = !matches; });
+        if (matches) count++;
+      });
+      $('#changelogCount').textContent = count + ' von ' + changelogEntries.length + ' Versionen';
+      $('#changelogEmpty').hidden = count !== 0;
+      if (current && current.id === 'changelog') {
+        lockAnchor = null;
+        buildToc(current);
+        requestSpy();
+      }
+    }
+    field.addEventListener('input', filterChangelog);
+    $('#changelogReset').addEventListener('click', function () {
+      field.value = '';
+      filterChangelog();
+      field.focus();
+    });
+    filterChangelog();
+  })();
+
   var printState = null;
   window.addEventListener('beforeprint', function () {
     if (printState) return;
     printState = {
       details: $$('.page details').map(function (el) { return { el: el, open: el.open }; }),
-      rows: commandRows.map(function (el) { return { el: el, hidden: el.hidden }; })
+      rows: commandRows.concat(changelogEntries.reduce(function (nodes, entry) {
+        return nodes.concat(entry.nodes);
+      }, [])).map(function (el) { return { el: el, hidden: el.hidden }; })
     };
     printState.details.forEach(function (item) { item.el.open = true; });
     printState.rows.forEach(function (item) { item.el.hidden = false; });
