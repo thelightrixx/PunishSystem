@@ -2726,10 +2726,34 @@ Verstöße: %punish_verstoss_punkte%</pre>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
   <p>Beim Wechsel von einer älteren Version alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.2.0">v4.2.0</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
-  <p>Unter Linux, auch in einem Pelican-Docker-Container, einmalig <code>sh plugins/update-pending/apply-update.sh </code> vor den bisherigen Java-Startbefehl setzen. In Pelican erfolgt das in der Startkonfiguration des Velocity-Servers; je nach Berechtigung muss der Panel-Administrator die Startzeile ändern. Alle bisherigen Java-Argumente und die Proxy-JAR beibehalten. Beispiel:</p>
+  <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
+  <ol class="steps">
+    <li><strong>Skript auf dem Proxy prüfen</strong>
+      <p>Im Pelican-Dateimanager des Velocity-Servers muss <code>plugins/update-pending/apply-update.sh</code> vorhanden sein. Fehlt die Datei, zuerst die oben beschriebene manuelle Aktualisierung und einen normalen Proxy-Start durchführen. Den Startbefehl erst ändern, wenn das Skript vorhanden ist.</p>
+    </li>
+    <li><strong>Gespeicherten Startbefehl in Pelican öffnen</strong>
+      <p>Beim Velocity-Server <strong>Startup / Startkonfiguration</strong> öffnen. Ist der Startbefehl dort nicht bearbeitbar, muss ein Panel-Administrator die Startzeile für diesen Server ändern. Je nach Pelican-Version heißt die Auswahl dafür <strong>Custom Startup / benutzerdefinierter Startbefehl</strong>. Die Ergänzung gehört in die gespeicherte Startzeile, nicht in die Minecraft-Konsole oder das Feld für den JAR-Dateinamen.</p>
+    </li>
+    <li><strong>Hook vor den bisherigen Java-Befehl setzen</strong>
+      <p>Ganz vorne <code>sh plugins/update-pending/apply-update.sh</code> und ein Leerzeichen ergänzen. Alle bisherigen Java-Argumente, Speicherwerte, Platzhalter und den Namen der Velocity-JAR beibehalten. Beispiel für eine Pelican-Startzeile <strong>vorher</strong>:</p>
+      <pre data-lang="shell">java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}</pre>
+      <p>Dieselbe Startzeile <strong>nachher</strong>:</p>
+      <pre data-lang="shell">sh plugins/update-pending/apply-update.sh java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}</pre>
+      <p>Die Platzhalter <code>{{SERVER_MEMORY}}</code> und <code>{{SERVER_JARFILE}}</code> werden weiterhin von Pelican ersetzt. Verwendet dein bisheriger Befehl andere Platzhalter oder feste Werte, diese unverändert übernehmen. Alles bleibt in einer einzigen Befehlszeile, ohne <code>&amp;&amp;</code> oder Semikolon zwischen Skript und <code>java</code>. Den gesamten Befehl nicht zusätzlich in Anführungszeichen einschließen: Das Skript startet Java selbst mit den übergebenen Argumenten.</p>
+    </li>
+    <li><strong>Speichern, neu starten und prüfen</strong>
+      <p>Die geänderte Startzeile speichern und den Proxy über Pelican neu starten. Anschließend im Spiel <code>/punish-update status</code> ausführen; dort muss <code>Proxy-Start-Hook=aktiv</code> stehen. Die Ergänzung dauerhaft stehen lassen. Ohne vorgemerktes Update startet das Skript Java direkt weiter.</p>
+    </li>
+  </ol>
+  <p>Auf einem Linux-System ohne Pelican dieselbe Ergänzung vor den Java-Befehl im verwendeten Startskript oder Dienst setzen. Mit festen Werten lautet ein vollständiges Beispiel:</p>
   <pre data-lang="shell">sh plugins/update-pending/apply-update.sh java -Xms128M -Xmx1G -jar velocity.jar</pre>
-  <p>Danach den Proxy über diese Startzeile neu starten. <code>/punish-update status</code> muss <code>Proxy-Start-Hook=aktiv</code> anzeigen. Der Hook benötigt <code>sh</code>, <code>sha256sum</code>, <code>cp</code>, <code>mv</code> und <code>rm</code> im Container. Er führt keine Downloads aus, prüft die vorgemerkte Datei erneut, sichert die bisherige Proxy-JAR als <code>plugins/update-pending/previous.jar.bak</code> und ersetzt sie vor dem Java-Start. Bei einem Prüfsummen- oder Dateifehler startet Java nicht; Ursache im Panel-Log prüfen und die vorgemerkte Datei korrigieren. Die Sicherung enthält nur die vorherige Proxy-JAR.</p>
-  <p>Ohne diesen Hook bleibt die Proxy-JAR vorgemerkt und <code>apply</code> meldet die fehlende Einrichtung. Auf Systemen ohne passende Shell kann die Proxy-JAR bei gestopptem Proxy weiterhin manuell ausgetauscht werden. Auf den Backends muss der konfigurierte Server-Update-Ordner aktiviert und beschreibbar sein.</p>
+  <p>Die Beispiele setzen das Hauptverzeichnis des Velocity-Servers als Arbeitsverzeichnis voraus, in dem auch <code>plugins/</code> liegt. Der Hook benötigt <code>sh</code>, <code>sha256sum</code>, <code>cp</code>, <code>mv</code> und <code>rm</code> im Container. Er führt keine Downloads aus, prüft die vorgemerkte Plugin-JAR erneut, sichert die bisherige Plugin-JAR als <code>plugins/update-pending/previous.jar.bak</code> und ersetzt sie vor dem Java-Start. Diese Sicherung enthält nur die vorherige PunishSystem-Plugin-JAR.</p>
+  <ul>
+    <li><strong>Skript kann nicht geöffnet werden:</strong> Bei <code>cannot open</code> oder <code>No such file</code> prüfen, ob <code>plugins/update-pending/apply-update.sh</code> im Dateimanager des Proxys vorhanden ist und das Arbeitsverzeichnis stimmt.</li>
+    <li><strong>Update-Prüfung schlägt fehl:</strong> Bei einem Prüfsummen- oder Dateifehler startet Java nicht. Die genaue Ursache im Panel-Log prüfen und die vorgemerkte Datei korrigieren.</li>
+    <li><strong>Hook bleibt inaktiv:</strong> Prüfen, ob die geänderte Startzeile gespeichert wurde und der Proxy seitdem tatsächlich darüber neu gestartet wurde.</li>
+  </ul>
+  <p>Ohne diesen Hook bleibt die Plugin-JAR auf dem Proxy vorgemerkt und <code>apply</code> meldet die fehlende Einrichtung. Auf Systemen ohne passende Shell kann die Plugin-JAR bei gestopptem Proxy weiterhin manuell ausgetauscht werden. Auf den Backends diesen Hook nicht eintragen; dort muss der konfigurierte Server-Update-Ordner aktiviert und beschreibbar sein.</p>
 
   <h2>Updates einspielen</h2>
   <p><code>/punish-update check</code> prüft GitHub Releases aus <code>update.github-repository</code> (Standard <code>thelightrixx/PunishSystem</code>). Für stabile Updates <code>update.channel</code> in der <code>general.yml</code> des Proxys auf <code>Release</code> setzen und mit <code>/punish-reload</code> neu laden. Die Kanäle <code>Beta</code> und <code>Snapshot</code> berücksichtigen auch Vorabversionen. Bei gleicher RC-Version entscheidet die Buildnummer. Ein Release muss alle drei Jars und <code>SHA256SUMS.txt</code> enthalten.</p>
