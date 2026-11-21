@@ -2,9 +2,9 @@
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
-## Dokumentation
+## Handbuch
 
-Lies das [Online-Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Die 37 Themen führen von der Einrichtung bis zur Fehlerbehebung. Inhalte, Suche, Schriften und interaktive Beispiele funktionieren offline; die Werkzeuge führen keine echten Serverbefehle aus.
+Lies das [PunishSystem Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Die 37 Themen führen von der Einrichtung bis zur Fehlerbehebung. Inhalte, Suche, Schriften und interaktive Beispiele funktionieren offline; die Werkzeuge führen keine echten Serverbefehle aus.
 
 | Aufgabe | Einstieg |
 |---|---|
