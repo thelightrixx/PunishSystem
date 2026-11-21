@@ -39,8 +39,14 @@ VPN-Blocklisten (separate Downloads, keine Listendaten in diesem Jar):
 - aaronburt/vpn-block-list, Kategorie lists/vpn.txt
   https://github.com/aaronburt/vpn-block-list
   Copyright (c) 2026 Aaron, MIT License.
+- tn3w/ProtonVPN-IPs, protonvpn_entry_ip_ranges.txt
+  https://github.com/tn3w/ProtonVPN-IPs
+  Lizenz: Apache License 2.0
+  https://github.com/tn3w/ProtonVPN-IPs/blob/master/LICENSE
+  Proton-bezogene Routing-Netze aus Anbieter- und Routing-Daten;
+  ein gelistetes Netz ist kein Nachweis exklusiver Proton-Nutzung.
 
-MIT License (für die genannten VPN-Listen):
+MIT License (für die Listen von X4BNet und aaronburt):
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

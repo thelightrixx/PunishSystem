@@ -312,6 +312,9 @@ alt-wache:
 # Treffer werden für alle Accounts abgelehnt; es entsteht kein permanenter Bann.
 # Downloads laufen im Hintergrund, ohne Übermittlung von Spieler-IPs an Anbieter.
 # Die VPN-Kategorien verwenden; allgemeine Hosting-/Datacenter-Listen sperren mehr.
+# Ergänzend werden Proton-bezogene Routing-Netze geprüft. Diese können auch
+# fremdgenutzte Adressen enthalten; Fehlzuordnungen gezielt unter freigaben lösen.
+# Bestehende explizite quellen-Listen beim Update um die neue Proton-URL ergänzen.
 # Cache: <Proxy-Datenordner>/vpn-blocklisten/ (letzter gültiger Stand je URL).
 # Ohne gültige Listen bleiben Logins erlaubt. Downloadfehler behalten den Cache;
 # Wiederholung nach spätestens 5 Minuten, regulär alle 360 Minuten (6 Stunden).
@@ -328,6 +331,7 @@ vpn-schutz:
     - "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv4.txt"
     - "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv6.txt"
     - "https://raw.githubusercontent.com/aaronburt/vpn-block-list/main/lists/vpn.txt"
+    - "https://raw.githubusercontent.com/tn3w/ProtonVPN-IPs/master/protonvpn_entry_ip_ranges.txt"
   freigaben: []
 
 # --- Unban-Antrag (Lite) ---

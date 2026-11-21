@@ -95,6 +95,30 @@ class VpnBlocklistenDienstTest {
     }
 
     @Test
+    void protonRoutingQuelleErfasstGemeldeteIpUndErlaubtGezielteAusnahmen() {
+        when(config.vpnSchutzQuellen()).thenReturn(VpnBlocklistenDienst.STANDARD_QUELLEN);
+        try (var dienst = dienst(q -> {
+            if (q.toString().equals("https://raw.githubusercontent.com/tn3w/ProtonVPN-IPs/master/protonvpn_entry_ip_ranges.txt")) {
+                return bytes("# Proton-bezogener Routing-Bereich\n190.2.128.0/19\n");
+            }
+            throw new IOException("Andere Quellen sind nicht Teil dieser Testdaten.");
+        })) {
+            dienst.neuLaden();
+            dienst.aktualisieren();
+            assertTrue(dienst.gesperrt("190.2.154.240"));
+            assertTrue(dienst.gesperrt("::ffff:190.2.154.240"));
+            assertFalse(dienst.gesperrt("190.2.127.255"));
+            assertFalse(dienst.gesperrt("190.2.160.0"));
+            assertFalse(dienst.gesperrt("203.0.113.7"));
+
+            when(config.vpnSchutzFreigaben()).thenReturn(List.of("190.2.154.241"));
+            dienst.neuLaden();
+            assertFalse(dienst.gesperrt("190.2.154.241"));
+            assertTrue(dienst.gesperrt("190.2.154.240"));
+        }
+    }
+
+    @Test
     void ohneGueltigeListenBleibenLoginsErlaubtUndPruefungLaedtNichts() {
         var aufrufe = new AtomicInteger();
         try (var dienst = dienst(q -> {

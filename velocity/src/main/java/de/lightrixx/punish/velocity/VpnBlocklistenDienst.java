@@ -36,7 +36,8 @@ final class VpnBlocklistenDienst implements AutoCloseable {
     static final List<String> STANDARD_QUELLEN = List.of(
             "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv4.txt",
             "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv6.txt",
-            "https://raw.githubusercontent.com/aaronburt/vpn-block-list/main/lists/vpn.txt");
+            "https://raw.githubusercontent.com/aaronburt/vpn-block-list/main/lists/vpn.txt",
+            "https://raw.githubusercontent.com/tn3w/ProtonVPN-IPs/master/protonvpn_entry_ip_ranges.txt");
     static final int MAX_BYTES = 8 * 1024 * 1024;
     private static final int MAX_ZEILEN = 250_000;
 

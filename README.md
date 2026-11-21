@@ -1,4 +1,4 @@
-# PunishSystem v4.3.0
+# PunishSystem v4.3.1
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
@@ -27,7 +27,7 @@ Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=
 
 ## Voraussetzungen und Jars
 
-Das [Release v4.3.0](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.3.0) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
+Das [Release v4.3.1](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.3.1) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
 
 | Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
@@ -61,11 +61,15 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 - MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
 - GitHub-Updates mit SHA-256-Prüfung und automatischer Übernahme beim nächsten Start: nativer Update-Ordner auf den Backends, Start-Hook auf dem Linux-Proxy, auch unter Pelican/Docker.
 
-Beim Wechsel von einer Version vor `v4.2.0` alle JARs einmalig manuell auf `v4.3.0` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
+Beim Wechsel von einer Version vor `v4.2.0` alle JARs einmalig manuell auf `v4.3.1` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
 
 Für künftige stabile Updates `update.channel: "Release"` auf dem Proxy verwenden. `/punish-update apply confirm` lädt, prüft und verteilt die Dateien. Mit `/punish-update status` den aktiven Proxy-Start-Hook und die erfolgreichen Transferquittungen aller Backends prüfen, dann Backends und Proxy neu starten. Für die Verteilung muss auf jedem Backend ein Spieler verbunden sein. Ohne Start-Hook bleibt die Proxy-JAR vorgemerkt; das Plugin weist darauf hin. Die [Update-Anleitung](docs/index.html#/betrieb) beschreibt Einrichtung, Sicherung und Fehlerbehandlung.
 
-Der VPN-Schutz ist ab v4.3.0 auch bei vorhandener Konfiguration standardmäßig aktiv. Er prüft jede Login-IP lokal; ein Treffer lehnt den Login ab, ohne eine Strafe zu speichern. Der Proxy lädt die VPN-Kategorien von [X4BNet/lists_vpn](https://github.com/X4BNet/lists_vpn) und [aaronburt/vpn-block-list](https://github.com/aaronburt/vpn-block-list) beim Start und danach alle sechs Stunden. Ohne gültigen lokalen Stand bleiben Logins vorübergehend erlaubt; spätere Downloadfehler behalten den letzten gültigen Stand. Spieler-IPs werden für diese Prüfung nicht an GitHub übermittelt. Fehlzuordnungen sind über `vpn-schutz.freigaben` korrigierbar, Abschalten über `vpn-schutz.aktiv: false`; Änderungen mit `/punish-reload` übernehmen. Öffentliche Listen können unbekannte und private VPNs übersehen.
+Der VPN-Schutz ist ab v4.3.0 auch bei vorhandener Konfiguration standardmäßig aktiv. Er prüft jede Login-IP lokal; ein Treffer lehnt den Login ab, ohne eine Strafe zu speichern. Der Proxy lädt die VPN-Kategorien von [X4BNet/lists_vpn](https://github.com/X4BNet/lists_vpn) und [aaronburt/vpn-block-list](https://github.com/aaronburt/vpn-block-list) sowie die Proton-bezogenen Routing-Netze von [tn3w/ProtonVPN-IPs](https://github.com/tn3w/ProtonVPN-IPs) beim Start und danach alle sechs Stunden. Die Routing-Netze verbessern die Abdeckung gemieteter VPN-Infrastruktur, können aber auch fremdgenutzte Adressen enthalten. Allgemeine Hosting-/Rechenzentrumslisten werden nicht pauschal eingebunden. Ohne gültigen lokalen Stand bleiben Logins vorübergehend erlaubt; spätere Downloadfehler behalten den letzten gültigen Stand. Spieler-IPs werden für diese Prüfung nicht an GitHub übermittelt. Fehlzuordnungen sind über `vpn-schutz.freigaben` korrigierbar, Abschalten über `vpn-schutz.aktiv: false`; Änderungen mit `/punish-reload` übernehmen. Öffentliche Listen können unbekannte und private VPNs übersehen.
+
+Beim Update auf v4.3.1 eine bereits ausdrücklich gesetzte `vpn-schutz.quellen`-Liste um `https://raw.githubusercontent.com/tn3w/ProtonVPN-IPs/master/protonvpn_entry_ip_ranges.txt` ergänzen und `/punish-reload` ausführen. Benutzerdefinierte Quellenlisten bleiben erhalten; fehlt der Schlüssel, gelten automatisch die vier aktuellen Standardquellen. Der gemeldete Fall `190.2.154.240` wird von der zusätzlichen Quelle über `190.2.128.0/19` erfasst. Das ist eine Netz-Heuristik und kein Nachweis, dass jede Adresse dieses Bereichs einen VPN betreibt.
+
+Stand der Quellenprüfung am 21.11.2026: Die neue Proton-Datei ist abrufbar, die jüngsten Upstream-Builds schlugen jedoch fehl; der letzte erfolgreiche Build war am 17.11.2026. Ein erfolgreicher Download im Proxy bestätigt die Erreichbarkeit der Datei, nicht eine neue Datenerzeugung beim Anbieter.
 
 ## Lizenz
 
