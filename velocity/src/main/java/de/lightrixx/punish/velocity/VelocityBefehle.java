@@ -372,6 +372,9 @@ public final class VelocityBefehle {
         registrar(manager, plugin, proxy, messageService, "punish-setup", List.of("pssetup"),
                 new VelocitySetupBefehl(messageService, config, protectionService, playerCache,
                         planer, proxy, kanal, datenOrdner, () -> proxyVersion(proxy)));
+        plugin.vpnBlocklistenDienst().ifPresent(dienst -> registrar(manager, plugin, proxy, messageService,
+                "punish-vpn", List.of("psvpn"), new VelocityVpnBefehl(messageService, config, protectionService,
+                        playerCache, planer, dienst)));
         ChatfilterBefehl chatfilter = new ChatfilterBefehl(messageService, config,
                 protectionService, playerCache, planer, verzeichnis, proxy);
         try {

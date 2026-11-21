@@ -33,6 +33,16 @@ public final class MessageKeys {
     public static final String SCHUTZ_PRUEFUNG_LAEUFT = "schutz-pruefung-laeuft";
     public static final String IP_NICHT_GEFUNDEN = "ip-nicht-gefunden";
     public static final String VPN_GESPERRT = "vpn-gesperrt";
+    public static final String VPN_SYNTAX = "vpn-syntax";
+    public static final String VPN_IP_UNGUELTIG = "vpn-ip-ungueltig";
+    public static final String VPN_CHECK = "vpn-check";
+    public static final String VPN_TREFFER = "vpn-treffer";
+    public static final String VPN_STATUS = "vpn-status";
+    public static final String VPN_QUELLE = "vpn-quelle";
+    public static final String VPN_QUELLENFEHLER = "vpn-quellenfehler";
+    public static final String VPN_QUELLENHINWEIS = "vpn-quellenhinweis";
+    public static final String VPN_TEAM_GESPERRT = "vpn-team-gesperrt";
+    public static final String VPN_TEAM_HINWEIS = "vpn-team-hinweis";
     public static final String BESTAETIGUNG_NOETIG = "bestaetigung-noetig";
     public static final String BESTAETIGUNG_ERFOLGREICH = "bestaetigung-erfolgreich";
     public static final String MASSEN_LIMIT_GEKUERZT = "massen-limit-gekuerzt";

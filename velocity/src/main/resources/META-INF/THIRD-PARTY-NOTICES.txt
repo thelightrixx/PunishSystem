@@ -45,6 +45,12 @@ VPN-Blocklisten (separate Downloads, keine Listendaten in diesem Jar):
   https://github.com/tn3w/ProtonVPN-IPs/blob/master/LICENSE
   Proton-bezogene Routing-Netze aus Anbieter- und Routing-Daten;
   ein gelistetes Netz ist kein Nachweis exklusiver Proton-Nutzung.
+- Joe12387/open-source-vpn-ip-lists, zehn Anbieterlisten
+  https://github.com/Joe12387/open-source-vpn-ip-lists
+  Lizenz: CC0 1.0 Universal
+  https://github.com/Joe12387/open-source-vpn-ip-lists/blob/master/LICENSE
+  Server-/Ein- und Austrittsadressen aus veröffentlichten Anbieterdaten;
+  keine Garantie für vollständige Erkennung oder exklusive VPN-Nutzung.
 
 MIT License (für die Listen von X4BNet und aaronburt):
 

@@ -183,6 +183,7 @@ public final class PunishBridge extends JavaPlugin {
         this.enforcementListener = new BridgeEnforcementListener(muteCache, ipMuteCache, banCache,
                 timeoutCache, freezeCache, config, kanalClient,
                 MiniMessageUtil.miniMessage(), playerCache);
+        enforcementListener.setVentureChatAktiv(getServer().getPluginManager().isPluginEnabled("VentureChat"));
         getServer().getPluginManager().registerEvents(enforcementListener, this);
         this.chatfilterService = starteChatfilterFallsAktiv(config, kanalClient);
         richteModellSyncEin();

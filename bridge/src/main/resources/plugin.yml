@@ -8,7 +8,7 @@ description: >
   Source of Truth bleibt der Proxy, die Bridge hat keine eigene Straflogik.
 author: lightrixx
 authors: [lightrixx]
-softdepend: [PlaceholderAPI, Essentials]
+softdepend: [PlaceholderAPI, Essentials, VentureChat]
 commands:
   punish-gui:
     description: Öffnet die PunishGUI (Command-Builder, Daten live vom Proxy).
@@ -311,6 +311,8 @@ permissions:
   punish.version: { description: Netzwerk-Version einsehen (via Proxy)., default: false }
   punish.help: { description: Befehlsübersicht einsehen (via Proxy)., default: false }
   punish.diagnostics: { description: Lokale Diagnose mit Warnungen einsehen., default: false }
+  punish.vpn: { description: VPN-Quellen und IP-Treffer am Proxy prüfen., default: false }
+  punish.message.vpn: { description: VPN-Login-Meldungen empfangen., default: false }
   punish.status.server: { description: Aktive Strafen serverweit einsehen (via Proxy)., default: false }
   punish.history.server: { description: Strafverlauf serverweit einsehen (via Proxy)., default: false }
   punish.verstoss.add: { description: Verstöße eintragen (via Proxy)., default: false }

@@ -18,6 +18,9 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
@@ -49,6 +52,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public final class BridgeEnforcementListener implements Listener {
 
@@ -76,6 +80,7 @@ public final class BridgeEnforcementListener implements Listener {
     private final MiniMessage miniMessage;
     private final PlayerCache playerCache;
     private volatile ChatfilterService chatfilterService;
+    private volatile boolean ventureChatAktiv;
 
     public BridgeEnforcementListener(MuteCache muteCache, BridgeKonfiguration config,
                                      KanalClient kanal, MiniMessage miniMessage,
@@ -406,27 +411,59 @@ public final class BridgeEnforcementListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void beiChat(AsyncChatEvent event) {
-        Player spieler = event.getPlayer();
+        if (!ventureChatAktiv) {
+            pruefeChat(event.getPlayer(), () -> PlainTextComponentSerializer.plainText().serialize(event.message()),
+                    event.isAsynchronous(), () -> event.setCancelled(true));
+        }
+    }
+
+    public void setVentureChatAktiv(boolean aktiv) {
+        ventureChatAktiv = aktiv;
+    }
+
+    @EventHandler
+    public void beiChatPluginAktiviert(PluginEnableEvent event) {
+        if ("VentureChat".equalsIgnoreCase(event.getPlugin().getName())) {
+            ventureChatAktiv = true;
+        }
+    }
+
+    @EventHandler
+    public void beiChatPluginDeaktiviert(PluginDisableEvent event) {
+        if ("VentureChat".equalsIgnoreCase(event.getPlugin().getName())) {
+            ventureChatAktiv = false;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void beiVentureChat(AsyncPlayerChatEvent event) {
+        if (ventureChatAktiv) {
+            pruefeChat(event.getPlayer(), event::getMessage, event.isAsynchronous(), () -> event.setCancelled(true));
+        }
+    }
+
+    private void pruefeChat(Player spieler, Supplier<String> textLieferant, boolean asynchron, Runnable ablehnen) {
         Optional<Protokoll.FreezeEintrag> freeze = findeAktivenFreeze(spieler);
         if (freeze.isPresent()) {
-            event.setCancelled(true);
+            ablehnen.run();
             sendeFreezeBlockiert(spieler, freeze.get());
             return;
         }
         if (muteErstSyncFehlt()) {
-            event.setCancelled(true);
+            ablehnen.run();
             sendeSyncLaeuft(spieler);
             return;
         }
         Optional<Protokoll.MuteEintrag> mute = findeAktiv(spieler.getUniqueId());
         if (mute.isPresent()) {
-            event.setCancelled(true);
+            ablehnen.run();
             sendeBlockiert(spieler, mute.get());
             return;
         }
         var ipMute = findeAktivenIpMute(spieler);
         if (ipMute.isPresent()) {
-            event.setCancelled(true);
+            ablehnen.run();
             sendeIpBlockiert(spieler, ipMute.get());
             return;
         }
@@ -436,22 +473,31 @@ public final class BridgeEnforcementListener implements Listener {
         }
         String text;
         try {
-            text = PlainTextComponentSerializer.plainText().serialize(event.message());
+            text = textLieferant.get();
         } catch (Exception e) {
             LOG.debug("Chat-Text konnte nicht gelesen werden.", e);
             return;
         }
         Optional<FilterTreffer> treffer;
         try {
-            treffer = chatfilter.pruefeChat(spieler, text);
+            treffer = asynchron ? chatfilter.pruefeChat(spieler, text)
+                    : chatfilter.pruefeStufe1(spieler, FilterKanal.CHAT, text);
         } catch (Exception e) {
             LOG.debug("Chatfilter-Prüfung fehlgeschlagen (Fail-Open).", e);
             return;
         }
         if (treffer.isPresent()) {
-            event.setCancelled(true);
+            ablehnen.run();
             sendeChatfilterBlockiert(spieler, treffer.get());
             chatfilter.melden(spieler, text, treffer.get());
+            return;
+        }
+        if (!asynchron && !chatfilter.umgeht(spieler)) {
+            try {
+                chatfilter.pruefeKiNachgelagert(spieler.getUniqueId(), spieler.getName(), FilterKanal.CHAT, text);
+            } catch (Exception e) {
+                LOG.debug("Nachgelagerte KI-Prüfung (Chat) fehlgeschlagen.", e);
+            }
         }
     }
 

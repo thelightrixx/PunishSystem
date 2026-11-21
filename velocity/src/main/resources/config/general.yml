@@ -309,12 +309,15 @@ alt-wache:
 
 # --- VPN-Schutz (nur Proxy) ---
 # Prüft bei jedem Login die Verbindungs-IP lokal gegen IPv4-/IPv6-Blocklisten.
-# Treffer werden für alle Accounts abgelehnt; es entsteht kein permanenter Bann.
+# Streng: jeder Treffer sperrt alle Accounts. Ausgewogen: nur VPN-Quellen sperren,
+# reine Routing-Treffer werden gemeldet. Es entsteht kein permanenter Bann.
 # Downloads laufen im Hintergrund, ohne Übermittlung von Spieler-IPs an Anbieter.
 # Die VPN-Kategorien verwenden; allgemeine Hosting-/Datacenter-Listen sperren mehr.
 # Ergänzend werden Proton-bezogene Routing-Netze geprüft. Diese können auch
 # fremdgenutzte Adressen enthalten; Fehlzuordnungen gezielt unter freigaben lösen.
-# Bestehende explizite quellen-Listen beim Update um die neue Proton-URL ergänzen.
+# Zusätzliche Anbieterlisten enthalten Server-/Ein- und Austrittsadressen;
+# auch exakte Adressen sind keine Garantie für Erkennung oder Fehlerfreiheit.
+# Bestehende explizite quellen-Listen beim Update um gewünschte neue URLs ergänzen.
 # Cache: <Proxy-Datenordner>/vpn-blocklisten/ (letzter gültiger Stand je URL).
 # Ohne gültige Listen bleiben Logins erlaubt. Downloadfehler behalten den Cache;
 # Wiederholung nach spätestens 5 Minuten, regulär alle 360 Minuten (6 Stunden).
@@ -324,14 +327,37 @@ alt-wache:
 # Leere/ungültige Listen und /0-Netze werden verworfen (max. 8 MiB je Quelle).
 # freigaben: einzelne IPs oder CIDRs für Fehlzuordnungen; gilt nur für VPN-Schutz,
 # normale Banns und IP-Banns bleiben wirksam. Beispiel: ["203.0.113.7/32"].
+# routing-quellen: URLs aus quellen als breite Routing-Quellen einstufen;
+# Proton-Routing ist immer so eingestuft. Neue unbekannte URLs zählen sonst als VPN.
+# team-meldungen: Empfänger benötigen punish.message.vpn; vollständige IP/CIDRs
+# zusätzlich punish.alts. Logs enthalten vollständige IPs und Treffer.
+# Cooldown je IP für Logs + Team; zusätzlich maximal 10 Meldungen als Burst,
+# danach eine pro Sekunde global. Die Login-Sperre bleibt davon unabhängig.
+# /punish-vpn check <IP> und /punish-vpn status zeigen Gründe und Quellenzustand.
+# Downloadzeit und lokal beobachtete Inhaltsänderung werden separat gespeichert;
+# Erzeugungszeit beim Listenanbieter ist unbekannt. Alte Caches: Zeiten unbekannt.
 vpn-schutz:
   aktiv: true
+  modus: streng
   intervall-minuten: 360
+  team-meldungen: true
+  meldungs-cooldown-sekunden: 60
   quellen:
     - "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv4.txt"
     - "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv6.txt"
     - "https://raw.githubusercontent.com/aaronburt/vpn-block-list/main/lists/vpn.txt"
     - "https://raw.githubusercontent.com/tn3w/ProtonVPN-IPs/master/protonvpn_entry_ip_ranges.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/airvpn.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/ivpn.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/mullvad.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/nordvpn.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/ovpn.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/pia.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/protonvpn.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/riseupvpn.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/surfshark.txt"
+    - "https://raw.githubusercontent.com/Joe12387/open-source-vpn-ip-lists/master/windscribe.txt"
+  routing-quellen: []
   freigaben: []
 
 # --- Unban-Antrag (Lite) ---
@@ -397,25 +423,25 @@ rang-buendel:
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
-    "punish.chatfilter", "punish.message.all-punishes"]
+    "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes"]
   manager: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
-    "punish.stats", "punish.chatfilter", "punish.message.all-punishes"]
+    "punish.stats", "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes"]
   richter: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
-    "punish.stats", "punish.chatfilter", "punish.pardon", "punish.message.all-punishes"]
+    "punish.stats", "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.pardon", "punish.message.all-punishes"]
   admin: ["punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax",
-    "punish.chatfilter", "punish.message.all-punishes",
+    "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes",
     "punish.ban", "punish.permabann", "punish.banip", "punish.unbanip", "punish.banall",
     "punish.muteip", "punish.unmuteip", "punish.timeoutip", "punish.untimeoutip",
     "punish.kickip", "punish.kickall", "punish.pardon", "punish.pardonall",
@@ -429,7 +455,7 @@ rang-buendel:
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax",
-    "punish.chatfilter", "punish.message.all-punishes",
+    "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes",
     "punish.ban", "punish.permabann", "punish.banip", "punish.unbanip", "punish.banall",
     "punish.muteip", "punish.unmuteip", "punish.timeoutip", "punish.untimeoutip",
     "punish.kickip", "punish.kickall", "punish.pardon", "punish.pardonall",

@@ -48,6 +48,7 @@ public enum Permissions {
     PUNISH_HELP("punish.help"),
     PUNISH_DIAGNOSTICS("punish.diagnostics"),
     PUNISH_SETUP("punish.setup"),
+    PUNISH_VPN("punish.vpn"),
     PUNISH_DELETEIP("punish.deleteip"),
     PUNISH_CHATFILTER("punish.chatfilter"),
     PUNISH_CHATFILTER_SYNC("punish.chatfilter.sync"),
@@ -61,6 +62,7 @@ public enum Permissions {
     ALLOW_SILENT("punish.allow-silent-syntax"),
 
     BROADCAST_RECEIVE_ALL("punish.message.all-punishes"),
+    MESSAGE_VPN("punish.message.vpn"),
 
     /**
      * @deprecated Veraltet, nur Kompatibilität. Schutz läuft über {@code punish.ignore.*}.

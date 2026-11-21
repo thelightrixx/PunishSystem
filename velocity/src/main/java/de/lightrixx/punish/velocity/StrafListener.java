@@ -84,6 +84,9 @@ public final class StrafListener {
     private volatile BroadcastService verpasstBroadcast;
     private volatile FreezeService freezeService;
     private volatile VpnBlocklistenDienst vpnBlocklistenDienst;
+    private final Map<String, Long> vpnMeldungsCooldown = new HashMap<>();
+    private final TunnelRateBegrenzer vpnMeldungsTempo =
+            new TunnelRateBegrenzer(1.0d, 10.0d, System::currentTimeMillis);
     private record LoginFenster(Player spieler, long seit, long bis) {
     }
 
@@ -398,6 +401,46 @@ public final class StrafListener {
         return text.substring(0, letzterPunkt) + ".*";
     }
 
+    private synchronized boolean vpnMeldungFaellig(String ip, long jetzt) {
+        long cooldown = Math.max(1L, config.vpnSchutzMeldungsCooldownSekunden()) * 1000L;
+        vpnMeldungsCooldown.values().removeIf(zeit -> jetzt - zeit >= cooldown);
+        if (vpnMeldungsCooldown.containsKey(ip) || !vpnMeldungsTempo.versuche()) {
+            return false;
+        }
+        vpnMeldungsCooldown.put(ip, jetzt);
+        return true;
+    }
+
+    private void meldeVpnTreffer(UUID uuid, String name, String ip, VpnBlocklistenDienst.Ergebnis ergebnis, long jetzt) {
+        if (!vpnMeldungFaellig(ip, jetzt)) {
+            return;
+        }
+        String details = ergebnis.treffer().stream().map(t -> t.quelle().name() + " ["
+                + t.quelle().art() + ", " + t.cidr() + "]").collect(java.util.stream.Collectors.joining("; "));
+        logger.info("VPN-Treffer aktion={} spieler={} uuid={} ip={} treffer={}",
+                ergebnis.aktion(), name, uuid, ip, details);
+        if (!config.vpnSchutzTeamMeldungen()) {
+            return;
+        }
+        String schluessel = ergebnis.aktion() == VpnBlocklistenDienst.Aktion.SPERREN
+                ? MessageKeys.VPN_TEAM_GESPERRT : MessageKeys.VPN_TEAM_HINWEIS;
+        for (var spieler : proxy.getAllPlayers()) {
+            try {
+                var empfaenger = new VelocitySender(spieler);
+                if (!empfaenger.hatRecht(Permissions.MESSAGE_VPN.node())) {
+                    continue;
+                }
+                boolean ipSichtbar = empfaenger.hatRecht(Permissions.PUNISH_ALTS.node());
+                String quellen = ipSichtbar ? details : ergebnis.treffer().stream().map(t -> t.quelle().name()
+                        + " [" + t.quelle().art() + "]").collect(java.util.stream.Collectors.joining("; "));
+                messageService.senden(empfaenger, schluessel,
+                        Map.of("spieler", name, "ip", ipSichtbar ? ip : maskiereIp(ip), "treffer", quellen));
+            } catch (Exception e) {
+                logger.warn("VPN-Team-Meldung konnte nicht zugestellt werden.", e);
+            }
+        }
+    }
+
     private void migriereVorab(UUID uuid, String name, long jetzt) {
         try {
             if (banService.findeAbdeckend(uuid, ServerScope.global()).isEmpty()) {
@@ -511,8 +554,19 @@ public final class StrafListener {
             logger.warn("IP für '{}' nicht lesbar – IP-Bann-Prüfung übersprungen (Fail-Open in der IP-Dimension).", name);
         }
         var vpn = vpnBlocklistenDienst;
-        if (!ipUnbekannt && vpn != null && vpn.gesperrt(ip)) {
-            return messageService.komponenteOhnePraefix(MessageKeys.VPN_GESPERRT, Map.of());
+        if (!ipUnbekannt && vpn != null) {
+            var ergebnis = vpn.pruefe(ip);
+            if (ergebnis.aktion() == VpnBlocklistenDienst.Aktion.SPERREN
+                    || ergebnis.aktion() == VpnBlocklistenDienst.Aktion.MELDEN) {
+                try {
+                    meldeVpnTreffer(uuid, name, ip, ergebnis, jetzt);
+                } catch (RuntimeException e) {
+                    logger.warn("VPN-Treffer konnte nicht gemeldet werden; Login-Entscheidung bleibt erhalten.", e);
+                }
+            }
+            if (ergebnis.aktion() == VpnBlocklistenDienst.Aktion.SPERREN) {
+                return messageService.komponenteOhnePraefix(MessageKeys.VPN_GESPERRT, Map.of());
+            }
         }
         Optional<TimeoutRecord> timeout;
         try {

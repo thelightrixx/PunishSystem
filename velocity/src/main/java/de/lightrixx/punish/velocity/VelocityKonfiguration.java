@@ -19,6 +19,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -334,6 +335,22 @@ public final class VelocityKonfiguration implements Konfiguration {
 
     public boolean vpnSchutzAktiv() {
         return Karten.wahr(abschnitt("vpn-schutz"), "aktiv", true);
+    }
+
+    public String vpnSchutzModus() {
+        return Karten.text(abschnitt("vpn-schutz"), "modus", "streng").trim().toLowerCase(Locale.ROOT);
+    }
+
+    public List<String> vpnSchutzRoutingQuellen() {
+        return Karten.liste(abschnitt("vpn-schutz"), "routing-quellen").stream().map(String::valueOf).toList();
+    }
+
+    public boolean vpnSchutzTeamMeldungen() {
+        return Karten.wahr(abschnitt("vpn-schutz"), "team-meldungen", true);
+    }
+
+    public long vpnSchutzMeldungsCooldownSekunden() {
+        return Math.clamp(holeLang("vpn-schutz", "meldungs-cooldown-sekunden", 60L), 1L, 3600L);
     }
 
     public long vpnSchutzIntervallMinuten() {
