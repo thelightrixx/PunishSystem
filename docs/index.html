@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Dokumentation</title>
-<meta name="description" content="Dokumentation für Admins und Moderatoren: Installation, Befehle, Rechte, Konfiguration und Chatfilter von PunishSystem v4.2.0.">
+<meta name="description" content="Das PunishSystem-Handbuch für Velocity und Paper: Einrichtung, Moderation, Befehle, Konfigurationsreferenz, Update-Prüfung und Fehlerbehebung. Auch offline nutzbar.">
 <script>
 (function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
@@ -291,7 +291,7 @@ details>div{padding:14px 18px 2px}
 .hero-action.primary{background:var(--accent-ink);border-color:var(--accent-ink);color:var(--surface)}
 .hero-action.primary:is(:hover,:focus-visible){background:var(--accent);border-color:var(--accent)}
 .hero-action svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.hero-art{align-self:start;border-radius:var(--r-l);background:var(--mc-bg);border:1px solid var(--code-line);padding:22px 20px 16px;font:400 13px/1.7 var(--mono);color:#aaa;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.hero-art{align-self:start;justify-self:center;width:100%;max-width:340px;border-radius:var(--r-l);background:var(--mc-bg);border:1px solid var(--code-line);padding:22px 20px 16px;font:400 13px/1.7 var(--mono);color:#aaa;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
 .hero-art .bs-title{color:#ff5555;font-weight:700;margin-bottom:12px}
 .hero-art .bs-row{white-space:nowrap}
 .hero-art .bs-row b{color:#fff;font-weight:400}
@@ -299,8 +299,8 @@ details>div{padding:14px 18px 2px}
 .hero-art .bs-chat i{font-style:normal;color:#7a7a7a}
 .hero-art .bs-chat em{font-style:normal;color:#ff5555}
 .hero-art .bs-chat b{font-weight:400;color:#fff}
-@container (min-width:680px){
-  .hero{grid-template-columns:minmax(0,1fr) 258px;gap:40px}
+@container (min-width:560px){
+  .hero{grid-template-columns:minmax(0,1fr) 244px;gap:28px}
 }
 
 /* ---------- Suche ---------- */
@@ -364,6 +364,10 @@ details>div{padding:14px 18px 2px}
 .wk-log li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:6px 2px;margin:0}
 .wk-log li:last-child{border-bottom:0}
 .wk-log .pts{font-family:var(--mono);color:var(--text-3);white-space:nowrap}
+
+.network-plan{display:block;width:100%;height:auto}
+.page .doc-meta{color:var(--text-3);font-size:14px;border-block:1px solid var(--line);padding:10px 0;margin:0 0 28px}
+.tbl :is(td,th){overflow-wrap:anywhere}
 
 /* ---------- Bewegung ---------- */
 #themeIcon .theme-sun,:root[data-theme="dark"] #themeIcon .theme-moon{opacity:0;transform:rotate(-45deg) scale(.65)}
@@ -527,25 +531,33 @@ details>div{padding:14px 18px 2px}
 <!-- =============================== START =============================== -->
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
+  <h1>PunishSystem Dokumentation</h1>
+  <p class="lead">Einrichten, moderieren, nachschlagen: Das Handbuch für PunishSystem v4.2.0 auf Velocity und Paper. Finde die passende Anleitung oder suche nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
   <div class="hero">
     <div class="hero-copy">
-      <h1>PunishSystem Dokumentation</h1>
-      <p class="lead">Einrichten, moderieren, nachschlagen: Hier findest du die Anleitungen für PunishSystem v4.2.0 auf Velocity und Paper. Wähle unten deine Aufgabe oder suche direkt nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+      <p>Ein Proxy verwaltet Strafen und Daten. Eine passende Bridge auf jedem Backend setzt die Regeln durch und stellt die Menüs bereit.</p>
+      <p>Beginne mit der Einrichtung oder spiele einen vollständigen Moderationsfall durch.</p>
       <div class="hero-actions">
-        <a class="hero-action primary" href="#/installation">
-          Installation starten
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-        </a>
+        <a class="hero-action primary" href="#/installation">Installation starten</a>
         <a class="hero-action" href="#/schnellstart">Moderation lernen</a>
       </div>
     </div>
-    <div class="hero-art" aria-hidden="true">
-      <div class="bs-title">Du wurdest gebannt!</div>
-      <div class="bs-row">Grund: <b>Cheating</b></div>
-      <div class="bs-row">Verbleibend: <b>6d 23h 58m</b></div>
-      <div class="bs-chat"><i>[</i><em>PunishSystem</em><i>]</i> <em>Du bist gemutet! Noch </em><b>59m 12s</b></div>
+    <div class="hero-art" role="img" aria-label="Netzwerkschema: Ein Velocity-Proxy verwaltet die Strafdaten. Je eine Bridge verbindet die Beispiel-Backends lobby und survival.">
+      <svg class="network-plan" viewBox="0 0 256 188" aria-hidden="true">
+        <path d="M128 71v29M55 100h146M55 100v16M201 100v16" stroke="#a4a4a4" stroke-width="2" fill="none"/>
+        <rect x="48" y="4" width="160" height="66" rx="8" fill="#3d211f" stroke="#ff9b8f"/>
+        <rect x="4" y="117" width="102" height="66" rx="8" fill="#22272d" stroke="#77818c"/>
+        <rect x="150" y="117" width="102" height="66" rx="8" fill="#22272d" stroke="#77818c"/>
+        <g text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#fff">
+          <text x="128" y="31" font-weight="600">Velocity</text><text x="128" y="53" fill="#ffb3a8">Strafen und Daten</text>
+          <text x="55" y="144" font-weight="600">lobby</text><text x="55" y="166" fill="#c6ccd3">Bridge</text>
+          <text x="201" y="144" font-weight="600">survival</text><text x="201" y="166" fill="#c6ccd3">Bridge</text>
+        </g>
+      </svg>
+      <div class="bs-chat"><em>Ein Stand für dein Netzwerk.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-21">21.11.2026</time> · v4.2.0 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -600,6 +612,11 @@ details>div{padding:14px 18px 2px}
     <li><strong>Administration:</strong> <a href="#/proxy-und-bridge">Proxy und Bridge verstehen</a> → <a href="#/installation">installieren und prüfen</a> → <a href="#/rang-buendel">Teamrechte vergeben</a> → <a href="#/config-uebersicht">Konfiguration pflegen</a>.</li>
     <li><strong>Moderation:</strong> <a href="#/schnellstart">einen Fall durchspielen</a> → <a href="#/scopes">Scopes verstehen</a> → <a href="#/schutz">Schutzregeln beachten</a> → <a href="#/befehle">benötigte Befehle nachschlagen</a>.</li>
   </ul>
+
+  <h2 data-anchor="offline">Offline lesen und drucken</h2>
+  <p>Öffne <code>docs/index.html</code> direkt im Browser. Inhalte, Suche, Schriften, Befehlsbaukasten, Scope-Demo und MiniMessage-Vorschau sind in der Datei enthalten und funktionieren ohne Server oder Internet. Die Werkzeuge zeigen Beispiele und führen keine Befehle auf deinem Netzwerk aus. Downloads, externe Referenzen und GitHub benötigen eine Verbindung.</p>
+  <p>Die Druckfunktion des Browsers gibt das ganze Handbuch aus, öffnet Detailabschnitte und hebt aktive Befehls- und Changelogfilter für den Druck auf. Darüber lässt sich das Handbuch auch als PDF speichern. Die Filtereinstellungen werden nach dem Druck wiederhergestellt.</p>
+
 </section>
 
 <section class="page" data-id="proxy-und-bridge" data-group="Start" data-title="Proxy und Bridge">
@@ -686,6 +703,22 @@ details>div{padding:14px 18px 2px}
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
+
+
+  <h2 data-anchor="download-pruefen">Downloads mit SHA-256 prüfen</h2>
+  <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
+  <h3>Windows PowerShell</h3>
+  <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.2.0-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.2.0-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.2.0-bridge-1.21.jar
+Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
+  <h3>Linux und macOS</h3>
+  <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
+  <pre data-lang="shell">sha256sum -c SHA256SUMS.txt</pre>
+  <p>Unter macOS:</p>
+  <pre data-lang="shell">shasum -a 256 -c SHA256SUMS.txt</pre>
+  <p>Bei vollständig geladenem Release müssen alle drei Dateien als <code>OK</code> gemeldet werden. Lädtst du nur die für deine Server benötigten Varianten, vergleiche ihre Hashes einzeln mit den passenden Zeilen. Bei einem abweichenden Hash die betroffene Datei erneut aus demselben Release laden und die Ursache klären.</p>
 
   <h2>Schritt 2: Einmal starten und Konfiguration anlegen</h2>
   <p>Starte Proxy und Backends einmal und stoppe sie anschließend wieder. Die Plugins legen dabei ihre Konfigurationsdateien an:</p>
@@ -1240,8 +1273,8 @@ punish-version</pre>
       <input id="commandFilter" type="search" placeholder="z. B. unmute, psundo oder punish.setup" autocomplete="off" spellcheck="false" aria-controls="commandIndex" aria-describedby="commandFilterHint">
       <button type="button" id="commandReset">Zurücksetzen</button>
     </div>
-    <p id="commandFilterHint">Suche nach Name, Zweck, Alias oder Permission. Mehrere Wörter grenzen die Treffer ein. Die Tabelle nennt das Hauptrecht; zusätzliche und alternative Rechte stehen beim jeweiligen Befehl.</p>
-    <p id="commandCount" role="status">48 von 48 Befehlen</p>
+    <p id="commandFilterHint">Suche nach Name, Zweck, Alias, Permission oder Angaben in der ausführlichen Befehlsbeschreibung. Mehrere Wörter grenzen die Treffer ein. Die Tabelle nennt das Hauptrecht; zusätzliche und alternative Rechte stehen beim jeweiligen Befehl.</p>
+    <p id="commandCount" role="status">49 von 49 Befehlen</p>
   </div>
   <div class="tbl" id="commandIndex"><table>
     <thead><tr><th>Befehl</th><th>Zweck</th><th>Hauptrecht</th></tr></thead>
@@ -1822,13 +1855,15 @@ punish-version</pre>
       <tr><td>Dauergrenzen oder Standardgründe ändern</td><td>Proxy: <code>general.yml → limits</code> bzw. <code>defaults</code></td><td><a href="#/config-general/limits">Limits</a>, <a href="#/config-general/defaults">Standardgründe</a></td></tr>
       <tr><td>Warn-Eskalation oder Auto-Bann ändern</td><td>Proxy: <code>general.yml → warns</code> bzw. <code>verstoesse</code></td><td><a href="#/verstoesse">Ablauf</a>, <a href="#/config-general/verstoesse">Konfiguration</a></td></tr>
       <tr><td>Nachrichten oder Bann-Screens anpassen</td><td>Proxy: <code>messages.yml</code>, <code>screens.yml</code>, <code>broadcasts.yml</code></td><td><a href="#/config-texte">Texte und Platzhalter</a></td></tr>
-      <tr><td>GUI-Gründe und Dauern ändern</td><td>Proxy: <code>general.yml → vorschlaege</code>; Ausweichwerte in <code>gui.yml</code></td><td><a href="#/config-general/tab-und-vorschlaege">Vorschläge</a>, <a href="#/config-bridge/gui-yml-proxy-master">GUI-Fallbacks</a></td></tr>
+      <tr><td>GUI-Gründe und Dauern ändern</td><td>Proxy: <code>general.yml → vorschlaege</code>; Ausweichwerte in <code>gui.yml</code></td><td><a href="#/config-general/tab-und-vorschlaege">Vorschläge</a>, <a href="#/config-gui">GUI-Fallbacks</a></td></tr>
       <tr><td>Chatfilter einschalten oder anpassen</td><td>Proxy: <code>general.yml → chatfilter</code> und <code>chatfilter/wortliste.txt</code></td><td><a href="#/chatfilter">Einrichtung, lokale Ausnahmen und Laufzeitschalter</a></td></tr>
       <tr><td>Einen neuen Backend-Server anbinden</td><td>Proxy: <code>general.yml → netzwerk.bridge-secrets</code>; Bridge: <code>netzwerk</code></td><td><a href="#/config-bridge/mehrere-backends-pflegen">Weiteres Backend einrichten</a></td></tr>
+      <tr><td>Automatische Update-Prüfung ändern</td><td>Proxy: <code>general.yml → update</code></td><td><a href="#/config-updates">Schlüssel und Updatezustände</a></td></tr>
       <tr><td>Speicher oder IP-Aufbewahrung ändern</td><td>Proxy: <code>general.yml → speicher</code> bzw. <code>datenschutz</code></td><td><a href="#/speicher">Speicherwechsel</a>, <a href="#/datenschutz">IP-Daten und Aufbewahrung</a></td></tr>
     </tbody>
   </table></div>
 
+  <p>Konkrete Zahlenbereiche stehen in der <a href="#/config-general/wertebereiche">Proxy-Referenz</a>. Die lokalen Bridge-Ausnahmen und synchronisierten Filterwerte sind in der <a href="#/config-chatfilter">Chatfilter-Referenz</a> getrennt beschrieben.</p>
   <h2>Auf dem Proxy</h2>
   <p>Im Unterordner <code>config/</code> des Plugin-Datenordners (<code>plugins/PunishSystemVelocity/config/</code>).</p>
   <div class="tbl"><table>
@@ -1876,6 +1911,17 @@ punish-version</pre>
     </tbody>
   </table></div>
   <div class="callout"><div><span class="ttl">Daten statt Einstellungen</span><p>Strafen und History liegen bei YAML-Speicherung im Unterordner <code>data/</code> des Proxys. Das Protokoll <code>punish_log.txt</code> rotiert bei 10 MiB in bis zu fünf zusätzliche Dateien (<code>punish_log.1.txt</code> bis <code>punish_log.5.txt</code>).</p></div></div>
+
+  <h2 data-anchor="kontrollierter-ablauf">Eine Änderung nachvollziehbar prüfen</h2>
+  <ol>
+    <li>Die zuständige Quelle sichern und einen konkreten Wert ändern. Bei Beispielen nur den gezeigten Schlüssel in den vorhandenen Abschnitt übernehmen; keine doppelten YAML-Abschnitte anlegen.</li>
+    <li>Einrückung mit Leerzeichen, YAML-Typ und Einheit prüfen. Dezimalzahlen verwenden einen Punkt. Die Bedeutung von 0 steht beim jeweiligen Schlüssel.</li>
+    <li>Reload oder Neustart gemäß Tabelle ausführen. Die vollständige Rückmeldung und beide Serverlogs beachten; ein Reload kann Teilfehler melden.</li>
+    <li>Bei Bridge-Verteilung einen Spieler auf dem betroffenen Backend verbinden. Anschließend die tatsächlich angewendete Änderung dort prüfen.</li>
+    <li>Mit einem Testaccount und den dafür vorgesehenen Rechten kontrollieren, dass die Änderung den gewünschten Fall betrifft.</li>
+  </ol>
+  <p>Ein Fehler beim Lesen des Konfigurationssatzes erhält den bisherigen aktiven Stand. Ein späterer Fehler beim Neuladen einzelner Bestände oder bei Folgearbeiten kann eine Teilfehlermeldung erzeugen. Diese Meldung ist keine vollständige Erfolgsbestätigung. Der PunishSystem-Reload lädt zusätzlich Repository-Bestände; er wechselt das Speicher-Backend nicht.</p>
+
 </section>
 
 <section class="page" data-id="rang-buendel" data-group="Konfiguration und Rechte" data-title="Rang-Bündel und LuckPerms">
@@ -2056,6 +2102,30 @@ punish-version</pre>
   <p class="lead">Referenz für <code>plugins/PunishSystemVelocity/config/general.yml</code>. Die Beispiele zeigen Standardwerte oder ausdrücklich benannte Beispiele. Öffne einen Abschnitt für Schlüssel, Bedeutung und Verweise auf die zugehörige Anleitung.</p>
   <div class="callout"><div><span class="ttl">Einheiten und Anwenden</span><p>Einheiten stehen im Schlüsselnamen oder bei der Erklärung: etwa Minuten für Limits, Sekunden für den Report-Cooldown und Millisekunden für den KI-Timeout. Texte wie <code>7d</code> verwenden das <a href="#/dauer">Zeitformat</a>. Regeln und Texte werden mit <code>/punish-reload</code> aktiv; ein Speicherwechsel braucht einen Neustart. Beginne bei Unklarheit mit <a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>.</p></div></div>
 
+  <h2 data-anchor="wertebereiche">Häufige Zahlenwerte und ihre Grenzen</h2>
+  <p>Die Werte stehen in der Proxy-<code>general.yml</code>. Die rechte Spalte beschreibt auch das Verhalten bei Grenzwerten. <code>0</code> bedeutet je nach Schlüssel deaktiviert, Rückfall auf einen Standard oder ungültige Untergrenze; es ist kein allgemeiner Schalter für unbegrenzt.</p>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Schlüssel</th><th scope="col">Standard</th><th scope="col">Einheit, gültiger Bereich und Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td><code>limits.timeout-max-minuten</code></td><td><code>1440</code></td><td>Positive Minuten. 0 oder negative Werte verwenden 1440. Ohne eigenständiges Ban-Minimum zugleich dessen Ausgangswert.</td></tr>
+      <tr><td><code>limits.mute-max-minuten</code></td><td><code>43200</code></td><td>Positive Minuten. 0 oder negative Werte verwenden 43200.</td></tr>
+      <tr><td><code>limits.freeze-max-minuten</code></td><td><code>43200</code></td><td>Positive Minuten. Fehlend oder höchstens 0: verwendet das Mute-Maximum.</td></tr>
+      <tr><td><code>limits.ban-min-minuten</code></td><td><code>1440</code></td><td>Positive Minuten; höchstens das Ban-Maximum. Fehlend oder höchstens 0: Timeout-Maximum, begrenzt auf Ban-Maximum.</td></tr>
+      <tr><td><code>limits.ban-max-minuten</code></td><td><code>525600</code></td><td>Positive Minuten. 0 oder negative Werte verwenden 525600.</td></tr>
+      <tr><td><code>history.eintraege-pro-seite</code></td><td><code>10</code></td><td>1 bis 100. Andere Werte werden auf die nächste Bereichsgrenze begrenzt.</td></tr>
+      <tr><td><code>reports.cooldown-sekunden</code></td><td><code>60</code></td><td>0 bis 3600 Sekunden. 0 hebt den Zeitabstand für denselben Reporter auf.</td></tr>
+      <tr><td><code>reports.cooldown-ip-sekunden</code></td><td><code>60</code></td><td>0 bis 3600 Sekunden. 0 deaktiviert den zusätzlichen IP-Cooldown.</td></tr>
+      <tr><td><code>reports.erinnerung-minuten</code></td><td><code>15</code></td><td>0 bis 1440 Minuten. 0 deaktiviert Team-Erinnerungen.</td></tr>
+      <tr><td><code>reports.uebernahme-timeout-minuten</code></td><td><code>0</code></td><td>0 bis 10080 Minuten. 0 deaktiviert die automatische Freigabe übernommener Reports.</td></tr>
+      <tr><td><code>reports.max-offen-pro-reporter</code></td><td><code>3</code></td><td>1 bis 50. Außerhalb liegende Werte werden auf die nächste Bereichsgrenze begrenzt.</td></tr>
+      <tr><td><code>reports.duplikat-sperre-minuten</code></td><td><code>10</code></td><td>0 bis 1440 Minuten. 0 deaktiviert das Zeitfenster für gleiche Melder und Ziele.</td></tr>
+      <tr><td><code>speicher.mysql.port</code></td><td><code>3306</code></td><td>1 bis 65535. Ungültige Werte verwenden 3306.</td></tr>
+      <tr><td><code>speicher.mysql.pool-max</code></td><td><code>10</code></td><td>1 bis 20 Verbindungen. Ungültige Werte verwenden 10.</td></tr>
+      <tr><td><code>datenschutz.ip-aufbewahrung-tage</code></td><td><code>90</code></td><td>1 bis 3650 Tage. Werte außerhalb verwenden 90; keine allgemeine Löschfrist für Spielerakten.</td></tr>
+      <tr><td><code>update.intervall-minuten</code></td><td><code>60</code></td><td>0 bis 10080 Minuten; auf diesen Bereich begrenzt. 0 schaltet die periodische Prüfung aus.</td></tr>
+    </tbody>
+  </table></div>
+  <h2 data-anchor="abschnitte">Abschnitte nachschlagen</h2>
   <details>
     <summary>config-version</summary>
     <div>
@@ -2256,7 +2326,7 @@ history:
   intervall-minuten: 60
   bestaetigung-fuer-apply: true</pre>
       <p><code>github-repository</code> ist das öffentliche GitHub-Repository im Format <code>Besitzer/Repository</code>. <code>Release</code> nutzt das neueste stabile Release; <code>Beta</code> und <code>Snapshot</code> wählen auch aus Vorabversionen. Die bisherigen Hangar-Schlüssel werden für den aktuellen Updateweg nicht verwendet. Ein Release benötigt alle drei Jars und <code>SHA256SUMS.txt</code>.</p>
-      <p><code>auto-check-beim-start</code> und <code>intervall-minuten</code> steuern reine Hinweise im Proxy-Log, keinen automatischen Download; <code>0</code> schaltet den periodischen Check ab. <code>bestaetigung-fuer-apply: true</code> verlangt <code>apply confirm</code>. Danach sind die bereitgestellten Jars <strong>manuell zu ersetzen</strong> und alle Server neu zu starten. Siehe <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</p>
+      <p><code>auto-check-beim-start</code> und <code>intervall-minuten</code> steuern reine Hinweise im Proxy-Log, keinen automatischen Download; <code>0</code> schaltet den periodischen Check ab. <code>bestaetigung-fuer-apply: true</code> verlangt <code>apply confirm</code>. Nach dem bestätigten Download übernimmt der Backend-Update-Ordner die verteilte Bridge beim nächsten Start. Auf dem Linux-Proxy ersetzt der eingerichtete Start-Hook die vorgemerkte Proxy-JAR vor Java. Ohne passenden Hook oder erfolgreiche Backend-Verteilung ist ein manueller Austausch bei gestopptem Server nötig. Alle Schlüssel und Zustände stehen unter <a href="#/config-updates">Update-Konfiguration</a>; der Ablauf unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</p>
     </div>
   </details>
 
@@ -2347,6 +2417,258 @@ vorschlaege:
       <p>Die Gründe, die das System einsetzt, wenn niemand einen angibt. Für den Eskalationsgrund stehen die Platzhalter <code>%anzahl%</code>, <code>%stufe%</code> und <code>%grund%</code> bereit. <code>auto-bann-grund</code> steht auf dem Auto-Bann, <code>auto-bann-reset-grund</code> auf dem Verstoß-Reset nach Ablauf.</p>
     </div>
   </details>
+
+  <h2 data-anchor="standarddatei">Vollständige Standardwerte</h2>
+  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.2.0</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
+  <details><summary>Vollständige Standardwerte der Proxy-general.yml</summary><div>
+  <pre data-lang="yaml">config-version: "2026-11-01"
+befehle:
+  ueberschreiben: true
+prefix: "&lt;dark_gray&gt;[&lt;red&gt;PunishSystem&lt;dark_gray&gt;]"
+netzwerk:
+  server-name: ""
+  server-liste: []
+  bridge-secrets: {}
+anzeige-zone: "Europe/Berlin"
+schutz:
+  fail-closed: true
+  selbstbestrafung-erlaubt: false
+offline-resolution:
+  allow-never-seen: false
+speicher:
+  typ: "mysql"
+  migration-beim-start: true
+  mysql:
+    host: "127.0.0.1"
+    port: 3306
+    datenbank: "punishsystem"
+    benutzer: "punish"
+    passwort: ""
+    use-ssl: false
+    pool-max: 10
+datenschutz:
+  ip-aufbewahrung-tage: 90
+verstoesse:
+  max-punkte: 6
+  auto-bann-dauer: "7d"
+  default-stufe: "medium"
+  stufen:
+    low: { dauer: "30d", punkte: 1 }
+    medium: { dauer: "90d", punkte: 2 }
+    high: { dauer: "365d", punkte: 3 }
+warns:
+  ablauf: 0
+  eskalation:
+    aktiv: true
+    schwellen:
+      - { ab: 3, stufe: low }
+      - { ab: 5, stufe: medium }
+      - { ab: 10, stufe: high }
+limits:
+  timeout-max-minuten: 1440        # Max. 24 Stunden Timeout (= gleichzeitig Ban-Min, wenn unten nicht gesetzt)
+  mute-max-minuten: 43200          # Max. 30 Tage Mute
+  freeze-max-minuten: 43200        # Max. 30 Tage Freeze (Default = mute-max-minuten)
+  ban-min-minuten: 1440            # Min. 24 Stunden Bann (Default = timeout-max-minuten)
+  ban-max-minuten: 525600          # Max. 1 Jahr Bann
+  ip-geteilt-warn-ab: 4
+  ip-geteilt-block-ab: 11
+  ip-geteilt-bestaetigung-ab: 2
+bestaetigungen:
+  pardon-all: true
+  kick-all: true
+  ban-all: true
+  mute-all: true
+  timeout-all: true
+  unmute-all: true
+  untimeout-all: true
+history:
+  eintraege-pro-seite: 10
+reports:
+  cooldown-sekunden: 60
+  cooldown-ip-sekunden: 60
+  erinnerung-minuten: 15
+  uebernahme-timeout-minuten: 0
+  max-offen-pro-reporter: 3
+  duplikat-sperre-minuten: 10
+chatfilter:
+  aktiv: false
+  fenster-minuten: 60
+  staffel:
+    - { anzahl: 5, aktion: warn }
+  team-info: false
+  klartext-uebertragen: true
+  modell-sync: true
+  auto-download: true
+  modell-url: ""
+  schwelle: 0.7
+  ki-timeout-ms: 150
+  max-zeichen: 500
+  kanaele:
+    chat: "ki"
+    privat: "ki"
+    schild: "stufe1"
+    buch: "stufe1"
+    amboss: "stufe1"
+alt-wache:
+  aktiv: true
+  cooldown-minuten: 30
+bann-unban-antrag:
+  link: ""
+  text: "&lt;green&gt;Unban beantragen"
+update:
+  github-repository: "thelightrixx/PunishSystem"
+  channel: "Release"
+  auto-check-beim-start: true
+  intervall-minuten: 60
+  bestaetigung-fuer-apply: true
+rang-buendel:
+  default: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  iron: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  gold: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  diamond: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  builder: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  builderplus: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  creator: ["punish.report", "punish.own", "punish.help", "punish.version"]
+  test-sup: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.warn"]
+  supporter: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.warn",
+    "punish.mute", "punish.unmute", "punish.kick",
+    "punish.reports", "punish.message.all-punishes"]
+  community: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.warn",
+    "punish.mute", "punish.unmute", "punish.kick",
+    "punish.reports", "punish.message.all-punishes"]
+  moderator: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
+    "punish.chatfilter", "punish.message.all-punishes"]
+  manager: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
+    "punish.stats", "punish.chatfilter", "punish.message.all-punishes"]
+  richter: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
+    "punish.stats", "punish.chatfilter", "punish.pardon", "punish.message.all-punishes"]
+  admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.message.all-punishes",
+    "punish.ban", "punish.permabann", "punish.banip", "punish.unbanip", "punish.banall",
+    "punish.muteip", "punish.unmuteip", "punish.timeoutip", "punish.untimeoutip",
+    "punish.kickip", "punish.kickall", "punish.pardon", "punish.pardonall",
+    "punish.muteall", "punish.unmuteall", "punish.timeoutall", "punish.untimeoutall",
+    "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
+    "punish.verstoss.edit", "punish.verstoss.clear",
+    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
+    "punish.undo", "punish.stats", "punish.export", "punish.search"]
+  p-admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.status.server", "punish.history", "punish.history.server",
+    "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
+    "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
+    "punish.note", "punish.gui", "punish.allow-silent-syntax",
+    "punish.chatfilter", "punish.message.all-punishes",
+    "punish.ban", "punish.permabann", "punish.banip", "punish.unbanip", "punish.banall",
+    "punish.muteip", "punish.unmuteip", "punish.timeoutip", "punish.untimeoutip",
+    "punish.kickip", "punish.kickall", "punish.pardon", "punish.pardonall",
+    "punish.muteall", "punish.unmuteall", "punish.timeoutall", "punish.untimeoutall",
+    "punish.verstoss", "punish.verstoss.add", "punish.verstoss.remove",
+    "punish.verstoss.edit", "punish.verstoss.clear",
+    "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
+    "punish.undo", "punish.stats", "punish.export", "punish.search"]
+  developer: ["punish.report", "punish.own", "punish.help", "punish.version",
+    "punish.status", "punish.history", "punish.reload"]
+  präsident: ["punish.*"]
+  vize: ["punish.*"]
+rang-gewicht:
+  default: 0
+  iron: 0
+  gold: 0
+  diamond: 0
+  builder: 0
+  builderplus: 0
+  creator: 0
+  developer: 0
+  test-sup: 10
+  supporter: 20
+  community: 20
+  moderator: 50
+  manager: 50
+  richter: 60
+  admin: 80
+  p-admin: 80
+  vize: 90
+  präsident: 100
+mute:
+  blockierte-befehle: ["/msg", "/tell", "/w", "/whisper", "/t", "/r", "/reply", "/me", "/action", "/tellraw", "/say", "/teammsg", "/title", "/pm", "/dm", "/message", "/party", "/p", "/guild", "/g", "/plot", "/channel", "/ch", "/mail", "/nick", "/emsg", "/ereply", "/m"]
+tab:
+  dauer-liste: ["10m", "1h", "6h", "1d", "7d", "30d", "perm"]
+  grund-liste: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
+vorschlaege:
+  ban:
+    gruende: ["Cheating", "Hacking", "Bugusing", "Teaming", "Ban-Umgehung", "Bedrohung"]
+    dauern: ["1d", "7d", "14d", "30d"]
+  mute:
+    gruende: ["Spamming", "Beleidigung", "Werbung", "Provokation", "Streit"]
+    dauern: ["10m", "30m", "1h", "6h", "1d"]
+  timeout:
+    gruende: ["Cool-down", "Streit", "Provokation", "Trolling"]
+    dauern: ["10m", "30m", "1h", "6h"]
+  freeze:
+    gruende: ["Cheating-Verdacht", "Bugusing-Verdacht", "Regelverstoß", "Überprüfung"]
+    dauern: ["10m", "30m", "1h", "6h", "perm"]
+  kick:
+    gruende: ["Störung", "AFK", "Provokation", "Regelverstoß"]
+  warn:
+    gruende: ["Spamming", "Beleidigung", "Werbung", "Störung", "Regelverstoß"]
+  verstoss:
+    gruende: ["Cheating", "Hacking", "Bugusing", "Teaming", "Beleidigung", "Spamming"]
+  report:
+    gruende: ["Cheating", "Beleidigung", "Spamming", "Provokation", "Bugusing", "Teaming"]
+  vorlagen:
+    - { befehl: ban, grund: Cheating, dauer: 30d }
+    - { befehl: ban, grund: Ban-Umgehung, dauer: 30d }
+    - { befehl: ban, grund: Bedrohung, dauer: 30d }
+    - { befehl: ban, grund: Hacking, dauer: 30d }
+    - { befehl: ban, grund: Bugusing, dauer: 14d }
+    - { befehl: ban, grund: Teaming, dauer: 7d }
+    - { befehl: mute, grund: Spamming, dauer: 1h }
+    - { befehl: mute, grund: Beleidigung, dauer: 1d }
+    - { befehl: mute, grund: Werbung, dauer: 6h }
+    - { befehl: mute, grund: Provokation, dauer: 30m }
+    - { befehl: mute, grund: Streit, dauer: 30m }
+    - { befehl: timeout, grund: Cool-down, dauer: 30m }
+    - { befehl: timeout, grund: Streit, dauer: 1h }
+    - { befehl: timeout, grund: Provokation, dauer: 30m }
+    - { befehl: timeout, grund: Trolling, dauer: 1h }
+    - { befehl: freeze, grund: Cheating-Verdacht, dauer: 1h }
+    - { befehl: freeze, grund: Bugusing-Verdacht, dauer: 1h }
+    - { befehl: freeze, grund: Regelverstoß, dauer: 30m }
+    - { befehl: freeze, grund: Überprüfung, dauer: 30m }
+defaults:
+  ban-grund: "Regelverstoß"
+  permabann-grund: "Schwerwiegender Regelverstoß"
+  ban-ip-grund: "Umgehung / Evasion"
+  timeout-grund: "Cool-down"
+  freeze-grund: "Überprüfung"
+  kick-grund: "Regelverstoß"
+  verstoss-grund: "Regelverstoß"
+  warn-grund: "Regelverstoß"
+  warn-eskalation-grund: "Automatische Eskalation bei %anzahl% Verwarnungen (Stufe %stufe%, Auslöser: %grund%)"
+  mute-grund: "Regelverstoß"
+  auto-bann-grund: "Automatischer Bann durch Verstoß-Limit"
+  auto-bann-reset-grund: "Verstöße nach Auto-Bann-Ablauf zurückgesetzt"</pre>
+  </div></details>
+
 </section>
 
 <section class="page" data-id="config-texte" data-group="Konfiguration und Rechte" data-title="Texte, Screens, Broadcasts">
@@ -2440,6 +2762,17 @@ vorschlaege:
   <pre data-lang="yaml">broadcasts:
   verpasst: { aktiv: true, kopf: "... %anzahl% ...", prefix: "[Verpasst] " }</pre>
   <p>Mit <code>aktiv: false</code> bleibt die Nachsendung aus.</p>
+
+  <h2 data-anchor="vorlagen-pruefen">Vorlagen gezielt ändern und prüfen</h2>
+  <p>Die YAML-Beispiele auf dieser Seite sind Ausschnitte. Bearbeite den vorhandenen Schlüssel im vorhandenen Abschnitt und erhalte alle übrigen Nachrichten. Ein zweiter gleichnamiger Hauptabschnitt ist kein zusätzlicher Nachrichtensatz. Texte mit Sonderzeichen in Anführungszeichen setzen; in einfachen YAML-Anführungszeichen wird ein enthaltenes einfaches Anführungszeichen verdoppelt.</p>
+  <p>Platzhalter sind an die konkrete Nachricht gebunden. Die Liste nennt mögliche Namen im Projekt; sie stehen nicht in jeder Vorlage zur Verfügung. Übernimm Schreibweise und benötigte Platzhalter aus der vorhandenen Nachricht, zum Beispiel <code>%grund%</code> oder <code>%verbleibend%</code>. Eine sichtbare Zeichenfolge nach dem Senden kann auf einen dort nicht eingesetzten Platzhalter hinweisen.</p>
+  <ol>
+    <li>Die Vorlage auf dem Proxy sichern und gezielt ändern.</li>
+    <li><code>/punish-reload</code> ausführen und auf Erfolg beziehungsweise Teilfehler achten.</li>
+    <li>Die bearbeitete Nachricht mit einem geeigneten Testfall auslösen und Werte, Zeilenumbrüche und Formatierung prüfen.</li>
+    <li>Bei Backend-Texten einen verbundenen Spieler und den aktuellen Text-Sync prüfen. Die Browser-Vorschau bestätigt keine tatsächlich geladene Servervorlage.</li>
+  </ol>
+
 </section>
 
 <section class="page" data-id="config-bridge" data-group="Konfiguration und Rechte" data-title="Bridge-Konfiguration">
@@ -2471,6 +2804,269 @@ vorschlaege:
 
   <h2>Mehrere Backends pflegen</h2>
   <p>Jedes Backend erhält die passende Bridge-Jar und eine eigene <code>config/general.yml</code>. Beim Kopieren einer Vorlage immer <strong>Servername und Tunnel-Secret</strong> an den jeweiligen Proxy-Eintrag anpassen. <code>config-sync/</code> wird vom Proxy verwaltet. Für neue Server kann <code>/punish-setup secrets</code> den benötigten Block erzeugen.</p>
+
+  <h2 data-anchor="netzwerk-referenz">Netzwerkschlüssel nachschlagen</h2>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Schlüssel</th><th scope="col">Ausgelieferter Wert</th><th scope="col">Wirkung und Übernahme</th></tr></thead>
+    <tbody>
+      <tr><td><code>netzwerk.server-name</code></td><td><code>""</code></td><td>Leer: lernt den kanonischen Backend-Namen vom Proxy. Ein gesetzter Name muss zur Velocity-Registrierung passen. Nach Änderung Bridge neu starten.</td></tr>
+      <tr><td><code>netzwerk.tunnel-secret</code></td><td><code>""</code></td><td>Pro Bridge eigener zufälliger Wert mit mindestens 16 Zeichen nach dem Trimmen. Muss zum Proxy-Eintrag passen. Leer deaktiviert den Tunnel; Änderungen auf der Bridge brauchen einen Neustart.</td></tr>
+      <tr><td><code>netzwerk.server-liste</code></td><td><code>[]</code></td><td>Veraltete Zusatzliste. Die registrierten Velocity-Server liefern die maßgebliche Liste für Scope-Vorschläge.</td></tr>
+      <tr><td><code>befehle.ueberschreiben</code></td><td><code>true</code></td><td>Wird auf dem Proxy gepflegt und verteilt. Nach der Verteilung Proxy und Backends neu starten; betrifft die Befehlsregistrierung.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Die Zuordnung auf dem Proxy lautet <code>netzwerk.bridge-secrets.&lt;Servername&gt;</code>. Diese Secrets werden nicht als allgemeine Textkonfiguration an alle Backends verteilt. Für weitere Werte siehe <a href="#/config-gui">gui.yml</a> und <a href="#/config-chatfilter">chatfilter.yml</a>.</p>
+  <h2 data-anchor="standarddatei">Mitgelieferte Bridge-general.yml</h2>
+  <pre data-lang="yaml"># =========================================================
+# PunishSystemBridge - Allgemeine Konfiguration (general.yml)
+# =========================================================
+# Entwickelt von: lightrixx
+# Ordner: plugins/PunishSystemBridge/config/
+# PROXY-ONLY: Alles außer netzwerk.server-name und netzwerk.tunnel-secret wird
+# per Text-Sync vom Proxy übernommen (Zwischenspeicher config-sync/, sobald ein
+# Spieler online ist). Das tunnel-secret ist das EIGENE Secret dieser Bridge und
+# muss dem passenden Eintrag netzwerk.bridge-secrets.&lt;servername&gt; auf dem Proxy
+# entsprechen – es wird nicht verteilt.
+# Daher NUR auf dem Proxy pflegen (/punish-reload verteilt netzwerkweit).
+# Alle Strafen laufen über den Proxy (Source of Truth). Vor dem ersten
+# Proxy-Kontakt gelten eingebaute Standardwerte (TAB nur Dauern, Filter
+# Stufe-1, Diagnose Standardwerte) – auf bespielten Netzwerken hinfällig.
+# Neben dieser Datei gibt es noch:
+#   messages.yml   - alle Spieler-Nachrichten (messages.*)
+#   screens.yml    - Bann-/Kick-Screens (screens.*)
+#   broadcasts.yml - Team-Broadcasts (broadcasts.*)
+#   gui.yml        - PunishGUI-Titel + Fallbacks (gui.*)
+# =========================================================
+
+# Schema-Version dieser Config (2026-11-01). Bei Downgrade Warnung im Log, kein Abbruch.
+config-version: "2026-11-01"
+
+# Strafbefehle von Minecraft/Essentials einschließlich direkter Aufrufe übernehmen.
+# false: normale PunishSystem-Registrierung ohne zusätzliche Fremdbefehls-Aliase.
+# Auf dem Proxy einstellen, mit /punish-reload an die Bridges verteilen.
+# Nach dem Text-Sync Proxy und Backends neu starten; ein Reload allein reicht nicht.
+befehle:
+  ueberschreiben: true
+
+# --- Netzwerk (Zero-Config) ---
+# server-name: leer lassen = Auto (Proxy meldet kanonischen Namen via HELLO_ACK).
+# Nur setzen, wenn der Auto-Name überschrieben werden soll.
+# server-liste: deprecated, optionaler Zusatz. Live-Liste vom Proxy gewinnt.
+netzwerk:
+  server-name: ""
+  server-liste: []
+  # Tunnel-Signatur (HMAC-SHA256) zwischen Proxy und Bridges.
+  # Hier steht NUR das eigene Secret dieser Bridge. Es muss dem Eintrag
+  # netzwerk.bridge-secrets.&lt;servername&gt; in der Proxy-general.yml entsprechen.
+  # Jede Bridge hat ein eigenes Secret; ein gemeinsames Secret für mehrere
+  # Bridges wird nicht mehr unterstützt.
+  # Leer = Tunnel deaktiviert (Fail-Closed): Die Bridge bleibt stumm, bis ein
+  # eigenes Secret gesetzt ist.
+  # Das Geheimnis erscheint nie in Logs.
+  # Mindestens 16 Zeichen Zufall; leere oder nach dem Trimmen kürzere Secrets werden abgewiesen.
+  tunnel-secret: ""
+
+# --- Rang-Gewichte (Hierarchie-Schutz) ---
+# Höherer Rang kann niedrigere bestrafen, nie umgekehrt.
+rang-gewicht:
+  default: 0
+  supporter: 20
+  community: 20
+  moderator: 50
+  manager: 50
+  richter: 60
+  admin: 80
+  p-admin: 80
+  vize: 90
+  präsident: 100</pre>
+</section>
+
+<section class="page" data-id="config-gui" data-group="Konfiguration und Rechte" data-title="gui.yml – Menüs und Fallbacks">
+  <h1>gui.yml – Menüs und Fallbacks</h1>
+  <p class="lead">Passe Menütitel und Ausweichlisten zentral auf dem Proxy an. Die GUI baut Befehle; Rechte, Schutz und Speicherung prüft weiterhin der Proxy.</p>
+<p>Aktive Quelle: <code>plugins/PunishSystemVelocity/config/gui.yml</code>. Der Text-Sync verteilt sie nach <code>plugins/PunishSystemBridge/config-sync/gui.yml</code>. Die lokale Bridge-Datei unter <code>config/gui.yml</code> ist der Fallback vor dem Sync. Änderungen an synchronisierten Kopien gehören zurück in die Proxy-Quelle.</p>
+  <h2 data-anchor="schluessel">Schlüssel und Standardwerte</h2>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Schlüssel</th><th scope="col">Standard</th><th scope="col">Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td><code>gui.titel</code></td><td><code>Punish</code></td><td>Titel der Hauptmenüs. MiniMessage ist erlaubt; der normale Chat-Präfix wird nicht vorangestellt.</td></tr>
+      <tr><td><code>gui.fallback-gruende</code></td><td>Beleidigung, Spamming, Cheating, Teaming, Bugusing, Hacking</td><td>Ausweichliste, wenn der Proxy keinen verwendbaren Gründe-Katalog liefert.</td></tr>
+      <tr><td><code>gui.fallback-dauern</code></td><td><code>10m</code>, <code>1h</code>, <code>6h</code>, <code>1d</code>, <code>7d</code>, <code>30d</code>, <code>perm</code></td><td>Ausweichliste für Dauern. Sie ändert keine Dauergrenzen und macht permanente Strafen nicht für jeden Befehl zulässig.</td></tr>
+    </tbody>
+  </table></div>
+  <h2 data-anchor="vorschlaege">Vorschläge, Regeln und Fallbacks unterscheiden</h2>
+  <p>Im normalen Betrieb kommen befehlsspezifische Gründe und Dauern aus <code>vorschlaege</code> der Proxy-<code>general.yml</code>. Ohne eigene Liste greifen die allgemeinen <code>tab</code>-Listen. <code>gui.yml</code> hält die Ausweichwerte bereit. Eine frei gewählte oder vorgeschlagene Dauer muss trotzdem die <a href="#/dauer">Dauerregeln</a> erfüllen.</p>
+  <p>Die GUI wartet bei einer Proxy-Anfrage bis zu vier Sekunden und hält erfolgreiche Katalogantworten bis zu fünf Minuten im Cache. Ein Fallback ersetzt weder eine erfolgreiche Rechteprüfung noch die Ausführung auf dem Proxy. Wenn Vorschläge fehlen, zunächst Verbindung und Sync prüfen.</p>
+  <h2 data-anchor="standard">Mitgelieferte Standarddatei</h2>
+  <pre data-lang="yaml"># =========================================================
+# PunishSystem - PunishGUI (gui.yml, Velocity/Proxy-Master)
+# =========================================================
+# Diese Datei wird per Text-Sync an alle Bridges verteilt (Proxy-only).
+# Bridges nutzen ihre lokale config/gui.yml nur als Fallback vor dem Sync.
+# Nach Änderungen: /punish-reload (gilt sofort netzwerkweit).
+# =========================================================
+
+# --- PunishGUI (Bridge, Command-Builder) ---
+# Die GUI baut nur die Befehlszeile und sendet sie per BEFEHL_AUSFUEHREN
+# an den Proxy. Status/History/Reports/Katalog kommen live per GUI_ANFRAGE.
+gui:
+  # Titel-Zeile der Hauptmenüs (MiniMessage erlaubt, ohne Prefix)
+  titel: "Punish"
+  # Falls der Proxy nicht antwortet (Timeout 4s), nutzt die GUI diese Fallbacks.
+  fallback-gruende: ["Beleidigung", "Spamming", "Cheating", "Teaming", "Bugusing", "Hacking"]
+  fallback-dauern: ["10m", "1h", "6h", "1d", "7d", "30d", "perm"]</pre>
+  <h2 data-anchor="pruefen">Änderung anwenden und prüfen</h2>
+  <ol>
+    <li>Die Proxy-Datei sichern und den gewünschten Titel oder die Listen ändern.</li>
+    <li>Auf dem Proxy <code>/punish-reload</code> ausführen und die Rückmeldung prüfen.</li>
+    <li>Auf dem betroffenen Backend einen Spieler verbinden, damit der Text-Sync übertragen werden kann.</li>
+    <li>Die GUI erneut öffnen. Titel und Listen prüfen; bei ausbleibender Änderung Diagnose und Katalog-Cache berücksichtigen.</li>
+  </ol>
+  <p>Die Konfiguration bietet keine Slot-, Material- oder Inventargrößen-Schlüssel. Die Bedienung mit Spielerwahl, Scope und Bestätigung erklärt <a href="#/gui">PunishGUI</a>.</p>
+</section>
+
+<section class="page" data-id="config-chatfilter" data-group="Konfiguration und Rechte" data-title="chatfilter.yml – Lokale Filterdatei">
+  <h1>chatfilter.yml – Lokale Filterdatei</h1>
+  <p class="lead">Erkenne, welche Werte lokal bleiben, welche vom Proxy kommen und welche Laufzeitschalter beide übersteuern.</p>
+<p>Lokale Datei: <code>plugins/PunishSystemBridge/config/chatfilter.yml</code>. Die zentralen Regeln stehen unter <code>chatfilter</code> in der Proxy-<code>general.yml</code>. Der Ablauf für Wortliste und optionales Modell steht unter <a href="#/chatfilter">Chatfilter einrichten</a>.</p>
+  <h2 data-anchor="lokale-schluessel">Diese Schlüssel bleiben lokal</h2>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Schlüssel unter chatfilter</th><th scope="col">Standard</th><th scope="col">Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td><code>befehl-ausnahmen</code></td><td><code>[]</code></td><td>Befehle, die nicht durch Wortliste und KI geprüft werden. Die separate Mute-Sperre bleibt wirksam.</td></tr>
+      <tr><td><code>bypass-permission</code></td><td><code>punish.chatfilter.bypass</code></td><td>Wer dieses Recht hat, wird vom Filter ausgenommen. Ein leerer Wert verwendet das Standardrecht.</td></tr>
+      <tr><td><code>wortliste-datei</code></td><td><code>wortliste.txt</code></td><td>Name der lokalen Wortlistendatei.</td></tr>
+      <tr><td><code>modell-datei</code></td><td><code>modell_int8.onnx</code></td><td>Name der lokalen ONNX-Modelldatei.</td></tr>
+      <tr><td><code>vocab-datei</code></td><td><code>vocab.txt</code></td><td>Name der lokalen Vokabulardatei.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Relative Dateinamen werden unter <code>plugins/PunishSystemBridge/chatfilter/</code> aufgelöst; absolute Dateipfade sind ebenfalls möglich. Wortliste, Modell und Vokabular sind zusätzliche Dateien und werden nicht durch die YAML-Datei selbst ersetzt.</p>
+  <h2 data-anchor="proxy-werte">Diese Werte kommen vom Proxy</h2>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Schlüssel unter chatfilter</th><th scope="col">Proxy-Standard</th><th scope="col">Wirkung und Grenzen auf der Bridge</th></tr></thead>
+    <tbody>
+      <tr><td><code>aktiv</code></td><td><code>false</code></td><td>Zentraler Aktivierungsschalter. Der lokale Wert ist der Fallback vor dem ersten Sync.</td></tr>
+      <tr><td><code>klartext-uebertragen</code></td><td><code>true</code></td><td>Überträgt zusätzlich zum Hash den gekürzten Treffertext an den eigenen Proxy. Bei false nur Hash; keine Cloud-Verarbeitung.</td></tr>
+      <tr><td><code>schwelle</code></td><td><code>0.7</code></td><td>KI-Schwelle zwischen 0 und 1. Ungültige Werte verwenden 0.7.</td></tr>
+      <tr><td><code>ki-timeout-ms</code></td><td><code>150</code></td><td>20 bis 5000 Millisekunden; auf diesen Bereich begrenzt.</td></tr>
+      <tr><td><code>max-zeichen</code></td><td><code>500</code></td><td>50 bis 2000 Zeichen für die KI; auf diesen Bereich begrenzt.</td></tr>
+      <tr><td><code>kanaele.chat</code>, <code>kanaele.privat</code></td><td><code>ki</code></td><td>Modus je Kanal: aus, stufe1 oder ki. Für Privatnachrichten/Befehle meldet die KI nachgelagert; Stufe 1 blockiert unmittelbar.</td></tr>
+      <tr><td><code>kanaele.schild</code>, <code>kanaele.buch</code>, <code>kanaele.amboss</code></td><td><code>stufe1</code></td><td>Modus je Kanal: aus, stufe1 oder ki. Ein unbekannter oder leerer Modus fällt auf stufe1 zurück.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Nach dem Text-Sync haben die Proxy-Werte Vorrang vor gleichnamigen lokalen Einträgen. In der ausgelieferten lokalen Datei stehen die zusätzlichen Proxy-Schlüssel als Kommentare. Für eine dauerhafte Regeländerung die Proxy-Quelle bearbeiten und <code>/punish-reload</code> ausführen.</p>
+  <h2 data-anchor="laufzeit">Gespeicherte Laufzeitschalter</h2>
+  <p><code>/chatfilter on</code> und <code>off</code> sowie <code>ai_on</code> und <code>ai_off</code> werden lokal als <code>chatfilter.laufzeit-filter</code> und <code>chatfilter.laufzeit-ki</code> gespeichert. Diese optionalen booleschen Übersteuerungen haben Vorrang und bleiben über Reloads und Neustarts erhalten. Sie gehören nicht zu den mitgelieferten Standardwerten.</p>
+  <p>Wenn der Proxy den Filter einschaltet, ein Backend aber weiterhin nichts blockiert, dessen Laufzeitzustand und Bypass-Recht prüfen. Das Deaktivieren der KI lässt die Wortliste weiterlaufen. <code>/chatfilter sync</code> braucht das separate Recht <code>punish.chatfilter.sync</code>.</p>
+  <h2 data-anchor="standard">Mitgelieferte lokale Standarddatei</h2>
+  <pre data-lang="yaml"># =========================================================
+# PunishSystemBridge - KI-Chatfilter (chatfilter.yml)
+# =========================================================
+# Ordner: plugins/PunishSystemBridge/config/
+# Hybrid-Filter: Stufe 1 Wortliste (sofort, exakt) + Stufe 2 KI
+# (lokales ONNX-Modell, offline, keine Cloud).
+# Ablauf: Bypass-Recht? -&gt; Stufe 1 (Wortliste) -&gt; Stufe 2 (KI).
+# Treffer werden geblockt und an den Proxy gemeldet. Der Proxy
+# zählt Treffer pro Spieler und fährt die Staffel (Velocity-config).
+#
+# PROXY-ONLY: aktiv, schwelle, ki-timeout-ms, max-zeichen und kanaele
+# stehen auf dem Proxy (general.yml, chatfilter.*) und werden per Text-Sync
+# verteilt (Proxy-Master). Lokale chatfilter.yml ist nur Fallback vor Sync.
+# bypass-permission und Dateinamen bleiben lokal.
+#
+# Laufzeit-Befehle (Recht: punish.chatfilter, kein Neustart nötig):
+#   /chatfilter off|on     Filter global an/ausschalten (Laufzeit)
+#   /chatfilter ai_off|ai_on  nur KI an/ausschalten (Wortliste läuft weiter)
+#   /chatfilter add &lt;Wort&gt; Wort zentral aufnehmen (Proxy-Wortliste, sofort + dauerhaft,
+#                          per Sync an alle Bridges; Konsole und Spieler möglich)
+# Nach Änderungen: /punish-reload auf dem Proxy (lädt alles neu).
+# =========================================================
+
+chatfilter:
+  # Master-Schalter. false = Filter komplett aus.
+  aktiv: false
+
+  # Hash-only-Modus: false = Bridge sendet nur textHash an den Proxy
+  # (kein Klartext), Team-Info zeigt neutral den Hash. Standard true.
+  # Wird per Text-Sync vom Proxy (general.yml chatfilter.klartext-uebertragen)
+  # überschrieben, lokale Datei ist nur Fallback vor Sync.
+  klartext-uebertragen: true
+
+  # Optionale Filter-Ausnahmen für Befehle (z. B. ["/msg", "/r"]).
+  # Wortliste+KI prüfen sonst ALLE Spieler-Befehle; Mute-Block bleibt
+  # Verbieten-Liste (mute.blockierte-befehle). Leer = keine Ausnahme.
+  befehl-ausnahmen: []
+
+  # Wer diese Permission hat, wird nie geprüft (Team).
+  bypass-permission: "punish.chatfilter.bypass"
+
+  # Dateien in plugins/PunishSystemBridge/chatfilter/
+  # (oder absolute Pfade). Fehlt die Wortliste, läuft nur
+  # die KI; fehlt das Modell, läuft nur die Wortliste.
+  wortliste-datei: "wortliste.txt"
+  modell-datei: "modell_int8.onnx"
+  vocab-datei: "vocab.txt"
+
+  # --- Proxy-Sync-Schlüssel (nur Doku, hier NICHT wirksam) ---
+  # Diese Werte kommen per Text-Sync vom Proxy (dort in general.yml
+  # unter chatfilter.* pflegen) und gewinnen gegen alles Lokale.
+  # schwelle: 0.7              # KI-Schwelle 0..1
+  # ki-timeout-ms: 150         # Max. KI-Wartezeit pro Nachricht (20..5000)
+  # max-zeichen: 500           # Max. Zeichen für die KI (50..2000)
+  # kanaele:                   # Modus pro Kanal (aus | stufe1 | ki)
+  #   chat: "ki"               # Chat: KI blockiert
+  #   privat: "ki"             # Befehle/PNs: Stufe 1 blockt, KI meldet nachgelagert
+  #   schild: "stufe1"
+  #   buch: "stufe1"
+  #   amboss: "stufe1"</pre>
+  <h2 data-anchor="pruefen">Mit einem geeigneten Spieler prüfen</h2>
+  <ol>
+    <li>Proxy-Einstellung, Text-Sync, lokale Laufzeitschalter und vorhandene Dateien prüfen.</li>
+    <li>Einen Testspieler ohne das konfigurierte Bypass-Recht verwenden.</li>
+    <li>Chat und die tatsächlich aktivierten weiteren Kanäle getrennt testen.</li>
+    <li>Die Rückmeldung und Proxy-Diagnose prüfen. Ein Filtertreffer und eine daraus folgende Staffelaktion sind verschiedene Schritte.</li>
+  </ol>
+</section>
+
+<section class="page" data-id="config-updates" data-group="Konfiguration und Rechte" data-title="Update-Konfiguration">
+  <h1>Update-Konfiguration</h1>
+  <p class="lead">Konfiguriere reine Versionsprüfungen auf dem Proxy und prüfe die Voraussetzungen der Übernahme beim nächsten Start.</p>
+<p>Quelle: <code>plugins/PunishSystemVelocity/config/general.yml</code>, Abschnitt <code>update</code>. Änderungen mit <code>/punish-reload</code> übernehmen und die Rückmeldung prüfen. Die erstmalige Einrichtung des Proxy-Start-Hooks benötigt einen regulären Neustart über den angepassten Startbefehl.</p>
+  <h2 data-anchor="schluessel">Schlüssel und Standardwerte</h2>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Schlüssel unter update</th><th scope="col">Standard</th><th scope="col">Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td><code>github-repository</code></td><td><code>thelightrixx/PunishSystem</code></td><td>Öffentliches GitHub-Repository mit allen drei Jars und SHA256SUMS.txt je Release.</td></tr>
+      <tr><td><code>channel</code></td><td><code>Release</code></td><td>Release verwendet stabile Veröffentlichungen. Beta und Snapshot berücksichtigen auch Vorabversionen.</td></tr>
+      <tr><td><code>auto-check-beim-start</code></td><td><code>true</code></td><td>Hinweisprüfung nach dem Start, kein automatischer Download oder Neustart.</td></tr>
+      <tr><td><code>intervall-minuten</code></td><td><code>60</code></td><td>0 bis 10080 Minuten. 0 deaktiviert die periodische Prüfung; Werte werden auf den Bereich begrenzt.</td></tr>
+      <tr><td><code>bestaetigung-fuer-apply</code></td><td><code>true</code></td><td>Verlangt die ausdrückliche Eingabe apply confirm zum Bereitstellen des Updates.</td></tr>
+    </tbody>
+  </table></div>
+  <h2 data-anchor="standard">Standardabschnitt</h2>
+  <pre data-lang="yaml">update:
+  github-repository: "thelightrixx/PunishSystem"
+  channel: "Release"
+  auto-check-beim-start: true
+  intervall-minuten: 60
+  bestaetigung-fuer-apply: true</pre>
+  <h2 data-anchor="zustand">Gefunden, vorbereitet und aktiv unterscheiden</h2>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">Zustand</th><th scope="col">Was ist belegt?</th><th scope="col">Nächster Schritt</th></tr></thead>
+    <tbody>
+      <tr><td>Neuere Version gefunden</td><td>Die Versionsprüfung hat ein geeignetes Release ermittelt.</td><td>Zielversion lesen, Bestand sichern und apply confirm ausführen.</td></tr>
+      <tr><td>Dateien vorbereitet</td><td>Die Downloads wurden geprüft und zur Übernahme abgelegt. Die laufende Version ist noch dieselbe.</td><td>Backend-Quittungen und aktiven Proxy-Start-Hook in update status prüfen.</td></tr>
+      <tr><td>Server regulär neu gestartet</td><td>Der Update-Ordner beziehungsweise Proxy-Hook konnte die vorgemerkte JAR übernehmen.</td><td>Die tatsächlich laufenden Versionen auf Proxy und jedem Backend mit punish-diagnostics vergleichen.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Eine erfolgreiche Transferquittung bestätigt die bereitgestellte Datei, nicht die bereits laufende Version. Ein Backend ohne verbundenen Spieler erhält keine Plugin-Nachrichten und damit keine automatische Verteilung. Solche Backends vor dem Neustart verbinden und prüfen oder manuell aktualisieren.</p>
+  <h2 data-anchor="hook">Welche Übernahme braucht welchen Server?</h2>
+  <ul>
+    <li><strong>Paper-/Purpur-Backend:</strong> aktivierter und beschreibbarer Server-Update-Ordner, normalerweise <code>plugins/update/</code>.</li>
+    <li><strong>Linux-Proxy:</strong> eingerichteter Start-Hook <code>plugins/update-pending/apply-update.sh</code> vor dem vorhandenen Java-Startbefehl. Der Hook ersetzt die vorgemerkte Proxy-JAR vor Java.</li>
+    <li><strong>Proxy ohne passende Shell:</strong> bei gestopptem Server manuell austauschen. Ein Reload übernimmt keinen neuen Plugin-Code.</li>
+  </ul>
+  <p>Der vollständige Ablauf einschließlich Pelican-Beispiel, Sicherung und Fehlerprüfung steht unter <a href="#/betrieb/start-hook-fuer-linux-und-pelican-einrichten">Start-Hook einrichten</a> und <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</p>
 </section>
 
 <!-- =============================== ERWEITERUNGEN =============================== -->
@@ -3135,6 +3731,18 @@ Verstöße: %punish_verstoss_punkte%</pre>
 
   <details><summary>Was zeigt das Spieler-Dossier?</summary>
     <div><p><code>/punish-dossier &lt;Spieler&gt;</code> öffnet als Spieler eine Übersicht mit Status, Verlauf, Warns und den Strafaktionen. Das Recht ist <code>punish.gui</code>. Siehe <a href="#/gui">PunishGUI</a>.</p></div></details>
+
+  <details><summary>Warum ändert sich die Plugin-Version nach apply noch nicht?</summary>
+    <div><p><code>apply</code> bereitet geprüfte Dateien vor. Die laufende Version ändert sich erst beim normalen Start über den Backend-Update-Ordner beziehungsweise den eingerichteten Proxy-Hook. Vorher Quittungen und Hookstatus, danach alle tatsächlich laufenden Versionen prüfen. Siehe <a href="#/config-updates/zustand">Updatezustände</a>.</p></div></details>
+  <details><summary>Warum wirkt eine lokale Konfigurationsänderung auf der Bridge nicht?</summary>
+    <div><p>Für synchronisierte Regeln und Texte ist der Proxy die Quelle. Die Kopien unter <code>config-sync/</code> gewinnen gegen lokale Fallbacks. Lokale Filter-Ausnahmen und Dateinamen bleiben dagegen lokal; gespeicherte Laufzeitschalter können zentrale Filterwerte übersteuern. Die <a href="#/config-chatfilter">Chatfilter-Referenz</a> zeigt die Zuständigkeiten.</p></div></details>
+  <details><summary>Bedeutet 0 bei jeder Einstellung unbegrenzt?</summary>
+    <div><p>Nein. Die Bedeutung hängt vom Schlüssel ab. Beispielsweise deaktiviert 0 die periodische Update-Prüfung, während 0 beim Mute-Maximum den Standardwert verwendet. Die <a href="#/config-general/wertebereiche">Wertebereiche</a> nennen Einheit, Grenzen und Rückfallverhalten.</p></div></details>
+  <details><summary>Führen die Werkzeuge im Handbuch echte Strafbefehle aus?</summary>
+    <div><p>Nein. Befehlsbaukasten, Scope-Demo, Punktebeispiel und MiniMessage-Vorschau laufen nur im Browser. Sie ändern keine Serverdaten und lesen keine aktive Konfiguration. Kopierte Befehle müssen im passenden Netzwerk mit den nötigen Rechten ausgeführt und geprüft werden.</p></div></details>
+  <details><summary>Funktioniert das Handbuch ohne Internet?</summary>
+    <div><p>Ja. <code>docs/index.html</code> enthält Inhalte, Skripte und Schriften. Suche und interaktive Beispiele funktionieren lokal. Nur externe Links und Downloads benötigen eine Verbindung. Die Druckfunktion gibt das vollständige Handbuch aus; siehe <a href="#/ueberblick/offline">Offline lesen und drucken</a>.</p></div></details>
+
 </section>
 
   </main>
@@ -3381,7 +3989,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem v4.2.0. Dokumentation für Admins und Moderatoren.</div>');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem ' + esc($('.ver').textContent) + ' · <a href="https://github.com/thelightrixx/PunishSystem">Quellcode</a> · <a href="https://github.com/thelightrixx/PunishSystem/releases">Downloads</a> · <a href="#/ueberblick/offline">Offline lesen</a></div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');
@@ -3780,7 +4388,8 @@ Verstöße: %punish_verstoss_punkte%</pre>
     var entries = commandRows.map(function (row) {
       var name = $('td:first-child code', row).textContent;
       var card = cards[name];
-      return { row: row, text: searchText(row.textContent + ' ' + (card ? card.getAttribute('data-alias') || '' : '')) };
+      var detail = card ? (card.getAttribute('data-alias') || '') + ' ' + (card.getAttribute('data-perm') || '') + ' ' + plain(card) : '';
+      return { row: row, text: searchText(row.textContent + ' ' + detail) };
     });
     function filterCommands() {
       var tokens = searchText(field.value).split(/\s+/).filter(Boolean);

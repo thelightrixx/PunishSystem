@@ -4,7 +4,7 @@ PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy
 
 ## Dokumentation
 
-Die vollständige Dokumentation liegt in [docs/index.html](docs/index.html). Öffne diese Datei lokal im Browser; sie funktioniert ohne Internetverbindung. Die Navigation ist nach Aufgaben geordnet, die Suche findet auch Befehle, Permissions und Konfigurationsschlüssel.
+Lies das [Online-Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Die 37 Themen führen von der Einrichtung bis zur Fehlerbehebung. Inhalte, Suche, Schriften und interaktive Beispiele funktionieren offline; die Werkzeuge führen keine echten Serverbefehle aus.
 
 | Aufgabe | Einstieg |
 |---|---|
@@ -13,11 +13,15 @@ Die vollständige Dokumentation liegt in [docs/index.html](docs/index.html). Öf
 | Syntax, Beispiele oder Aliase finden | [Befehlsreferenz](docs/index.html#/befehle) |
 | Meldungen bearbeiten oder Moderationsdaten durchsuchen | [Reports](docs/index.html#/reports), [Suche](docs/index.html#/befehle-einsicht/punish-search) |
 | Rechte an Teamgruppen vergeben | [Rang-Bündel und LuckPerms](docs/index.html#/rang-buendel), [alle Permissions](docs/index.html#/rechte) |
-| Eine Einstellung oder Nachricht ändern | [Dateien und Zuständigkeiten](docs/index.html#/config-uebersicht) |
+| Eine Einstellung oder Nachricht ändern | [Dateien und Zuständigkeiten](docs/index.html#/config-uebersicht), [Zahlenwerte und Grenzen](docs/index.html#/config-general/wertebereiche) |
+| Menüs, lokale Filterwerte oder Update-Prüfungen anpassen | [gui.yml](docs/index.html#/config-gui), [chatfilter.yml](docs/index.html#/config-chatfilter), [Update-Konfiguration](docs/index.html#/config-updates) |
+| Downloads vor der Installation prüfen | [SHA-256 für Windows, Linux und macOS](docs/index.html#/installation/download-pruefen) |
 | MySQL einrichten oder YAML-Daten übernehmen | [Speicher und Migration](docs/index.html#/speicher) |
 | Eine bestehende Installation aktualisieren | [Updates und Sicherungen](docs/index.html#/betrieb) |
 | Änderungen einer Version nachlesen | [Changelog](docs/index.html#/changelog) |
 | Ein Problem untersuchen | [Fehlerbehebung](docs/index.html#/fehlerbehebung) |
+
+Mit `Strg+K` (macOS: `⌘+K`) oder `/` durchsuchst du Befehle, Permissions und Konfigurationsschlüssel. Abschnittslinks führen direkt zur passenden Stelle. Die Druckfunktion gibt das ganze Handbuch mit aufgeklappten Details aus und erlaubt das Speichern als PDF.
 
 Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=low`, `level=medium` und `level=high`. Die Vorschläge gibt es auch beim [Bearbeiten eines Verstoßes](docs/index.html#/befehle-bearbeiten/punish-edit).
 
