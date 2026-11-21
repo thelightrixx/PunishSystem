@@ -24,8 +24,6 @@ public final class PunishHelpCommand extends PunishCommand {
         }
     }
 
-    private static final String BETA_ANHAENGSEL = " (Beta)";
-
     private static final List<Eintrag> EINTRAEGE = List.of(
             new Eintrag("ban", "<Spieler> <Dauer> [Grund]", Permissions.PUNISH_BAN.node()),
             new Eintrag("permabann", "<Spieler> [Grund]", Permissions.PUNISH_PERMABANN.node()),
@@ -65,11 +63,11 @@ public final class PunishHelpCommand extends PunishCommand {
                     Permissions.PUNISH_OWN.node()),
             new Eintrag("punish-history (pshistory)", "[Spieler|server] [filter:...] [Seite]", Permissions.PUNISH_HISTORY.node(),
                     Permissions.PUNISH_OWN.node()),
-            new Eintrag("alts" + BETA_ANHAENGSEL, "<Spieler|IP>", Permissions.PUNISH_ALTS.node()),
+            new Eintrag("alts", "<Spieler|IP>", Permissions.PUNISH_ALTS.node()),
             new Eintrag("report (melden)", "<Spieler> <Grund>", Permissions.PUNISH_REPORT.node()),
             new Eintrag("reports (reportlist)", "[offen|alle|info|...]", Permissions.PUNISH_REPORTS.node()),
             new Eintrag("punish-gui (psgui)", "[Spieler]", Permissions.PUNISH_GUI.node()),
-            new Eintrag("chatfilter" + BETA_ANHAENGSEL, "<on|off|ai_on|ai_off|add|remove|list|test|sync>", Permissions.PUNISH_CHATFILTER.node()),
+            new Eintrag("chatfilter", "<on|off|ai_on|ai_off|add|remove|list|test|sync>", Permissions.PUNISH_CHATFILTER.node()),
             new Eintrag("punish-delete-ip (psdelete-ip)", "<IP|Spieler>", Permissions.PUNISH_DELETEIP.node()),
             new Eintrag("punish-reload (psreload)", "", Permissions.PUNISH_RELOAD.node()),
             new Eintrag("punish-update (psupdate)", "check|apply|confirm|status", Permissions.PUNISH_UPDATE.node()),

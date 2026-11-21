@@ -19,16 +19,17 @@ import static org.mockito.Mockito.*;
 class GuiBetaTest {
 
     @Test
-    void hauptTitel_traegtBetaMarker() {
-        String text = MiniMessage.miniMessage().serialize(GuiMenues.titel(GuiMenues.BETA_TITEL + "  •  mute Max"));
-        assertTrue(text.contains("(Beta)"), "GUI-Titel ohne Beta-Marker: " + text);
+    void hauptTitel_ohneBetaMarker() {
+        String text = MiniMessage.miniMessage().serialize(GuiMenues.titel(GuiMenues.HAUPT_TITEL + "  •  mute Max"));
+        assertTrue(text.contains("Menü"), "GUI-Titel fehlt: " + text);
+        assertFalse(text.contains("Beta"), "GUI-Titel als Beta markiert: " + text);
     }
 
     @Test
     void altsLore_weistAufHeuristikHin() {
-        assertTrue(GuiMenues.BETA_LORE.contains("Beta"), "Alts-Lore ohne Beta-Marker: " + GuiMenues.BETA_LORE);
-        String text = MiniMessage.miniMessage().serialize(GuiMenues.name(GuiMenues.BETA_LORE));
-        assertTrue(text.contains("Heuristik"), "Alts-Lore ohne Heuristik-Hinweis: " + text);
+        assertFalse(GuiMenues.ALTS_HINWEIS.contains("Beta"), "Alts-Lore als Beta markiert: " + GuiMenues.ALTS_HINWEIS);
+        String text = MiniMessage.miniMessage().serialize(GuiMenues.name(GuiMenues.ALTS_HINWEIS));
+        assertTrue(text.contains("IP-Heuristik, kein Beweis"), "Alts-Lore ohne Heuristik-Hinweis: " + text);
     }
 
     @ParameterizedTest

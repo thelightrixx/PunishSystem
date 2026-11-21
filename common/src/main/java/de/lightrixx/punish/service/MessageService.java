@@ -2,6 +2,7 @@ package de.lightrixx.punish.service;
 
 import de.lightrixx.punish.core.BefehlsSender;
 import de.lightrixx.punish.core.Konfiguration;
+import de.lightrixx.punish.core.MessageKeys;
 import de.lightrixx.punish.core.SpielerVerzeichnis;
 import de.lightrixx.punish.util.MiniMessageUtil;
 import net.kyori.adventure.text.Component;
@@ -123,6 +124,18 @@ public final class MessageService {
     public Component komponenteOhnePraefix(String schluessel, Map<String, String> platzhalter,
                                            Set<String> rohSchluessel) {
         String vorlage = configManager.nachricht(schluessel);
+        if (vorlage != null) {
+            vorlage = switch (schluessel) {
+                case MessageKeys.PUNISH_HELP_FUSS -> vorlage.replace("Beta: ", "Weitere Befehle: ");
+                case MessageKeys.ALTS_KOPF -> vorlage.replace("(Beta: IP-Heuristik, kein Beweis)",
+                        "(IP-Heuristik, kein Beweis)");
+                case MessageKeys.CHATFILTER_SYNTAX -> vorlage.replace("(Beta: KI-Stufe)", "(KI-Stufe)");
+                case MessageKeys.CHATFILTER_AN, MessageKeys.CHATFILTER_AUS,
+                     MessageKeys.CHATFILTER_AI_AN, MessageKeys.CHATFILTER_AI_AUS ->
+                        vorlage.replace(" <gray>(Beta)", "").replace(" (Beta)", "");
+                default -> vorlage;
+            };
+        }
         String ersetzt = MiniMessageUtil.ersetzen(vorlage, platzhalter, rohSchluessel);
         try {
             return miniMessage.deserialize(ersetzt);

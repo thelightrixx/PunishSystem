@@ -430,7 +430,7 @@ public final class BridgeKonfiguration implements Konfiguration {
             case "alts-syntax" ->
                     "<red>Verwendung: /alts <Spieler|IP> [--global|--server|--unbekannt]";
             case "alts-kopf" ->
-                    "<yellow>Alt-Accounts für <white>%spieler% <yellow>(IP <white>%ip%<yellow>, <white>%anzahl%<yellow>)%ipstatus% <gray>(Beta: IP-Heuristik, kein Beweis)";
+                    "<yellow>Alt-Accounts für <white>%spieler% <yellow>(IP <white>%ip%<yellow>, <white>%anzahl%<yellow>)%ipstatus% <gray>(IP-Heuristik, kein Beweis)";
             case "alts-eintrag" ->
                     "<gray>• <white>%spieler% <gray>| zuletzt: <white>%zuletzt% <gray>| Ban: %banstatus%";
             case "alts-ban-frei" -> "<green>kein Ban";
@@ -445,7 +445,7 @@ public final class BridgeKonfiguration implements Konfiguration {
             case "punish-help-eintrag" -> "<gray>• <green>/%befehl% <gray>%nutzung%";
             case "punish-help-leer" -> "<gray>Keine Befehle für deine Rechte verfügbar.";
             case "punish-help-fuss" ->
-                    "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Beta: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>.";
+                    "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Weitere Befehle: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>.";
             case "chatfilter-blockiert" ->
                     "<red>Deine Nachricht wurde blockiert (Chatfilter: %quelle%, Kanal: %kanal%).";
             case "mute-sync-laeuft" ->

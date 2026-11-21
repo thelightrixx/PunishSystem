@@ -9,9 +9,12 @@ import de.lightrixx.punish.storage.PlayerCache;
 import de.lightrixx.punish.util.MiniMessageUtil;
 import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -76,18 +79,44 @@ class PunishHelpCommandBetaTest {
     }
 
     @Test
-    void betaBefehle_tragenBetaMarker() {
+    void alleInternenBefehle_ohneBetaMarker() {
         Konfiguration config = config();
         var befehl = new PunishHelpCommand(new MessageService(config), config,
                 mock(ProtectionService.class), mock(PlayerCache.class), mock(SpielerVerzeichnis.class));
         List<Component> empfangen = new ArrayList<>();
-        var sender = senderMitRechten(empfangen, Set.of("punish.help", "punish.alts", "punish.chatfilter"));
+        var sender = senderMitRechten(empfangen, Set.of("punish.help", "punish.alts", "punish.chatfilter", "punish.gui"));
 
         befehl.ausfuehren(sender, new String[0]);
 
         String text = textAller(empfangen);
-        assertTrue(text.contains("alts (Beta)"), "Alts-Eintrag ohne Beta-Marker: " + text);
-        assertTrue(text.contains("chatfilter (Beta)"), "Chatfilter-Eintrag ohne Beta-Marker: " + text);
+        assertTrue(text.contains("alts "), "Alts-Eintrag fehlt: " + text);
+        assertTrue(text.contains("chatfilter "), "Chatfilter-Eintrag fehlt: " + text);
+        assertTrue(text.contains("punish-gui (psgui)"), "GUI-Eintrag fehlt: " + text);
+        assertFalse(text.contains("Beta"), "Interner Befehl als Beta markiert: " + text);
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "punish-help-fuss|<gray>Beta: <white>/chatfilter|<gray>Weitere Befehle: <white>/chatfilter",
+            "alts-kopf|<yellow>%spieler% <gray>(Beta: IP-Heuristik, kein Beweis)|<yellow>BetaSpieler <gray>(IP-Heuristik, kein Beweis)",
+            "chatfilter-syntax|<red>/chatfilter <gray>(Beta: KI-Stufe)|<red>/chatfilter <gray>(KI-Stufe)",
+            "chatfilter-an|<green>Chatfilter eingeschaltet. <gray>(Beta)|<green>Chatfilter eingeschaltet.",
+            "chatfilter-aus|<yellow>Chatfilter ausgeschaltet. <gray>(Beta)|<yellow>Chatfilter ausgeschaltet.",
+            "chatfilter-ai-an|<green>Chatfilter-KI eingeschaltet. <gray>(Beta)|<green>Chatfilter-KI eingeschaltet.",
+            "chatfilter-ai-aus|<yellow>Chatfilter-KI ausgeschaltet. <gray>(Beta)|<yellow>Chatfilter-KI ausgeschaltet.",
+            "chatfilter-an|<green>Eigener Text für %spieler% (Beta)|<green>Eigener Text für BetaSpieler",
+            "chatfilter-an|<green>Eigener Text für %spieler%|<green>Eigener Text für BetaSpieler",
+            "punish-version|<white>v4.0-beta|<white>v4.0-beta",
+            "report-info|<white>%spieler% (Beta)|<white>BetaSpieler (Beta)"
+    })
+    void alteBetaHinweiseEntfallenBeiDerAusgabe(String schluessel, String vorlage, String erwartet) {
+        Konfiguration config = config();
+        when(config.nachricht(schluessel)).thenReturn(vorlage);
+
+        var nachricht = new MessageService(config).komponenteOhnePraefix(schluessel,
+                Map.of("spieler", "BetaSpieler"));
+
+        assertEquals(MiniMessageUtil.miniMessage().deserialize(erwartet), nachricht);
     }
 
     @Test

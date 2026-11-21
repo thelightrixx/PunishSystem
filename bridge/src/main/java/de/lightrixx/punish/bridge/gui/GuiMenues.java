@@ -33,8 +33,8 @@ public final class GuiMenues {
 
     private static volatile String titelPrefix = "Punish";
 
-    static final String BETA_TITEL = "Menü (Beta)";
-    static final String BETA_LORE = "<yellow>Beta: IP-Heuristik, kein Beweis";
+    static final String HAUPT_TITEL = "Menü";
+    static final String ALTS_HINWEIS = "<yellow>IP-Heuristik, kein Beweis";
 
     public static void setTitelPrefix(String prefix) {
         if (prefix != null && !prefix.isBlank()) {
@@ -112,7 +112,7 @@ public final class GuiMenues {
     }
 
     public static Inventory haupt(GuiSitzung sitzung, boolean darfAlts) {
-        Inventory inv = Bukkit.createInventory(new GuiHolder(Menue.HAUPT), 27, titel(BETA_TITEL + "  •  " + sitzung.vorschau()));
+        Inventory inv = Bukkit.createInventory(new GuiHolder(Menue.HAUPT), 27, titel(HAUPT_TITEL + "  •  " + sitzung.vorschau()));
         String ziel = sitzung.ziel().isBlank() ? "<gray>nicht gewählt" : "<white>" + escape(sitzung.ziel());
         String aktion = sitzung.aktion() == null ? "<gray>nicht gewählt" : "<white>" + sitzung.aktion().befehl();
         inv.setItem(10, item(Material.PLAYER_HEAD, "<yellow>1. Spieler: " + ziel,
@@ -135,8 +135,8 @@ public final class GuiMenues {
         inv.setItem(21, darfAlts
                 ? item(Material.SPYGLASS, "<aqua>Alts ansehen",
                         sitzung.ziel().isBlank()
-                                ? List.of("<red>Erst Spieler wählen", BETA_LORE)
-                                : List.of("<gray>IP-Abgleich + Ban-Status", BETA_LORE,
+                                ? List.of("<red>Erst Spieler wählen", ALTS_HINWEIS)
+                                : List.of("<gray>IP-Abgleich + Ban-Status", ALTS_HINWEIS,
                                         "<gray>Klick: /alts " + escape(sitzung.ziel())))
                 : item(Material.GRAY_STAINED_GLASS, "<gray>Alts ansehen",
                         List.of("<red>Keine Berechtigung: punish.alts")));

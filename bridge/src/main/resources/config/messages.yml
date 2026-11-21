@@ -81,7 +81,7 @@ messages:
   punish-help-kopf: "<yellow>PunishSystem <gray>by <white>lightrixx <yellow>– Befehle:"
   punish-help-eintrag: "<gray>• <green>/%befehl% <gray>%nutzung%"
   punish-help-leer: "<gray>Keine Befehle für deine Rechte verfügbar."
-  punish-help-fuss: "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Beta: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>."
+  punish-help-fuss: "<gray>PunishSystem by <white>lightrixx <gray>• Tipp: <white>--global <gray>oder <white>--server <gray>anhängen, Details per TAB. <gray>Weitere Befehle: <white>/chatfilter <gray>(KI), <white>/alts <gray>(Heuristik), <white>/punish-gui<gray>."
 
   # Straf-Vorlagen (/punish)
   punish-vorlage-kopf: "<yellow>Straf-Vorlagen <gray>(/punish <Spieler> <Vorlage>):"
@@ -204,7 +204,7 @@ messages:
 
   # Alt-Accounts (/alts)
   alts-syntax: "<red>Verwendung: /alts <Spieler|IP> [--global|--server|--unbekannt]"
-  alts-kopf: "<yellow>Alt-Accounts für <white>%spieler% <yellow>(IP <white>%ip%<yellow>, <white>%anzahl%<yellow>)%ipstatus% <gray>(Beta: IP-Heuristik, kein Beweis)"
+  alts-kopf: "<yellow>Alt-Accounts für <white>%spieler% <yellow>(IP <white>%ip%<yellow>, <white>%anzahl%<yellow>)%ipstatus% <gray>(IP-Heuristik, kein Beweis)"
   alts-eintrag: "<gray>• <white>%spieler% <gray>| zuletzt: <white>%zuletzt% <gray>| Ban: %banstatus%"
   alts-ban-frei: "<green>kein Ban"
   alts-ban-aktiv: "<red>aktiv [%scope%] (noch %rest%)"
