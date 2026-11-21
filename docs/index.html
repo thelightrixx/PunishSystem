@@ -532,11 +532,11 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Einrichten, moderieren, nachschlagen: Das Handbuch für PunishSystem v4.2.0 auf Velocity und Paper. Finde die passende Anleitung oder suche nach einem Befehl, einer Permission oder einem Konfigurationsschlüssel.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.2.0 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
-      <p>Ein Proxy verwaltet Strafen und Daten. Eine passende Bridge auf jedem Backend setzt die Regeln durch und stellt die Menüs bereit.</p>
-      <p>Beginne mit der Einrichtung oder spiele einen vollständigen Moderationsfall durch.</p>
+      <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
+      <p>Für ein neues Netzwerk beginne mit der Installation. Der Schnellstart zeigt einen Moderationsfall vom Nachschlagen bis zum Aufheben einer Strafe.</p>
       <div class="hero-actions">
         <a class="hero-action primary" href="#/installation">Installation starten</a>
         <a class="hero-action" href="#/schnellstart">Moderation lernen</a>
@@ -554,7 +554,7 @@ details>div{padding:14px 18px 2px}
           <text x="201" y="144" font-weight="600">survival</text><text x="201" y="166" fill="#c6ccd3">Bridge</text>
         </g>
       </svg>
-      <div class="bs-chat"><em>Ein Stand für dein Netzwerk.</em><br><b>Global oder je Server moderieren.</b></div>
+      <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
   <p class="doc-meta">Handbuchstand: <time datetime="2026-11-21">21.11.2026</time> · v4.2.0 · Velocity und Paper/Purpur</p>
@@ -570,7 +570,7 @@ details>div{padding:14px 18px 2px}
   </div>
 
   <div class="callout">
-    <div><span class="ttl">So navigierst du am schnellsten</span>
+    <div><span class="ttl">Navigation und Suche</span>
     <p>Die Navigation links ist nach Aufgaben gruppiert; klicke auf eine Gruppe, um ihre Themen zu öffnen. Rechts steht das Inhaltsverzeichnis der aktuellen Seite, auf kleineren Bildschirmen direkt unter der Einleitung. Mit <kbd>Strg</kbd>+<kbd>K</kbd> (macOS: <kbd>⌘</kbd>+<kbd>K</kbd>) oder <kbd>/</kbd> durchsuchst du auch Befehle, Aliase und Konfigurationsschlüssel. Abschnittslinks lassen sich über das <code>#</code> an einer Überschrift teilen.</p>
     <p>Die <a href="#/befehle/alle-befehle">Befehlsliste</a> lässt sich zusätzlich direkt filtern. Über die Druckfunktion des Browsers kannst du das gesamte Handbuch einschließlich aufgeklappter Detailabschnitte drucken oder als PDF speichern.</p></div>
   </div>
@@ -584,7 +584,7 @@ details>div{padding:14px 18px 2px}
     <li><strong>Status und History:</strong> Aktive Strafen und den gespeicherten Hauptverlauf ansehen, filtern und blättern.</li>
     <li><strong>Vorlagen, Undo und Statistik:</strong> Häufige Fälle per Vorlage ausführen, die letzte eigene Aktion zurücknehmen, die Team-Arbeit auswerten und die Daten als JSON exportieren.</li>
     <li><strong>PunishGUI:</strong> Strafen per Menü zusammenbauen, statt Befehle zu tippen.</li>
-    <li><strong>Chatfilter:</strong> Wortliste und lokale KI blockieren Beleidigungen, ohne Cloud-Dienst.</li>
+    <li><strong>Chatfilter:</strong> Eine Wortliste und ein optionales lokales KI-Modell filtern Chatnachrichten ohne Cloud-Dienst.</li>
     <li><strong>PlaceholderAPI, LuckPerms und MySQL:</strong> Strafdaten in Scoreboards und Tab zeigen, Rechte an Straf-Kontexte knüpfen und Daten zentral auf dem Proxy speichern.</li>
   </ul>
 
@@ -607,7 +607,7 @@ details>div{padding:14px 18px 2px}
     <p>Die aktuellen Jars benötigen einen Velocity-Proxy und je Backend eine passende Bridge. Die Bridge führt keine eigene Strafverwaltung aus; ein eigenständiger Paper-Betrieb ist mit diesen Jars nicht vorgesehen.</p></div>
   </div>
 
-  <h2>Empfohlene Lesereihenfolge</h2>
+  <h2>Einstieg nach Aufgabe</h2>
   <ul>
     <li><strong>Administration:</strong> <a href="#/proxy-und-bridge">Proxy und Bridge verstehen</a> → <a href="#/installation">installieren und prüfen</a> → <a href="#/rang-buendel">Teamrechte vergeben</a> → <a href="#/config-uebersicht">Konfiguration pflegen</a>.</li>
     <li><strong>Moderation:</strong> <a href="#/schnellstart">einen Fall durchspielen</a> → <a href="#/scopes">Scopes verstehen</a> → <a href="#/schutz">Schutzregeln beachten</a> → <a href="#/befehle">benötigte Befehle nachschlagen</a>.</li>
@@ -621,12 +621,12 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="proxy-und-bridge" data-group="Start" data-title="Proxy und Bridge">
   <h1>Proxy und Bridge</h1>
-  <p class="lead">Der Proxy entscheidet, die Bridge setzt auf den Backend-Servern durch. Wer das einmal verstanden hat, findet Fehler deutlich schneller.</p>
+  <p class="lead">Der Proxy verwaltet die Strafdaten; die Bridges setzen die Regeln auf den Backend-Servern durch. Diese Aufteilung hilft auch bei der Fehlersuche.</p>
 
   <div class="tbl"><table>
     <thead><tr><th>Teil</th><th>Läuft auf</th><th>Aufgabe</th></tr></thead>
     <tbody>
-      <tr><td><strong>PunishSystem (Velocity)</strong></td><td>Proxy</td><td>Führt alle Befehle aus, speichert Strafen, verwaltet Verstöße, Reports und Notizen, sperrt Spieler beim Beitritt. Hier liegt die einzige Wahrheit über alle Strafen.</td></tr>
+      <tr><td><strong>PunishSystem (Velocity)</strong></td><td>Proxy</td><td>Führt alle Befehle aus, speichert Strafen, verwaltet Verstöße, Reports und Notizen, sperrt Spieler beim Beitritt. Der Proxy ist die maßgebliche Quelle für Strafdaten.</td></tr>
       <tr><td><strong>PunishSystemBridge</strong></td><td>Jeder Paper-Server (Variante <code>bridge</code> für 26.x, <code>bridge-1.21</code> für 1.21.x)</td><td>Nimmt Befehle entgegen und reicht sie an den Proxy weiter, setzt Mutes im Chat durch, stellt die PunishGUI, den Chatfilter und PlaceholderAPI-Werte bereit.</td></tr>
     </tbody>
   </table></div>
@@ -649,7 +649,7 @@ details>div{padding:14px 18px 2px}
   </ol>
 
   <div class="callout">
-    <div><span class="ttl">Was das praktisch bedeutet</span>
+    <div><span class="ttl">Konfiguration und Ausfall</span>
     <ul>
       <li>Strafen, Limits, Texte und Broadcasts werden auf dem <strong>Proxy</strong> konfiguriert.</li>
       <li>Die Bridge braucht ihr eigenes Tunnel-Secret und einen gesetzten oder vom Proxy gelernten Servernamen. Texte, Mute-Block und GUI-Vorgaben übernimmt sie vom Proxy in <code>config-sync/</code>.</li>
@@ -676,7 +676,7 @@ details>div{padding:14px 18px 2px}
   <h1>Installation</h1>
   <p class="lead">Diese Anleitung richtet eine neue Installation auf einem Velocity-Proxy mit Paper- oder Purpur-Backends ein. Der Proxy verwaltet die Strafdaten; eine Bridge auf jedem Backend verbindet es mit dem Proxy. Für eine bestehende Installation gelten die Hinweise zu <a href="#/betrieb/updates-einspielen">Updates und Sicherungen</a>.</p>
 
-  <div class="callout"><div><span class="ttl">Das erwartet dich</span><p>Du installierst die Jars, wählst den Speicher und verbindest jedes Backend mit einem eigenen Secret. Plane Zugriff auf die Dateien und Konsolen von Proxy und Backends ein. Befehle für die Velocity-Konsole stehen in dieser Anleitung ohne führenden Schrägstrich.</p></div></div>
+  <div class="callout"><div><span class="ttl">Vorbereitung</span><p>Halte Zugriff auf die Dateien und Konsolen des Proxys und aller Backends bereit. Du installierst die JARs, richtest den Speicher ein und verbindest jedes Backend mit einem eigenen Secret. Befehle für die Velocity-Konsole stehen ohne führenden Schrägstrich.</p></div></div>
 
   <h2>Voraussetzungen</h2>
   <div class="tbl"><table>
@@ -830,9 +830,9 @@ punish-version</pre>
 
 <section class="page" data-id="schnellstart" data-group="Moderation" data-title="Moderations-Schnellstart">
   <h1>Moderations-Schnellstart</h1>
-  <p class="lead">Ein Moderationsfall vom Prüfen bis zum Aufheben. Die Installation muss abgeschlossen sein; für jeden Befehl brauchst du das jeweilige Recht. Welche Rolle es erhält, legt die Administration fest.</p>
+  <p class="lead">Dieses Beispiel führt durch einen Moderationsfall: Akte prüfen, eine Strafe setzen, das Ergebnis kontrollieren und die Strafe wieder aufheben. Die Installation muss abgeschlossen sein. Für jeden Befehl benötigst du das entsprechende Recht.</p>
 
-  <div class="callout"><div><span class="ttl">Beispiele und Standardwerte</span><p>Ersetze <code>Notch</code> durch den betroffenen Spieler und <code>survival</code> durch einen registrierten Server. Die Beispiele verwenden bewusst einen ausdrücklichen Scope. Das mitgelieferte Moderator-Bündel erlaubt unter anderem Mute und Timeout; Bann und Permabann sind im Admin-Bündel enthalten. Die genaue Zuweisung steht unter <a href="#/rang-buendel">Rang-Bündel</a>.</p></div></div>
+  <div class="callout"><div><span class="ttl">Beispiele und Standardwerte</span><p>Ersetze <code>Notch</code> durch den betroffenen Spieler und <code>survival</code> durch einen registrierten Server. Die Beispiele geben den Scope ausdrücklich an. Das mitgelieferte Moderator-Bündel erlaubt unter anderem Mute und Timeout; Bann und Permabann sind im Admin-Bündel enthalten. Die genaue Zuweisung steht unter <a href="#/rang-buendel">Rang-Bündel</a>.</p></div></div>
 
   <h2>Schritt 1: Spielerakte prüfen</h2>
   <pre data-lang="cmd">/punish-status Notch
@@ -845,7 +845,7 @@ punish-version</pre>
 /timeout Notch 30m Streit --survival
 /ban Notch 7d Cheating --global
 /kick Notch Störung</pre>
-  <p>Wähle einen passenden Befehl aus diesen Alternativen. Ein Mute sperrt das Schreiben, ein Timeout den Zugang für höchstens 24 Stunden. Ein Bann dauert mindestens 24 Stunden; ein Kick trennt nur die aktuelle Verbindung. Diese Dauergrenzen sind konfigurierbare Standardwerte. <code>--survival</code> begrenzt die Strafe auf diesen Server, <code>--global</code> gilt im ganzen Netzwerk.</p>
+  <p>Die vier Befehle sind Alternativen: Ein Mute sperrt das Schreiben, ein Timeout vorübergehend den Zugang. Ein Bann sperrt ebenfalls den Zugang; ein Kick trennt nur die aktuelle Verbindung. Standardmäßig dauert ein Timeout höchstens 24 Stunden und ein Bann mindestens 24 Stunden. Diese Grenzen lassen sich ändern. <code>--survival</code> begrenzt die Strafe auf diesen Server, <code>--global</code> gilt im ganzen Netzwerk.</p>
 
   <h2 data-anchor="nachsehen-was-gegen-einen-spieler-vorliegt">Schritt 3: Ergebnis prüfen</h2>
   <pre data-lang="cmd">/punish-status Notch
@@ -871,7 +871,7 @@ punish-version</pre>
   </table></div>
 
   <h2>Befehl zusammenbauen</h2>
-  <p>Ausfüllen, Ergebnis kopieren. Der Baukasten prüft Zeitformat und Standardlimits. Rechte, Schutz, eigene Konfiguration und registrierte Server prüft erst das Plugin bei der Ausführung.</p>
+  <p>Wähle die Strafart und fülle die Felder aus; anschließend kannst du den Befehl kopieren. Der Baukasten prüft das Zeitformat und die Standardlimits. Ob Rechte, Spielerschutz, eigene Grenzwerte und Servername passen, prüft erst das Plugin bei der Ausführung.</p>
   <div class="wk" id="bk" role="group" aria-label="Befehl zusammenbauen">
     <div class="wk-grid">
       <div class="wk-field"><label for="bkTyp">Strafart</label>
@@ -911,7 +911,7 @@ punish-version</pre>
   <p>Mehr dazu unter <a href="#/scopes">Server-Scopes</a>.</p>
 
   <h2>Mit Menü arbeiten</h2>
-  <p>Mit <code>/punish-gui</code> wird die PunishGUI geöffnet. Spieler, Strafart, Grund und Dauer werden per Klick gewählt. Siehe <a href="#/gui">PunishGUI</a>.</p>
+  <p>Mit <code>/punish-gui</code> öffnest du das Menü und wählst Spieler, Strafart, Grund und Dauer per Klick. Einzelheiten stehen unter <a href="#/gui">PunishGUI</a>.</p>
 
   <div class="callout ok"><div><span class="ttl">Tipp: TAB benutzen</span><p>Fast jede Eingabe lässt sich mit TAB vervollständigen: Spielernamen, Dauern, Gründe und Server nach <code>--</code>.</p></div></div>
 </section>
@@ -1912,7 +1912,7 @@ punish-version</pre>
   </table></div>
   <div class="callout"><div><span class="ttl">Daten statt Einstellungen</span><p>Strafen und History liegen bei YAML-Speicherung im Unterordner <code>data/</code> des Proxys. Das Protokoll <code>punish_log.txt</code> rotiert bei 10 MiB in bis zu fünf zusätzliche Dateien (<code>punish_log.1.txt</code> bis <code>punish_log.5.txt</code>).</p></div></div>
 
-  <h2 data-anchor="kontrollierter-ablauf">Eine Änderung nachvollziehbar prüfen</h2>
+  <h2 data-anchor="kontrollierter-ablauf">Eine Änderung prüfen</h2>
   <ol>
     <li>Die zuständige Quelle sichern und einen konkreten Wert ändern. Bei Beispielen nur den gezeigten Schlüssel in den vorhandenen Abschnitt übernehmen; keine doppelten YAML-Abschnitte anlegen.</li>
     <li>Einrückung mit Leerzeichen, YAML-Typ und Einheit prüfen. Dezimalzahlen verwenden einen Punkt. Die Bedeutung von 0 steht beim jeweiligen Schlüssel.</li>
@@ -2763,11 +2763,11 @@ defaults:
   verpasst: { aktiv: true, kopf: "... %anzahl% ...", prefix: "[Verpasst] " }</pre>
   <p>Mit <code>aktiv: false</code> bleibt die Nachsendung aus.</p>
 
-  <h2 data-anchor="vorlagen-pruefen">Vorlagen gezielt ändern und prüfen</h2>
+  <h2 data-anchor="vorlagen-pruefen">Vorlagen ändern und prüfen</h2>
   <p>Die YAML-Beispiele auf dieser Seite sind Ausschnitte. Bearbeite den vorhandenen Schlüssel im vorhandenen Abschnitt und erhalte alle übrigen Nachrichten. Ein zweiter gleichnamiger Hauptabschnitt ist kein zusätzlicher Nachrichtensatz. Texte mit Sonderzeichen in Anführungszeichen setzen; in einfachen YAML-Anführungszeichen wird ein enthaltenes einfaches Anführungszeichen verdoppelt.</p>
   <p>Platzhalter sind an die konkrete Nachricht gebunden. Die Liste nennt mögliche Namen im Projekt; sie stehen nicht in jeder Vorlage zur Verfügung. Übernimm Schreibweise und benötigte Platzhalter aus der vorhandenen Nachricht, zum Beispiel <code>%grund%</code> oder <code>%verbleibend%</code>. Eine sichtbare Zeichenfolge nach dem Senden kann auf einen dort nicht eingesetzten Platzhalter hinweisen.</p>
   <ol>
-    <li>Die Vorlage auf dem Proxy sichern und gezielt ändern.</li>
+    <li>Die Vorlage auf dem Proxy sichern und ändern.</li>
     <li><code>/punish-reload</code> ausführen und auf Erfolg beziehungsweise Teilfehler achten.</li>
     <li>Die bearbeitete Nachricht mit einem geeigneten Testfall auslösen und Werte, Zeilenumbrüche und Formatierung prüfen.</li>
     <li>Bei Backend-Texten einen verbundenen Spieler und den aktuellen Text-Sync prüfen. Die Browser-Vorschau bestätigt keine tatsächlich geladene Servervorlage.</li>
