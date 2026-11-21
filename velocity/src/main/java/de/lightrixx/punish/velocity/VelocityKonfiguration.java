@@ -332,6 +332,26 @@ public final class VelocityKonfiguration implements Konfiguration {
         return Karten.text(abschnitt("chatfilter"), "modell-url", "");
     }
 
+    public boolean vpnSchutzAktiv() {
+        return Karten.wahr(abschnitt("vpn-schutz"), "aktiv", true);
+    }
+
+    public long vpnSchutzIntervallMinuten() {
+        return Math.clamp(holeLang("vpn-schutz", "intervall-minuten", 360L), 5L, 10080L);
+    }
+
+    public List<String> vpnSchutzQuellen() {
+        var vpn = abschnitt("vpn-schutz");
+        if (!Karten.hat(vpn, "quellen")) {
+            return VpnBlocklistenDienst.STANDARD_QUELLEN;
+        }
+        return Karten.liste(vpn, "quellen").stream().map(String::valueOf).toList();
+    }
+
+    public List<String> vpnSchutzFreigaben() {
+        return Karten.liste(abschnitt("vpn-schutz"), "freigaben").stream().map(String::valueOf).toList();
+    }
+
     public String updateHangarAutor() {
         return Karten.text(abschnitt("update"), "hangar-author", "").trim();
     }

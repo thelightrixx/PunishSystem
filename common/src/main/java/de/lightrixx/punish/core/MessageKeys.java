@@ -32,6 +32,7 @@ public final class MessageKeys {
     public static final String SCHUTZ_HINWEIS_UNBEKANNT_ERLAUBT = "schutz-hinweis-unbekannt-erlaubt";
     public static final String SCHUTZ_PRUEFUNG_LAEUFT = "schutz-pruefung-laeuft";
     public static final String IP_NICHT_GEFUNDEN = "ip-nicht-gefunden";
+    public static final String VPN_GESPERRT = "vpn-gesperrt";
     public static final String BESTAETIGUNG_NOETIG = "bestaetigung-noetig";
     public static final String BESTAETIGUNG_ERFOLGREICH = "bestaetigung-erfolgreich";
     public static final String MASSEN_LIMIT_GEKUERZT = "massen-limit-gekuerzt";

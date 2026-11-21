@@ -83,6 +83,7 @@ public final class StrafListener {
     private volatile SpielerVerzeichnis verpasstVerzeichnis;
     private volatile BroadcastService verpasstBroadcast;
     private volatile FreezeService freezeService;
+    private volatile VpnBlocklistenDienst vpnBlocklistenDienst;
     private record LoginFenster(Player spieler, long seit, long bis) {
     }
 
@@ -189,6 +190,10 @@ public final class StrafListener {
 
     public void setFreezeService(FreezeService freezeService) {
         this.freezeService = freezeService;
+    }
+
+    void setVpnBlocklistenDienst(VpnBlocklistenDienst vpnBlocklistenDienst) {
+        this.vpnBlocklistenDienst = Objects.requireNonNull(vpnBlocklistenDienst);
     }
 
     public void setModellVerteilung(ModellVerteilung modellVerteilung) {
@@ -504,6 +509,10 @@ public final class StrafListener {
             }
         } else {
             logger.warn("IP für '{}' nicht lesbar – IP-Bann-Prüfung übersprungen (Fail-Open in der IP-Dimension).", name);
+        }
+        var vpn = vpnBlocklistenDienst;
+        if (!ipUnbekannt && vpn != null && vpn.gesperrt(ip)) {
+            return messageService.komponenteOhnePraefix(MessageKeys.VPN_GESPERRT, Map.of());
         }
         Optional<TimeoutRecord> timeout;
         try {

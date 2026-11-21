@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "v4.2.1",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "v4.3.0",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
@@ -97,6 +97,7 @@ public final class PunishVelocity {
     private TextVerteilung textVerteilung;
     private UpdateVerteilung updateVerteilung;
     private LuckPermsKontextRechner luckPermsKontext;
+    private VpnBlocklistenDienst vpnBlocklistenDienst;
 
     @Inject
     public PunishVelocity(ProxyServer proxy, Logger logger, @DataDirectory Path datenOrdner) {
@@ -242,6 +243,13 @@ public final class PunishVelocity {
                 kanal::sendeAn);
         this.updateVerteilung = updateVerteilung;
 
+        this.vpnBlocklistenDienst = new VpnBlocklistenDienst(config, logger, ordner.toPath());
+        try {
+            vpnBlocklistenDienst.neuLaden();
+        } catch (RuntimeException e) {
+            logger.warn("VPN-Schutz konnte nicht gestartet werden; Logins bleiben ohne VPN-Prüfung erlaubt.", e);
+        }
+
         VelocityBefehle.register(this, proxy, logger, messageService, config, protectionService,
                 playerCache, banService, ipBanService, autoBann, muteService, ipMuteService,
                 kickService, timeoutService, ipTimeoutService, freezeService,
@@ -305,6 +313,7 @@ public final class PunishVelocity {
                 banRepository, kanal, guiDienst);
         strafListener.setPlatzhalterDienst(platzhalterDienst);
         strafListener.setFreezeService(freezeService);
+        strafListener.setVpnBlocklistenDienst(vpnBlocklistenDienst);
         try {
             strafListener.setChatfilterStaffel(
                     new ChatfilterStaffelService(config, warnService, muteService, broadcastService));
@@ -445,6 +454,10 @@ public final class PunishVelocity {
         }
     }
 
+    java.util.Optional<VpnBlocklistenDienst> vpnBlocklistenDienst() {
+        return java.util.Optional.ofNullable(vpnBlocklistenDienst);
+    }
+
     private void loggeZeroConfigStatus(VelocityKonfiguration config, boolean nutztMysql,
                                        ModellVerteilung modellVerteilung) {
         int serverAnzahl = 0;
@@ -471,6 +484,9 @@ public final class PunishVelocity {
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
         logger.info("PunishSystemVelocity wird deaktiviert.");
+        if (vpnBlocklistenDienst != null) {
+            vpnBlocklistenDienst.close();
+        }
         if (luckPermsKontext != null) {
             try {
                 luckPermsKontext.unregister();

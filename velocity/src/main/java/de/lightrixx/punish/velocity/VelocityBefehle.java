@@ -334,6 +334,7 @@ public final class VelocityBefehle {
                 muteService, timeoutService, ipBanService, ipMuteRepository, ipTimeoutRepository,
                 ipMuteService, ipTimeoutService);
         reload.setFreezeRepository(freezeRepository);
+        plugin.vpnBlocklistenDienst().ifPresent(reload::setVpnBlocklistenDienst);
         try {
             reload.setBrueckenKanal(kanal);
         } catch (Exception e) {

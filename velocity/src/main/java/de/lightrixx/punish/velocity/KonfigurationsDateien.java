@@ -24,7 +24,7 @@ final class KonfigurationsDateien {
     private static final List<String> GENERAL_KEYS = List.of(
             "prefix", "netzwerk", "befehle", "anzeige-zone", "schutz", "offline-resolution",
             "speicher", "datenschutz", "verstoesse", "warns", "limits", "bestaetigungen", "history", "mute", "tab",
-            "vorschlaege", "defaults", "reports", "chatfilter", "alt-wache", "bann-unban-antrag",
+            "vorschlaege", "defaults", "reports", "chatfilter", "alt-wache", "vpn-schutz", "bann-unban-antrag",
             "rang-buendel", "rang-gewicht", "update", "config-version");
 
     private final File datenOrdner;

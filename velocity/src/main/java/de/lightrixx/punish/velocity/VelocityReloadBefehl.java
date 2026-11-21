@@ -60,6 +60,7 @@ public final class VelocityReloadBefehl extends PunishCommand {
     private final AtomicBoolean laeuft = new AtomicBoolean(false);
     private volatile BrueckenKanal brueckenKanal;
     private volatile FreezeRepository freezeRepository;
+    private volatile VpnBlocklistenDienst vpnBlocklistenDienst;
     private volatile de.lightrixx.punish.storage.IoExecutor ioExecutor;
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -144,6 +145,10 @@ public final class VelocityReloadBefehl extends PunishCommand {
         this.ioExecutor = ioExecutor;
     }
 
+    void setVpnBlocklistenDienst(VpnBlocklistenDienst vpnBlocklistenDienst) {
+        this.vpnBlocklistenDienst = vpnBlocklistenDienst;
+    }
+
     @Override
     protected String recht() {
         return Permissions.PUNISH_RELOAD.node();
@@ -205,6 +210,10 @@ public final class VelocityReloadBefehl extends PunishCommand {
                             LOG.debug("Reload-Fehlermeldung nach Shutdown verworfen.");
                         }
                         return;
+                    }
+                    var vpn = vpnBlocklistenDienst;
+                    if (vpn != null) {
+                        ladeRepo(teilfehler, "VPN-Schutz", vpn::neuLaden);
                     }
                     ladeRepo(teilfehler, "Banns", banRepository::laden);
                     ladeRepo(teilfehler, "IP-Banns", ipBanRepository::laden);

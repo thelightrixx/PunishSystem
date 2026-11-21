@@ -46,6 +46,7 @@ messages:
   schutz-pruefung-laeuft: "<gray>Prüfe Schutzstatus von <white>%spieler%<gray> …"
   silent-ohne-recht: "<yellow>Silent erfordert <white>punish.allow-silent-syntax<yellow> – die Strafe wurde laut ausgeführt."
   ip-nicht-gefunden: "<red>Für <white>%spieler% <red>ist keine IP-Adresse bekannt."
+  vpn-gesperrt: "<red>Deine Verbindung wird einem VPN zugeordnet.<newline><gray>Bitte deaktiviere deinen VPN. Bei einer Fehlzuordnung kontaktiere das Serverteam."
   bereits-gebannt-ip: "<red>Die IP <white>%ip% <red>ist bereits gebannt."
   nicht-gebannt-ip: "<red>Die IP <white>%ip% <red>ist nicht gebannt."
   bereits-gemutet-ip: "<red>Die IP <white>%ip% <red>ist bereits gemutet."

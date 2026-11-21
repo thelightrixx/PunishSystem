@@ -307,6 +307,29 @@ alt-wache:
   aktiv: true
   cooldown-minuten: 30
 
+# --- VPN-Schutz (nur Proxy) ---
+# Prüft bei jedem Login die Verbindungs-IP lokal gegen IPv4-/IPv6-Blocklisten.
+# Treffer werden für alle Accounts abgelehnt; es entsteht kein permanenter Bann.
+# Downloads laufen im Hintergrund, ohne Übermittlung von Spieler-IPs an Anbieter.
+# Die VPN-Kategorien verwenden; allgemeine Hosting-/Datacenter-Listen sperren mehr.
+# Cache: <Proxy-Datenordner>/vpn-blocklisten/ (letzter gültiger Stand je URL).
+# Ohne gültige Listen bleiben Logins erlaubt. Downloadfehler behalten den Cache;
+# Wiederholung nach spätestens 5 Minuten, regulär alle 360 Minuten (6 Stunden).
+# intervall-minuten: 5-10080. Änderungen mit /punish-reload übernehmen.
+# quellen: direkte raw.githubusercontent.com-HTTPS-URLs, max. 16; [] = keine.
+# Format: eine IP oder ein CIDR pro Zeile, IPv4/IPv6, #-Kommentare erlaubt.
+# Leere/ungültige Listen und /0-Netze werden verworfen (max. 8 MiB je Quelle).
+# freigaben: einzelne IPs oder CIDRs für Fehlzuordnungen; gilt nur für VPN-Schutz,
+# normale Banns und IP-Banns bleiben wirksam. Beispiel: ["203.0.113.7/32"].
+vpn-schutz:
+  aktiv: true
+  intervall-minuten: 360
+  quellen:
+    - "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv4.txt"
+    - "https://raw.githubusercontent.com/X4BNet/lists_vpn/main/output/vpn/ipv6.txt"
+    - "https://raw.githubusercontent.com/aaronburt/vpn-block-list/main/lists/vpn.txt"
+  freigaben: []
+
 # --- Unban-Antrag (Lite) ---
 # Optionaler Link im Bann-/IP-Bann-Screen und in /pscheck.
 # link: nur http:// oder https://; leer = kein Link.
