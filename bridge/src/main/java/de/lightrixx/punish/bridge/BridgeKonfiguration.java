@@ -87,6 +87,15 @@ public final class BridgeKonfiguration implements Konfiguration {
 
     private void sichereRessource(String resourcePfad, File ziel) {
         if (ziel.exists()) {
+            try (var in = plugin.getResource(resourcePfad)) {
+                if (in != null && yamlUtil.aktualisiereKonfiguration(ziel,
+                        new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8))) {
+                    LOG.info("Konfiguration {} um aktuelle Standards und Kommentare ergänzt.", ziel.getName());
+                }
+            } catch (Exception e) {
+                LOG.warn("Konfiguration {} konnte nicht abgeglichen werden; vorhandene Datei bleibt erhalten.",
+                        ziel.getName(), e);
+            }
             return;
         }
         try {

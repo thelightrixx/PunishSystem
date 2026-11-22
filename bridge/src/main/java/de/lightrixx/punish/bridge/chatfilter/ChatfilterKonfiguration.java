@@ -60,6 +60,15 @@ public final class ChatfilterKonfiguration {
                 } catch (Exception e) {
                     LOG.warn("Standard-chatfilter.yml konnte nicht angelegt werden.", e);
                 }
+            } else {
+                try (var in = plugin.getResource("config/chatfilter.yml")) {
+                    if (in != null && new de.lightrixx.punish.storage.YamlUtil().aktualisiereKonfiguration(datei,
+                            new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8))) {
+                        LOG.info("chatfilter.yml um aktuelle Standards und Kommentare ergänzt.");
+                    }
+                } catch (Exception e) {
+                    LOG.warn("chatfilter.yml konnte nicht abgeglichen werden; vorhandene Datei bleibt erhalten.", e);
+                }
             }
             FileConfiguration geladen = new YamlConfiguration();
             if (datei.isFile()) {

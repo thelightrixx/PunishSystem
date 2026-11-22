@@ -4,6 +4,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import java.util.Map;
 
 public final class YamlUtil {
 
@@ -27,6 +38,91 @@ public final class YamlUtil {
 
     public FileConfiguration laden(File datei) {
         return ladenMitStatus(datei).konfiguration();
+    }
+
+    public boolean aktualisiereKonfiguration(File datei, String vorlage) throws IOException {
+        Objects.requireNonNull(datei, "Die Konfigurationsdatei darf nicht null sein.");
+        Objects.requireNonNull(vorlage, "Die Vorlage darf nicht null sein.");
+        if (Files.size(datei.toPath()) > MAX_DATEIGROESSE) {
+            throw new IOException("Konfiguration ist zu groß: " + datei.getName());
+        }
+        String vorher = Files.readString(datei.toPath(), java.nio.charset.StandardCharsets.UTF_8);
+        return DateiSicherung.aktualisiereKonfiguration(datei.toPath(), vorher,
+                ergaenzeKonfiguration(vorlage, vorher));
+    }
+
+    private static String ergaenzeKonfiguration(String vorlage, String inhalt) {
+        if (vorlage.equals(inhalt)) {
+            return inhalt;
+        }
+        var optionen = new LoaderOptions();
+        optionen.setAllowDuplicateKeys(false);
+        optionen.setMaxAliasesForCollections(50);
+        optionen.setCodePointLimit(32 * 1024 * 1024);
+        optionen.setProcessComments(true);
+        var konstruktor = new SafeConstructor(optionen) {
+            MappingNode pruefe(Node knoten) {
+                if (!(knoten instanceof MappingNode mapping)
+                        || !Tag.MAP.equals(knoten.getTag())) {
+                    throw new IllegalArgumentException("Die Konfiguration muss ein YAML-Mapping enthalten.");
+                }
+                constructDocument(knoten);
+                return mapping;
+            }
+        };
+        var ausgabe = new DumperOptions();
+        ausgabe.setProcessComments(true);
+        ausgabe.setIndent(2);
+        ausgabe.setSplitLines(false);
+        ausgabe.setLineBreak(inhalt.contains("\r\n")
+                ? DumperOptions.LineBreak.WIN : DumperOptions.LineBreak.UNIX);
+        var yaml = new Yaml(konstruktor, new Representer(ausgabe), ausgabe, optionen);
+        var standard = konstruktor.pruefe(yaml.compose(new java.io.StringReader(vorlage)));
+        var aktuell = konstruktor.pruefe(yaml.compose(new java.io.StringReader(inhalt)));
+        var text = new java.io.StringWriter();
+        yaml.serialize(ergaenzeKnoten(standard, aktuell), text);
+        return text.toString();
+    }
+
+    private static Node ergaenzeKnoten(Node standard, Node aktuell) {
+        uebernehmeKommentare(standard, aktuell);
+        if (standard instanceof MappingNode vorlage && aktuell instanceof MappingNode vorhanden) {
+            var eintraege = new java.util.LinkedHashMap<Map.Entry<Tag, String>, NodeTuple>();
+            for (var eintrag : vorhanden.getValue()) {
+                if (!(eintrag.getKeyNode() instanceof ScalarNode schluessel)) {
+                    throw new IllegalArgumentException("Konfigurationsschlüssel müssen Skalare sein.");
+                }
+                eintraege.put(Map.entry(schluessel.getTag(), schluessel.getValue()), eintrag);
+            }
+            var zusammen = new java.util.ArrayList<NodeTuple>();
+            for (var eintrag : vorlage.getValue()) {
+                var schluessel = (ScalarNode) eintrag.getKeyNode();
+                var bisher = eintraege.remove(Map.entry(schluessel.getTag(), schluessel.getValue()));
+                if (bisher == null) {
+                    zusammen.add(eintrag);
+                } else {
+                    uebernehmeKommentare(eintrag.getKeyNode(), bisher.getKeyNode());
+                    zusammen.add(new NodeTuple(bisher.getKeyNode(),
+                            ergaenzeKnoten(eintrag.getValueNode(), bisher.getValueNode())));
+                }
+            }
+            zusammen.addAll(eintraege.values());
+            vorhanden.setValue(zusammen);
+            vorhanden.setFlowStyle(vorlage.getFlowStyle());
+        }
+        return aktuell;
+    }
+
+    private static void uebernehmeKommentare(Node standard, Node aktuell) {
+        if (standard.getBlockComments() != null) {
+            aktuell.setBlockComments(standard.getBlockComments());
+        }
+        if (standard.getInLineComments() != null) {
+            aktuell.setInLineComments(standard.getInLineComments());
+        }
+        if (standard.getEndComments() != null) {
+            aktuell.setEndComments(standard.getEndComments());
+        }
     }
 
     public Ladung ladenMitStatus(File datei) {

@@ -7,12 +7,44 @@ import java.io.File;
 import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DateiSicherungTest {
 
     @TempDir
     File temp;
+
+    @Test
+    void configAbgleichSichertOriginalUndSchreibtNurBeiAenderungen() throws Exception {
+        var datei = Files.writeString(temp.toPath().resolve("general.yml"), "alt: true\n");
+        assertTrue(DateiSicherung.aktualisiereKonfiguration(datei, "alt: true\n", "alt: true\nneu: 7\n"));
+        assertEquals("alt: true\n", Files.readString(temp.toPath().resolve("general.yml.vor-config-update.bak")));
+        assertFalse(DateiSicherung.aktualisiereKonfiguration(datei, "alt: true\nneu: 7\n", "alt: true\nneu: 7\n"));
+        assertEquals("alt: true\n", Files.readString(temp.toPath().resolve("general.yml.vor-config-update.bak")));
+    }
+
+    @Test
+    void configAbgleichUeberschreibtKeineZwischenzeitlicheAenderung() throws Exception {
+        var datei = Files.writeString(temp.toPath().resolve("general.yml"), "angepasst: true\n");
+        assertThrows(java.io.IOException.class,
+                () -> DateiSicherung.aktualisiereKonfiguration(datei, "alt: true\n", "neu: true\n"));
+        assertEquals("angepasst: true\n", Files.readString(datei));
+    }
+
+    @Test
+    void configAbgleichBrichtBeiFehlgeschlagenerSicherungOhneDateiaenderungAb() throws Exception {
+        var datei = Files.writeString(temp.toPath().resolve("general.yml"), "alt: true\n");
+        var backup = Files.createDirectory(temp.toPath().resolve("general.yml.vor-config-update.bak"));
+        Files.writeString(backup.resolve("belegt"), "beibehalten");
+        assertThrows(java.io.IOException.class,
+                () -> DateiSicherung.aktualisiereKonfiguration(datei, "alt: true\n", "neu: true\n"));
+        assertEquals("alt: true\n", Files.readString(datei));
+        try (var dateien = Files.list(temp.toPath())) {
+            assertTrue(dateien.noneMatch(p -> p.getFileName().toString().endsWith(".tmp")));
+        }
+    }
 
     @Test
     void bootBackupSichertHistoryUndArchiv() throws Exception {

@@ -510,7 +510,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite des Handbuchs"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Handbuch</small></button>
-  <span class="ver">v4.4.1</span>
+  <span class="ver">v4.4.2</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Handbuch durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -532,7 +532,7 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.4.1 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.4.2 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
       <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
@@ -557,7 +557,7 @@ details>div{padding:14px 18px 2px}
       <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
-  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-22">22.11.2026</time> · v4.4.1 · Velocity und Paper/Purpur</p>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-22">22.11.2026</time> · v4.4.2 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -693,13 +693,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.1">Release v4.4.1</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.2">Release v4.4.2</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.4.1-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.4.1-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.4.1-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.4.2-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.4.2-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.4.2-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -709,9 +709,9 @@ details>div{padding:14px 18px 2px}
   <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
   <h3>Windows PowerShell</h3>
   <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
-  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.1-velocity.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.1-bridge.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.1-bridge-1.21.jar
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.2-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.2-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.2-bridge-1.21.jar
 Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
   <h3>Linux und macOS</h3>
   <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
@@ -1860,6 +1860,11 @@ punish-version</pre>
   <h1>Dateien und Zuständigkeiten</h1>
   <p class="lead">Der Einstieg für jede Konfigurationsänderung: Finde zuerst den zuständigen Ort, ändere dort den Wert und wende ihn mit Reload oder Neustart an. Proxy und Bridge besitzen gleichnamige Dateien mit unterschiedlichen Aufgaben.</p>
 
+  <h2 data-anchor="config-abgleich">Automatischer Config-Abgleich ab v4.4.2</h2>
+  <p>Beim Start der neuen Version und beim Laden der Konfiguration werden vorhandene YAML-Dateien um fehlende Schlüssel und aktuelle Kommentare aus der mitgelieferten Vorlage ergänzt. Nach <code>/punish-update apply confirm</code> und dem regulären Neustart ist kein manuelles Übertragen neuer Config-Abschnitte nötig. Das gilt ebenso bei einem manuellen JAR-Update. Der Abgleich umfasst <code>general.yml</code>, <code>messages.yml</code>, <code>screens.yml</code>, <code>broadcasts.yml</code> und <code>gui.yml</code> auf Proxy und Bridges sowie die lokale <code>chatfilter.yml</code> der Bridges.</p>
+  <p>Vorhandene Werte, eigene Nachrichtentexte, Listen einschließlich leerer Listen, zusätzliche Schlüssel, Servernamen, Tunnel-Secrets und Datenbankzugänge bleiben erhalten. Neue Listeneinträge werden bestehenden eigenen Listen nicht automatisch hinzugefügt; gewünschte zusätzliche VPN-Quellen oder Rechte in Rangbündeln weiterhin gezielt ergänzen. Aufbau und Standardkommentare folgen der aktuellen Vorlage, sodass etwa der neue VPN-Erklärungsabsatz auch in vorhandenen Dateien erscheint. Eigene Kommentare an Stellen mit neuen Standardkommentaren können dabei durch die aktuellen Hinweise ersetzt werden; die Originaldatei bleibt in der Sicherung erhalten.</p>
+  <p>Vor jeder tatsächlichen Dateianpassung wird die bisherige Datei unverändert daneben als <code>&lt;Dateiname&gt;.vor-config-update.bak</code> gesichert. Diese Sicherung enthält den Stand vor dem letzten Config-Abgleich und kann dieselben vertraulichen Werte wie die Config enthalten. Schlägt die Sicherung fehl oder ist die Datei leer, fehlerhaft oder enthält doppelte Schlüssel, wird sie nicht überschrieben; das Log nennt den Fehler. Bei unverändertem Stand wird nicht erneut geschrieben. Strafdateien, Spielerbestände, Wortlisten und Datenbankdaten werden durch diesen Abgleich nicht verändert.</p>
+
   <h2>Welche Einstellung suchst du?</h2>
   <div class="tbl"><table>
     <thead><tr><th>Ich möchte …</th><th>Hier ändern</th><th>Erklärung</th></tr></thead>
@@ -2327,7 +2332,7 @@ history:
   <details>
     <summary>vpn-schutz</summary>
     <div>
-      <p>Seit v4.3.0 prüft der Velocity-Proxy jede Login-IP lokal gegen VPN-Listen. In v4.4.1 bleibt <code>streng</code> der Standard: Ein Treffer verweigert den Netzwerkbeitritt für jeden Account, ohne eine Strafe zu speichern. Im optionalen Modus <code>ausgewogen</code> werden reine Routing-Treffer nur gemeldet. Der Filter ist auch bei vorhandenen Konfigurationen standardmäßig aktiv; Banns und IP-Banns haben weiterhin Vorrang.</p>
+      <p>Seit v4.3.0 prüft der Velocity-Proxy jede Login-IP lokal gegen VPN-Listen. In v4.4.2 bleibt <code>streng</code> der Standard: Ein Treffer verweigert den Netzwerkbeitritt für jeden Account, ohne eine Strafe zu speichern. Im optionalen Modus <code>ausgewogen</code> werden reine Routing-Treffer nur gemeldet. Der Filter ist auch bei vorhandenen Konfigurationen standardmäßig aktiv; Banns und IP-Banns haben weiterhin Vorrang.</p>
       <pre data-lang="yaml">vpn-schutz:
   aktiv: true
   modus: streng
@@ -2366,7 +2371,7 @@ history:
       </table></div>
       <p>Die 14 Standardquellen umfassen die IPv4-/IPv6-VPN-Kategorien von <a href="https://github.com/X4BNet/lists_vpn" target="_blank" rel="noopener">X4BNet</a>, die VPN-Kategorie von <a href="https://github.com/aaronburt/vpn-block-list" target="_blank" rel="noopener">aaronburt</a>, die <a href="https://github.com/tn3w/ProtonVPN-IPs" target="_blank" rel="noopener">Proton-Routing-Netze</a> und zehn <a href="https://github.com/Joe12387/open-source-vpn-ip-lists" target="_blank" rel="noopener">Anbieterlisten</a>: AirVPN, IVPN, Mullvad, NordVPN, OVPN, Private Internet Access, ProtonVPN, RiseupVPN, Surfshark und Windscribe. Die Anbieterlisten enthalten einzelne Server-/Ein- und Austrittsadressen, deren IPv6-Abdeckung unterschiedlich ist. Allgemeine Hosting-/Datacenter-Kategorien werden nicht pauschal eingebunden. Lizenzen und Herkunft stehen unter <code>META-INF/THIRD-PARTY-NOTICES.txt</code> in der Proxy-JAR.</p>
       <p>Die Proton-Routing-Quelle erfasst <code>190.2.154.240</code> über <code>190.2.128.0/19</code> mit 8192 Adressen. Das Netz ist nicht als ausschließlich von Proton genutzt belegt. Im strengen Standardmodus bleibt die IP gesperrt; ausgewogen würde sie bei einem alleinigen Routing-Treffer durchkommen. Eine zusätzlich treffende VPN-Quelle sperrt auch im ausgewogenen Modus. Einzelne Fehlzuordnungen gezielt über <code>freigaben</code> ausnehmen.</p>
-      <p><strong>Update auf v4.4.1:</strong> Proxy und alle Bridges gemeinsam aktualisieren und neu starten. Abgelehnte VPN-Logins werden jetzt bei jedem Versuch ohne IP-Cooldown oder globale Meldungsbegrenzung erfasst. <code>team-meldungen: true</code> aktiviert die Ingame-Meldungen; <code>false</code> unterdrückt weiterhin nur den Team-Chat. Bestehende ausdrücklich gesetzte <code>quellen</code>-Listen bleiben erhalten; ohne den Schlüssel gelten die 14 Standards. Die seit v4.4.0 vorhandenen Rechte gelten weiter: <code>punish.vpn</code> für Diagnose und <code>punish.message.vpn</code> für Meldungen. Standardbündel enthalten diese Rechte ab Moderator; bestehende eigene Bündel ergänzen oder Einzelrechte vergeben. Konfigurationsschlüssel, Nachrichtentexte und Datenbankschema bleiben kompatibel.</p>
+      <p><strong>Update auf v4.4.2:</strong> Proxy und alle Bridges gemeinsam aktualisieren und neu starten. Abgelehnte VPN-Logins werden bei jedem Versuch ohne IP-Cooldown oder globale Meldungsbegrenzung erfasst. <code>team-meldungen: true</code> aktiviert die Ingame-Meldungen; <code>false</code> unterdrückt weiterhin nur den Team-Chat. Bestehende ausdrücklich gesetzte <code>quellen</code>-Listen bleiben erhalten; ohne den Schlüssel gelten die 14 Standards. Die seit v4.4.0 vorhandenen Rechte gelten weiter: <code>punish.vpn</code> für Diagnose und <code>punish.message.vpn</code> für Meldungen. Standardbündel enthalten diese Rechte ab Moderator; bestehende eigene Bündel ergänzen oder Einzelrechte vergeben. Konfigurationsschlüssel, Nachrichtentexte und Datenbankschema bleiben kompatibel.</p>
       <p><strong>Quellenprüfung am 21.11.2026:</strong> Alle 14 Standardquellen wurden mit dem produktiven Downloader und Parser geprüft. Die jüngsten <a href="https://github.com/tn3w/ProtonVPN-IPs/actions" target="_blank" rel="noopener">Proton-Upstream-Builds</a> schlugen weiterhin fehl; letzter erfolgreicher Build war am 17.11.2026. Ein erfolgreicher Download belegt Erreichbarkeit und gültiges Format, nicht neue Datenerzeugung. <code>/punish-vpn status</code> zeigt Downloadzeit und lokal beobachtete Inhaltsänderung separat; die Erzeugungszeit beim Anbieter bleibt unbekannt. Zeitangaben werden mit dem Inhalts-Hash neben dem Cache gespeichert. Alte Caches bleiben nutzbar, ihre unbekannten Zeiten werden nicht aus dem Dateidatum abgeleitet.</p>
       <p>Der Proxy speichert pro URL den letzten gültigen Stand unter <code>plugins/PunishSystemVelocity/vpn-blocklisten/</code>. Beim Neustart wird dieser vor den Downloads geladen. Updates ersetzen jede Quelle unabhängig; entfernte Quellen wirken nach dem Reload nicht mehr. Die Prüfung beim Login liest nur den RAM-Stand und führt keine Netzwerkabfrage aus. Spieler-IPs werden dabei nicht an GitHub oder einen Prüfanbieter gesendet.</p>
       <p>Bei Downloadfehlern bleiben vorhandene Daten aktiv; nach fünf Minuten wird erneut versucht. Leere oder fehlerhafte Dateien, <code>/0</code>-Netze, mehr als 250000 Zeilen sowie Dateien über 8 MiB werden verworfen. Fehlen alle gültigen Listen, bleiben Logins vorübergehend erlaubt. Ist nur ein Teil verfügbar, wirken dessen Treffer bereits. Das Proxy-Log nennt die Anzahl geladener und aktualisierter Quellen.</p>
@@ -2490,7 +2495,7 @@ vorschlaege:
   </details>
 
   <h2 data-anchor="standarddatei">Vollständige Standardwerte</h2>
-  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.4.1</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
+  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.4.2</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
   <details><summary>Vollständige Standardwerte der Proxy-general.yml</summary><div>
   <pre data-lang="yaml">config-version: "2026-11-01"
 befehle:
@@ -3154,6 +3159,7 @@ chatfilter:
     </tbody>
   </table></div>
   <p>Eine erfolgreiche Transferquittung bestätigt die bereitgestellte Datei, nicht die bereits laufende Version. Ein Backend ohne verbundenen Spieler erhält keine Plugin-Nachrichten und damit keine automatische Verteilung. Solche Backends vor dem Neustart verbinden und prüfen oder manuell aktualisieren.</p>
+  <p>Ab v4.4.2 übernimmt die neue Version beim anschließenden Start auch den <a href="#/config-uebersicht/config-abgleich">Config-Abgleich</a>: Fehlende Optionen und aktuelle Standardkommentare werden in die vorhandenen Dateien geschrieben, eigene Einstellungen bleiben erhalten. Der Downloadbefehl selbst startet keine Server.</p>
   <h2 data-anchor="hook">Welche Übernahme braucht welchen Server?</h2>
   <ul>
     <li><strong>Paper-/Purpur-Backend:</strong> aktivierter und beschreibbarer Server-Update-Ordner, normalerweise <code>plugins/update/</code>.</li>
@@ -3416,7 +3422,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
-  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.1">v4.4.1</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.2">v4.4.2</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
   <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
   <ol class="steps">
     <li><strong>Skript auf dem Proxy prüfen</strong>
@@ -3469,7 +3475,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
       <p>Nach vollständiger Verteilung die Backends und anschließend den Proxy über den eingerichteten Startbefehl neu starten. Der jeweilige Server übernimmt die Backend-JAR beim Start; der Proxy-Hook ersetzt die Proxy-JAR, bevor Java startet. Ein zusätzliches Kopieren ist für erfolgreich verteilte Updates nicht nötig. Der Befehl selbst stoppt oder startet keine Server.</p>
     </li>
     <li><strong>Starten und Ergebnis prüfen</strong>
-      <p>Proxy und Backends starten. <code>/punish-diagnostics</code> auf dem Proxy und auf jedem Backend sowie <code>/punish-update status</code> prüfen. Leere Backends nach dem ersten Spielerbeitritt erneut prüfen. Konfigurationsdateien bleiben erhalten; fehlende Schlüssel werden beim Laden mit Standardwerten ergänzt.</p>
+      <p>Proxy und Backends starten. <code>/punish-diagnostics</code> auf dem Proxy und auf jedem Backend sowie <code>/punish-update status</code> prüfen. Leere Backends nach dem ersten Spielerbeitritt erneut prüfen. Ab v4.4.2 werden die vorhandenen Konfigurationsdateien beim Start um fehlende Schlüssel und aktuelle Standardkommentare ergänzt; eigene Werte bleiben erhalten. Vor jeder Dateianpassung entsteht eine <code>.vor-config-update.bak</code>-Sicherung. Den Abgleich und mögliche Fehler im Log prüfen; Details unter <a href="#/config-uebersicht/config-abgleich">automatischer Config-Abgleich</a>.</p>
     </li>
   </ol>
   <div class="callout warn"><div><span class="ttl">Neustart aktiviert das vorgemerkte Update</span><p>Mit eingerichtetem Proxy-Start-Hook und erfolgreichen Backend-Quittungen genügt nach <code>apply</code> der Neustart. Ein Reload lädt keinen neuen Plugin-Code. Leere oder ausgeschaltete Backends erhalten ohne verbundenen Spieler kein Update; ihre Aktualisierung muss vorab sichergestellt sein.</p></div></div>
@@ -3501,13 +3507,23 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <div class="command-tools" role="search" aria-label="Changelog filtern">
     <label for="changelogFilter">Versionen filtern</label>
     <div class="command-filter-row">
-      <input id="changelogFilter" type="search" placeholder="z. B. v4.4.1, VentureChat oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
+      <input id="changelogFilter" type="search" placeholder="z. B. v4.4.2, Config oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
       <button type="button" id="changelogReset">Zurücksetzen</button>
     </div>
     <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">11 von 11 Versionen</p>
+    <p id="changelogCount" role="status">12 von 12 Versionen</p>
   </div>
   <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+  <h2 data-anchor="v4-4-2">v4.4.2</h2>
+  <p><time datetime="2026-11-22">22.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.2" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>Vollständige Config-Dateien nach Updates:</strong> Beim Start der neuen Version und beim Laden der Konfiguration werden fehlende Schlüssel und aktuelle Standardkommentare direkt in vorhandene Configs übernommen. Das betrifft die fünf YAML-Dateien des Proxys und zusätzlich die lokale Chatfilter-Konfiguration der Bridges.</li>
+    <li><strong>Eigene Einstellungen bleiben erhalten:</strong> Bestehende Werte, Nachrichtentexte, Listen, Zusatzschlüssel, Verbindungsdaten und lokale Laufzeitschalter werden übernommen. Listen werden nicht automatisch erweitert. Strafdateien und Datenbankbestände bleiben unberührt.</li>
+    <li><strong>Gesicherter Abgleich:</strong> Vor jeder tatsächlichen Dateianpassung wird das Original als <code>.vor-config-update.bak</code> gesichert. Fehlerhafte oder leere Dateien und Dateien mit doppelten Schlüsseln werden nicht überschrieben. Unveränderte Dateien werden nicht erneut geschrieben.</li>
+    <li><strong>Regressionstests:</strong> Prüfen alle betroffenen Config-Dateien, neue Kommentare, eigene Werte und leere Listen, Null-Werte, mehrzeilige Texte, YAML-Merges, Sicherungsfehler und wiederholtes Laden in beiden Bridge-Varianten.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.4.2 aktualisieren und regulär neu starten. Bei eingerichteter automatischer Installation genügt nach erfolgreichem <code>apply confirm</code> und geprüften Transferquittungen der Neustart. Es gibt keine neue Abhängigkeit, keine neuen Config-Schalter und keinen Datenbankschemawechsel. Standardkommentare werden aktualisiert; eigene Kommentare an denselben Stellen können ersetzt werden und bleiben im Original-Backup erhalten. Details unter <a href="#/config-uebersicht/config-abgleich">automatischer Config-Abgleich</a>.</p>
 
   <h2 data-anchor="v4-4-1">v4.4.1</h2>
   <p><time datetime="2026-11-22">22.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.1" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3762,7 +3778,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
         <li>Hat der Spieler das Bypass-Recht <code>punish.chatfilter.bypass</code>?</li>
         <li>Steht der Kanal in <code>kanaele</code> auf <code>aus</code>?</li>
         <li>Wurde der Filter zur Laufzeit mit <code>/chatfilter off</code> ausgeschaltet?</li>
-        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.4.1 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
+        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.4.2 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
       </ul>
     </div>
   </details>

@@ -3,6 +3,16 @@ package de.lightrixx.punish.velocity;
 import de.lightrixx.punish.storage.YamlSpeicher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.File;
 import java.io.InputStream;
@@ -72,12 +82,10 @@ final class KonfigurationsDateien {
         sichereRessource(R_MESSAGES, messagesDatei);
         sichereRessource(R_SCREENS, screensDatei);
         sichereRessource(R_BROADCASTS, broadcastsDatei);
+        sichereRessource("/config/gui.yml", new File(configOrdner, "gui.yml"));
     }
 
     private void sichereRessource(String resourcePfad, File ziel) {
-        if (ziel.exists()) {
-            return;
-        }
         try {
             File eltern = ziel.getParentFile();
             if (eltern != null && !eltern.exists()) {
@@ -85,13 +93,100 @@ final class KonfigurationsDateien {
             }
             try (InputStream in = getClass().getResourceAsStream(resourcePfad)) {
                 if (in != null) {
-                    Files.copy(in, ziel.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    if (ziel.exists()) {
+                        if (Files.size(ziel.toPath()) > 64L * 1024L * 1024L) {
+                            throw new java.io.IOException("Konfiguration ist zu groß: " + ziel.getName());
+                        }
+                        String vorher = Files.readString(ziel.toPath(), java.nio.charset.StandardCharsets.UTF_8);
+                        String vorlage = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                        if (de.lightrixx.punish.storage.DateiSicherung.aktualisiereKonfiguration(ziel.toPath(),
+                                vorher, ergaenzeKonfiguration(vorlage, vorher))) {
+                            LOG.info("Konfiguration {} um aktuelle Standards und Kommentare ergänzt.", ziel.getName());
+                        }
+                    } else {
+                        Files.copy(in, ziel.toPath());
+                    }
                 } else {
                     LOG.warn("Jar-Default {} nicht gefunden, Datei {} nicht angelegt.", resourcePfad, ziel.getName());
                 }
             }
         } catch (Exception e) {
-            LOG.warn("Die Standard-Datei {} konnte nicht angelegt werden.", ziel.getName(), e);
+            LOG.warn("Konfiguration {} konnte nicht abgeglichen werden; vorhandene Datei bleibt erhalten.",
+                    ziel.getName(), e);
+        }
+    }
+
+    private static String ergaenzeKonfiguration(String vorlage, String inhalt) {
+        if (vorlage.equals(inhalt)) {
+            return inhalt;
+        }
+        var optionen = new LoaderOptions();
+        optionen.setAllowDuplicateKeys(false);
+        optionen.setMaxAliasesForCollections(50);
+        optionen.setCodePointLimit(32 * 1024 * 1024);
+        optionen.setProcessComments(true);
+        var konstruktor = new SafeConstructor(optionen) {
+            MappingNode pruefe(Node knoten) {
+                if (!(knoten instanceof MappingNode mapping)
+                        || !Tag.MAP.equals(knoten.getTag())) {
+                    throw new IllegalArgumentException("Die Konfiguration muss ein YAML-Mapping enthalten.");
+                }
+                constructDocument(knoten);
+                return mapping;
+            }
+        };
+        var ausgabe = new DumperOptions();
+        ausgabe.setProcessComments(true);
+        ausgabe.setIndent(2);
+        ausgabe.setSplitLines(false);
+        ausgabe.setLineBreak(inhalt.contains("\r\n")
+                ? DumperOptions.LineBreak.WIN : DumperOptions.LineBreak.UNIX);
+        var yaml = new Yaml(konstruktor, new Representer(ausgabe), ausgabe, optionen);
+        var standard = konstruktor.pruefe(yaml.compose(new java.io.StringReader(vorlage)));
+        var aktuell = konstruktor.pruefe(yaml.compose(new java.io.StringReader(inhalt)));
+        var text = new java.io.StringWriter();
+        yaml.serialize(ergaenzeKnoten(standard, aktuell), text);
+        return text.toString();
+    }
+
+    private static Node ergaenzeKnoten(Node standard, Node aktuell) {
+        uebernehmeKommentare(standard, aktuell);
+        if (standard instanceof MappingNode vorlage && aktuell instanceof MappingNode vorhanden) {
+            var eintraege = new java.util.LinkedHashMap<Map.Entry<Tag, String>, NodeTuple>();
+            for (var eintrag : vorhanden.getValue()) {
+                if (!(eintrag.getKeyNode() instanceof ScalarNode schluessel)) {
+                    throw new IllegalArgumentException("Konfigurationsschlüssel müssen Skalare sein.");
+                }
+                eintraege.put(Map.entry(schluessel.getTag(), schluessel.getValue()), eintrag);
+            }
+            var zusammen = new java.util.ArrayList<NodeTuple>();
+            for (var eintrag : vorlage.getValue()) {
+                var schluessel = (ScalarNode) eintrag.getKeyNode();
+                var bisher = eintraege.remove(Map.entry(schluessel.getTag(), schluessel.getValue()));
+                if (bisher == null) {
+                    zusammen.add(eintrag);
+                } else {
+                    uebernehmeKommentare(eintrag.getKeyNode(), bisher.getKeyNode());
+                    zusammen.add(new NodeTuple(bisher.getKeyNode(),
+                            ergaenzeKnoten(eintrag.getValueNode(), bisher.getValueNode())));
+                }
+            }
+            zusammen.addAll(eintraege.values());
+            vorhanden.setValue(zusammen);
+            vorhanden.setFlowStyle(vorlage.getFlowStyle());
+        }
+        return aktuell;
+    }
+
+    private static void uebernehmeKommentare(Node standard, Node aktuell) {
+        if (standard.getBlockComments() != null) {
+            aktuell.setBlockComments(standard.getBlockComments());
+        }
+        if (standard.getInLineComments() != null) {
+            aktuell.setInLineComments(standard.getInLineComments());
+        }
+        if (standard.getEndComments() != null) {
+            aktuell.setEndComments(standard.getEndComments());
         }
     }
 

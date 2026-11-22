@@ -1,14 +1,100 @@
 package de.lightrixx.punish.velocity;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class VelocityKonfigurationSetupTest {
+
+    @ParameterizedTest
+    @ValueSource(strings = {"general.yml", "messages.yml", "screens.yml", "broadcasts.yml", "gui.yml"})
+    void configDateienErhaltenVorlagenKommentareUndBehaltenEigeneSchluessel(String name,
+            @org.junit.jupiter.api.io.TempDir Path ordner) throws Exception {
+        var dateien = new KonfigurationsDateien(ordner.toFile());
+        Files.createDirectories(ordner.resolve("config"));
+        var datei = ordner.resolve("config").resolve(name);
+        String alt = "# Mein eigener Abschnitt\neigene-option: 'beibehalten'\n";
+        Files.writeString(datei, alt);
+        dateien.sicherstellen();
+        String neu = Files.readString(datei);
+        assertEquals("beibehalten", ((Map<?, ?>) KonfigurationsDateien.safeYaml().load(neu)).get("eigene-option"));
+        assertTrue(neu.contains("# Mein eigener Abschnitt"));
+        try (var in = getClass().getResourceAsStream("/config/" + name)) {
+            String vorlage = new String(java.util.Objects.requireNonNull(in).readAllBytes(),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            var standards = (Map<?, ?>) KonfigurationsDateien.safeYaml().load(vorlage);
+            assertTrue(((Map<?, ?>) KonfigurationsDateien.safeYaml().load(neu)).keySet().containsAll(standards.keySet()));
+            assertTrue(neu.contains(vorlage.lines().filter(zeile -> zeile.startsWith("#")).findFirst().orElseThrow()));
+        }
+        assertEquals(alt, Files.readString(datei.resolveSibling(name + ".vor-config-update.bak")));
+        var zeit = Files.getLastModifiedTime(datei);
+        dateien.sicherstellen();
+        assertEquals(neu, Files.readString(datei));
+        assertEquals(zeit, Files.getLastModifiedTime(datei));
+    }
+
+    @Test
+    void configAbgleichBehaeltWerteListenNullMehrzeilerUndStrafdaten(
+            @org.junit.jupiter.api.io.TempDir Path ordner) throws Exception {
+        Files.createDirectories(ordner.resolve("config"));
+        String alt = """
+                prefix: '<blue>Mein Netzwerk'
+                vpn-schutz:
+                  aktiv: false
+                  team-meldungen: false
+                  quellen: []
+                  freigaben: ['203.0.113.7/32']
+                netzwerk:
+                  tunnel-secret: ''
+                  bridge-secrets: {lobby: 'lokaler-wert'}
+                eigene-option:
+                  leer: null
+                  zahl: 0
+                  text: |
+                    Erste Zeile mit Umlauten: Äöß
+                    Zweite Zeile
+                """.replace("\n", "\r\n");
+        var datei = Files.writeString(ordner.resolve("config/general.yml"), alt);
+        var strafen = Files.writeString(ordner.resolve("bans.yml"), "bestand: beibehalten\n");
+        var config = new VelocityKonfiguration(org.mockito.Mockito.mock(
+                com.velocitypowered.api.proxy.ProxyServer.class), ordner.toFile());
+        config.laden();
+        assertFalse(config.vpnSchutzAktiv());
+        assertFalse(config.vpnSchutzTeamMeldungen());
+        assertEquals(java.util.List.of(), config.vpnSchutzQuellen());
+        assertEquals(java.util.List.of("203.0.113.7/32"), config.vpnSchutzFreigaben());
+        String neu = Files.readString(datei);
+        assertTrue(neu.contains("# Jeder vom VPN-Schutz abgelehnte Login wird geloggt"));
+        assertTrue(neu.contains("\r\n"));
+        var werte = (Map<?, ?>) KonfigurationsDateien.safeYaml().load(neu);
+        var eigene = (Map<?, ?>) werte.get("eigene-option");
+        assertTrue(eigene.containsKey("leer"));
+        assertEquals(null, eigene.get("leer"));
+        assertEquals(0, eigene.get("zahl"));
+        assertEquals("Erste Zeile mit Umlauten: Äöß\nZweite Zeile\n", eigene.get("text"));
+        assertEquals("lokaler-wert", ((Map<?, ?>) ((Map<?, ?>) werte.get("netzwerk")).get("bridge-secrets")).get("lobby"));
+        assertEquals("bestand: beibehalten\n", Files.readString(strafen));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "vpn-schutz: [", "- liste", "prefix: eins\nprefix: zwei\n"})
+    void defekteConfigsWerdenNichtUeberschrieben(String inhalt,
+            @org.junit.jupiter.api.io.TempDir Path ordner) throws Exception {
+        Files.createDirectories(ordner.resolve("config"));
+        var datei = Files.writeString(ordner.resolve("config/general.yml"), inhalt);
+        new KonfigurationsDateien(ordner.toFile()).sicherstellen();
+        assertEquals(inhalt, Files.readString(datei));
+        assertFalse(Files.exists(ordner.resolve("config/general.yml.vor-config-update.bak")));
+    }
 
     @Test
     void befehlsUeberschreibungIstStandardmaessigAktivUndAbschaltbar(

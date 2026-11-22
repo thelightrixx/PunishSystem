@@ -39,6 +39,21 @@ class ChatfilterKonfigurationTest {
     }
 
     @Test
+    void abgleichErgaenztKommentareUndBehaeltLokaleLaufzeitSchalter() throws Exception {
+        when(plugin.getResource("config/chatfilter.yml")).thenAnswer(aufruf ->
+                getClass().getResourceAsStream("/config/chatfilter.yml"));
+        schreibeConfig("chatfilter:\n  aktiv: false\n  laufzeit-filter: false\n  laufzeit-ki: true\n");
+        konfiguration.laden();
+        assertFalse(konfiguration.aktiv());
+        assertEquals(false, konfiguration.leseLaufzeitFilter());
+        assertEquals(true, konfiguration.leseLaufzeitKi());
+        String inhalt = Files.readString(datenOrdner.toPath().resolve("config/chatfilter.yml"));
+        assertTrue(inhalt.contains("#"));
+        assertTrue(inhalt.contains("ki-timeout-ms:"));
+        assertTrue(Files.isRegularFile(datenOrdner.toPath().resolve("config/chatfilter.yml.vor-config-update.bak")));
+    }
+
+    @Test
     void werte_werdenGelesen() throws Exception {
         schreibeConfig("""
                 chatfilter:
