@@ -331,8 +331,9 @@ alt-wache:
 # Proton-Routing ist immer so eingestuft. Neue unbekannte URLs zählen sonst als VPN.
 # team-meldungen: Empfänger benötigen punish.message.vpn; vollständige IP/CIDRs
 # zusätzlich punish.alts. Logs enthalten vollständige IPs und Treffer.
-# Cooldown je IP für Logs + Team; zusätzlich maximal 10 Meldungen als Burst,
-# danach eine pro Sekunde global. Die Login-Sperre bleibt davon unabhängig.
+# Jeder vom VPN-Schutz abgelehnte Login wird geloggt und bei team-meldungen: true
+# dem Team gemeldet. Nur Routing-Hinweise nutzen den Cooldown je IP und global
+# maximal 10 Meldungen als Burst, danach eine pro Sekunde.
 # /punish-vpn check <IP> und /punish-vpn status zeigen Gründe und Quellenzustand.
 # Downloadzeit und lokal beobachtete Inhaltsänderung werden separat gespeichert;
 # Erzeugungszeit beim Listenanbieter ist unbekannt. Alte Caches: Zeiten unbekannt.

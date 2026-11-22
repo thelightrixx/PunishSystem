@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
@@ -229,9 +230,12 @@ class VpnErweiterungenTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void loginMeldungenSindBerechtigtGedrosseltUndVeraendernDieSperreNicht(boolean streng) throws Exception {
-        when(config.vpnSchutzModus()).thenReturn(streng ? "streng" : "ausgewogen");
+    @CsvSource({"streng, true", "streng, false", "ausgewogen, true", "ausgewogen, false"})
+    void jederGesperrteLoginWirdGemeldetUndNurRoutingHinweiseWerdenGedrosselt(String modus, boolean routing)
+            throws Exception {
+        when(config.vpnSchutzModus()).thenReturn(modus);
+        when(config.vpnSchutzQuellen()).thenReturn(List.of((routing ? ROUTING : VPN).toString()));
+        boolean gesperrt = "streng".equals(modus) || !routing;
         var proxy = mock(ProxyServer.class);
         var voll = mock(Player.class);
         when(voll.hasPermission("punish.message.vpn")).thenReturn(true);
@@ -259,29 +263,40 @@ class VpnErweiterungenTest {
             for (int i = 0; i < 3; i++) {
                 var event = new LoginEvent(spieler);
                 listener.onLogin(event);
-                assertEquals(!streng, event.getResult().isAllowed());
+                assertEquals(!gesperrt, event.getResult().isAllowed());
             }
-            String key = streng ? MessageKeys.VPN_TEAM_GESPERRT : MessageKeys.VPN_TEAM_HINWEIS;
+            int meldungen = gesperrt ? 3 : 1;
+            String key = gesperrt ? MessageKeys.VPN_TEAM_GESPERRT : MessageKeys.VPN_TEAM_HINWEIS;
             @SuppressWarnings("unchecked")
             var platzhalter = ArgumentCaptor.forClass(Map.class);
-            verify(nachrichten, times(2)).senden(any(BefehlsSender.class), eq(key), platzhalter.capture());
+            verify(nachrichten, times(2 * meldungen)).senden(any(BefehlsSender.class), eq(key), platzhalter.capture());
             assertEquals("190.2.154.240", platzhalter.getAllValues().getFirst().get("ip"));
             assertTrue(platzhalter.getAllValues().getFirst().get("treffer").toString().contains("190.2.128.0/19"));
             assertEquals("190.2.154.*", platzhalter.getAllValues().getLast().get("ip"));
             assertFalse(platzhalter.getAllValues().getLast().get("treffer").toString().contains("190.2.128"));
-            verify(logger, times(1)).info(eq("VPN-Treffer aktion={} spieler={} uuid={} ip={} treffer={}"),
-                    eq(streng ? SPERREN : MELDEN), eq("Spieler"), eq(uuid), eq("190.2.154.240"), anyString());
-            when(config.vpnSchutzTeamMeldungen()).thenReturn(false);
+            verify(logger, times(meldungen)).info(eq("VPN-Treffer aktion={} spieler={} uuid={} ip={} treffer={}"),
+                    eq(gesperrt ? SPERREN : MELDEN), eq("Spieler"), eq(uuid), eq("190.2.154.240"), anyString());
             for (int i = 1; i <= 20; i++) {
                 when(spieler.getRemoteAddress()).thenReturn(new InetSocketAddress(
                         InetAddress.getByName("190.2.153." + i), 25565));
                 var event = new LoginEvent(spieler);
                 listener.onLogin(event);
-                assertEquals(!streng, event.getResult().isAllowed());
+                assertEquals(!gesperrt, event.getResult().isAllowed());
             }
-            verify(logger, times(10)).info(eq("VPN-Treffer aktion={} spieler={} uuid={} ip={} treffer={}"),
-                    eq(streng ? SPERREN : MELDEN), eq("Spieler"), eq(uuid), anyString(), anyString());
-            verify(nachrichten, times(2)).senden(any(BefehlsSender.class), eq(key), anyMap());
+            meldungen = gesperrt ? 23 : 10;
+            verify(logger, times(meldungen)).info(eq("VPN-Treffer aktion={} spieler={} uuid={} ip={} treffer={}"),
+                    eq(gesperrt ? SPERREN : MELDEN), eq("Spieler"), eq(uuid), anyString(), anyString());
+            verify(nachrichten, times(2 * meldungen)).senden(any(BefehlsSender.class), eq(key), anyMap());
+            when(config.vpnSchutzTeamMeldungen()).thenReturn(false);
+            when(spieler.getRemoteAddress()).thenReturn(
+                    new InetSocketAddress(InetAddress.getByName("190.2.154.240"), 25565));
+            var event = new LoginEvent(spieler);
+            listener.onLogin(event);
+            assertEquals(!gesperrt, event.getResult().isAllowed());
+            verify(logger, times(gesperrt ? meldungen + 1 : meldungen))
+                    .info(eq("VPN-Treffer aktion={} spieler={} uuid={} ip={} treffer={}"),
+                            eq(gesperrt ? SPERREN : MELDEN), eq("Spieler"), eq(uuid), anyString(), anyString());
+            verify(nachrichten, times(2 * meldungen)).senden(any(BefehlsSender.class), eq(key), anyMap());
         }
     }
 

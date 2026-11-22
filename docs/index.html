@@ -510,7 +510,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite des Handbuchs"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Handbuch</small></button>
-  <span class="ver">v4.4.0</span>
+  <span class="ver">v4.4.1</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Handbuch durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -532,7 +532,7 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.4.0 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.4.1 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
       <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
@@ -557,7 +557,7 @@ details>div{padding:14px 18px 2px}
       <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
-  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-21">21.11.2026</time> · v4.4.0 · Velocity und Paper/Purpur</p>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-22">22.11.2026</time> · v4.4.1 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -693,13 +693,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.0">Release v4.4.0</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.1">Release v4.4.1</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.4.0-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.4.0-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.4.0-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.4.1-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.4.1-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.4.1-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -709,9 +709,9 @@ details>div{padding:14px 18px 2px}
   <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
   <h3>Windows PowerShell</h3>
   <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
-  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.0-velocity.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.0-bridge.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.0-bridge-1.21.jar
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.1-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.1-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.1-bridge-1.21.jar
 Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
   <h3>Linux und macOS</h3>
   <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
@@ -2140,7 +2140,7 @@ punish-version</pre>
       <tr><td><code>datenschutz.ip-aufbewahrung-tage</code></td><td><code>90</code></td><td>1 bis 3650 Tage. Werte außerhalb verwenden 90; keine allgemeine Löschfrist für Spielerakten.</td></tr>
       <tr><td><code>update.intervall-minuten</code></td><td><code>60</code></td><td>0 bis 10080 Minuten; auf diesen Bereich begrenzt. 0 schaltet die periodische Prüfung aus.</td></tr>
       <tr><td><code>vpn-schutz.intervall-minuten</code></td><td><code>360</code></td><td>5 bis 10080 Minuten; auf diesen Bereich begrenzt. Downloadfehler werden nach fünf Minuten erneut versucht.</td></tr>
-      <tr><td><code>vpn-schutz.meldungs-cooldown-sekunden</code></td><td><code>60</code></td><td>1 bis 3600 Sekunden; auf diesen Bereich begrenzt. Gilt je IP für Treffer-Logs und Team-Meldungen, ohne die Login-Sperre zu beeinflussen.</td></tr>
+      <tr><td><code>vpn-schutz.meldungs-cooldown-sekunden</code></td><td><code>60</code></td><td>1 bis 3600 Sekunden; auf diesen Bereich begrenzt. Gilt je IP nur für Logs und Team-Meldungen reiner Routing-Hinweise. Abgelehnte VPN-Logins werden bei jedem Versuch geloggt und bei aktivierten Team-Meldungen gemeldet.</td></tr>
     </tbody>
   </table></div>
   <h2 data-anchor="abschnitte">Abschnitte nachschlagen</h2>
@@ -2327,7 +2327,7 @@ history:
   <details>
     <summary>vpn-schutz</summary>
     <div>
-      <p>Seit v4.3.0 prüft der Velocity-Proxy jede Login-IP lokal gegen VPN-Listen. In v4.4.0 bleibt <code>streng</code> der Standard: Ein Treffer verweigert den Netzwerkbeitritt für jeden Account, ohne eine Strafe zu speichern. Im optionalen Modus <code>ausgewogen</code> werden reine Routing-Treffer nur gemeldet. Der Filter ist auch bei vorhandenen Konfigurationen standardmäßig aktiv; Banns und IP-Banns haben weiterhin Vorrang.</p>
+      <p>Seit v4.3.0 prüft der Velocity-Proxy jede Login-IP lokal gegen VPN-Listen. In v4.4.1 bleibt <code>streng</code> der Standard: Ein Treffer verweigert den Netzwerkbeitritt für jeden Account, ohne eine Strafe zu speichern. Im optionalen Modus <code>ausgewogen</code> werden reine Routing-Treffer nur gemeldet. Der Filter ist auch bei vorhandenen Konfigurationen standardmäßig aktiv; Banns und IP-Banns haben weiterhin Vorrang.</p>
       <pre data-lang="yaml">vpn-schutz:
   aktiv: true
   modus: streng
@@ -2360,18 +2360,18 @@ history:
           <tr><td><code>quellen</code></td><td>Bis zu 16 direkte HTTPS-URLs von <code>raw.githubusercontent.com</code>. Format: eine IP oder ein CIDR pro Zeile, IPv4 und IPv6, Leerzeilen und <code>#</code>-Kommentare erlaubt. <code>[]</code> verwendet keine Quellen.</td></tr>
           <tr><td><code>routing-quellen</code></td><td>URLs aus <code>quellen</code> zusätzlich als breite Routing-Quellen einstufen. Die mitgelieferte Proton-Routing-URL ist immer so eingestuft. Andere Quellen gelten als VPN-Quellen. Die Kategorien sagen nichts über unabhängige Bestätigung aus; gespiegelte Listen zählen nicht als zusätzliche Beweise.</td></tr>
           <tr><td><code>team-meldungen</code></td><td><code>true</code> meldet Sperren und Routing-Hinweise an Spieler mit <code>punish.message.vpn</code>. Vollständige IPs/CIDRs benötigen zusätzlich <code>punish.alts</code>; sonst wird die IP gekürzt und der CIDR weggelassen. <code>false</code> unterdrückt nur den Team-Chat, nicht die Treffer-Logs.</td></tr>
-          <tr><td><code>meldungs-cooldown-sekunden</code></td><td>Standard 60, begrenzt auf 1 bis 3600 Sekunden je IP. Für Log und Team gelten zusätzlich global zehn Meldungen als Burst, danach eine pro Sekunde. Die Login-Prüfung und Sperre bleiben bei jedem Versuch wirksam.</td></tr>
+          <tr><td><code>meldungs-cooldown-sekunden</code></td><td>Standard 60, begrenzt auf 1 bis 3600 Sekunden je IP. Gilt nur für reine Routing-Hinweise im ausgewogenen Modus; für deren Logs und Team-Meldungen gelten zusätzlich global zehn Meldungen als Burst, danach eine pro Sekunde. Jeder abgelehnte VPN-Login wird ohne diese Begrenzungen geloggt und bei aktivierten Team-Meldungen ingame gemeldet.</td></tr>
           <tr><td><code>freigaben</code></td><td>Einzelne IPs oder CIDRs, etwa <code>["203.0.113.7", "2001:db8:abcd::/48"]</code>. Sie umgehen ausschließlich den VPN-Filter. Banns, IP-Banns und Timeouts bleiben wirksam.</td></tr>
         </tbody>
       </table></div>
       <p>Die 14 Standardquellen umfassen die IPv4-/IPv6-VPN-Kategorien von <a href="https://github.com/X4BNet/lists_vpn" target="_blank" rel="noopener">X4BNet</a>, die VPN-Kategorie von <a href="https://github.com/aaronburt/vpn-block-list" target="_blank" rel="noopener">aaronburt</a>, die <a href="https://github.com/tn3w/ProtonVPN-IPs" target="_blank" rel="noopener">Proton-Routing-Netze</a> und zehn <a href="https://github.com/Joe12387/open-source-vpn-ip-lists" target="_blank" rel="noopener">Anbieterlisten</a>: AirVPN, IVPN, Mullvad, NordVPN, OVPN, Private Internet Access, ProtonVPN, RiseupVPN, Surfshark und Windscribe. Die Anbieterlisten enthalten einzelne Server-/Ein- und Austrittsadressen, deren IPv6-Abdeckung unterschiedlich ist. Allgemeine Hosting-/Datacenter-Kategorien werden nicht pauschal eingebunden. Lizenzen und Herkunft stehen unter <code>META-INF/THIRD-PARTY-NOTICES.txt</code> in der Proxy-JAR.</p>
       <p>Die Proton-Routing-Quelle erfasst <code>190.2.154.240</code> über <code>190.2.128.0/19</code> mit 8192 Adressen. Das Netz ist nicht als ausschließlich von Proton genutzt belegt. Im strengen Standardmodus bleibt die IP gesperrt; ausgewogen würde sie bei einem alleinigen Routing-Treffer durchkommen. Eine zusätzlich treffende VPN-Quelle sperrt auch im ausgewogenen Modus. Einzelne Fehlzuordnungen gezielt über <code>freigaben</code> ausnehmen.</p>
-      <p><strong>Update auf v4.4.0:</strong> Bestehende ausdrücklich gesetzte <code>quellen</code>-Listen bleiben erhalten. Die gewünschten zusätzlichen URLs aus dem Beispiel selbst ergänzen und <code>/punish-reload</code> ausführen; ohne den Schlüssel gelten die 14 Standards. Für Diagnose <code>punish.vpn</code>, für Meldungen <code>punish.message.vpn</code> vergeben. Neue Standardbündel enthalten diese Rechte ab Moderator; bestehende eigene Bündel ergänzen oder Einzelrechte vergeben. Die neuen Texte kommen aus den mitgelieferten Nachrichten, sofern sie lokal nicht überschrieben sind.</p>
+      <p><strong>Update auf v4.4.1:</strong> Proxy und alle Bridges gemeinsam aktualisieren und neu starten. Abgelehnte VPN-Logins werden jetzt bei jedem Versuch ohne IP-Cooldown oder globale Meldungsbegrenzung erfasst. <code>team-meldungen: true</code> aktiviert die Ingame-Meldungen; <code>false</code> unterdrückt weiterhin nur den Team-Chat. Bestehende ausdrücklich gesetzte <code>quellen</code>-Listen bleiben erhalten; ohne den Schlüssel gelten die 14 Standards. Die seit v4.4.0 vorhandenen Rechte gelten weiter: <code>punish.vpn</code> für Diagnose und <code>punish.message.vpn</code> für Meldungen. Standardbündel enthalten diese Rechte ab Moderator; bestehende eigene Bündel ergänzen oder Einzelrechte vergeben. Konfigurationsschlüssel, Nachrichtentexte und Datenbankschema bleiben kompatibel.</p>
       <p><strong>Quellenprüfung am 21.11.2026:</strong> Alle 14 Standardquellen wurden mit dem produktiven Downloader und Parser geprüft. Die jüngsten <a href="https://github.com/tn3w/ProtonVPN-IPs/actions" target="_blank" rel="noopener">Proton-Upstream-Builds</a> schlugen weiterhin fehl; letzter erfolgreicher Build war am 17.11.2026. Ein erfolgreicher Download belegt Erreichbarkeit und gültiges Format, nicht neue Datenerzeugung. <code>/punish-vpn status</code> zeigt Downloadzeit und lokal beobachtete Inhaltsänderung separat; die Erzeugungszeit beim Anbieter bleibt unbekannt. Zeitangaben werden mit dem Inhalts-Hash neben dem Cache gespeichert. Alte Caches bleiben nutzbar, ihre unbekannten Zeiten werden nicht aus dem Dateidatum abgeleitet.</p>
       <p>Der Proxy speichert pro URL den letzten gültigen Stand unter <code>plugins/PunishSystemVelocity/vpn-blocklisten/</code>. Beim Neustart wird dieser vor den Downloads geladen. Updates ersetzen jede Quelle unabhängig; entfernte Quellen wirken nach dem Reload nicht mehr. Die Prüfung beim Login liest nur den RAM-Stand und führt keine Netzwerkabfrage aus. Spieler-IPs werden dabei nicht an GitHub oder einen Prüfanbieter gesendet.</p>
       <p>Bei Downloadfehlern bleiben vorhandene Daten aktiv; nach fünf Minuten wird erneut versucht. Leere oder fehlerhafte Dateien, <code>/0</code>-Netze, mehr als 250000 Zeilen sowie Dateien über 8 MiB werden verworfen. Fehlen alle gültigen Listen, bleiben Logins vorübergehend erlaubt. Ist nur ein Teil verfügbar, wirken dessen Treffer bereits. Das Proxy-Log nennt die Anzahl geladener und aktualisierter Quellen.</p>
       <p>Änderungen mit <code>/punish-reload</code> übernehmen. Die Ablehnungsmeldung steht auf dem Proxy in <code>messages.yml → messages.vpn-gesperrt</code>. Bei einer Fehlzuordnung die betroffene IP gezielt unter <code>freigaben</code> eintragen und neu laden. Für Teammitglieder gibt es keinen automatischen Bypass.</p>
-      <p>Bei der Ablehnung sieht der Spieler weiterhin „Deine Verbindung wird einem VPN zugeordnet. Bitte deaktiviere deinen VPN. Bei einer Fehlzuordnung kontaktiere das Serverteam.“ Das Team erhält je nach Modus eine Sperrmeldung oder einen Routing-Hinweis mit Name, IP und Quellen. Die Texte heißen <code>messages.vpn-team-gesperrt</code> und <code>messages.vpn-team-hinweis</code>. In den Proxy-Logs stehen vollständige IPs und passende CIDRs, zum Beispiel:</p>
+      <p>Bei der Ablehnung sieht der Spieler weiterhin „Deine Verbindung wird einem VPN zugeordnet. Bitte deaktiviere deinen VPN. Bei einer Fehlzuordnung kontaktiere das Serverteam.“ Jeder vom VPN-Schutz abgelehnte Login wird im Proxy-Log erfasst und bei aktivierten Team-Meldungen ingame mit Name, IP und Quellen gemeldet, auch bei sofortigen Wiederholungen derselben IP. Reine Routing-Hinweise im ausgewogenen Modus bleiben gedrosselt. Die Texte heißen <code>messages.vpn-team-gesperrt</code> und <code>messages.vpn-team-hinweis</code>. In den Proxy-Logs stehen zusätzlich die UUID, vollständige IPs und passende CIDRs, zum Beispiel:</p>
       <pre data-lang="text">VPN-Treffer aktion=SPERREN spieler=Spieler uuid=&lt;UUID&gt; ip=190.2.154.240 treffer=Proton-Routing [ROUTING, 190.2.128.0/19]</pre>
       <p>Öffentliche Listen können unbekannte, private oder über Privatanschlüsse betriebene VPNs übersehen und Netze falsch zuordnen. Eine andere IP wird dadurch keinem früher gebannten Spieler zugeordnet; bestehende UUID-Banns und die Alt-Wache bleiben ergänzend nötig.</p>
     </div>
@@ -2490,7 +2490,7 @@ vorschlaege:
   </details>
 
   <h2 data-anchor="standarddatei">Vollständige Standardwerte</h2>
-  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.4.0</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
+  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.4.1</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
   <details><summary>Vollständige Standardwerte der Proxy-general.yml</summary><div>
   <pre data-lang="yaml">config-version: "2026-11-01"
 befehle:
@@ -3416,7 +3416,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
-  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.0">v4.4.0</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.1">v4.4.1</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
   <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
   <ol class="steps">
     <li><strong>Skript auf dem Proxy prüfen</strong>
@@ -3501,13 +3501,22 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <div class="command-tools" role="search" aria-label="Changelog filtern">
     <label for="changelogFilter">Versionen filtern</label>
     <div class="command-filter-row">
-      <input id="changelogFilter" type="search" placeholder="z. B. v4.4.0, VentureChat oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
+      <input id="changelogFilter" type="search" placeholder="z. B. v4.4.1, VentureChat oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
       <button type="button" id="changelogReset">Zurücksetzen</button>
     </div>
     <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">10 von 10 Versionen</p>
+    <p id="changelogCount" role="status">11 von 11 Versionen</p>
   </div>
   <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+  <h2 data-anchor="v4-4-1">v4.4.1</h2>
+  <p><time datetime="2026-11-22">22.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.1" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>VPN-Loginversuche:</strong> Jeder vom VPN-Schutz abgelehnte Login wird mit Spielername, UUID, vollständiger IP und passenden Quellen/CIDRs im Proxy-Log erfasst, auch bei sofortigen Wiederholungen derselben IP.</li>
+    <li><strong>Team-Meldungen:</strong> Bei aktiviertem <code>vpn-schutz.team-meldungen</code> wird jede VPN-Ablehnung ingame an Empfänger mit <code>punish.message.vpn</code> gemeldet. Der IP-Cooldown und die globale Meldungsbegrenzung unterdrücken diese Sperrmeldungen nicht mehr. Vollständige IPs/CIDRs benötigen weiterhin zusätzlich <code>punish.alts</code>.</li>
+    <li><strong>Routing-Hinweise:</strong> Reine Routing-Treffer im ausgewogenen Modus bleiben in Logs und Team-Chat gedrosselt. Die gezielten Regressionstests prüfen beide Modi, VPN- und Routing-Quellen, wiederholte Logins, Meldungsgrenzen, Rechte, IP-Maskierung und abgeschaltete Team-Meldungen.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.4.1 aktualisieren und neu starten. Bestehende Konfigurationsschlüssel, Nachrichten, Rechte und das Datenbankschema bleiben kompatibel. Für Ingame-Meldungen <code>vpn-schutz.team-meldungen: true</code> und <code>punish.message.vpn</code> prüfen; <code>false</code> unterdrückt nur den Team-Chat, nicht die Logs. Details unter <a href="#/config-general/vpn-schutz">VPN-Schutz</a>.</p>
 
   <h2 data-anchor="v4-4-0">v4.4.0</h2>
   <p><time datetime="2026-11-21">21.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.0" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3753,7 +3762,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
         <li>Hat der Spieler das Bypass-Recht <code>punish.chatfilter.bypass</code>?</li>
         <li>Steht der Kanal in <code>kanaele</code> auf <code>aus</code>?</li>
         <li>Wurde der Filter zur Laufzeit mit <code>/chatfilter off</code> ausgeschaltet?</li>
-        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.4.0 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
+        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.4.1 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
       </ul>
     </div>
   </details>

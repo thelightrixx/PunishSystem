@@ -412,7 +412,7 @@ public final class StrafListener {
     }
 
     private void meldeVpnTreffer(UUID uuid, String name, String ip, VpnBlocklistenDienst.Ergebnis ergebnis, long jetzt) {
-        if (!vpnMeldungFaellig(ip, jetzt)) {
+        if (ergebnis.aktion() == VpnBlocklistenDienst.Aktion.MELDEN && !vpnMeldungFaellig(ip, jetzt)) {
             return;
         }
         String details = ergebnis.treffer().stream().map(t -> t.quelle().name() + " ["
