@@ -1,4 +1,6 @@
-# PunishSystem v4.5.0
+# PunishSystem v4.4.3
+
+Dieser Patch ersetzt die irrtümlich als `v4.5.0` veröffentlichte Chatfilter-Korrektur. Die Chatfilter-Funktionen bleiben gegenüber dieser Veröffentlichung unverändert. Wer `v4.5.0` bereits installiert hat, muss alle drei Module einmalig manuell auf `v4.4.3` umstellen und regulär neu starten; der automatische Updater bietet niedrigere Versionsnummern nicht an.
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
@@ -27,7 +29,7 @@ Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=
 
 ## Voraussetzungen und Jars
 
-Das [Release v4.5.0](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
+Das [Release v4.4.3](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.3) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
 
 | Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
@@ -61,11 +63,11 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 - MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
 - GitHub-Updates mit SHA-256-Prüfung und automatischer Übernahme beim nächsten Start: nativer Update-Ordner auf den Backends, Start-Hook auf dem Linux-Proxy, auch unter Pelican/Docker.
 
-Beim Wechsel von einer Version vor `v4.2.0` alle JARs einmalig manuell auf `v4.5.0` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
+Beim Wechsel von einer Version vor `v4.2.0` alle JARs einmalig manuell auf `v4.4.3` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
 
 Für künftige stabile Updates `update.channel: "Release"` auf dem Proxy verwenden. `/punish-update apply confirm` lädt, prüft und verteilt die Dateien. Mit `/punish-update status` den aktiven Proxy-Start-Hook und die erfolgreichen Transferquittungen aller Backends prüfen, dann Backends und Proxy neu starten. Für die Verteilung muss auf jedem Backend ein Spieler verbunden sein. Ohne Start-Hook bleibt die Proxy-JAR vorgemerkt; das Plugin weist darauf hin. Die [Update-Anleitung](docs/index.html#/betrieb) beschreibt Einrichtung, Sicherung und Fehlerbehandlung.
 
-Ab v4.5.0 verhindert `chatfilter.ki-freigaben` in der Proxy-`general.yml` KI-Fehlalarme für vollständige Minecraft-Begriffe wie `xpfarm`, `XP-Farm` und `redstone`. Die Vorgabe enthält 31 Einträge. Satzzeichen und Groß-/Kleinschreibung werden für die Freigabe vereinheitlicht: `-xpfarm` und `xpfarm!` sind ebenfalls frei. Zusätzlicher Text wird weiterhin vollständig durch die KI geprüft; die Sperrwortliste hat Vorrang. Freigaben erzeugen weder Meldungen noch Staffel-Treffer. Eigene Begriffe oder vollständige Phrasen lassen sich ergänzen; `[]` deaktiviert die Freigaben. Die fehlende Option wird beim Config-Abgleich ergänzt und per Text-Sync verteilt. Danach Proxy und alle Bridges gemeinsam aktualisieren und regulär neu starten. Das vorhandene KI-Modell und Vokabular bleiben verwendbar. Details und Testfälle: [Minecraft-Freigaben](docs/index.html#/chatfilter/minecraft-freigaben).
+Ab v4.4.3 verhindert `chatfilter.ki-freigaben` in der Proxy-`general.yml` KI-Fehlalarme für vollständige Minecraft-Begriffe wie `xpfarm`, `XP-Farm` und `redstone`. Die Vorgabe enthält 31 Einträge. Satzzeichen und Groß-/Kleinschreibung werden für die Freigabe vereinheitlicht: `-xpfarm` und `xpfarm!` sind ebenfalls frei. Zusätzlicher Text wird weiterhin vollständig durch die KI geprüft; die Sperrwortliste hat Vorrang. Freigaben erzeugen weder Meldungen noch Staffel-Treffer. Eigene Begriffe oder vollständige Phrasen lassen sich ergänzen; `[]` deaktiviert die Freigaben. Die fehlende Option wird beim Config-Abgleich ergänzt und per Text-Sync verteilt. Danach Proxy und alle Bridges gemeinsam aktualisieren und regulär neu starten. Das vorhandene KI-Modell und Vokabular bleiben verwendbar. Details und Testfälle: [Minecraft-Freigaben](docs/index.html#/chatfilter/minecraft-freigaben).
 
 Ab v4.4.2 ergänzt die neue Version beim Start und beim Laden der Konfiguration auch die vorhandenen YAML-Dateien um fehlende Schlüssel und aktuelle Standardkommentare. Das gilt auf dem Proxy für `general.yml`, `messages.yml`, `screens.yml`, `broadcasts.yml` und `gui.yml`, auf den Bridges zusätzlich für `chatfilter.yml`. Eigene Werte, Texte, Listen, Zusatzschlüssel und lokale Verbindungsdaten bleiben erhalten; Strafen und Datenbankbestände werden dabei nicht geändert. Vor jeder tatsächlichen Dateianpassung entsteht daneben eine Sicherung mit der Endung `.vor-config-update.bak`. Fehlerhafte oder leere Dateien bleiben unverändert und werden im Log gemeldet. Nach erfolgreichem Abgleich wird bei unverändertem Stand nicht erneut geschrieben. Details: [automatischer Config-Abgleich](docs/index.html#/config-uebersicht/config-abgleich).
 
