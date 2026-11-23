@@ -129,7 +129,7 @@ public final class ChatfilterKonfiguration {
             FileConfiguration proxy = YamlConfiguration.loadConfiguration(sync);
             boolean übernommen = false;
             for (String pfad : List.of("chatfilter.aktiv", "chatfilter.schwelle", "chatfilter.ki-timeout-ms",
-                    "chatfilter.max-zeichen", "chatfilter.klartext-uebertragen")) {
+                    "chatfilter.max-zeichen", "chatfilter.klartext-uebertragen", "chatfilter.ki-freigaben")) {
                 if (proxy.contains(pfad)) {
                     ziel.set(pfad, proxy.get(pfad));
                     übernommen = true;
@@ -245,6 +245,10 @@ public final class ChatfilterKonfiguration {
             return 500;
         }
         return Math.min(2000, Math.max(50, wert));
+    }
+
+    public List<String> kiFreigaben() {
+        return List.copyOf(konfiguration.getStringList("chatfilter.ki-freigaben"));
     }
 
     public String bypassPermission() {

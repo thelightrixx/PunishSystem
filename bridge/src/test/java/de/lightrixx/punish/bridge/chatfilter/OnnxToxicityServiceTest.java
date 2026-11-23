@@ -19,6 +19,29 @@ class OnnxToxicityServiceTest {
     })
     void nativeInferenzUndSoftmaxLaufenOhneExternesModell(float sauber, float toxisch, double erwartet,
             @org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner) throws Exception {
+        var datei = schreibeTestModell(sauber, toxisch, ordner);
+        var tokenizer = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "hallo"), 16);
+        try (var dienst = OnnxToxicityService.laden(datei.toFile(), tokenizer, 500)) {
+            assertEquals(erwartet, dienst.bewerte("hallo"), 1e-9);
+            assertEquals(erwartet, dienst.bewerte(""), 1e-9);
+        }
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"NaN,0", "0,NaN", "Infinity,0", "0,-Infinity"})
+    void nichtEndlicheLogitsWerdenAlsModellfehlerAbgewiesen(float sauber, float toxisch,
+            @org.junit.jupiter.api.io.TempDir java.nio.file.Path ordner) throws Exception {
+        var datei = schreibeTestModell(sauber, toxisch, ordner);
+        var tokenizer = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "hallo"), 16);
+        try (var dienst = OnnxToxicityService.laden(datei.toFile(), tokenizer, 500)) {
+            assertThrows(de.lightrixx.punish.chatfilter.ChatfilterAusfall.class, () -> dienst.bewerte("hallo"));
+        }
+    }
+
+    private static java.nio.file.Path schreibeTestModell(float sauber, float toxisch, java.nio.file.Path ordner)
+            throws Exception {
         // ONNX IR 8: drei int64-Eingaben [1,tokens], konstante float-Logits [1,2].
         // Die letzten acht Bytes sind die beiden Logits als little-endian float32.
         byte[] modell = java.util.Base64.getDecoder().decode(
@@ -28,13 +51,7 @@ class OnnxToxicityServiceTest {
                         + "QgZsb2dpdHNKCAAAAAAAAAAA");
         java.nio.ByteBuffer.wrap(modell, modell.length - 8, 8).order(java.nio.ByteOrder.LITTLE_ENDIAN)
                 .putFloat(sauber).putFloat(toxisch);
-        var datei = Files.write(ordner.resolve("test.onnx"), modell);
-        var tokenizer = BertWordPieceTokenizer.ausZeilen(
-                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "hallo"), 16);
-        try (var dienst = OnnxToxicityService.laden(datei.toFile(), tokenizer, 500)) {
-            assertEquals(erwartet, dienst.bewerte("hallo"), 1e-9);
-            assertEquals(erwartet, dienst.bewerte(""), 1e-9);
-        }
+        return Files.write(ordner.resolve("test.onnx"), modell);
     }
 
     @org.junit.jupiter.params.ParameterizedTest
@@ -93,6 +110,41 @@ class OnnxToxicityServiceTest {
             assertTrue(toxisch >= 0.7d, "Toxisch erwartet, war " + toxisch);
             assertTrue(sauber <= 0.3d, "Sauber erwartet, war " + sauber);
             assertTrue(millis < 150L, "Zu langsam: " + millis + "ms");
+        }
+    }
+
+    @Test
+    void echteInferenz_minecraftFreigabenLassenBeleidigungenWeiterPruefen() throws Exception {
+        var tokenizer = BertWordPieceTokenizer.ausZeilen(
+                Files.readAllLines(vocabDatei().toPath(), StandardCharsets.UTF_8), 128);
+        var config = org.mockito.Mockito.mock(ChatfilterKonfiguration.class);
+        org.mockito.Mockito.when(config.aktiv()).thenReturn(true);
+        org.mockito.Mockito.when(config.modusFuer(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(ChatfilterKonfiguration.Modus.KI);
+        org.mockito.Mockito.when(config.schwelle()).thenReturn(0.7d);
+        org.mockito.Mockito.when(config.kiTimeoutMillis()).thenReturn(5000L);
+        org.mockito.Mockito.when(config.bypassPermission()).thenReturn("punish.chatfilter.bypass");
+        try (var reader = new java.io.InputStreamReader(
+                java.util.Objects.requireNonNull(getClass().getResourceAsStream("/config/chatfilter.yml")),
+                StandardCharsets.UTF_8)) {
+            var standard = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(reader);
+            org.mockito.Mockito.when(config.kiFreigaben()).thenReturn(standard.getStringList("chatfilter.ki-freigaben"));
+        }
+        var spieler = org.mockito.Mockito.mock(org.bukkit.entity.Player.class);
+        try (var filter = new ChatfilterService(config,
+                new de.lightrixx.punish.chatfilter.WortlistenFilter(List.of("hurensohn")),
+                OnnxToxicityService.laden(modellDatei(), tokenizer, 500),
+                (uuid, name, text, treffer) -> fail("Keine nachgelagerte Meldung erwartet."))) {
+            for (String text : List.of("xpfarm", "-xpfarm", "XPFARM!", "XP-Farm", "redstone", "creeper")) {
+                assertTrue(filter.pruefeChat(spieler, text).isEmpty(), text);
+            }
+            for (String text : List.of("xpfarm du bist ein Idiot", "Du bist ein Idiot xpfarm")) {
+                assertEquals(de.lightrixx.punish.chatfilter.TrefferQuelle.KI,
+                        filter.pruefeChat(spieler, text).orElseThrow().quelle(), text);
+            }
+            assertEquals(de.lightrixx.punish.chatfilter.TrefferQuelle.WORTLISTE,
+                    filter.pruefeChat(spieler, "xpfarm du Hurensohn").orElseThrow().quelle());
+            assertTrue(filter.pruefeChat(spieler, "Hey, willkommen auf dem Server!").isEmpty());
         }
     }
 }

@@ -13,16 +13,21 @@ import org.bukkit.entity.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.Normalizer;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class ChatfilterService implements AutoCloseable {
 
@@ -31,6 +36,7 @@ public final class ChatfilterService implements AutoCloseable {
     private static final int MAX_CACHE = 1000;
     private static final int MAX_AUSSTEHEND = 50;
     private static final long KI_PAUSE_MILLIS = 5L * 60L * 1000L;
+    private static final Pattern FREIGABE_TRENNER = Pattern.compile("[^\\p{L}\\p{N}]+");
 
     static volatile java.util.function.BooleanSupplier serverThreadPruefer =
             ChatfilterService::istServerThread;
@@ -42,6 +48,7 @@ public final class ChatfilterService implements AutoCloseable {
     private final ChatfilterKonfiguration konfiguration;
     private volatile WortlistenFilter wortliste;
     private final ToxizitaetsModell modell;
+    private final Set<String> kiFreigaben;
     private final TrefferMelder melder;
     private final ExecutorService kiPool;
     private final AtomicInteger ausstehend = new AtomicInteger();
@@ -63,6 +70,10 @@ public final class ChatfilterService implements AutoCloseable {
         this.konfiguration = Objects.requireNonNull(konfiguration, "Die Konfiguration darf nicht null sein.");
         this.wortliste = wortliste;
         this.modell = modell;
+        this.kiFreigaben = konfiguration.kiFreigaben().stream()
+                .map(ChatfilterService::normalisiereKiFreigabe)
+                .filter(text -> !text.isEmpty())
+                .collect(Collectors.toUnmodifiableSet());
         this.melder = Objects.requireNonNull(melder, "Der Melder darf nicht null sein.");
         this.kiPool = new java.util.concurrent.ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
@@ -188,7 +199,7 @@ public final class ChatfilterService implements AutoCloseable {
         if (stufe1.isPresent()) {
             return stufe1;
         }
-        if (modusEffektiv(FilterKanal.CHAT) != Modus.KI || modell == null) {
+        if (modusEffektiv(FilterKanal.CHAT) != Modus.KI || modell == null || istKiFreigabe(text)) {
             return Optional.empty();
         }
         String hash = TextHash.sha256Hex(text);
@@ -250,7 +261,7 @@ public final class ChatfilterService implements AutoCloseable {
         if (stufe1.isPresent()) {
             return stufe1;
         }
-        if (modusEffektiv(kanal) != Modus.KI || modell == null) {
+        if (modusEffektiv(kanal) != Modus.KI || modell == null || istKiFreigabe(text)) {
             return Optional.empty();
         }
         String hash = TextHash.sha256Hex(text);
@@ -284,7 +295,7 @@ public final class ChatfilterService implements AutoCloseable {
         if (text == null || text.isBlank() || modell == null) {
             return;
         }
-        if (modusEffektiv(kanal) != Modus.KI) {
+        if (modusEffektiv(kanal) != Modus.KI || istKiFreigabe(text)) {
             return;
         }
         if (ausstehend.incrementAndGet() > MAX_AUSSTEHEND) {
@@ -303,7 +314,7 @@ public final class ChatfilterService implements AutoCloseable {
                     bewertung = gecacht;
                 } else {
                     try {
-                        bewertung = modell.bewerte(kopie);
+                        bewertung = bewerteModell(kopie);
                     } catch (ChatfilterAusfall e) {
                         zaehleKiFehler("nachgelagert", e);
                         return;
@@ -349,6 +360,15 @@ public final class ChatfilterService implements AutoCloseable {
         return !umgeht(spieler);
     }
 
+    private boolean istKiFreigabe(String text) {
+        return !kiFreigaben.isEmpty() && kiFreigaben.contains(normalisiereKiFreigabe(text));
+    }
+
+    private static String normalisiereKiFreigabe(String text) {
+        String normalisiert = Normalizer.normalize(text, Normalizer.Form.NFKC).toLowerCase(Locale.ROOT);
+        return FREIGABE_TRENNER.matcher(normalisiert).replaceAll(" ").strip();
+    }
+
     private Optional<FilterTreffer> trefferStufe1(FilterKanal kanal, String text) {
         WortlistenFilter liste = wortliste;
         if (liste == null) {
@@ -371,26 +391,44 @@ public final class ChatfilterService implements AutoCloseable {
         }
         Future<Double> zukunft;
         try {
-            zukunft = kiPool.submit(() -> modell.bewerte(text));
+            zukunft = kiPool.submit(() -> bewerteModell(text));
         } catch (Exception e) {
             ausstehend.decrementAndGet();
             throw new ChatfilterAusfall("KI-Pool nicht verfügbar (Fail-Open).", e);
         }
         try {
             Double bewertung = zukunft.get(konfiguration.kiTimeoutMillis(), TimeUnit.MILLISECONDS);
-            if (bewertung == null || Double.isNaN(bewertung)) {
-                throw new ChatfilterAusfall("KI lieferte keine Bewertung.");
-            }
-            return Math.min(1.0d, Math.max(0.0d, bewertung));
-        } catch (ChatfilterAusfall e) {
+            return bewertung;
+        } catch (InterruptedException e) {
             zukunft.cancel(true);
-            throw e;
-        } catch (Exception e) {
+            Thread.currentThread().interrupt();
+            throw new ChatfilterAusfall("KI-Prüfung unterbrochen (Fail-Open).", e);
+        } catch (java.util.concurrent.ExecutionException e) {
+            if (e.getCause() instanceof ChatfilterAusfall ausfall) {
+                throw ausfall;
+            }
+            throw new ChatfilterAusfall("KI-Bewertung fehlgeschlagen (Fail-Open).", e.getCause());
+        } catch (java.util.concurrent.TimeoutException e) {
             zukunft.cancel(true);
             throw new ChatfilterAusfall("KI-Timeout nach " + konfiguration.kiTimeoutMillis() + "ms.", e);
         } finally {
             ausstehend.decrementAndGet();
         }
+    }
+
+    private double bewerteModell(String text) {
+        double bewertung;
+        try {
+            bewertung = modell.bewerte(text);
+        } catch (ChatfilterAusfall e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new ChatfilterAusfall("KI-Bewertung fehlgeschlagen (Fail-Open).", e);
+        }
+        if (!Double.isFinite(bewertung) || bewertung < 0.0d || bewertung > 1.0d) {
+            throw new ChatfilterAusfall("KI lieferte eine ungültige Bewertung: " + bewertung);
+        }
+        return bewertung;
     }
 
     @Override

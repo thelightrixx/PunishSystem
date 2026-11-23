@@ -278,8 +278,19 @@ chatfilter:
   # Diese Werte werden per Text-Sync an alle Bridges verteilt und gewinnen
   # dort gegen config/chatfilter.yml (lokale Datei = nur Fallback vor dem
   # ersten Sync). Hier pflegen, nicht auf den Backends.
-  # schwelle: KI-Schwelle 0..1 (Standard 0.7, kalibriert).
+  # schwelle: KI-Score 0..1 (Standard 0.7), keine verlässliche Wahrscheinlichkeit.
   schwelle: 0.7
+  # Vollständige Nachrichten aus dieser Liste werden nur gegen die Wortliste
+  # geprüft. Groß-/Kleinschreibung und Satzzeichen sind dabei egal: "-xpfarm"
+  # und "xpfarm!" entsprechen "xpfarm". Zusätzlicher Text bleibt KI-pflichtig;
+  # "xpfarm du Idiot" wird NICHT freigegeben. Sperrwortliste hat immer Vorrang.
+  # Eigene Begriffe/Phrasen ergänzen; [] schaltet KI-Freigaben ab. Nach Änderung
+  # /punish-reload auf dem Proxy ausführen (Text-Sync an verbundene Bridges).
+  ki-freigaben: [xpfarm, xp-farm, erfahrungsfarm, mobfarm, mob-farm, creeperfarm,
+    creeper-farm, endermanfarm, enderman-farm, eisenfarm, goldfarm, slimefarm,
+    raidfarm, guardianfarm, redstone, creeper, enderman, spawner, cobblestone,
+    deepslate, netherite, netherit, elytra, shulker, wither, villager, nether,
+    overworld, pvp, pve, afk]
   # ki-timeout-ms: Max. KI-Wartezeit pro Nachricht, 20..5000 (Standard 150).
   ki-timeout-ms: 150
   # max-zeichen: Max. Zeichen für die KI, 50..2000 (Standard 500).

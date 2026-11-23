@@ -4,11 +4,11 @@
 # Ordner: plugins/PunishSystemBridge/config/
 # Hybrid-Filter: Stufe 1 Wortliste (sofort, exakt) + Stufe 2 KI
 # (lokales ONNX-Modell, offline, keine Cloud).
-# Ablauf: Bypass-Recht? -> Stufe 1 (Wortliste) -> Stufe 2 (KI).
+# Ablauf: Bypass-Recht? -> Wortliste -> KI-Freigabe? -> KI.
 # Treffer werden geblockt und an den Proxy gemeldet. Der Proxy
 # zählt Treffer pro Spieler und fährt die Staffel (Velocity-config).
 #
-# PROXY-ONLY: aktiv, schwelle, ki-timeout-ms, max-zeichen und kanaele
+# PROXY-ONLY: aktiv, schwelle, ki-freigaben, ki-timeout-ms, max-zeichen und kanaele
 # stehen auf dem Proxy (general.yml, chatfilter.*) und werden per Text-Sync
 # verteilt (Proxy-Master). Lokale chatfilter.yml ist nur Fallback vor Sync.
 # bypass-permission und Dateinamen bleiben lokal.
@@ -30,6 +30,16 @@ chatfilter:
   # Wird per Text-Sync vom Proxy (general.yml chatfilter.klartext-uebertragen)
   # überschrieben, lokale Datei ist nur Fallback vor Sync.
   klartext-uebertragen: true
+
+  # Fallback vor dem Proxy-Sync; zentral in general.yml des Proxys pflegen.
+  # Nur vollständige Nachrichten freigeben, Satzzeichen und Schreibweise egal.
+  # Zusätzlicher Text bleibt KI-pflichtig; Sperrwortliste hat immer Vorrang.
+  # [] deaktiviert KI-Freigaben. Diese erzeugen keine Meldung und keinen Staffel-Treffer.
+  ki-freigaben: [xpfarm, xp-farm, erfahrungsfarm, mobfarm, mob-farm, creeperfarm,
+    creeper-farm, endermanfarm, enderman-farm, eisenfarm, goldfarm, slimefarm,
+    raidfarm, guardianfarm, redstone, creeper, enderman, spawner, cobblestone,
+    deepslate, netherite, netherit, elytra, shulker, wither, villager, nether,
+    overworld, pvp, pve, afk]
 
   # Optionale Filter-Ausnahmen für Befehle (z. B. ["/msg", "/r"]).
   # Wortliste+KI prüfen sonst ALLE Spieler-Befehle; Mute-Block bleibt

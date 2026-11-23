@@ -74,6 +74,50 @@ class BertWordPieceTokenizerTest {
     }
 
     @Test
+    void unicodeLeerzeichen_entsprechenNormalenLeerzeichen() {
+        for (String leerzeichen : List.of("\u00a0", "\u202f", "\u3000", "\u2028", "\t", "\n", "\r")) {
+            assertArrayEquals(tokenizer.kodiere("hallo welt"), tokenizer.kodiere("hallo" + leerzeichen + "welt"));
+        }
+    }
+
+    @Test
+    void steuerzeichen_werdenWieImReferenzTokenizerEntfernt() {
+        for (String zeichen : List.of("\u0000", "\u0007", "\u200b", "\u200d", "\ufffd")) {
+            assertArrayEquals(tokenizer.kodiere("hallo welt"), tokenizer.kodiere("ha" + zeichen + "llo welt"));
+        }
+    }
+
+    @Test
+    void zerlegteUmlaute_werdenKanonischZusammengesetzt() {
+        var klein = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "schön"), 16);
+        assertArrayEquals(new int[]{2, 4, 3}, klein.kodiere("scho\u0308n"));
+    }
+
+    @Test
+    void japanischUndKoreanisch_werdenNichtAlsChinesischeEinzelzeichenGetrennt() {
+        var klein = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "あい", "가나"), 16);
+        assertArrayEquals(new int[]{2, 4, 5, 3}, klein.kodiere("あい 가나"));
+    }
+
+    @Test
+    void chinesischeErweiterungszeichen_werdenAlsGanzeCodepointsGetrennt() {
+        var klein = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "hallo"), 16);
+        assertArrayEquals(new int[]{2, 1, 4, 1, 3}, klein.kodiere("\ud840\udc00hallo\ud840\udc01"));
+    }
+
+    @Test
+    void minecraftBegriffe_behaltenGrossschreibungUndSatzzeichen() {
+        var klein = BertWordPieceTokenizer.ausZeilen(
+                List.of("[PAD]", "[UNK]", "[CLS]", "[SEP]", "xpfarm", "-", "XP", "Farm"), 16);
+        assertArrayEquals(new int[]{2, 4, 3}, klein.kodiere("xpfarm"));
+        assertArrayEquals(new int[]{2, 5, 4, 3}, klein.kodiere("-xpfarm"));
+        assertArrayEquals(new int[]{2, 6, 5, 7, 3}, klein.kodiere("XP-Farm"));
+    }
+
+    @Test
     void langtext_wirdGekuerzt() {
         String text = "Hallo Welt ".repeat(200);
         assertEquals(128, tokenizer.kodiere(text).length);

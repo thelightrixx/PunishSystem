@@ -124,7 +124,7 @@ public final class OnnxToxicityService implements ToxizitaetsModell, AutoCloseab
                 eingaben.put(EINGABE_TYPEN, typenTensor);
                 try (OrtSession.Result ergebnis = sitzung.run(eingaben)) {
                     Object wert = ergebnis.get(AUSGABE).get().getValue();
-                    if (!(wert instanceof float[][] felder) || felder.length < 1 || felder[0].length < 2) {
+                    if (!(wert instanceof float[][] felder) || felder.length != 1 || felder[0].length != 2) {
                         throw new ChatfilterAusfall("Unerwartete Modellantwort.");
                     }
                     logits = felder;
@@ -141,6 +141,9 @@ public final class OnnxToxicityService implements ToxizitaetsModell, AutoCloseab
     }
 
     private static double softmaxToxisch(float[][] logits) {
+        if (!Float.isFinite(logits[0][0]) || !Float.isFinite(logits[0][1])) {
+            throw new ChatfilterAusfall("KI lieferte ungültige Logits.");
+        }
         double max = Math.max(logits[0][0], logits[0][1]);
         double sauber = Math.exp(logits[0][0] - max);
         double toxisch = Math.exp(logits[0][1] - max);

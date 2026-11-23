@@ -510,7 +510,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite des Handbuchs"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Handbuch</small></button>
-  <span class="ver">v4.4.2</span>
+  <span class="ver">v4.5.0</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Handbuch durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -532,7 +532,7 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.4.2 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.5.0 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
       <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
@@ -557,7 +557,7 @@ details>div{padding:14px 18px 2px}
       <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
-  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-22">22.11.2026</time> · v4.4.2 · Velocity und Paper/Purpur</p>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-23">23.11.2026</time> · v4.5.0 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -693,13 +693,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.2">Release v4.4.2</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0">Release v4.5.0</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.4.2-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.4.2-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.4.2-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.5.0-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.5.0-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.5.0-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -709,9 +709,9 @@ details>div{padding:14px 18px 2px}
   <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
   <h3>Windows PowerShell</h3>
   <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
-  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.2-velocity.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.2-bridge.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.2-bridge-1.21.jar
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-bridge-1.21.jar
 Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
   <h3>Linux und macOS</h3>
   <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
@@ -2307,6 +2307,11 @@ history:
   auto-download: true
   modell-url: ""
   schwelle: 0.7
+  ki-freigaben: [xpfarm, xp-farm, erfahrungsfarm, mobfarm, mob-farm, creeperfarm,
+    creeper-farm, endermanfarm, enderman-farm, eisenfarm, goldfarm, slimefarm,
+    raidfarm, guardianfarm, redstone, creeper, enderman, spawner, cobblestone,
+    deepslate, netherite, netherit, elytra, shulker, wither, villager, nether,
+    overworld, pvp, pve, afk]
   ki-timeout-ms: 150
   max-zeichen: 500
   kanaele:
@@ -2315,7 +2320,7 @@ history:
     schild: "stufe1"
     buch: "stufe1"
     amboss: "stufe1"</pre>
-      <p>Siehe <a href="#/chatfilter">Chatfilter</a>. <code>modell-sync</code> verteilt Modell und Vokabular automatisch an die Bridges, <code>auto-download</code> lädt <code>vocab.txt</code> beim ersten Start im Hintergrund nach (nur bei <code>aktiv: true</code>, der Proxy-Start wartet nicht). <code>modell-url</code> bleibt leer, außer das Modell soll von einer eigenen Adresse kommen. Mit <code>klartext-uebertragen: false</code> meldet die Bridge nur Text-Hashes (Hash-only-Modus, Team-Info zeigt dann den Hash). Die Filterwerte <code>schwelle</code>, <code>ki-timeout-ms</code>, <code>max-zeichen</code> und <code>kanaele</code> werden per Sync an die Bridges verteilt und gewinnen dort gegen die lokale <code>chatfilter.yml</code>.</p>
+      <p>Siehe <a href="#/chatfilter">Chatfilter</a>. <code>modell-sync</code> verteilt Modell und Vokabular automatisch an die Bridges, <code>auto-download</code> lädt <code>vocab.txt</code> beim ersten Start im Hintergrund nach (nur bei <code>aktiv: true</code>, der Proxy-Start wartet nicht). <code>modell-url</code> bleibt leer, außer das Modell soll von einer eigenen Adresse kommen. Mit <code>klartext-uebertragen: false</code> meldet die Bridge nur Text-Hashes (Hash-only-Modus, Team-Info zeigt dann den Hash). Die Filterwerte <code>schwelle</code>, <code>ki-freigaben</code>, <code>ki-timeout-ms</code>, <code>max-zeichen</code> und <code>kanaele</code> werden per Sync an die Bridges verteilt und gewinnen dort gegen die lokale <code>chatfilter.yml</code>. Freigaben gelten nur für vollständige Nachrichten und lassen die Wortliste wirksam; siehe <a href="#/chatfilter/minecraft-freigaben">Minecraft-Freigaben</a>.</p>
     </div>
   </details>
 
@@ -2577,6 +2582,11 @@ chatfilter:
   auto-download: true
   modell-url: ""
   schwelle: 0.7
+  ki-freigaben: [xpfarm, xp-farm, erfahrungsfarm, mobfarm, mob-farm, creeperfarm,
+    creeper-farm, endermanfarm, enderman-farm, eisenfarm, goldfarm, slimefarm,
+    raidfarm, guardianfarm, redstone, creeper, enderman, spawner, cobblestone,
+    deepslate, netherite, netherit, elytra, shulker, wither, villager, nether,
+    overworld, pvp, pve, afk]
   ki-timeout-ms: 150
   max-zeichen: 500
   kanaele:
@@ -3047,13 +3057,14 @@ gui:
       <tr><td><code>aktiv</code></td><td><code>false</code></td><td>Zentraler Aktivierungsschalter. Der lokale Wert ist der Fallback vor dem ersten Sync.</td></tr>
       <tr><td><code>klartext-uebertragen</code></td><td><code>true</code></td><td>Überträgt zusätzlich zum Hash den gekürzten Treffertext an den eigenen Proxy. Bei false nur Hash; keine Cloud-Verarbeitung.</td></tr>
       <tr><td><code>schwelle</code></td><td><code>0.7</code></td><td>KI-Schwelle zwischen 0 und 1. Ungültige Werte verwenden 0.7.</td></tr>
+      <tr><td><code>ki-freigaben</code></td><td>31 Minecraft-Einträge</td><td>Vollständige Nachrichten von der KI ausnehmen. Satzzeichen und Groß-/Kleinschreibung werden vereinheitlicht; die Wortliste hat Vorrang. <code>[]</code> deaktiviert die Freigaben.</td></tr>
       <tr><td><code>ki-timeout-ms</code></td><td><code>150</code></td><td>20 bis 5000 Millisekunden; auf diesen Bereich begrenzt.</td></tr>
       <tr><td><code>max-zeichen</code></td><td><code>500</code></td><td>50 bis 2000 Zeichen für die KI; auf diesen Bereich begrenzt.</td></tr>
       <tr><td><code>kanaele.chat</code>, <code>kanaele.privat</code></td><td><code>ki</code></td><td>Modus je Kanal: aus, stufe1 oder ki. Für Privatnachrichten/Befehle meldet die KI nachgelagert; Stufe 1 blockiert unmittelbar.</td></tr>
       <tr><td><code>kanaele.schild</code>, <code>kanaele.buch</code>, <code>kanaele.amboss</code></td><td><code>stufe1</code></td><td>Modus je Kanal: aus, stufe1 oder ki. Ein unbekannter oder leerer Modus fällt auf stufe1 zurück.</td></tr>
     </tbody>
   </table></div>
-  <p>Nach dem Text-Sync haben die Proxy-Werte Vorrang vor gleichnamigen lokalen Einträgen. In der ausgelieferten lokalen Datei stehen die zusätzlichen Proxy-Schlüssel als Kommentare. Für eine dauerhafte Regeländerung die Proxy-Quelle bearbeiten und <code>/punish-reload</code> ausführen.</p>
+  <p>Nach dem Text-Sync haben die Proxy-Werte Vorrang vor gleichnamigen lokalen Einträgen. Die lokale Datei enthält <code>ki-freigaben</code> als Fallback; die weiteren Proxy-Schlüssel stehen als Kommentare darin. Für eine dauerhafte Regeländerung die Proxy-Quelle bearbeiten und <code>/punish-reload</code> ausführen.</p>
   <h2 data-anchor="laufzeit">Gespeicherte Laufzeitschalter</h2>
   <p><code>/chatfilter on</code> und <code>off</code> sowie <code>ai_on</code> und <code>ai_off</code> werden lokal als <code>chatfilter.laufzeit-filter</code> und <code>chatfilter.laufzeit-ki</code> gespeichert. Diese optionalen booleschen Übersteuerungen haben Vorrang und bleiben über Reloads und Neustarts erhalten. Sie gehören nicht zu den mitgelieferten Standardwerten.</p>
   <p>Wenn der Proxy den Filter einschaltet, ein Backend aber weiterhin nichts blockiert, dessen Laufzeitzustand und Bypass-Recht prüfen. Das Deaktivieren der KI lässt die Wortliste weiterlaufen. <code>/chatfilter sync</code> braucht das separate Recht <code>punish.chatfilter.sync</code>.</p>
@@ -3064,11 +3075,11 @@ gui:
 # Ordner: plugins/PunishSystemBridge/config/
 # Hybrid-Filter: Stufe 1 Wortliste (sofort, exakt) + Stufe 2 KI
 # (lokales ONNX-Modell, offline, keine Cloud).
-# Ablauf: Bypass-Recht? -&gt; Stufe 1 (Wortliste) -&gt; Stufe 2 (KI).
+# Ablauf: Bypass-Recht? -&gt; Wortliste -&gt; KI-Freigabe? -&gt; KI.
 # Treffer werden geblockt und an den Proxy gemeldet. Der Proxy
 # zählt Treffer pro Spieler und fährt die Staffel (Velocity-config).
 #
-# PROXY-ONLY: aktiv, schwelle, ki-timeout-ms, max-zeichen und kanaele
+# PROXY-ONLY: aktiv, schwelle, ki-freigaben, ki-timeout-ms, max-zeichen und kanaele
 # stehen auf dem Proxy (general.yml, chatfilter.*) und werden per Text-Sync
 # verteilt (Proxy-Master). Lokale chatfilter.yml ist nur Fallback vor Sync.
 # bypass-permission und Dateinamen bleiben lokal.
@@ -3090,6 +3101,16 @@ chatfilter:
   # Wird per Text-Sync vom Proxy (general.yml chatfilter.klartext-uebertragen)
   # überschrieben, lokale Datei ist nur Fallback vor Sync.
   klartext-uebertragen: true
+
+  # Fallback vor dem Proxy-Sync; zentral in general.yml des Proxys pflegen.
+  # Nur vollständige Nachrichten freigeben, Satzzeichen und Schreibweise egal.
+  # Zusätzlicher Text bleibt KI-pflichtig; Sperrwortliste hat immer Vorrang.
+  # [] deaktiviert KI-Freigaben. Diese erzeugen keine Meldung und keinen Staffel-Treffer.
+  ki-freigaben: [xpfarm, xp-farm, erfahrungsfarm, mobfarm, mob-farm, creeperfarm,
+    creeper-farm, endermanfarm, enderman-farm, eisenfarm, goldfarm, slimefarm,
+    raidfarm, guardianfarm, redstone, creeper, enderman, spawner, cobblestone,
+    deepslate, netherite, netherit, elytra, shulker, wither, villager, nether,
+    overworld, pvp, pve, afk]
 
   # Optionale Filter-Ausnahmen für Befehle (z. B. ["/msg", "/r"]).
   # Wortliste+KI prüfen sonst ALLE Spieler-Befehle; Mute-Block bleibt
@@ -3180,7 +3201,8 @@ chatfilter:
   <ol>
     <li><strong>Bypass-Recht?</strong> Spieler mit <code>punish.chatfilter.bypass</code> werden nie geprüft.</li>
     <li><strong>Stufe 1, Wortliste:</strong> Regelbasierter Abgleich normalisierter Texte. Ein Treffer wird sofort blockiert.</li>
-    <li><strong>Stufe 2, KI:</strong> Ein lokales Sprachmodell bewertet die Nachricht und kann zusätzliche toxische Inhalte erkennen. Fehlalarme und übersehene Treffer sind möglich.</li>
+    <li><strong>Minecraft-Freigabe?</strong> Entspricht die vollständige Nachricht einem Eintrag unter <code>ki-freigaben</code>, endet die Prüfung ohne KI-Treffer. Die Wortliste wurde bereits geprüft.</li>
+    <li><strong>Stufe 2, KI:</strong> Ein lokales Sprachmodell bewertet die übrigen Nachrichten und kann zusätzliche toxische Inhalte erkennen. Fehlalarme und übersehene Treffer sind möglich. Der angezeigte Score ist keine verlässliche Wahrscheinlichkeit, dass eine Nachricht beleidigend ist.</li>
   </ol>
   <p>Sofort erkannte Treffer werden blockiert und dem Proxy gemeldet. Nachgelagerte KI-Treffer werden nur gemeldet; bereits gesendete Inhalte bleiben bestehen. Der Proxy zählt beide Arten für die <strong>Staffel</strong>. Standardmäßig gibt es bei 5 Treffern in 60 Minuten eine Verwarnung; ein Mute muss zusätzlich konfiguriert werden.</p>
   <p>Seit v4.4.0 wird <a href="https://github.com/minefalo/VentureChat" target="_blank" rel="noopener">VentureChat v3.8.1</a> über den Bukkit-Chat vor dessen Versand geprüft. Wortliste, Bypass, Mutes, IP-Mutes und Freezes greifen auch dort. Normaler asynchroner Chat verwendet weiterhin die blockierende Prüfung mit KI-Zeitlimit. Wird Chat synchron ausgelöst, etwa über <code>Player.chat()</code>, blockiert die Wortliste unmittelbar; die KI meldet nachgelagert und hält den Serverthread nicht auf. Die Anbindung ist durch Regressionstests beider Bridge-Varianten geprüft; den Zusammenspiel-Test mit einem Account ohne Bypass nach dem Update auf dem eigenen Server durchführen.</p>
@@ -3237,8 +3259,28 @@ gratis vip rank</pre>
   </ul>
   <div class="callout"><div><span class="ttl">Grenzen</span><p>Die Wortliste fängt nur Ausdrückliches. Umschriebene Drohungen ohne Schimpfwort erkennt auch die KI nicht zuverlässig. Das <a href="#/reports">Report-System</a> bleibt deshalb nötig.</p></div></div>
 
+  <h2 data-anchor="minecraft-freigaben">Minecraft-Freigaben gegen KI-Fehlalarme</h2>
+  <p>Seit v4.5.0 stehen in <code>chatfilter.ki-freigaben</code> auf dem Proxy 31 harmlose Minecraft-Begriffe, darunter <code>xpfarm</code>, <code>xp-farm</code>, <code>redstone</code>, <code>creeper</code> und verschiedene Farmtypen. Du kannst die Liste um eigene Begriffe oder vollständige Phrasen ergänzen. Nach einer Änderung <code>/punish-reload</code> auf dem Proxy ausführen; verbundene Bridges erhalten die Liste per Text-Sync. Eine ausdrücklich leere Liste <code>[]</code> schaltet die Freigaben ab.</p>
+  <p>Die Freigabe vergleicht die <strong>vollständige, ungekürzte Nachricht</strong>. Unicode-Schreibvarianten und Groß-/Kleinschreibung werden vereinheitlicht, Satzzeichen und Leerzeichen als Worttrenner behandelt. Sie ist keine Teilwortsuche und entfernt keine Begriffe aus längeren Nachrichten. Freigegebene Texte erzeugen weder eine KI-Meldung noch einen Staffel-Treffer; die Sperrwortliste, Mutes und Freezes bleiben wirksam.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Nachricht</th><th>Verhalten bei Standardfreigaben</th></tr></thead>
+    <tbody>
+      <tr><td><code>xpfarm</code>, <code>-xpfarm</code>, <code>XPFARM!</code></td><td>Nach der Wortliste freigegeben, keine KI-Prüfung.</td></tr>
+      <tr><td><code>XP-Farm</code>, <code>xp farm</code></td><td>Entsprechen dem Eintrag <code>xp-farm</code>; nach der Wortliste freigegeben.</td></tr>
+      <tr><td><code>xpfarm du bist ein Idiot</code></td><td>Die gesamte Nachricht wird durch die KI geprüft. Der Begriff schafft keine Ausnahme für Zusatztext.</td></tr>
+      <tr><td><code>xpfarm du Hurensohn</code></td><td>Die Standard-Sperrwortliste blockiert sofort.</td></tr>
+      <tr><td><code>xpfarm123</code>, <code>meine xpfarm</code></td><td>Keine passende vollständige Freigabe; die KI prüft wie bisher.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Der Befund wurde mit dem vorhandenen Originalmodell nachgestellt: Für <code>xpfarm</code> lieferte es lokal etwa 99,5 %, für <code>-xpfarm</code> etwa 30 %. Die Freigaben verhindern daraus entstehende Treffer unabhängig vom Modellwert. Das Modell wird dabei nicht neu trainiert; andere Nachrichten können weiterhin falsch bewertet werden.</p>
+  <ol>
+    <li>Proxy und alle Bridges auf v4.5.0 aktualisieren und regulär neu starten. Die neue Option wird beim Config-Abgleich ergänzt, wenn sie fehlt; vorhandene eigene Listen bleiben erhalten.</li>
+    <li>Mit einem Account ohne Bypass <code>xpfarm</code>, <code>-xpfarm</code> und <code>XP-Farm</code> im Backend-Chat prüfen. Sie müssen bei unveränderter Wortliste durchgehen, ohne Team-Meldung oder Staffel-Treffer.</li>
+    <li>Mit einem abgesprochenen Testtext prüfen, dass zusätzliche Wörter und explizite Sperrwortlisten-Treffer weiter erkannt werden. <code>/chatfilter test</code> prüft nur die zentrale Wortliste, keine KI oder Freigabe.</li>
+  </ol>
+
   <h2>Einstellungen der Bridge</h2>
-  <p>Datei <code>config/chatfilter.yml</code> auf jedem Backend. <code>aktiv</code>, <code>schwelle</code>, <code>ki-timeout-ms</code>, <code>max-zeichen</code>, <code>kanaele</code> und <code>klartext-uebertragen</code> kommen aus dem synchronisierten Proxy-Stand. <code>befehl-ausnahmen</code>, <code>bypass-permission</code>, Dateinamen und die gespeicherten Laufzeitschalter bleiben lokal. Änderungen an lokalen Einstellungen benötigen einen Bridge-Neustart oder einen vom Proxy ausgelösten Reload.</p>
+  <p>Datei <code>config/chatfilter.yml</code> auf jedem Backend. <code>aktiv</code>, <code>schwelle</code>, <code>ki-freigaben</code>, <code>ki-timeout-ms</code>, <code>max-zeichen</code>, <code>kanaele</code> und <code>klartext-uebertragen</code> kommen aus dem synchronisierten Proxy-Stand. <code>befehl-ausnahmen</code>, <code>bypass-permission</code>, Dateinamen und die gespeicherten Laufzeitschalter bleiben lokal. Änderungen an lokalen Einstellungen benötigen einen Bridge-Neustart oder einen vom Proxy ausgelösten Reload.</p>
   <div class="tbl"><table>
     <thead><tr><th>Schlüssel</th><th>Standard</th><th>Bedeutung</th></tr></thead>
     <tbody>
@@ -3247,6 +3289,7 @@ gratis vip rank</pre>
       <tr><td><code>befehl-ausnahmen</code></td><td><code>[]</code></td><td>Befehle, die Wortliste und KI nie prüfen (z. B. <code>["/msg", "/r"]</code>). Leer = keine Ausnahme. Der Mute-Block bleibt eine Verbieten-Liste.</td></tr>
       <tr><td><code>bypass-permission</code></td><td><code>punish.chatfilter.bypass</code></td><td>Wer sie hat, wird nie geprüft</td></tr>
       <tr><td><code>schwelle</code></td><td><code>0.7</code></td><td>KI-Wert von 0 bis 1, ab dem eine Nachricht als Treffer gilt (Proxy-Master, per Sync verteilt). Höher bedeutet weniger Fehlalarme, aber mehr rutscht durch. Niedriger fängt mehr, blockt aber öfter Harmloses.</td></tr>
+      <tr><td><code>ki-freigaben</code></td><td>31 Minecraft-Einträge</td><td>Vollständige Nachrichten von der KI ausnehmen; die Wortliste hat Vorrang. <code>[]</code> deaktiviert die Freigaben (Proxy-Master, per Sync verteilt).</td></tr>
       <tr><td><code>ki-timeout-ms</code></td><td><code>150</code></td><td>Maximale Wartezeit der KI pro Nachricht, 20 bis 5000 (Proxy-Master, per Sync verteilt). Wird sie überschritten, geht die Nachricht durch.</td></tr>
       <tr><td><code>max-zeichen</code></td><td><code>500</code></td><td>Längere Texte werden für die KI gekürzt, 50 bis 2000 (Proxy-Master, per Sync verteilt)</td></tr>
       <tr><td><code>wortliste-datei</code>, <code>modell-datei</code>, <code>vocab-datei</code></td><td><code>wortliste.txt</code>, <code>modell_int8.onnx</code>, <code>vocab.txt</code></td><td>Dateinamen im Ordner <code>chatfilter/</code></td></tr>
@@ -3422,7 +3465,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
-  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.2">v4.4.2</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0">v4.5.0</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
   <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
   <ol class="steps">
     <li><strong>Skript auf dem Proxy prüfen</strong>
@@ -3507,13 +3550,24 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <div class="command-tools" role="search" aria-label="Changelog filtern">
     <label for="changelogFilter">Versionen filtern</label>
     <div class="command-filter-row">
-      <input id="changelogFilter" type="search" placeholder="z. B. v4.4.2, Config oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
+      <input id="changelogFilter" type="search" placeholder="z. B. v4.5.0, Chatfilter oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
       <button type="button" id="changelogReset">Zurücksetzen</button>
     </div>
     <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">12 von 12 Versionen</p>
+    <p id="changelogCount" role="status">13 von 13 Versionen</p>
   </div>
   <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+  <h2 data-anchor="v4-5-0">v4.5.0</h2>
+  <p><time datetime="2026-11-23">23.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>Minecraft-Freigaben:</strong> Die neue Proxy-Option <code>chatfilter.ki-freigaben</code> schützt vollständige harmlose Begriffe wie <code>xpfarm</code>, <code>XP-Farm</code> und <code>redstone</code> vor KI-Fehlalarmen. Die Vorgabe enthält 31 Einträge. Groß-/Kleinschreibung und Satzzeichen werden vereinheitlicht; <code>-xpfarm</code> und <code>xpfarm!</code> sind ebenfalls frei.</li>
+    <li><strong>Begrenzte Ausnahmen:</strong> Zusätzlicher Text bleibt vollständig KI-pflichtig, die Sperrwortliste hat Vorrang. Freigaben erzeugen weder Meldungen noch Staffel-Treffer und gelten auch für die nachgelagerte Prüfung. Eigene Listen und <code>[]</code> bleiben beim Config-Abgleich erhalten; der Proxy-Stand hat per Text-Sync Vorrang.</li>
+    <li><strong>Textaufbereitung korrigiert:</strong> Unicode-Leerzeichen, unsichtbare Steuerzeichen, zerlegte Umlaute und chinesische Erweiterungszeichen werden entsprechend der Modellreferenz verarbeitet. Japanisch und Koreanisch werden nicht mehr fälschlich wie chinesische Einzelzeichen getrennt.</li>
+    <li><strong>Ungültige KI-Werte:</strong> NaN, Unendlich und Scores außerhalb von 0 bis 1 werden als Ausfall behandelt und weder als Treffer noch im Cache gespeichert. Modellfehler, Zeitüberschreitungen und Unterbrechungen werden unterschieden.</li>
+    <li><strong>Regressionstests:</strong> Minecraft-Begriffe, zusätzliche Beleidigungen, Wortlisten-Vorrang, Proxy-Sync, leere Listen und ungültige Modellantworten sind in beiden Bridge-Varianten geprüft; die lokale Prüfung umfasst auch das vorhandene echte ONNX-Modell.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.5.0 aktualisieren und regulär neu starten. Die neue Freigabeliste wird ergänzt, wenn der Schlüssel fehlt; eigene Listen werden nicht erweitert. Danach Änderungen zentral in der Proxy-<code>general.yml</code> pflegen und mit <code>/punish-reload</code> verteilen. Modell, Vokabular, Permissions und Datenbankschema bleiben kompatibel. Die KI kann bei anderen Nachrichten weiterhin Fehlalarme erzeugen; ein hoher Score ist keine verlässliche Wahrscheinlichkeit. Siehe <a href="#/chatfilter/minecraft-freigaben">Minecraft-Freigaben und Testfälle</a>.</p>
 
   <h2 data-anchor="v4-4-2">v4.4.2</h2>
   <p><time datetime="2026-11-22">22.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.2" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3778,7 +3832,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
         <li>Hat der Spieler das Bypass-Recht <code>punish.chatfilter.bypass</code>?</li>
         <li>Steht der Kanal in <code>kanaele</code> auf <code>aus</code>?</li>
         <li>Wurde der Filter zur Laufzeit mit <code>/chatfilter off</code> ausgeschaltet?</li>
-        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.4.2 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
+        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.5.0 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
       </ul>
     </div>
   </details>
@@ -3788,7 +3842,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </details>
   <details>
     <summary>Zu viele harmlose Nachrichten werden blockiert</summary>
-    <div><p>In der <code>general.yml</code> des Proxys die <code>schwelle</code> schrittweise erhöhen, zum Beispiel von 0.7 auf 0.8; synchronisierte Werte haben Vorrang vor der lokalen Bridge-Datei. Außerdem die Wortliste auf zu kurze oder zu allgemeine Einträge prüfen.</p></div>
+    <div><p>Zuerst die Trefferquelle prüfen: Bei Wortlisten-Treffern zu kurze oder zu allgemeine Sperreinträge korrigieren. Bei KI-Fehlalarmen für vollständige harmlose Begriffe <code>chatfilter.ki-freigaben</code> auf dem Proxy prüfen und gezielt ergänzen; <a href="#/chatfilter/minecraft-freigaben">Minecraft-Freigaben</a> erklärt Grenzen und Tests. Für andere Texte die <code>schwelle</code> bei Bedarf schrittweise erhöhen, etwa von 0.7 auf 0.8. Auch sehr hohe Scores können falsch sein. Nach Änderungen <code>/punish-reload</code> auf dem Proxy ausführen; synchronisierte Werte haben Vorrang vor der lokalen Bridge-Datei.</p></div>
   </details>
 
   <h2>Konfiguration</h2>

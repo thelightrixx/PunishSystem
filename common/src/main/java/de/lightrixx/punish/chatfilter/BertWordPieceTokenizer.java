@@ -1,5 +1,6 @@
 package de.lightrixx.punish.chatfilter;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -100,16 +101,25 @@ public final class BertWordPieceTokenizer {
 
     static List<String> basisTokenisiere(String text) {
         StringBuilder mitAbstand = new StringBuilder(text.length() + 8);
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
+        for (int i = 0; i < text.length();) {
+            int c = text.codePointAt(i);
+            i += Character.charCount(c);
+            if (c == '\t' || c == '\n' || c == '\r' || Character.isSpaceChar(c)) {
+                mitAbstand.append(' ');
+                continue;
+            }
+            int typ = Character.getType(c);
+            if (c == 0 || c == 0xFFFD || typ == Character.CONTROL || typ == Character.FORMAT) {
+                continue;
+            }
             if (istCjk(c)) {
-                mitAbstand.append(' ').append(c).append(' ');
+                mitAbstand.append(' ').appendCodePoint(c).append(' ');
             } else {
-                mitAbstand.append(c);
+                mitAbstand.appendCodePoint(c);
             }
         }
         List<String> woerter = new ArrayList<>();
-        for (String teil : mitAbstand.toString().split("\\s+")) {
+        for (String teil : Normalizer.normalize(mitAbstand, Normalizer.Form.NFC).split("\\s+")) {
             if (teil.isEmpty()) {
                 continue;
             }
@@ -121,16 +131,17 @@ public final class BertWordPieceTokenizer {
     private static List<String> anSatzzeichenTeilen(String teil) {
         List<String> ergebnis = new ArrayList<>();
         StringBuilder aktuell = new StringBuilder();
-        for (int i = 0; i < teil.length(); i++) {
-            char c = teil.charAt(i);
+        for (int i = 0; i < teil.length();) {
+            int c = teil.codePointAt(i);
+            i += Character.charCount(c);
             if (istSatzzeichen(c)) {
                 if (!aktuell.isEmpty()) {
                     ergebnis.add(aktuell.toString());
                     aktuell.setLength(0);
                 }
-                ergebnis.add(String.valueOf(c));
+                ergebnis.add(new String(Character.toChars(c)));
             } else {
-                aktuell.append(c);
+                aktuell.appendCodePoint(c);
             }
         }
         if (!aktuell.isEmpty()) {
@@ -139,7 +150,7 @@ public final class BertWordPieceTokenizer {
         return ergebnis;
     }
 
-    private static boolean istSatzzeichen(char c) {
+    private static boolean istSatzzeichen(int c) {
         if ((c >= 33 && c <= 47) || (c >= 58 && c <= 64)
                 || (c >= 91 && c <= 96) || (c >= 123 && c <= 126)) {
             return true;
@@ -153,10 +164,11 @@ public final class BertWordPieceTokenizer {
                 || Character.getType(c) == Character.OTHER_PUNCTUATION;
     }
 
-    private static boolean istCjk(char c) {
+    private static boolean istCjk(int c) {
         return (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0x3400 && c <= 0x4DBF)
                 || (c >= 0xF900 && c <= 0xFAFF)
-                || (c >= 0x3040 && c <= 0x309F) || (c >= 0x30A0 && c <= 0x30FF)
-                || (c >= 0xAC00 && c <= 0xD7AF);
+                || (c >= 0x20000 && c <= 0x2A6DF) || (c >= 0x2A700 && c <= 0x2B73F)
+                || (c >= 0x2B740 && c <= 0x2B81F) || (c >= 0x2B820 && c <= 0x2CEAF)
+                || (c >= 0x2F800 && c <= 0x2FA1F);
     }
 }

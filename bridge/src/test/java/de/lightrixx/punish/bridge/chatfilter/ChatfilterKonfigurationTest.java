@@ -179,6 +179,42 @@ class ChatfilterKonfigurationTest {
     }
 
     @Test
+    void minecraftFreigabenWerdenBeiBestehenderKonfigurationErgaenzt() throws Exception {
+        when(plugin.getResource("config/chatfilter.yml")).thenAnswer(aufruf ->
+                getClass().getResourceAsStream("/config/chatfilter.yml"));
+        schreibeConfig("chatfilter:\n  aktiv: true\n");
+        konfiguration.laden();
+        assertTrue(konfiguration.kiFreigaben().contains("xpfarm"));
+        assertTrue(konfiguration.kiFreigaben().contains("redstone"));
+        String inhalt = Files.readString(datenOrdner.toPath().resolve("config/chatfilter.yml"));
+        assertTrue(inhalt.contains("ki-freigaben:"));
+        assertTrue(inhalt.contains("xpfarm"));
+    }
+
+    @Test
+    void eigeneUndLeereFreigabenBleibenBeimConfigAbgleichErhalten() throws Exception {
+        when(plugin.getResource("config/chatfilter.yml")).thenAnswer(aufruf ->
+                getClass().getResourceAsStream("/config/chatfilter.yml"));
+        schreibeConfig("chatfilter:\n  ki-freigaben: [meinserver]\n");
+        konfiguration.laden();
+        assertEquals(java.util.List.of("meinserver"), konfiguration.kiFreigaben());
+        schreibeConfig("chatfilter:\n  ki-freigaben: []\n");
+        konfiguration.laden();
+        assertTrue(konfiguration.kiFreigaben().isEmpty());
+    }
+
+    @Test
+    void proxyFreigabenUndLeereListeHabenVorrangVorLokal() throws Exception {
+        schreibeConfig("chatfilter:\n  ki-freigaben: [lokal]\n");
+        schreibeProxySync("chatfilter:\n  ki-freigaben: [xpfarm, xp-farm]\n");
+        konfiguration.laden();
+        assertEquals(java.util.List.of("xpfarm", "xp-farm"), konfiguration.kiFreigaben());
+        schreibeProxySync("chatfilter:\n  ki-freigaben: []\n");
+        konfiguration.laden();
+        assertTrue(konfiguration.kiFreigaben().isEmpty());
+    }
+
+    @Test
     void dateiAufloesen_relativUndAbsolut() {
         File relativ = konfiguration.dateiAufloesen("wortliste.txt");
         assertEquals(new File(new File(datenOrdner, "chatfilter"), "wortliste.txt"), relativ);
