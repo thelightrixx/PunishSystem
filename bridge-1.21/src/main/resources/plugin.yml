@@ -233,8 +233,8 @@ commands:
     permission: punish.deleteip
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
   punish-version:
-    description: Zeigt die PunishSystem-Version des Netzwerks (wird an den Proxy weitergeleitet).
-    usage: /punish-version
+    description: Zeigt Proxy- und Server-Version (wird an den Proxy weitergeleitet).
+    usage: /punish-version [server|proxy]
     aliases: [psversion]
     permission: punish.version
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."

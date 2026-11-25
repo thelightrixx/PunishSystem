@@ -76,7 +76,7 @@ public final class PunishHelpCommand extends PunishCommand {
             new Eintrag("punish-update (psupdate)", "check|apply|confirm|status", Permissions.PUNISH_UPDATE.node()),
             new Eintrag("punish-diagnostics (psdiagnostics)", "", Permissions.PUNISH_DIAGNOSTICS.node()),
             new Eintrag("punish-vpn (psvpn)", "check <IP>|status", Permissions.PUNISH_VPN.node()),
-            new Eintrag("punish-version (psversion)", "", Permissions.PUNISH_VERSION.node()),
+            new Eintrag("punish-version (psversion)", "[server|proxy]", Permissions.PUNISH_VERSION.node()),
             new Eintrag("punish-help (pshelp)", "", Permissions.PUNISH_HELP.node()));
 
     public PunishHelpCommand(MessageService messageService,

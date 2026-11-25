@@ -206,7 +206,8 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
             case "pscheck" -> args.length == 1 ? spielerVorschlag(sender, aktuell) : List.of();
             case "alts" -> alts(args, aktuell, sender);
             case "punish-delete-ip", "psdelete-ip", "psdeleteip" -> deleteIp(sender, aktuell);
-            case "punish-version", "psversion" -> List.of();
+            case "punish-version", "psversion" -> args.length <= 1
+                    ? TabHinweis.filtere(List.of("server", "proxy"), aktuell) : List.of();
             case "punish-help", "pshelp" -> List.of();
             case "chatfilter" -> chatfilter(args, aktuell);
             case "punish-stats", "psstats" -> args.length <= 1

@@ -343,4 +343,72 @@ class VelocityUpdateBefehlTest {
             verteilung.schliessen();
         }
     }
+
+    private static AuftragsPlaner sofortPlaner() {
+        var planer = Mockito.mock(AuftragsPlaner.class);
+        org.mockito.stubbing.Answer<Object> sofort = inv -> {
+            inv.<Runnable>getArgument(0).run();
+            return null;
+        };
+        Mockito.doAnswer(sofort).when(planer).aufgabe(Mockito.any(Runnable.class));
+        Mockito.doAnswer(sofort).when(planer).aufgabeAsync(Mockito.any(Runnable.class));
+        return planer;
+    }
+
+    private static VelocityUpdateBefehl bauePruefBefehl(MessageService nachrichten, String version,
+                                                        java.util.Map<String, String> serverVersionen) {
+        var befehl = new VelocityUpdateBefehl(nachrichten, githubConfig("Release"),
+                Mockito.mock(ProtectionService.class), Mockito.mock(PlayerCache.class), sofortPlaner(),
+                Mockito.mock(SpielerVerzeichnis.class), () -> version);
+        if (serverVersionen != null) {
+            var kanal = Mockito.mock(BrueckenKanal.class);
+            Mockito.when(kanal.bridgeVersionen()).thenReturn(serverVersionen);
+            befehl.setBrueckenKanal(kanal);
+        }
+        return befehl;
+    }
+
+    @Test
+    void checkMeldetAbweichendeServerVersionen() throws Exception {
+        String version = "4.5.1";
+        var nachrichten = Mockito.mock(MessageService.class);
+        var befehl = bauePruefBefehl(nachrichten, version,
+                java.util.Map.of("lobby", "v4.5.1", "survival", "v4.5.0"));
+        befehl.setHttpAbruf(githubAntwort(release(version, false, false), summen(version)));
+        var sender = Mockito.mock(de.lightrixx.punish.core.BefehlsSender.class);
+
+        befehl.ausfuehren(sender, new String[]{"check"});
+
+        Mockito.verify(nachrichten).senden(Mockito.eq(sender),
+                Mockito.eq(de.lightrixx.punish.core.MessageKeys.UPDATE_SERVER_ABWEICHEND),
+                Mockito.argThat(map -> "survival=4.5.0".equals(map.get("detail"))));
+        Mockito.verify(nachrichten, Mockito.never()).senden(Mockito.eq(sender),
+                Mockito.eq(de.lightrixx.punish.core.MessageKeys.UPDATE_AKTUELL), Mockito.anyMap());
+    }
+
+    @Test
+    void checkOhneAbweichungMeldetAktuell() throws Exception {
+        String version = "4.5.1";
+        var nachrichten = Mockito.mock(MessageService.class);
+        var befehl = bauePruefBefehl(nachrichten, version,
+                java.util.Map.of("lobby", "v4.5.1"));
+        befehl.setHttpAbruf(githubAntwort(release(version, false, false), summen(version)));
+        var sender = Mockito.mock(de.lightrixx.punish.core.BefehlsSender.class);
+
+        befehl.ausfuehren(sender, new String[]{"check"});
+
+        Mockito.verify(nachrichten).senden(Mockito.eq(sender),
+                Mockito.eq(de.lightrixx.punish.core.MessageKeys.UPDATE_AKTUELL), Mockito.anyMap());
+        Mockito.verify(nachrichten, Mockito.never()).senden(Mockito.eq(sender),
+                Mockito.eq(de.lightrixx.punish.core.MessageKeys.UPDATE_SERVER_ABWEICHEND), Mockito.anyMap());
+    }
+
+    @Test
+    void abweichendeServerIgnoriertGleicheUndUnbekannteVersionen() {
+        assertEquals("survival=4.5.0", VelocityUpdateBefehl.abweichendeServer(java.util.Map.of(
+                "lobby", "v4.5.1", "survival", "v4.5.0", "alt", "unbekannt"), "v4.5.1"));
+        assertEquals("", VelocityUpdateBefehl.abweichendeServer(java.util.Map.of(), "v4.5.1"));
+        assertEquals("", VelocityUpdateBefehl.abweichendeServer(
+                java.util.Map.of("lobby", "v4.5.1"), "unbekannt"));
+    }
 }

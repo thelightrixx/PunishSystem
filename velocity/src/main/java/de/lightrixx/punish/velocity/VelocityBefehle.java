@@ -361,7 +361,8 @@ public final class VelocityBefehle {
         registrar(manager, plugin, proxy, messageService, "punish-update", List.of("psupdate"), update);
         registrar(manager, plugin, proxy, messageService, "punish-version", List.of("psversion"),
                 new PunishVersionCommand(messageService, config, protectionService, playerCache,
-                        verzeichnis, () -> proxyVersion(proxy)));
+                        verzeichnis, () -> proxyVersion(proxy),
+                        () -> kanal == null ? Map.of() : kanal.bridgeVersionen()));
         registrar(manager, plugin, proxy, messageService, "punish-help", List.of("pshelp"),
                 new PunishHelpCommand(messageService, config, protectionService, playerCache,
                         verzeichnis));

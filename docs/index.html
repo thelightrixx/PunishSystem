@@ -510,7 +510,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite des Handbuchs"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Handbuch</small></button>
-  <span class="ver">v4.5.0</span>
+  <span class="ver">v4.5.1</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Handbuch durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -532,7 +532,7 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.5.0 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.5.1 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
       <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
@@ -557,7 +557,7 @@ details>div{padding:14px 18px 2px}
       <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
-  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-25">25.11.2026</time> · v4.5.0 · Velocity und Paper/Purpur</p>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-25">25.11.2026</time> · v4.5.1 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -693,13 +693,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0">Release v4.5.0</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1">Release v4.5.1</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.5.0-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.5.0-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.5.0-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.5.1-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.5.1-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.5.1-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -709,9 +709,9 @@ details>div{padding:14px 18px 2px}
   <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
   <h3>Windows PowerShell</h3>
   <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
-  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-velocity.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-bridge.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-bridge-1.21.jar
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.1-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.1-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.1-bridge-1.21.jar
 Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
   <h3>Linux und macOS</h3>
   <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
@@ -1418,8 +1418,8 @@ punish-version</pre>
       <tr><td><a href="#/reports/report"><code>/report</code></a></td><td>Spieler melden</td><td><code>punish.report</code></td></tr>
       <tr><td><a href="#/reports/reports"><code>/reports</code></a></td><td>Reports bearbeiten</td><td><code>punish.reports</code></td></tr>
       <tr><td><a href="#/befehle-system/punish-reload"><code>/punish-reload</code></a></td><td>Proxy-Konfiguration und Bestände neu laden</td><td><code>punish.reload</code></td></tr>
-      <tr><td><a href="#/befehle-system/punish-update"><code>/punish-update</code></a></td><td>Updates prüfen und Dateien bereitstellen</td><td><code>punish.update</code></td></tr>
-      <tr><td><a href="#/befehle-system/punish-version"><code>/punish-version</code></a></td><td>Version anzeigen</td><td><code>punish.version</code></td></tr>
+      <tr><td><a href="#/befehle-system/punish-update"><code>/punish-update</code></a></td><td>Updates für Proxy und Bridges prüfen und Dateien bereitstellen</td><td><code>punish.update</code></td></tr>
+      <tr><td><a href="#/befehle-system/punish-version"><code>/punish-version</code></a></td><td>Proxy- und Server-Version anzeigen</td><td><code>punish.version</code></td></tr>
       <tr><td><a href="#/befehle-system/punish-help"><code>/punish-help</code></a></td><td>Für dich erlaubte Befehle anzeigen</td><td><code>punish.help</code></td></tr>
       <tr><td><a href="#/befehle-system/punish-diagnostics"><code>/punish-diagnostics</code></a></td><td>Zustand auf Proxy oder Bridge prüfen</td><td><code>punish.diagnostics</code></td></tr>
       <tr><td><a href="#/befehle-system/punish-vpn"><code>/punish-vpn</code></a></td><td>VPN-Entscheidung und Quellen prüfen</td><td><code>punish.vpn</code></td></tr>
@@ -1904,15 +1904,15 @@ punish-version</pre>
     <p class="desc">Prüft GitHub Releases und merkt geprüfte Update-Jars für die automatische Übernahme beim nächsten Start vor. Die Ausführung erfolgt auf dem Proxy.</p>
     <pre data-lang="cmd">/punish-update check|status|apply [confirm]</pre>
     <ul>
-      <li><code>check</code> fragt <code>update.github-repository</code> ab; <code>status</code> zeigt bekannte Proxy-/Bridge-Versionen, Varianten, Transferquittungen und ob der Proxy-Start-Hook aktiv ist.</li>
+      <li><code>check</code> fragt <code>update.github-repository</code> ab und vergleicht Proxy- sowie gemeldete Bridge-Versionen; <code>status</code> zeigt bekannte Proxy-/Bridge-Versionen, Varianten, Transferquittungen und ob der Proxy-Start-Hook aktiv ist.</li>
       <li><code>apply confirm</code> lädt alle drei Jars mit SHA-256-Prüfung, verteilt die passenden Bridge-Jars und legt die Proxy-Jar bereit. Nur <code>apply</code> verlangt standardmäßig die Bestätigung; <code>update.bestaetigung-fuer-apply</code> steuert diese Pflicht.</li>
       <li>Die Backends übernehmen ihre Jars beim nächsten Start aus dem konfigurierten Update-Ordner. Auf dem Linux-Proxy übernimmt ein einmalig eingerichteter Start-Hook den Austausch vor Java, auch unter Pelican/Docker. Erst die erfolgreiche Verteilung prüfen, dann neu starten. Einrichtung und Zielordner stehen unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</li>
     </ul>
   </article>
 
   <article class="cmd-card" data-cmd="/punish-version" data-alias="/psversion" data-perm="punish.version" data-scope="nein">
-    <p class="desc">Zeigt die Version von PunishSystem im Netzwerk.</p>
-    <pre data-lang="cmd">/punish-version</pre>
+    <p class="desc">Zeigt die Proxy-Version und die von den Bridges gemeldeten Server-Versionen. Mit <code>proxy</code> oder <code>server</code> lässt sich die Ausgabe einschränken.</p>
+    <pre data-lang="cmd">/punish-version [server|proxy]</pre>
   </article>
 
   <article class="cmd-card" data-cmd="/punish-help" data-alias="/pshelp" data-perm="punish.help" data-scope="nein">
@@ -2611,7 +2611,7 @@ vorschlaege:
   </details>
 
   <h2 data-anchor="standarddatei">Vollständige Standardwerte</h2>
-  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.5.0</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
+  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.5.1</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
   <details><summary>Vollständige Standardwerte der Proxy-general.yml</summary><div>
   <pre data-lang="yaml">config-version: "2026-11-01"
 befehle:
@@ -3601,7 +3601,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
-  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0">v4.4.3</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1">v4.5.1</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
   <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
   <ol class="steps">
     <li><strong>Skript auf dem Proxy prüfen</strong>
@@ -3690,9 +3690,17 @@ Verstöße: %punish_verstoss_punkte%</pre>
       <button type="button" id="changelogReset">Zurücksetzen</button>
     </div>
     <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">14 von 14 Versionen</p>
+    <p id="changelogCount" role="status">15 von 15 Versionen</p>
   </div>
   <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+  <h2 data-anchor="v4-5-1">v4.5.1</h2>
+  <p><time datetime="2026-11-25">25.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>Versionen gezielt abfragen:</strong> <code>/punish-version</code> zeigt ohne Argument die Proxy-Version und zusätzlich die von den Bridges gemeldeten Versionen der Backends. Mit <code>/punish-version proxy</code> oder <code>/punish-version server</code> lässt sich die Ausgabe auf eine Seite beschränken; beide Angaben werden per Tab vervollständigt. Ohne Bridge-Meldung nennt <code>server</code> den möglichen Grund (Bridge installiert? Spieler online?).</li>
+    <li><strong>Update-Prüfung für alle Module:</strong> <code>/punish-update check</code> vergleicht nicht mehr nur die Proxy-Version, sondern auch die gemeldeten Server-Versionen. Weicht ein Backend ab, nennt die Ausgabe Server und Version; <code>apply</code> verteilt die Bridge-Jars wie bisher.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.5.1 aktualisieren und regulär neu starten. Es gibt keine neuen Pflichtschlüssel und kein neues Datenbankschema. Die drei neuen Nachrichten <code>punish-version-server</code>, <code>punish-version-server-leer</code> und <code>punish-version-verwendung</code> werden beim Config-Abgleich in <code>messages.yml</code> ergänzt, falls sie fehlen; eigene Texte bleiben erhalten.</p>
 
   <h2 data-anchor="v4-5-0">v4.5.0</h2>
   <p><time datetime="2026-11-25">25.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3980,7 +3988,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
         <li>Hat der Spieler das Bypass-Recht <code>punish.chatfilter.bypass</code>?</li>
         <li>Steht der Kanal in <code>kanaele</code> auf <code>aus</code>?</li>
         <li>Wurde der Filter zur Laufzeit mit <code>/chatfilter off</code> ausgeschaltet?</li>
-        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.5.0 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
+        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.5.1 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
       </ul>
     </div>
   </details>

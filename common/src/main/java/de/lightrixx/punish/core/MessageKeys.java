@@ -55,6 +55,7 @@ public final class MessageKeys {
     public static final String RELOAD_LAEUFT_BEREITS = "reload-laeuft-bereits";
     public static final String UPDATE_AKTUELL = "update-aktuell";
     public static final String UPDATE_VERFUEGBAR = "update-verfuegbar";
+    public static final String UPDATE_SERVER_ABWEICHEND = "update-server-abweichend";
     public static final String UPDATE_START = "update-start";
     public static final String UPDATE_FEHLER = "update-fehler";
     public static final String UPDATE_LAEUFT_BEREITS = "update-laeuft-bereits";
@@ -66,6 +67,9 @@ public final class MessageKeys {
     public static final String UPDATE_PUSH_LAUFEND = "update-push-laufend";
     public static final String UPDATE_PUSH_FERTIG = "update-push-fertig";
     public static final String PUNISH_VERSION = "punish-version";
+    public static final String PUNISH_VERSION_SERVER = "punish-version-server";
+    public static final String PUNISH_VERSION_SERVER_LEER = "punish-version-server-leer";
+    public static final String PUNISH_VERSION_VERWENDUNG = "punish-version-verwendung";
 
     public static final String SETUP_CHECK_KOPF = "setup-check-kopf";
     public static final String SETUP_CHECK_SPEICHER = "setup-check-speicher";

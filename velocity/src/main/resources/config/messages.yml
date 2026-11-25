@@ -91,10 +91,14 @@ messages:
 
   # Version
   punish-version: "<gray>PunishSystem <white>%version% <gray>by <white>lightrixx"
+  punish-version-server: "<gray>Server <white>%server%<gray>: <white>%version%"
+  punish-version-server-leer: "<gray>Keine Bridge-Version gemeldet. Prüfe, ob die Bridge installiert und mindestens ein Spieler auf dem Backend online ist."
+  punish-version-verwendung: "<yellow>Verwendung: <white>/punish-version [server|proxy] <gray>– ohne Angabe werden Proxy und Server angezeigt."
 
   # Update (/punish-update)
   update-aktuell: "<green>PunishSystem ist aktuell (<white>%version%<green>)."
   update-verfuegbar: "<yellow>Update verfügbar: <white>%version% <yellow>(installiert: <white>%aktuell%<yellow>, Channel: <white>%channel%<yellow>). Mit <white>/punish-update apply<yellow> installieren."
+  update-server-abweichend: "<yellow>Proxy <white>%aktuell%<yellow>, Release <white>%version%<yellow>. Server-Versionen weichen ab: <white>%detail%<yellow>. Mit <white>/punish-update apply<yellow> alle Module angleichen und die Backends neu starten."
   update-start: "<gray>Update wird geladen …"
   update-fehler: "<red>Update fehlgeschlagen: <white>%detail%"
   update-laeuft-bereits: "<yellow>Es läuft bereits ein Update – bitte kurz warten."

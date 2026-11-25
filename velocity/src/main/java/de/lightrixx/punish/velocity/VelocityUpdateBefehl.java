@@ -95,13 +95,22 @@ public final class VelocityUpdateBefehl extends PunishCommand {
                     HangarUpdateService.ReleaseInfo info = pruefeGithub(konfiguration, httpAbruf);
                     letzteRemoteVersion = info.version();
                     String aktuell = aktuelleVersion();
-                    if (UpdateVergleich.neuerVerfuegbar(aktuell, info.version())) {
-                        taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_VERFUEGBAR,
-                                Map.of("version", info.version(), "aktuell", aktuell, "channel", info.channel())));
-                    } else {
-                        taskScheduler.aufgabe(() -> messageService.senden(sender, MessageKeys.UPDATE_AKTUELL,
-                                Map.of("version", aktuell)));
-                    }
+                    boolean proxyVeraltet = UpdateVergleich.neuerVerfuegbar(aktuell, info.version());
+                    String abweichend = abweichendeServer(serverVersionen(), aktuell);
+                    taskScheduler.aufgabe(() -> {
+                        if (proxyVeraltet) {
+                            messageService.senden(sender, MessageKeys.UPDATE_VERFUEGBAR,
+                                    Map.of("version", info.version(), "aktuell", aktuell, "channel", info.channel()));
+                        } else if (abweichend.isEmpty()) {
+                            messageService.senden(sender, MessageKeys.UPDATE_AKTUELL,
+                                    Map.of("version", aktuell));
+                        }
+                        if (!abweichend.isEmpty()) {
+                            messageService.senden(sender, MessageKeys.UPDATE_SERVER_ABWEICHEND,
+                                    Map.of("version", info.version(), "aktuell", aktuell,
+                                            "detail", abweichend));
+                        }
+                    });
                 } catch (Exception e) {
                     LOG.warn("Update-Check fehlgeschlagen.", e);
                     try {
@@ -118,6 +127,52 @@ public final class VelocityUpdateBefehl extends PunishCommand {
             laeuft.set(false);
             messageService.senden(sender, MessageKeys.UPDATE_FEHLER, Map.of("detail", "Scheduler geschlossen"));
         }
+    }
+
+    private Map<String, String> serverVersionen() {
+        BrueckenKanal kanal = brueckenKanal;
+        if (kanal == null) {
+            return Map.of();
+        }
+        try {
+            Map<String, String> versionen = kanal.bridgeVersionen();
+            return versionen == null ? Map.of() : versionen;
+        } catch (Exception e) {
+            LOG.debug("Bridge-Versionen konnten nicht gelesen werden.", e);
+            return Map.of();
+        }
+    }
+
+    static String abweichendeServer(Map<String, String> versionen, String proxyVersion) {
+        if (versionen == null || versionen.isEmpty()) {
+            return "";
+        }
+        String eigen = normalisiereVersion(proxyVersion);
+        if (eigen.isEmpty() || "unbekannt".equalsIgnoreCase(eigen)) {
+            return "";
+        }
+        var teile = new java.util.ArrayList<String>();
+        for (var eintrag : versionen.entrySet()) {
+            String server = eintrag.getKey();
+            String version = normalisiereVersion(eintrag.getValue());
+            if (server == null || server.isBlank() || version.isEmpty()
+                    || "unbekannt".equalsIgnoreCase(version)) {
+                continue;
+            }
+            if (!eigen.equals(version)) {
+                teile.add(server.trim() + "=" + version);
+            }
+        }
+        teile.sort(String.CASE_INSENSITIVE_ORDER);
+        return String.join(", ", teile);
+    }
+
+    private static String normalisiereVersion(String version) {
+        String wert = version == null ? "" : version.trim();
+        if (wert.startsWith("v") || wert.startsWith("V")) {
+            return wert.substring(1);
+        }
+        return wert;
     }
 
     private void wendeAnAsync(BefehlsSender sender, boolean bestaetigt) {
