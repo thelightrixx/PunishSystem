@@ -236,6 +236,19 @@ class ReportServiceTest {
     }
 
     @Test
+    void stilleReportBearbeitungBleibtInDerAkteAberIstFuerMeldungenGekennzeichnet() {
+        var service = service(0, 3, 0);
+        var akte = new java.util.ArrayList<de.lightrixx.punish.model.ReportRecord>();
+        var kennzeichen = new java.util.ArrayList<Boolean>();
+        service.beobachterHinzufuegen(akte::add);
+        service.ereignisBeobachterHinzufuegen((report, silent) -> kennzeichen.add(silent));
+        var report = service.melden(UUID.randomUUID(), "Spieler", UUID.randomUUID(), "Melder", "Spam", "lobby").report();
+        assertTrue(service.schliessen(report.id(), ReportStatus.ABGELEHNT, "Mod", "Fehlmeldung", true).isPresent());
+        assertEquals(2, akte.size());
+        assertEquals(List.of(false, true), kennzeichen);
+    }
+
+    @Test
     void selbstReportAbgelehnt() {
         ReportService service = service(0, 3, 0);
         UUID uuid = UUID.randomUUID();

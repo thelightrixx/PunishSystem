@@ -147,6 +147,7 @@ public final class TextVerteilung {
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> karte = new LinkedHashMap<>((Map<String, Object>) geladen);
+        karte.remove("discord");
         karte.remove("speicher");
         Object netzwerk = karte.get("netzwerk");
         if (netzwerk instanceof Map) {

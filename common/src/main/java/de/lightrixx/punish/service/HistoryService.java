@@ -13,6 +13,13 @@ import java.util.concurrent.TimeUnit;
 public final class HistoryService {
 
     private final HistoryRepository historyRepository;
+    public void beobachterHinzufuegen(java.util.function.BiConsumer<UUID, HistoryEntry> beobachter) {
+        historyRepository.beobachterHinzufuegen(beobachter);
+    }
+
+    public void ereignisBeobachterHinzufuegen(java.util.function.Consumer<de.lightrixx.punish.model.HistoryEreignis> beobachter) {
+        historyRepository.ereignisBeobachterHinzufuegen(beobachter);
+    }
 
     public HistoryService(HistoryRepository historyRepository) {
         this.historyRepository = Objects.requireNonNull(historyRepository,
@@ -28,6 +35,12 @@ public final class HistoryService {
     public void hinzufuegen(HistoryType typ, String ausfuehrer, UUID zielUuid,
                             String zielName, String grund, Long ablauf,
                             ServerScope scope, String herkunft) {
+        hinzufuegen(typ, ausfuehrer, zielUuid, zielName, grund, ablauf, scope, herkunft, false);
+    }
+
+    public void hinzufuegen(HistoryType typ, String ausfuehrer, UUID zielUuid,
+                            String zielName, String grund, Long ablauf,
+                            ServerScope scope, String herkunft, boolean silent) {
         Objects.requireNonNull(typ, "Der History-Typ darf nicht null sein.");
         Objects.requireNonNull(ausfuehrer, "Der Ausführende darf nicht null sein.");
         Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
@@ -35,13 +48,25 @@ public final class HistoryService {
 
         historyRepository.hinzufuegenNeu(typ, ausfuehrer, zielUuid, zielName, grund, ablauf,
                 scope == null ? ServerScope.UNBEKANNT_WERT : scope.speicherwert(),
-                herkunft);
+                herkunft, silent);
+    }
+
+    public void hinzufuegen(HistoryType typ, String ausfuehrer, UUID zielUuid,
+                            String zielName, String grund, Long ablauf, boolean silent) {
+        hinzufuegen(typ, ausfuehrer, zielUuid, zielName, grund, ablauf,
+                ServerScope.unbekannt(), ServerScope.UNBEKANNT_WERT, silent);
     }
 
     public void hinzufuegenDauerhaft(HistoryType typ, String ausfuehrer, UUID zielUuid,
                                      String zielName, String grund, Long ablauf,
                                      ServerScope scope, String herkunft) {
-        hinzufuegen(typ, ausfuehrer, zielUuid, zielName, grund, ablauf, scope, herkunft);
+        hinzufuegenDauerhaft(typ, ausfuehrer, zielUuid, zielName, grund, ablauf, scope, herkunft, false);
+    }
+
+    public void hinzufuegenDauerhaft(HistoryType typ, String ausfuehrer, UUID zielUuid,
+                                     String zielName, String grund, Long ablauf,
+                                     ServerScope scope, String herkunft, boolean silent) {
+        hinzufuegen(typ, ausfuehrer, zielUuid, zielName, grund, ablauf, scope, herkunft, silent);
         if (!historyRepository.warteAufPersistenz(5, TimeUnit.SECONDS)) {
             throw new IllegalStateException("History konnte nicht rechtzeitig dauerhaft gespeichert werden.");
         }
@@ -55,13 +80,24 @@ public final class HistoryService {
 
     public void hinzufuegen(HistoryType typ, String ausfuehrer, String ziel,
                             String grund, Long ablauf, ServerScope scope, String herkunft) {
+        hinzufuegen(typ, ausfuehrer, ziel, grund, ablauf, scope, herkunft, false);
+    }
+
+    public void hinzufuegen(HistoryType typ, String ausfuehrer, String ziel,
+                            String grund, Long ablauf, ServerScope scope, String herkunft, boolean silent) {
         Objects.requireNonNull(typ, "Der History-Typ darf nicht null sein.");
         Objects.requireNonNull(ausfuehrer, "Der Ausführende darf nicht null sein.");
         Objects.requireNonNull(ziel, "Das Ziel darf nicht null sein.");
 
         historyRepository.hinzufuegenNeu(typ, ausfuehrer, ziel, grund, ablauf,
                 scope == null ? ServerScope.UNBEKANNT_WERT : scope.speicherwert(),
-                herkunft);
+                herkunft, silent);
+    }
+
+    public void hinzufuegen(HistoryType typ, String ausfuehrer, String ziel,
+                            String grund, Long ablauf, boolean silent) {
+        hinzufuegen(typ, ausfuehrer, ziel, grund, ablauf,
+                ServerScope.unbekannt(), ServerScope.UNBEKANNT_WERT, silent);
     }
 
     public List<HistoryEntry> findeSpielerHistory(UUID zielUuid, int limit) {

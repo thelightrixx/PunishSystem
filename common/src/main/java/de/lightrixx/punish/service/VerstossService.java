@@ -160,7 +160,7 @@ public final class VerstossService {
 
         try {
             historyService.hinzufuegen(HistoryType.VERSTOSS_ADD, ausfuehrer, zielUuid, zielName,
-                    "[" + effektiveStufe.schluessel() + "] " + grund, null);
+                    "[" + effektiveStufe.schluessel() + "] " + grund, null, silent);
         } catch (Exception e) {
             LOG.warn("Verstoß-Add-History für {} konnte nicht geschrieben werden (Verstoß bleibt bestehen).",
                     zielUuid, e);
@@ -172,7 +172,7 @@ public final class VerstossService {
                         + effektiveStufe.schluessel());
 
         if (punkte >= 0 && punkte >= maximum) {
-            boolean autoErfolg = autoBannService.autoBann(zielUuid, zielName, ausfuehrer, punkte, maximum);
+            boolean autoErfolg = autoBannService.autoBann(zielUuid, zielName, ausfuehrer, punkte, maximum, silent);
             if (!autoErfolg) {
                 LOG.info(
                         "Auto-Bann für {} (Punkte {}/{}) nicht vollzogen (bereits aktiv/geschützt).",
@@ -220,7 +220,7 @@ public final class VerstossService {
         try {
             historyService.hinzufuegen(HistoryType.VERSTOSS_REMOVE, ausfuehrer, zielUuid, zielName,
                     "Entfernt (Nr. " + nummer + ", Stufe: " + entfernt.get().stufe().schluessel()
-                            + ", Grund war: " + entfernt.get().grund() + ")", null);
+                            + ", Grund war: " + entfernt.get().grund() + ")", null, silent);
         } catch (Exception e) {
             LOG.warn("Verstoß-Remove-History für {} konnte nicht geschrieben werden.", zielUuid, e);
         }
@@ -231,7 +231,7 @@ public final class VerstossService {
                         + ", Grund war: " + entfernt.get().grund());
 
         if (punkte < maximum && istAutoBannAktiv(zielUuid)) {
-            autoBannService.autoPardonAufheben(zielUuid, zielName, ausfuehrer);
+            autoBannService.autoPardonAufheben(zielUuid, zielName, ausfuehrer, silent);
         }
         return true;
     }
@@ -264,7 +264,7 @@ public final class VerstossService {
         try {
             historyService.hinzufuegen(HistoryType.VERSTOSS_EDIT, ausfuehrer, zielUuid, zielName,
                     "Bearbeitet (Nr. " + nummer + ", Stufe: " + bearbeitet.get().stufe().schluessel()
-                            + ", Grund: " + neuerGrund + ")", null);
+                            + ", Grund: " + neuerGrund + ")", null, silent);
         } catch (Exception e) {
             LOG.warn("Verstoß-Edit-History für {} konnte nicht geschrieben werden (Edit bleibt wirksam).",
                     zielUuid, e);
@@ -279,13 +279,13 @@ public final class VerstossService {
             int maximum = snapshot.maxPunkte();
             int punkte = punkteOhneCleanup(zielUuid);
             if (punkte >= maximum) {
-                boolean autoErfolg = autoBannService.autoBann(zielUuid, zielName, ausfuehrer, punkte, maximum);
+                boolean autoErfolg = autoBannService.autoBann(zielUuid, zielName, ausfuehrer, punkte, maximum, silent);
                 if (!autoErfolg) {
                     LOG.info("Auto-Bann nach Verstoß-Edit für {} (Punkte {}/{}) nicht vollzogen.",
                             zielUuid, punkte, maximum);
                 }
             } else if (istAutoBannAktiv(zielUuid)) {
-                autoBannService.autoPardonAufheben(zielUuid, zielName, ausfuehrer);
+                autoBannService.autoPardonAufheben(zielUuid, zielName, ausfuehrer, silent);
             }
         } catch (Exception e) {
             LOG.warn("Auto-Bann-Re-Evaluierung nach Verstoß-Edit für {} fehlgeschlagen.", zielUuid, e);
@@ -310,7 +310,7 @@ public final class VerstossService {
             int punkte = punkteOhneCleanup(zielUuid);
             if (punkte >= maximum) {
                 boolean autoErfolg = autoBannService.autoBann(zielUuid,
-                        zielName == null ? "" : zielName, ausfuehrer, punkte, maximum);
+                        zielName == null ? "" : zielName, ausfuehrer, punkte, maximum, false);
                 if (!autoErfolg) {
                     LOG.info("Auto-Bann-Re-Evaluierung für {} (Punkte {}/{}) nicht vollzogen.",
                             zielUuid, punkte, maximum);
@@ -359,7 +359,7 @@ public final class VerstossService {
                     LOG.debug("Verstoß-Name für Re-Evaluierung unlesbar.", e);
                 }
                 if (autoBannService.autoBann(zielUuid, zielName, ausfuehrer,
-                        punkteOhneCleanup(zielUuid), maximum)) {
+                        punkteOhneCleanup(zielUuid), maximum, false)) {
                     ausgeloest++;
                 }
             } catch (Exception e) {
@@ -391,7 +391,7 @@ public final class VerstossService {
 
         try {
             historyService.hinzufuegen(HistoryType.RESET, ausfuehrer, zielUuid, zielName,
-                    "Alle Verstöße gelöscht (" + entfernt.size() + ")", null);
+                    "Alle Verstöße gelöscht (" + entfernt.size() + ")", null, silent);
         } catch (Exception e) {
             LOG.warn("Verstoß-Reset-History für {} konnte nicht geschrieben werden.", zielUuid, e);
         }
@@ -401,7 +401,7 @@ public final class VerstossService {
                 "Alle Verstöße gelöscht: " + entfernt.size());
 
         if (istAutoBannAktiv(zielUuid)) {
-            autoBannService.autoPardonAufheben(zielUuid, zielName, ausfuehrer);
+            autoBannService.autoPardonAufheben(zielUuid, zielName, ausfuehrer, silent);
         }
         return entfernt.size();
     }
@@ -500,7 +500,7 @@ public final class VerstossService {
                 historyService.hinzufuegen(HistoryType.VERSTOSS_REMOVE, "System", zielUuid,
                         record.spielerName(),
                         "Verfallen (Nr. " + record.nummer() + ", Stufe: " + record.stufe().schluessel()
-                                + ", Grund war: " + record.grund() + ")", null);
+                                + ", Grund war: " + record.grund() + ")", null, false);
             } catch (Exception e) {
                 LOG.warn("Verfall-History für {} (#{} ) konnte nicht geschrieben werden.",
                         zielUuid, record.nummer(), e);

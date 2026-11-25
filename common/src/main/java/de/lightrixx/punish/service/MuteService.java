@@ -153,7 +153,7 @@ public final class MuteService {
 
         try {
             historyService.hinzufuegen(HistoryType.MUTE, ausfuehrer, zielUuid, zielName, grund, ablaufAm,
-                    wirksam, herkunftNorm);
+                    wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Mute-History für {} konnte nicht geschrieben werden (Mute bleibt aktiv).", zielUuid, e);
         }
@@ -183,7 +183,7 @@ public final class MuteService {
             try {
                 historyService.hinzufuegen(HistoryType.UNMUTE, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,
-                        scope, normiereHerkunft(herkunft));
+                        scope, normiereHerkunft(herkunft), silent);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }
@@ -211,7 +211,7 @@ public final class MuteService {
         try {
             historyService.hinzufuegen(HistoryType.UNMUTE, ausfuehrer, zielUuid, zielName,
                     "Aufgehoben (Grund war: " + entfernt.get().grund() + ")", null,
-                    entfernt.get().scope(), herkunftNorm);
+                    entfernt.get().scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Unmute-History für {} konnte nicht geschrieben werden (Entmutung bleibt wirksam).", zielUuid, e);
         }
@@ -285,7 +285,7 @@ public final class MuteService {
 
         try {
             historyService.hinzufuegen(HistoryType.MUTE_EDIT, ausfuehrer, zielUuid, zielName,
-                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm);
+                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Mute-Edit-History für {} konnte nicht geschrieben werden (Mute bleibt aktiv).", zielUuid, e);
         }
@@ -364,7 +364,7 @@ public final class MuteService {
             try {
                 historyService.hinzufuegen(HistoryType.MUTE_ALL, ausfuehrer,
                         record.spielerUuid(), record.spielerName(), grund, ablaufAm,
-                        record.scope(), herkunftNorm);
+                        record.scope(), herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("MUTE_ALL-History für {} fehlgeschlagen (Mute bleibt aktiv).", record.spielerUuid(), e);
             }
@@ -440,7 +440,7 @@ public final class MuteService {
             try {
                 historyService.hinzufuegen(HistoryType.UNMUTE_ALL, ausfuehrer,
                         record.spielerUuid(), record.spielerName(), grund, null,
-                        record.scope(), herkunftNorm);
+                        record.scope(), herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("UNMUTE_ALL-History für {} konnte nicht geschrieben werden.", record.spielerUuid(), e);
             }
@@ -611,14 +611,14 @@ public final class MuteService {
             try {
                 historyService.hinzufuegen(HistoryType.UNMUTE, "System", vorabUuid, vorab.spielerName(),
                         "Vorab-Mute auf " + echterName + " (" + echteUuid + ") migriert", null,
-                        vorab.scope(), ServerScope.UNBEKANNT_WERT);
+                        vorab.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Migrations-History (alt) fehlgeschlagen.", e);
             }
             try {
                 historyService.hinzufuegen(HistoryType.MUTE, vorab.ausfuehrer(), echteUuid, echterName,
                         vorab.grund() + " (Vorab-Mute migriert)", neu.ablaufAm(),
-                        neu.scope(), ServerScope.UNBEKANNT_WERT);
+                        neu.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Migrations-History (neu) fehlgeschlagen.", e);
             }
@@ -662,7 +662,7 @@ public final class MuteService {
                 try {
                     historyService.hinzufuegen(HistoryType.UNMUTE, ausfuehrer, rec.spielerUuid(),
                             rec.spielerName(), "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                            rec.scope(), ServerScope.UNBEKANNT_WERT);
+                            rec.scope(), ServerScope.UNBEKANNT_WERT, false);
                 } catch (Exception e) {
                     LOG.warn("Ablauf-History für {} konnte nicht geschrieben werden.", rec.spielerUuid(), e);
                 }

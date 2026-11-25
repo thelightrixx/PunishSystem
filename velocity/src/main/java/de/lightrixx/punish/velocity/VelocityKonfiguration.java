@@ -305,6 +305,23 @@ public final class VelocityKonfiguration implements Konfiguration {
         return Karten.wahr(abschnitt("chatfilter"), "team-info", false);
     }
 
+    public boolean chatfilterBeobachten() {
+        return Karten.wahr(abschnitt("chatfilter"), "beobachten", false);
+    }
+
+    public int chatfilterPruefungAufbewahrungTage() {
+        return (int) Math.clamp(Karten.zahl(abschnitt("chatfilter"), "pruefung-aufbewahrung-tage", 7), 1, 365);
+    }
+
+    Map<String, Object> moderationsAbschnitt(String schluessel) {
+        return Map.copyOf(abschnitt(schluessel));
+    }
+
+    @Override
+    public List<String> strafkatalogRegeln() {
+        return Strafkatalog.lesen(moderationsAbschnitt("strafkatalog")).keySet().stream().sorted().toList();
+    }
+
     public boolean chatfilterKlartextUbertragen() {
         java.util.Map<String, Object> abschnitt = abschnitt("chatfilter");
         if (!abschnitt.containsKey("klartext-uebertragen")) {

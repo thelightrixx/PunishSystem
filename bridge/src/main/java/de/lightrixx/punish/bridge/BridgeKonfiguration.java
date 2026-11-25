@@ -40,7 +40,7 @@ public final class BridgeKonfiguration implements Konfiguration {
     private static final List<String> GENERAL_KEYS = List.of(
             "prefix", "netzwerk", "befehle", "anzeige-zone", "schutz", "offline-resolution",
             "speicher", "verstoesse", "limits", "bestaetigungen", "history", "mute", "tab",
-            "vorschlaege", "defaults", "reports", "rang-buendel", "rang-gewicht",
+            "vorschlaege", "defaults", "reports", "rang-buendel", "rang-gewicht", "strafkatalog",
             "config-version");
 
     private final JavaPlugin plugin;
@@ -60,6 +60,13 @@ public final class BridgeKonfiguration implements Konfiguration {
         } catch (Exception e) {
             return new File("plugins/PunishSystemBridge/config-sync");
         }
+    }
+
+    @Override
+    public List<String> strafkatalogRegeln() {
+        var regeln = konfiguration.getConfigurationSection("strafkatalog.regeln");
+        return regeln == null ? List.of() : regeln.getKeys(false).stream()
+                .map(id -> id.toLowerCase(java.util.Locale.ROOT)).sorted().toList();
     }
 
     public BridgeKonfiguration(JavaPlugin plugin) {

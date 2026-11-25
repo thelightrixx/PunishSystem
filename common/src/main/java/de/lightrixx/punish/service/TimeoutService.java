@@ -174,7 +174,7 @@ public final class TimeoutService {
             }
             try {
                 historyService.hinzufuegen(HistoryType.TIMEOUT, ausfuehrer, zielUuid, zielName, grund, ablaufAm,
-                        wirksam, herkunftNorm);
+                        wirksam, herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn(
                         "Timeout-History für {} konnte nicht geschrieben werden (Timeout bleibt aktiv).", zielUuid, e);
@@ -334,14 +334,14 @@ public final class TimeoutService {
             try {
                 historyService.hinzufuegen(HistoryType.UNTIMEOUT, "System", vorabUuid, vorab.spielerName(),
                         "Vorab-Timeout auf " + echterName + " (" + echteUuid + ") migriert", null,
-                        vorab.scope(), ServerScope.UNBEKANNT_WERT);
+                        vorab.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Migrations-History (alt) fehlgeschlagen.", e);
             }
             try {
                 historyService.hinzufuegen(HistoryType.TIMEOUT, vorab.ausfuehrer(), echteUuid, echterName,
                         vorab.grund() + " (Vorab-Timeout migriert)", neu.ablaufAm(),
-                        neu.scope(), ServerScope.UNBEKANNT_WERT);
+                        neu.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Migrations-History (neu) fehlgeschlagen.", e);
             }
@@ -374,7 +374,7 @@ public final class TimeoutService {
             try {
                 historyService.hinzufuegen(HistoryType.UNTIMEOUT, ausfuehrer, rec.spielerUuid(),
                         rec.spielerName(), "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                        rec.scope(), ServerScope.UNBEKANNT_WERT);
+                        rec.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", spielerUuid, e);
             }
@@ -419,7 +419,7 @@ public final class TimeoutService {
             try {
                 historyService.hinzufuegen(HistoryType.UNTIMEOUT, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,
-                        scope, herkunftNorm);
+                        scope, herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }
@@ -442,7 +442,7 @@ public final class TimeoutService {
         try {
             historyService.hinzufuegen(HistoryType.UNTIMEOUT, ausfuehrer, zielUuid, zielName,
                     "Timeout aufgehoben (Grund war: " + entfernt.get().grund() + ")", null,
-                    entfernt.get().scope(), herkunftNorm);
+                    entfernt.get().scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Untimeout-History für {} konnte nicht geschrieben werden (Aufhebung bleibt wirksam).", zielUuid, e);
         }
@@ -517,7 +517,7 @@ public final class TimeoutService {
             try {
                 historyService.hinzufuegen(HistoryType.TIMEOUT_ALL, ausfuehrer,
                         record.spielerUuid(), record.spielerName(), grund, ablaufAm,
-                        record.scope(), herkunftNorm);
+                        record.scope(), herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("TIMEOUT_ALL-History für {} fehlgeschlagen (Timeout bleibt aktiv).", record.spielerUuid(), e);
             }
@@ -598,7 +598,7 @@ public final class TimeoutService {
             try {
                 historyService.hinzufuegen(HistoryType.UNTIMEOUT_ALL, ausfuehrer,
                         record.spielerUuid(), record.spielerName(), grund, null,
-                        record.scope(), herkunftNorm);
+                        record.scope(), herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("UNTIMEOUT_ALL-History für {} konnte nicht geschrieben werden.", record.spielerUuid(), e);
             }
@@ -715,7 +715,7 @@ public final class TimeoutService {
 
         try {
             historyService.hinzufuegen(HistoryType.TIMEOUT_EDIT, ausfuehrer, zielUuid, zielName,
-                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm);
+                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Timeout-Edit-History für {} konnte nicht geschrieben werden (Timeout bleibt aktiv).",
                     zielUuid, e);
@@ -760,7 +760,7 @@ public final class TimeoutService {
                 try {
                     historyService.hinzufuegen(HistoryType.UNTIMEOUT, ausfuehrer, rec.spielerUuid(),
                             rec.spielerName(), "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                            rec.scope(), ServerScope.UNBEKANNT_WERT);
+                            rec.scope(), ServerScope.UNBEKANNT_WERT, false);
                 } catch (Exception e) {
                     LOG.warn("Ablauf-History für {} konnte nicht geschrieben werden.", rec.spielerUuid(), e);
                 }

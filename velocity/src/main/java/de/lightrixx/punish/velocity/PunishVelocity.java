@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "v4.4.3",
+@Plugin(id = "punishsystem", name = "PunishSystemVelocity", version = "v4.5.0",
         description = "Zentrales Bestrafungssystem mit Server-Scopes (by lightrixx).",
         authors = {"lightrixx"})
 public final class PunishVelocity {
@@ -90,6 +90,17 @@ public final class PunishVelocity {
     private volatile boolean persistenzWarnungAktiv;
     private VelocityAuftragsPlaner planer;
     private LogWriter logWriter;
+    private ModerationsDienst moderationsDienst;
+    private ChatfilterStaffelService chatfilterStaffelService;
+    private DiscordBenachrichtigung discordBenachrichtigung;
+
+    ModerationsDienst moderationsDienst() {
+        return moderationsDienst;
+    }
+
+    ChatfilterStaffelService chatfilterStaffelService() {
+        return chatfilterStaffelService;
+    }
     private AutoBannService autoBannService;
     private BrueckenKanal kanal;
     private MysqlVerbindung mysqlVerbindung;
@@ -212,6 +223,32 @@ public final class PunishVelocity {
         ReportService reportService = new ReportService(reportRepository, config,
                 historyService, broadcastService, logWriter, messageService, planer, verzeichnis);
 
+        this.chatfilterStaffelService = new ChatfilterStaffelService(config, warnService, muteService, broadcastService);
+        try {
+            var moderation = new ModerationsDienst(
+                    new ModerationsSpeicher(datenUnterOrdner, speicher, ioExecutor, mysql, "faelle"),
+                    new ModerationsSpeicher(datenUnterOrdner, new SnakeYamlSpeicher(false), ioExecutor, mysql, "chatfilter-pruefung"), config);
+            moderation.laden();
+            this.moderationsDienst = moderation;
+        } catch (RuntimeException e) {
+            logger.error("Moderationsdaten konnten nicht geladen werden. Fallverwaltung, Strafkatalog, Prüfverlauf "
+                    + "und Discord bleiben bis zur Fehlerbehebung deaktiviert.", e);
+        }
+        ModerationsDienst moderation = this.moderationsDienst;
+        if (moderation != null) {
+            historyService.beobachterHinzufuegen(moderation::historyNeu);
+            reportService.beobachterHinzufuegen(moderation::report);
+            chatfilterStaffelService.mitPruefung(moderation);
+            planer.intervallAsync(moderation::wartung, 1200L, 1200L);
+            try {
+                this.discordBenachrichtigung = new DiscordBenachrichtigung(config, moderation);
+                historyService.ereignisBeobachterHinzufuegen(discordBenachrichtigung::history);
+                reportService.ereignisBeobachterHinzufuegen(discordBenachrichtigung::report);
+            } catch (RuntimeException e) {
+                logger.error("Discord-Benachrichtigungen konnten nicht gestartet werden.", e);
+            }
+        }
+
         this.kanal = new BrueckenKanal(this, proxy, logger, muteRepository, ipMuteRepository);
         kanal.setBanRepository(banRepository);
         kanal.setTimeoutRepository(timeoutRepository);
@@ -263,6 +300,7 @@ public final class PunishVelocity {
                 banRepository, muteRepository, timeoutRepository, ipBanRepository,
                 ipMuteRepository, ipTimeoutRepository, verstossRepository, warnRepository,
                 historyService, reportService, protectionService);
+        guiDienst.mitModeration(moderationsDienst);
         try {
             guiDienst.setFreezeRepository(freezeRepository);
         } catch (Exception e) {
@@ -315,8 +353,7 @@ public final class PunishVelocity {
         strafListener.setFreezeService(freezeService);
         strafListener.setVpnBlocklistenDienst(vpnBlocklistenDienst);
         try {
-            strafListener.setChatfilterStaffel(
-                    new ChatfilterStaffelService(config, warnService, muteService, broadcastService));
+            strafListener.setChatfilterStaffel(chatfilterStaffelService);
         } catch (Exception e) {
             logger.warn("Chatfilter-Staffel konnte nicht gestartet werden (Treffer werden ignoriert).", e);
         }
@@ -483,6 +520,9 @@ public final class PunishVelocity {
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        if (discordBenachrichtigung != null) {
+            discordBenachrichtigung.close();
+        }
         logger.info("PunishSystemVelocity wird deaktiviert.");
         if (vpnBlocklistenDienst != null) {
             vpnBlocklistenDienst.close();

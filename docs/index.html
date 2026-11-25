@@ -510,7 +510,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite des Handbuchs"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><path d="M16.6 6.5 11.4 21.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>PunishSystem <small>Handbuch</small></button>
-  <span class="ver">v4.4.3</span>
+  <span class="ver">v4.5.0</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Handbuch durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -532,7 +532,7 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.4.3 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.5.0 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
       <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
@@ -557,7 +557,7 @@ details>div{padding:14px 18px 2px}
       <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
-  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-23">23.11.2026</time> · v4.4.3 · Velocity und Paper/Purpur</p>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-25">25.11.2026</time> · v4.5.0 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -693,13 +693,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.3">Release v4.4.3</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0">Release v4.5.0</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.4.3-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.4.3-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.4.3-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.5.0-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.5.0-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.5.0-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -709,9 +709,9 @@ details>div{padding:14px 18px 2px}
   <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
   <h3>Windows PowerShell</h3>
   <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
-  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.3-velocity.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.3-bridge.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.4.3-bridge-1.21.jar
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.0-bridge-1.21.jar
 Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
   <h3>Linux und macOS</h3>
   <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
@@ -1262,6 +1262,105 @@ punish-version</pre>
 
 <!-- =============================== BEFEHLSREFERENZ =============================== -->
 
+<section class="page" data-id="faelle" data-group="Moderation" data-title="Moderationsfälle und Beweise">
+  <h1>Moderationsfälle und Beweise</h1>
+  <p class="lead">Ein Fall verbindet einen Vorfall mit Reports, internen Fallnotizen, Beweislinks und Strafentscheidungen. Ein Spieler kann mehrere getrennte Fälle haben.</p>
+  <p>Neue Reports erhalten automatisch einen eigenen Fall. Bereits vorhandene Reports werden nicht nachträglich zu Fällen umgeschrieben. Die Fallliste findest du im Spieler-Dossier unter „Moderationsfälle“ oder mit <code>/punish-fall list</code>.</p>
+  <article class="cmd-card" data-cmd="/punish-fall" data-alias="/psfall" data-perm="punish.fall" data-scope="nein">
+    <p class="desc">Fälle ansehen, anlegen und bearbeiten. Zum Ändern zusätzlich <code>punish.fall.bearbeiten</code> vergeben.</p>
+    <pre data-lang="cmd">/punish-fall list [Spieler] [Seite]
+/punish-fall info &lt;Fallnummer&gt; [Seite]
+/punish-fall create &lt;Spieler&gt; &lt;Titel&gt;
+/punish-fall notiz &lt;Fallnummer&gt; &lt;Text&gt;
+/punish-fall beweis &lt;Fallnummer&gt; &lt;HTTPS-Link&gt;
+/punish-fall report &lt;Fallnummer&gt; &lt;Report-ID&gt;
+/punish-fall strafe &lt;Fallnummer&gt; &lt;History-ID&gt;
+/punish-fall close &lt;Fallnummer&gt;
+/punish-fall reopen &lt;Fallnummer&gt;</pre>
+  </article>
+  <p>Beispiel: <code>/punish-fall create Notch Spamming im Lobbychat</code>. Die zurückgegebene Nummer anschließend für Notizen und Beweislinks verwenden. Die Befehle zur Verknüpfung brauchen zusätzlich <code>punish.reports</code> beziehungsweise <code>punish.history</code>. Zielspieler und referenzierte Daten müssen zusammenpassen. Eine Verknüpfung führt keine Strafe aus.</p>
+  <p>Fallnotizen gehören zum jeweiligen Fall; die bisherigen allgemeinen Spielernotizen bleiben separat. Reports und History-Einträge werden mit ihrer ID und einer lesbaren Momentaufnahme verknüpft. Änderungen am Reportstatus werden im zugehörigen Fall ergänzt. Zum Ergänzen eines geschlossenen Falls zuerst <code>reopen</code> verwenden.</p>
+  <p>Beweislinks werden als HTTPS-Adressen ohne eingebettete Zugangsdaten gespeichert. PunishSystem lädt diese Links nicht herunter. Chatfilter-Fälle speichern nur die Prüfeintragsnummer als Beleg; Klartexte bleiben im befristeten Prüfverlauf.</p>
+  <h2>Speicher und Grenzen</h2>
+  <p>Fälle werden im gewählten Speicher-Backend abgelegt: bei YAML unter <code>data/faelle.yml</code>, bei MySQL in <code>punish_moderation</code>. Es gibt höchstens 20.000 Fälle und 500 Einträge pro Fall. Neue Katalog-Strafen benötigen Platz in einem Fall. Fälle werden nicht automatisch gelöscht. Diese Daten in Sicherungen aufnehmen; der bisherige JSON-Export ist weiterhin kein Vollbackup.</p>
+</section>
+
+<section class="page" data-id="strafkatalog" data-group="Moderation" data-title="Strafkatalog und Wiederholungsstufen">
+  <h1>Strafkatalog und Wiederholungsstufen</h1>
+  <p class="lead">Für dieselbe Regel schlägt der Katalog abhängig von früheren bestätigten Katalog-Strafen die nächste Strafstufe vor. Das Team bestätigt jede Ausführung.</p>
+  <article class="cmd-card" data-cmd="/punish-katalog" data-alias="/pskatalog" data-perm="punish.katalog" data-scope="ja">
+    <p class="desc">Öffnet einen Vorschlag mit Regel, Spieler, Stufe, Dauer und Scope. Die Bestätigung gilt 60 Sekunden und nur für den Ausführenden.</p>
+    <pre data-lang="cmd">/punish-katalog &lt;Spieler&gt; &lt;Regel-ID&gt; [fall=&lt;Fallnummer&gt;] [--global|--server=&lt;Name&gt;]
+/punish-katalog Notch spam --global
+/punish-katalog Notch spam fall=12 --server=lobby</pre>
+  </article>
+  <p>Im Dossier führt „Strafkatalog“ zur Regelauswahl. Der Klick öffnet den Vorschlag im Chat; erst der Bestätigungsklick verhängt die Strafe. Ohne Scope-Flag gilt <code>--global</code>. Verwarnungen gelten global. Stille Strafen mit <code>-s</code> sind im Katalog nicht vorgesehen.</p>
+  <p>Es zählen erfolgreiche Ausführungen dieses Katalogs je Account und stabiler Regel-ID innerhalb des Zeitfensters. Reports, reine Vorschläge, fehlgeschlagene Aktionen und Strafen über andere Befehle erhöhen diese Zählung nicht. Ein geschlossener Fall zählt weiter bis zum Ende des Zeitfensters. Nach der letzten Stufe wird diese wiederholt.</p>
+  <h2>Regeln auf dem Proxy einrichten</h2>
+  <pre data-lang="yaml">strafkatalog:
+  regeln:
+    spam:
+      grund: "Spamming"
+      fenster-tage: 30
+      stufen:
+        - { befehl: warn }
+        - { befehl: mute, dauer: "15m" }
+        - { befehl: mute, dauer: "2h" }
+        - { befehl: mute, dauer: "1d" }</pre>
+  <p>Dies ist die mitgelieferte Beispielregel. Erlaubte Strafarten: <code>warn</code>, <code>mute</code>, <code>timeout</code>, <code>ban</code>, <code>permabann</code> und <code>freeze</code>. Bei <code>warn</code> und <code>permabann</code> entfällt die Dauer. Das Zeitfenster liegt zwischen 1 und 3650 Tagen. Nach Änderungen <code>/punish-reload</code> ausführen und einen neuen Vorschlag öffnen. Die Regel-ID beim Umbenennen des sichtbaren Grundes beibehalten.</p>
+  <p>Neben <code>punish.katalog</code> wird das Recht der tatsächlichen Strafart benötigt. Rangschutz, Selbstbestrafungsschutz, Dauernlimits und Scopes werden bei der Ausführung geprüft. Geänderte Rechte, Konfiguration oder eine inzwischen erhöhte Stufe machen den alten Vorschlag ungültig. Jede Ausführung erhält einen Fall; mit <code>fall=&lt;Nr&gt;</code> kann ein passender offener Fall mit ausreichendem Platz verwendet werden. Dafür ist <code>punish.fall.bearbeiten</code> erforderlich. Pro Fall ist eine Katalog-Strafe möglich.</p>
+</section>
+
+<section class="page" data-id="chatfilter-pruefung" data-group="Moderation" data-title="Chatfilter-Prüfung und Fehlalarme">
+  <h1>Chatfilter-Prüfung und Fehlalarme</h1>
+  <p class="lead">Beanstandete Nachrichten prüfen, Fehlalarme aus der Staffelzählung nehmen und betroffene automatische Strafen gezielt korrigieren.</p>
+  <article class="cmd-card" data-cmd="/chatfilter-pruefung" data-perm="punish.chatfilter.pruefung" data-scope="nein">
+    <p class="desc">Zeigt Treffer mit Quelle, Kanal, Score, Status und verbundenen Aktionen. Zum Bewerten und Korrigieren zusätzlich <code>punish.chatfilter.pruefung.bearbeiten</code> vergeben.</p>
+    <pre data-lang="cmd">/chatfilter-pruefung list [alle|Spieler] [Seite]
+/chatfilter-pruefung info &lt;Treffer-ID&gt;
+/chatfilter-pruefung berechtigt &lt;Treffer-ID&gt;
+/chatfilter-pruefung fehlalarm &lt;Treffer-ID&gt;
+/chatfilter-pruefung korrektur &lt;Treffer-ID&gt; &lt;History-ID&gt;</pre>
+  </article>
+  <p>Ohne <code>alle</code> zeigt die Chatliste offene Treffer. Im Spieler-Dossier öffnet „Chatfilter-Prüfung“ den Verlauf des gewählten Spielers. Der KI-Score ist keine verlässliche Wahrscheinlichkeit für einen Regelverstoß.</p>
+  <ol>
+    <li>Den Treffer mit <code>info</code> öffnen und den Inhalt beurteilen.</li>
+    <li>Mit <code>berechtigt</code> bestätigen oder mit <code>fehlalarm</code> aus der Staffelzählung entfernen. Ein Fehlalarm wird nicht wieder in die Zählung aufgenommen.</li>
+    <li>Falls die verbleibenden belegten Treffer für eine ausgelöste Maßnahme nicht ausreichen, zeigt das System einen Korrekturvorschlag.</li>
+    <li>Die konkrete Verwarnung oder den Mute prüfen und die Aufhebung innerhalb von 60 Sekunden bestätigen. Dafür zusätzlich <code>punish.warn</code> beziehungsweise <code>punish.unmute</code> besitzen.</li>
+  </ol>
+  <p>Eine Korrektur hebt nur die unveränderte, noch vorhandene automatische Verwarnung beziehungsweise den aktiven Mute auf. Eine inzwischen bearbeitete, ersetzte oder abgelaufene Strafe wird nicht entfernt. Durch Warn-Eskalation entstandene Verstöße oder Auto-Banns werden als Folgeaktionen mit ihrer History-ID angezeigt und müssen gesondert in der Spielerakte geprüft und korrigiert werden. Es gibt keine automatische Kettenaufhebung.</p>
+  <h2>Aufbewahrung und Klartext</h2>
+  <pre data-lang="yaml">chatfilter:
+  pruefung-aufbewahrung-tage: 7
+  klartext-uebertragen: true
+  beobachten: false</pre>
+  <p>Standardmäßig werden nur Treffer für sieben Tage aufbewahrt, keine vollständigen Chatverläufe. Die Prüffrist ist von 1 bis 365 Tagen einstellbar. Bei <code>klartext-uebertragen: false</code> werden ausschließlich Hash und Metadaten gespeichert; bereits gespeicherte Prüftexte werden bei der Wartung entfernt. Fallverweise enthalten keinen Chattext. Die Liste enthält höchstens 20.000 Treffer; ältere Treffer werden bei Erreichen der Grenze verdrängt. Fehlende oder abgelaufene Belege erlauben keine belegabhängige Korrektur.</p>
+  <p>YAML speichert unter <code>data/chatfilter-pruefung.yml</code>, MySQL in <code>punish_moderation</code>. Der YAML-Prüfverlauf erzeugt keine internen rotierenden Sicherungskopien. Die regelmäßige Wartung löscht abgelaufene Daten. Externe Sicherungen und deren Aufbewahrung werden dadurch nicht verändert.</p>
+  <h2>Neue Einstellungen erst beobachten</h2>
+  <p>Mit <code>chatfilter.beobachten: true</code> und <code>chatfilter.aktiv: true</code> werden Wortlisten- und KI-Treffer gemeldet und zur Prüfung gespeichert. Der Filter blockiert dabei keine Inhalte und löst keine Staffel-Strafen aus. Bestehende Mutes und Freezes werden weiterhin durchgesetzt. Die Einstellung wird nach <code>/punish-reload</code> an erreichbare Bridges verteilt. Anschließend den Sync prüfen und den gewünschten Kanal mit einem Testaccount ausprobieren.</p>
+  <p>Jeder Treffer trägt das Beobachtungskennzeichen der meldenden Bridge. Beobachtungstreffer zählen auch nach einem Moduswechsel nicht als Strafauslöser. Für einen einheitlichen Stand Proxy und alle Bridges gemeinsam aktualisieren.</p>
+</section>
+
+<section class="page" data-id="discord" data-group="Erweiterungen" data-title="Discord-Team-Meldungen">
+  <h1>Discord-Team-Meldungen</h1>
+  <p class="lead">Neue Reports, Reportstatus und Ereignisse aus dem Strafverlauf können zusätzlich in einen privaten Discord-Teamkanal gemeldet werden.</p>
+  <p>Die Funktion ist ausgeschaltet, bis ein Webhook eingerichtet und aktiviert wird. Sie sendet Meldungen; ein eigener Bot ist nicht erforderlich. Discord-Befehle oder eine Fernsteuerung gehören nicht zu dieser Anbindung.</p>
+  <pre data-lang="yaml">discord:
+  aktiv: false
+  webhook-url: ""
+  ereignisse: [report, bann, mute, timeout, freeze, kick, ip, verwarnung, verstoss, aufhebung, bearbeitung]</pre>
+  <ol>
+    <li>In einem privaten Discord-Teamkanal einen eingehenden Webhook anlegen.</li>
+    <li>Dessen HTTPS-Adresse ausschließlich auf dem Proxy in <code>config/general.yml</code> unter <code>discord.webhook-url</code> eintragen. Die Adresse enthält einen geheimen Token.</li>
+    <li>Gewünschte Ereignisgruppen auswählen und <code>aktiv: true</code> setzen.</li>
+    <li><code>/punish-reload</code> ausführen und eine selbst gewählte Testmeldung im eingerichteten Kanal prüfen.</li>
+  </ol>
+  <p>Mit <code>ausgeschlossene-typen: [MUTE_ALL, WARN_EDIT, BAN_IP]</code> lassen sich zusätzlich einzelne Ereignistypen ausnehmen. Die Gruppenliste kann auf einzelne Gruppen beschränkt werden; <code>[]</code> unterdrückt alle Meldungen. IP-Strafen einschließlich ihrer Bearbeitungen und Aufhebungen gehören zur Gruppe <code>ip</code>. Andere Bearbeitungen gehören zu <code>bearbeitung</code>, andere Aufhebungen zu <code>aufhebung</code>. Fallnummern werden ergänzt, soweit die Verknüpfung beim Versand vorhanden ist.</p>
+  <p>IP-Ziele werden ausgeblendet; Prüftexte des Chatfilters werden nicht übertragen. Gründe und Teamnamen sind Teil der ausgewählten Meldungen. Mit <code>-s</code> ausgeführte Strafen und stille Report-Bearbeitungen werden auch in Discord unterdrückt. Die Akte bleibt erhalten. Automatische Erwähnungen wie <code>@everyone</code> sind deaktiviert. Die Webhook-Konfiguration wird nicht an Bridges verteilt und nicht in Verbindungsfehlern ausgegeben.</p>
+  <p>Der Versand läuft im Hintergrund, getrennt von Speicheraufträgen. Bei vorübergehenden Fehlern und Discord-Limits gibt es begrenzte Wiederholungen. Die Warteschlange ist auf 250 Meldungen begrenzt und wird beim Neustart nicht wiederhergestellt; sie ersetzt kein dauerhaftes Audit-Log. Zustellprobleme stehen ohne geheime Adresse im Proxy-Log.</p>
+</section>
+
 <section class="page" data-id="befehle" data-group="Befehlsreferenz" data-title="Befehlsübersicht">
   <h1>Befehlsübersicht</h1>
   <p class="lead">Nachschlagewerk für Syntax, Rechte, Aliase und Beispiele. Klicke auf einen Befehl in der Tabelle, um seine vollständige Beschreibung zu öffnen. <code>/punish-help</code> im Spiel zeigt nur Befehle, für die du Rechte hast.</p>
@@ -1329,6 +1428,9 @@ punish-version</pre>
       <tr><td><a href="#/chatfilter/chatfilter"><code>/chatfilter</code></a></td><td>Filter steuern; sync braucht eigenes Recht</td><td><code>punish.chatfilter</code></td></tr>
       <tr><td><a href="#/gui/punish-gui"><code>/punish-gui</code></a></td><td>Menü zur Strafauswahl öffnen</td><td><code>punish.gui</code></td></tr>
       <tr><td><a href="#/gui/punish-dossier"><code>/punish-dossier</code></a></td><td>Spieler-Dossier öffnen</td><td><code>punish.gui</code></td></tr>
+      <tr><td><a href="#/faelle"><code>/punish-fall</code></a></td><td>Fälle, Beweise und Fallnotizen</td><td><code>punish.fall</code></td></tr>
+      <tr><td><a href="#/strafkatalog"><code>/punish-katalog</code></a></td><td>Nächste Strafstufe vorschlagen und bestätigen</td><td><code>punish.katalog</code></td></tr>
+      <tr><td><a href="#/chatfilter-pruefung"><code>/chatfilter-pruefung</code></a></td><td>Treffer bewerten und Korrekturen prüfen</td><td><code>punish.chatfilter.pruefung</code></td></tr>
     </tbody>
   </table></div>
   <p id="commandEmpty" class="empty" hidden>Kein passender Befehl. Prüfe die Schreibweise oder setze den Filter zurück.</p>
@@ -2116,6 +2218,15 @@ punish-version</pre>
       <tr><td><code>punish.*</code>, <code>punish.all</code></td><td>Alle Rechte von PunishSystem.</td></tr>
     </tbody>
   </table></div>
+  <h2>Rechte für die neuen Moderationsabläufe</h2>
+  <div class="tbl"><table><thead><tr><th>Recht</th><th>Erlaubt</th></tr></thead><tbody>
+    <tr><td><code>punish.fall</code></td><td>Falllisten und Fallinhalte lesen</td></tr>
+    <tr><td><code>punish.fall.bearbeiten</code></td><td>Zusätzlich Fälle anlegen, ergänzen, schließen und öffnen</td></tr>
+    <tr><td><code>punish.katalog</code></td><td>Strafkatalog verwenden; das jeweilige Strafrecht ist zusätzlich nötig</td></tr>
+    <tr><td><code>punish.chatfilter.pruefung</code></td><td>Beanstandete Nachrichten und verbundene Aktionen lesen</td></tr>
+    <tr><td><code>punish.chatfilter.pruefung.bearbeiten</code></td><td>Zusätzlich Treffer bewerten und Korrekturen vorbereiten; das Aufhebungsrecht bleibt erforderlich</td></tr>
+  </tbody></table></div>
+  <p>Die Menüs benötigen außerdem <code>punish.gui</code>. Vorhandene selbst gepflegte Rangbündel werden nicht um neue Listeneinträge erweitert; die gewünschten Rechte dort bewusst ergänzen.</p>
 </section>
 
 <section class="page" data-id="config-general" data-group="Konfiguration und Rechte" data-title="general.yml (Proxy)">
@@ -2500,7 +2611,7 @@ vorschlaege:
   </details>
 
   <h2 data-anchor="standarddatei">Vollständige Standardwerte</h2>
-  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.4.2</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
+  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.5.0</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
   <details><summary>Vollständige Standardwerte der Proxy-general.yml</summary><div>
   <pre data-lang="yaml">config-version: "2026-11-01"
 befehle:
@@ -2537,6 +2648,21 @@ verstoesse:
     low: { dauer: "30d", punkte: 1 }
     medium: { dauer: "90d", punkte: 2 }
     high: { dauer: "365d", punkte: 3 }
+strafkatalog:
+  regeln:
+    spam:
+      grund: "Spamming"
+      fenster-tage: 30
+      stufen:
+        - { befehl: warn }
+        - { befehl: mute, dauer: "15m" }
+        - { befehl: mute, dauer: "2h" }
+        - { befehl: mute, dauer: "1d" }
+discord:
+  aktiv: false
+  webhook-url: ""
+  ereignisse: [report, bann, mute, timeout, freeze, kick, ip, verwarnung, verstoss, aufhebung, bearbeitung]
+  ausgeschlossene-typen: []
 warns:
   ablauf: 0
   eskalation:
@@ -2573,6 +2699,8 @@ reports:
   duplikat-sperre-minuten: 10
 chatfilter:
   aktiv: false
+  beobachten: false
+  pruefung-aufbewahrung-tage: 7
   fenster-minuten: 60
   staffel:
     - { anzahl: 5, aktion: warn }
@@ -2648,25 +2776,29 @@ rang-buendel:
     "punish.status", "punish.history", "punish.warn",
     "punish.mute", "punish.unmute", "punish.kick",
     "punish.reports", "punish.message.all-punishes"]
-  moderator: ["punish.report", "punish.own", "punish.help", "punish.version",
+  moderator: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes"]
-  manager: ["punish.report", "punish.own", "punish.help", "punish.version",
+  manager: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.stats", "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes"]
-  richter: ["punish.report", "punish.own", "punish.help", "punish.version",
+  richter: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.stats", "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.pardon", "punish.message.all-punishes"]
-  admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+  admin: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
@@ -2680,7 +2812,8 @@ rang-buendel:
     "punish.verstoss.edit", "punish.verstoss.clear",
     "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
     "punish.undo", "punish.stats", "punish.export", "punish.search"]
-  p-admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+  p-admin: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
@@ -3093,6 +3226,8 @@ gui:
 # =========================================================
 
 chatfilter:
+  # Kommt per Text-Sync vom Proxy: nur beobachten, keine Inhalte blockieren.
+  beobachten: false
   # Master-Schalter. false = Filter komplett aus.
   aktiv: false
 
@@ -3138,7 +3273,8 @@ chatfilter:
   #   privat: "ki"             # Befehle/PNs: Stufe 1 blockt, KI meldet nachgelagert
   #   schild: "stufe1"
   #   buch: "stufe1"
-  #   amboss: "stufe1"</pre>
+  #   amboss: "stufe1"
+</pre>
   <h2 data-anchor="pruefen">Mit einem geeigneten Spieler prüfen</h2>
   <ol>
     <li>Proxy-Einstellung, Text-Sync, lokale Laufzeitschalter und vorhandene Dateien prüfen.</li>
@@ -3274,7 +3410,7 @@ gratis vip rank</pre>
   </table></div>
   <p>Der Befund wurde mit dem vorhandenen Originalmodell nachgestellt: Für <code>xpfarm</code> lieferte es lokal etwa 99,5 %, für <code>-xpfarm</code> etwa 30 %. Die Freigaben verhindern daraus entstehende Treffer unabhängig vom Modellwert. Das Modell wird dabei nicht neu trainiert; andere Nachrichten können weiterhin falsch bewertet werden.</p>
   <ol>
-    <li>Proxy und alle Bridges auf v4.4.3 aktualisieren und regulär neu starten. Die neue Option wird beim Config-Abgleich ergänzt, wenn sie fehlt; vorhandene eigene Listen bleiben erhalten.</li>
+    <li>Proxy und alle Bridges auf v4.5.0 aktualisieren und regulär neu starten. Die neue Option wird beim Config-Abgleich ergänzt, wenn sie fehlt; vorhandene eigene Listen bleiben erhalten.</li>
     <li>Mit einem Account ohne Bypass <code>xpfarm</code>, <code>-xpfarm</code> und <code>XP-Farm</code> im Backend-Chat prüfen. Sie müssen bei unveränderter Wortliste durchgehen, ohne Team-Meldung oder Staffel-Treffer.</li>
     <li>Mit einem abgesprochenen Testtext prüfen, dass zusätzliche Wörter und explizite Sperrwortlisten-Treffer weiter erkannt werden. <code>/chatfilter test</code> prüft nur die zentrale Wortliste, keine KI oder Freigabe.</li>
   </ol>
@@ -3465,7 +3601,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
-  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.3">v4.4.3</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0">v4.4.3</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
   <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
   <ol class="steps">
     <li><strong>Skript auf dem Proxy prüfen</strong>
@@ -3554,9 +3690,20 @@ Verstöße: %punish_verstoss_punkte%</pre>
       <button type="button" id="changelogReset">Zurücksetzen</button>
     </div>
     <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">13 von 13 Versionen</p>
+    <p id="changelogCount" role="status">14 von 14 Versionen</p>
   </div>
   <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+  <h2 data-anchor="v4-5-0">v4.5.0</h2>
+  <p><time datetime="2026-11-25">25.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0" target="_blank" rel="noopener">Release und Downloads</a></p>
+  <ul>
+    <li><strong>Moderationsfälle:</strong> Neue Reports erhalten einen Fall. Fallnotizen, HTTPS-Beweislinks und History-Verweise lassen sich gemeinsam ansehen, ergänzen und im Dossier öffnen.</li>
+    <li><strong>Strafkatalog:</strong> Regeln mit stabiler ID, Zeitfenster und Wiederholungsstufen schlagen die nächste Strafe vor. Jede Ausführung braucht eine persönliche Bestätigung; Rechte, Schutz, Limits und Änderungen seit dem Vorschlag werden geprüft.</li>
+    <li><strong>Chatfilter-Prüfung:</strong> Befristeter Verlauf nur für Treffer, Bewertung durch das Team, Entfernung von Fehlalarmen aus der Staffel und bestätigte Korrektur unveränderter automatischer Warns/Mutes. Folgeaktionen werden zur gesonderten Prüfung verknüpft.</li>
+    <li><strong>Beobachtungsmodus:</strong> Wortliste und KI melden Treffer ohne Filterblockade oder Staffel-Strafe. Das Beobachtungskennzeichen wird von der Bridge zum Proxy übertragen.</li>
+    <li><strong>Discord:</strong> Optionale, einzeln auswählbare Ereignisgruppen über einen eingehenden Webhook. Geheime Adressen bleiben auf dem Proxy; der Hintergrundversand begrenzt Wiederholungen und Warteschlange. Stille Aktionen mit <code>-s</code> bleiben auch in Discord stumm, einschließlich zugehöriger Auto-Bann-Folgen.</li>
+  </ul>
+  <p><strong>Update-Hinweis:</strong> Proxy und alle Bridges gemeinsam auf v4.5.0 aktualisieren und regulär neu starten. Vorher Daten sichern. Neue Moderationsdaten liegen in zwei zusätzlichen YAML-Dateien oder der automatisch angelegten MySQL-Tabelle <code>punish_moderation</code>; vorhandene Strafdaten bleiben lesbar. Neue Rechte sind <code>punish.fall</code>, <code>punish.fall.bearbeiten</code>, <code>punish.katalog</code>, <code>punish.chatfilter.pruefung</code> und <code>punish.chatfilter.pruefung.bearbeiten</code>. Die Standardbündel enthalten sie ab Moderator; eigene bestehende Bündel gezielt ergänzen. Der Chatfilter-Prüfverlauf bewahrt Treffer standardmäßig sieben Tage auf und beachtet den Klartextschalter. Discord und Beobachtungsmodus sind zunächst aus. Die Beispielregel <code>spam</code> greift nur bei ausdrücklich bestätigter Katalog-Ausführung.</p>
 
   <h2 data-anchor="v4-4-3">v4.4.3</h2>
   <p><time datetime="2026-11-23">23.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.3" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3833,7 +3980,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
         <li>Hat der Spieler das Bypass-Recht <code>punish.chatfilter.bypass</code>?</li>
         <li>Steht der Kanal in <code>kanaele</code> auf <code>aus</code>?</li>
         <li>Wurde der Filter zur Laufzeit mit <code>/chatfilter off</code> ausgeschaltet?</li>
-        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.4.3 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
+        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.5.0 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
       </ul>
     </div>
   </details>

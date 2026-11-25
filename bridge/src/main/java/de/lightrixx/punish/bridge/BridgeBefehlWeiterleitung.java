@@ -213,6 +213,14 @@ public final class BridgeBefehlWeiterleitung implements CommandExecutor, TabComp
                     ? TabHinweis.filtere(List.of("7d", "30d", "90d", "all"), aktuell)
                     : spielerVorschlag(sender, aktuell);
             case "punish-export", "psexport", "punish-search" -> List.of();
+            case "punish-katalog" -> args.length <= 1 ? spielerVorschlag(sender, aktuell)
+                    : args.length == 2 ? TabHinweis.filtere(config.strafkatalogRegeln(), aktuell) : endFlags(sender, aktuell);
+            case "punish-fall" -> args.length <= 1
+                    ? TabHinweis.filtere(List.of("list", "info", "create", "notiz", "beweis", "report", "strafe", "close", "reopen"), aktuell)
+                    : args.length == 2 && (args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("list"))
+                            ? spielerVorschlag(sender, aktuell) : List.of();
+            case "chatfilter-pruefung" -> args.length <= 1
+                    ? TabHinweis.filtere(List.of("list", "info", "berechtigt", "fehlalarm", "korrektur"), aktuell) : List.of();
             default -> args.length <= 2 ? spielerVorschlag(sender, aktuell) : endFlags(sender, aktuell);
         };
     }

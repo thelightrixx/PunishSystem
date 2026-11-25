@@ -244,6 +244,10 @@ public interface Konfiguration {
     record Vorlage(String befehl, String grund, String dauer) {
     }
 
+    default List<String> strafkatalogRegeln() {
+        return List.of();
+    }
+
     default java.util.List<Vorlage> vorlagen() {
         return java.util.List.of();
     }

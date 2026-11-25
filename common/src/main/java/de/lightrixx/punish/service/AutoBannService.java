@@ -88,6 +88,11 @@ public final class AutoBannService {
 
     public boolean autoBann(UUID zielUuid, String zielName, String ausfuehrer,
                             int echtePunkte, int echtesMaximum) {
+        return autoBann(zielUuid, zielName, ausfuehrer, echtePunkte, echtesMaximum, false);
+    }
+
+    public boolean autoBann(UUID zielUuid, String zielName, String ausfuehrer,
+                            int echtePunkte, int echtesMaximum, boolean silent) {
         try {
             if (protectionService.istGeschuetzt(zielUuid, ProtectionService.IgnoreTyp.BAN)) {
                 LOG.warn("autoBann für {} abgewiesen: Ziel ist (inzwischen) geschützt.", zielUuid);
@@ -161,19 +166,23 @@ public final class AutoBannService {
         platzhalter.put("max", String.valueOf(echtesMaximum));
 
         try {
-            historyService.hinzufuegen(HistoryType.AUTO_BANN, ausfuehrer, zielUuid, zielName, grund, ablaufAm);
+            historyService.hinzufuegen(HistoryType.AUTO_BANN, ausfuehrer, zielUuid, zielName, grund, ablaufAm, silent);
         } catch (Exception e) {
             LOG.warn("AutoBann-History für {} konnte nicht geschrieben werden (Ban bleibt aktiv).", zielUuid, e);
         }
         kickHelper.spielerKicken(zielUuid, MessageKeys.SCREEN_BANN_AUTO, platzhalter);
-        broadcastService.senden(MessageKeys.BROADCAST_AUTO_BANN, platzhalter);
+        broadcastService.senden(MessageKeys.BROADCAST_AUTO_BANN, platzhalter, silent);
         logWriter.schreiben(HistoryType.AUTO_BANN, ausfuehrer, zielName,
-                "Grund: " + grund + ", Dauer: " + ZeitFormat.formatRestzeit(dauerMillis));
+                "Grund: " + grund + ", Dauer: " + ZeitFormat.formatRestzeit(dauerMillis) + (silent ? " [SILENT]" : ""));
         planeAutoBannAblauf(record);
         return true;
     }
 
     public boolean autoPardonAufheben(UUID zielUuid, String zielName, String ausfuehrer) {
+        return autoPardonAufheben(zielUuid, zielName, ausfuehrer, false);
+    }
+
+    public boolean autoPardonAufheben(UUID zielUuid, String zielName, String ausfuehrer, boolean silent) {
 
         Optional<BanRecord> entfernt = banRepository.entbannenWenn(
                 zielUuid, ServerScope.unbekannt(),
@@ -191,15 +200,15 @@ public final class AutoBannService {
 
         try {
             historyService.hinzufuegen(HistoryType.AUTO_PARDON, ausfuehrer, zielUuid, effektiverName,
-                    "Aufgehoben (Auto-Bann, Grund war: " + entfernt.get().grund() + ")", null);
+                    "Aufgehoben (Auto-Bann, Grund war: " + entfernt.get().grund() + ")", null, silent);
         } catch (Exception e) {
             LOG.warn("Auto-Pardon-History für {} konnte nicht geschrieben werden (Aufhebung bleibt wirksam).",
                     zielUuid, e);
         }
 
-        broadcastService.senden(MessageKeys.BROADCAST_AUTO_PARDON, platzhalter);
+        broadcastService.senden(MessageKeys.BROADCAST_AUTO_PARDON, platzhalter, silent);
         logWriter.schreiben(HistoryType.AUTO_PARDON, ausfuehrer, effektiverName,
-                "Auto-Bann durch Verstoß-Entfernung aufgehoben");
+                "Auto-Bann durch Verstoß-Entfernung aufgehoben" + (silent ? " [SILENT]" : ""));
         return true;
     }
 
@@ -326,7 +335,7 @@ public final class AutoBannService {
         try {
             historyService.hinzufuegen(HistoryType.AUTO_BANN_EXPIRED, SYSTEM_AUSFUEHRER,
                     zielUuid, zielName,
-                    resetOk ? "" : "WARNUNG: Verstoß-Reset fehlgeschlagen (manuell prüfen!)", null);
+                    resetOk ? "" : "WARNUNG: Verstoß-Reset fehlgeschlagen (manuell prüfen!)", null, false);
         } catch (Exception e) {
             LOG.warn("Auto-Bann-Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
         }
@@ -335,7 +344,7 @@ public final class AutoBannService {
             try {
                 historyService.hinzufuegen(HistoryType.RESET, SYSTEM_AUSFUEHRER,
                         zielUuid, zielName,
-                        configManager.standardGrund(MessageKeys.DEFAULT_AUTO_BANN_RESET_GRUND), null);
+                        configManager.standardGrund(MessageKeys.DEFAULT_AUTO_BANN_RESET_GRUND), null, false);
             } catch (Exception e) {
                 LOG.warn("Auto-Bann-Reset-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }

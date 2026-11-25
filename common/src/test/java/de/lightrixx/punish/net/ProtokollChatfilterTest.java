@@ -7,6 +7,15 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProtokollChatfilterTest {
+    @Test
+    void beobachtungWirdUebertragenUndAlteTrefferOhneKennzeichenBleibenLesbar() throws Exception {
+        var treffer = new Protokoll.ChatfilterTreffer(java.util.UUID.randomUUID(), "Spieler", "CHAT", "KI", .9,
+                "b".repeat(64), "Test", 1, true);
+        byte[] daten = Protokoll.paket(Protokoll.chatfilterTreffer(treffer)).nutzdaten().readAllBytes();
+        assertTrue(Protokoll.leseChatfilterTreffer(new java.io.DataInputStream(new java.io.ByteArrayInputStream(daten))).beobachtung());
+        byte[] alt = java.util.Arrays.copyOf(daten, daten.length - 1);
+        assertFalse(Protokoll.leseChatfilterTreffer(new java.io.DataInputStream(new java.io.ByteArrayInputStream(alt))).beobachtung());
+    }
 
     @Test
     void treffer_roundtrip() throws Exception {

@@ -487,8 +487,10 @@ public final class BridgeEnforcementListener implements Listener {
             return;
         }
         if (treffer.isPresent()) {
-            ablehnen.run();
-            sendeChatfilterBlockiert(spieler, treffer.get());
+            if (!chatfilter.beobachten()) {
+                ablehnen.run();
+                sendeChatfilterBlockiert(spieler, treffer.get());
+            }
             chatfilter.melden(spieler, text, treffer.get());
             return;
         }
@@ -550,8 +552,10 @@ public final class BridgeEnforcementListener implements Listener {
             return;
         }
         if (treffer.isPresent()) {
-            event.setCancelled(true);
-            sendeChatfilterBlockiert(spieler, treffer.get());
+            if (!chatfilter.beobachten()) {
+                event.setCancelled(true);
+                sendeChatfilterBlockiert(spieler, treffer.get());
+            }
             chatfilter.melden(spieler, inhalt, treffer.get());
             return;
         }
@@ -689,9 +693,11 @@ public final class BridgeEnforcementListener implements Listener {
             return;
         }
         if (treffer.isPresent()) {
-            event.setResult(null);
-            if (darfAmbossHinweis(spieler.getUniqueId())) {
-                sendeChatfilterBlockiert(spieler, treffer.get());
+            if (!chatfilter.beobachten()) {
+                event.setResult(null);
+                if (darfAmbossHinweis(spieler.getUniqueId())) {
+                    sendeChatfilterBlockiert(spieler, treffer.get());
+                }
             }
             chatfilter.melden(spieler, name, treffer.get());
         }
@@ -974,12 +980,14 @@ public final class BridgeEnforcementListener implements Listener {
             return;
         }
         if (treffer.isPresent()) {
-            try {
-                abbrechen.accept(true);
-            } catch (Exception e) {
-                LOG.debug("Event-Abbruch fehlgeschlagen.", e);
+            if (!chatfilter.beobachten()) {
+                try {
+                    abbrechen.accept(true);
+                } catch (Exception e) {
+                    LOG.debug("Event-Abbruch fehlgeschlagen.", e);
+                }
+                sendeChatfilterBlockiert(spieler, treffer.get());
             }
-            sendeChatfilterBlockiert(spieler, treffer.get());
             chatfilter.melden(spieler, text, treffer.get());
             return;
         }

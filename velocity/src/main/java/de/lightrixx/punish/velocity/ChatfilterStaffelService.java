@@ -49,7 +49,10 @@ public final class ChatfilterStaffelService {
         }
     }
 
-    private record Fenster(Deque<Long> zeiten, Set<Integer> angewendet) {
+    private record ZaehlTreffer(long id, long zeit) {
+    }
+
+    private record Fenster(Deque<ZaehlTreffer> zeiten, Set<Integer> angewendet) {
     }
 
     private final VelocityKonfiguration konfiguration;
@@ -57,6 +60,24 @@ public final class ChatfilterStaffelService {
     private final MuteService muteService;
     private final BroadcastService broadcastService;
     private final ConcurrentHashMap<UUID, Fenster> fenster = new ConcurrentHashMap<>();
+    private volatile ModerationsDienst moderation;
+    private final java.util.concurrent.atomic.AtomicLong lokalerZaehler = new java.util.concurrent.atomic.AtomicLong();
+
+    public void mitPruefung(ModerationsDienst moderation) {
+        this.moderation = Objects.requireNonNull(moderation);
+    }
+
+    public void entferneTreffer(UUID uuid, long id) {
+        var aktuell = fenster.get(uuid);
+        if (aktuell != null) {
+            synchronized (aktuell) {
+                aktuell.zeiten.removeIf(t -> t.id() == id);
+                var stufen = konfiguration.chatfilterStaffel();
+                aktuell.angewendet.removeIf(index -> index >= stufen.size()
+                        || stufen.get(index).anzahl() > aktuell.zeiten.size());
+            }
+        }
+    }
 
     public ChatfilterStaffelService(VelocityKonfiguration konfiguration, WarnService warnService,
                                     MuteService muteService, BroadcastService broadcastService) {
@@ -67,16 +88,33 @@ public final class ChatfilterStaffelService {
     }
 
     public void melde(UUID uuid, String name, Protokoll.ChatfilterTreffer treffer) {
+        ModerationsDienst pruefung = moderation;
+        if (pruefung == null) {
+            meldeIntern(uuid, name, treffer);
+        } else {
+            synchronized (pruefung) {
+                meldeIntern(uuid, name, treffer);
+            }
+        }
+    }
+
+    private void meldeIntern(UUID uuid, String name, Protokoll.ChatfilterTreffer treffer) {
         Objects.requireNonNull(uuid, "Die UUID darf nicht null sein.");
         Objects.requireNonNull(treffer, "Der Treffer darf nicht null sein.");
         if (!konfiguration.chatfilterAktiv()) {
             return;
         }
         String spielerName = name == null || name.isBlank() ? treffer.name() : name;
+        ModerationsDienst pruefung = moderation;
+        long trefferId = pruefung == null ? lokalerZaehler.incrementAndGet()
+                : pruefung.treffer(uuid, spielerName, treffer).id();
         if (konfiguration.chatfilterTeamInfo()) {
             sendeTeamInfo(spielerName, treffer);
         }
         long jetzt = System.currentTimeMillis();
+        if (konfiguration.chatfilterBeobachten() || treffer.beobachtung()) {
+            return;
+        }
         long fensterMillis = konfiguration.chatfilterFensterMillis();
         var stufen = konfiguration.chatfilterStaffel();
         if (stufen.isEmpty()) {
@@ -93,10 +131,10 @@ public final class ChatfilterStaffelService {
                     : new Fenster(new ArrayDeque<>(), new HashSet<>());
             synchronized (aktuell) {
                 while (!aktuell.zeiten.isEmpty()
-                        && jetzt - aktuell.zeiten.peekFirst() > fensterMillis) {
+                        && jetzt - aktuell.zeiten.peekFirst().zeit() > fensterMillis) {
                     aktuell.zeiten.pollFirst();
                 }
-                aktuell.zeiten.addLast(jetzt);
+                aktuell.zeiten.addLast(new ZaehlTreffer(trefferId, jetzt));
                 anzahl[0] = aktuell.zeiten.size();
                 aktuell.angewendet.removeIf(index -> index >= stufen.size()
                         || stufen.get(index).anzahl() > anzahl[0]);
@@ -109,7 +147,12 @@ public final class ChatfilterStaffelService {
             return aktuell;
         });
         for (int index : neu) {
-            wendeAn(uuid, spielerName, anzahl[0], stufen.get(index));
+            java.util.List<Long> belege;
+            var aktuell = fenster.get(uuid);
+            synchronized (aktuell) {
+                belege = aktuell.zeiten.stream().map(ZaehlTreffer::id).toList();
+            }
+            wendeAn(uuid, spielerName, anzahl[0], stufen.get(index), trefferId, belege);
         }
     }
 
@@ -123,11 +166,11 @@ public final class ChatfilterStaffelService {
             Fenster aeltestes = null;
             long aeltesterZeit = Long.MAX_VALUE;
             for (var eintrag : fenster.entrySet()) {
-                Long zuletzt;
+                ZaehlTreffer zuletzt;
                 synchronized (eintrag.getValue()) {
                     zuletzt = eintrag.getValue().zeiten.peekLast();
                 }
-                long zeit = zuletzt == null ? Long.MIN_VALUE : zuletzt;
+                long zeit = zuletzt == null ? Long.MIN_VALUE : zuletzt.zeit();
                 if (zeit < aeltesterZeit) {
                     aeltesterZeit = zeit;
                     aeltester = eintrag.getKey();
@@ -144,8 +187,8 @@ public final class ChatfilterStaffelService {
 
     private static boolean istFensterAbgelaufen(Fenster fenster, long jetzt, long fensterMillis) {
         synchronized (fenster) {
-            Long zuletzt = fenster.zeiten.peekLast();
-            return zuletzt == null || jetzt - zuletzt > fensterMillis;
+            ZaehlTreffer zuletzt = fenster.zeiten.peekLast();
+            return zuletzt == null || jetzt - zuletzt.zeit() > fensterMillis;
         }
     }
 
@@ -193,15 +236,43 @@ public final class ChatfilterStaffelService {
         return getrimmt.length() <= 12 ? getrimmt : getrimmt.substring(0, 12);
     }
 
-    private void wendeAn(UUID uuid, String name, int anzahl, Stufe stufe) {
+    private void wendeAn(UUID uuid, String name, int anzahl, Stufe stufe, long trefferId, java.util.List<Long> belege) {
         String grund = stufe.grund().replace("%anzahl%", String.valueOf(anzahl));
         try {
-            switch (stufe.aktion()) {
-                case WARN -> warnService.hinzufuegen(uuid, name, grund, AUSFUEHRER);
-                case MUTE -> {
-                    boolean ok = muteService.muten(uuid, name, stufe.dauerMillis(), grund, AUSFUEHRER);
-                    if (!ok) {
-                        LOG.debug("Chatfilter-Mute für {} nicht wirksam (bereits gemutet?).", name);
+            Map<String, Object> zielDaten = new java.util.LinkedHashMap<>();
+            Runnable auftrag = () -> {
+                switch (stufe.aktion()) {
+                    case WARN -> {
+                        var warn = warnService.hinzufuegen(uuid, name, grund, AUSFUEHRER);
+                        if (warn != null) {
+                            zielDaten.put("warn-nummer", warn.nummer());
+                            zielDaten.put("erstellt", warn.erstelltAm());
+                        }
+                    }
+                    case MUTE -> {
+                        boolean ok = muteService.muten(uuid, name, stufe.dauerMillis(), grund, AUSFUEHRER);
+                        if (!ok) {
+                            LOG.debug("Chatfilter-Mute für {} nicht wirksam (bereits gemutet?).", name);
+                        } else {
+                            muteService.finden(uuid, de.lightrixx.punish.model.ServerScope.unbekannt())
+                                    .ifPresent(m -> zielDaten.put("erstellt", m.erstelltAm()));
+                        }
+                    }
+                }
+            };
+            ModerationsDienst pruefung = moderation;
+            if (pruefung == null) {
+                auftrag.run();
+            } else {
+                var ereignisse = pruefung.erfasse(auftrag);
+                pruefung.aktion(trefferId, stufe.anzahl(), konfiguration.chatfilterFensterMillis(), belege, zielDaten, ereignisse);
+                if (!ereignisse.isEmpty()) {
+                    var fall = pruefung.erstellen(uuid, name, "Chatfilter-Aktion", AUSFUEHRER);
+                    pruefung.eintrag(fall.id(), AUSFUEHRER, "PRUEFUNG", trefferId, "Chatfilter-Treffer #" + trefferId);
+                    for (var ereignis : ereignisse) {
+                        if (uuid.equals(ereignis.uuid())) {
+                            pruefung.historyVerknuepfen(fall.id(), ereignis);
+                        }
                     }
                 }
             }

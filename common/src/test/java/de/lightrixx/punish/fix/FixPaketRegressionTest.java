@@ -438,7 +438,7 @@ class FixPaketRegressionTest {
         when(repo.entbannenDauerhaft(eq(uuid), any(), any())).thenReturn(true);
         var history = mock(de.lightrixx.punish.service.HistoryService.class);
         org.mockito.Mockito.doThrow(new IllegalStateException("History nicht schreibbar"))
-                .when(history).hinzufuegenDauerhaft(any(), any(), any(), any(), any(), any(), any(), any());
+                .when(history).hinzufuegenDauerhaft(any(), any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean());
         var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
         var kick = mock(de.lightrixx.punish.service.BanKickHelper.class);
         var schutz = mock(ProtectionService.class);
@@ -463,7 +463,7 @@ class FixPaketRegressionTest {
         when(repo.entbannenDauerhaft(eq(uuid), any(), any())).thenReturn(false);
         var history = mock(de.lightrixx.punish.service.HistoryService.class);
         org.mockito.Mockito.doThrow(new IllegalStateException("History nicht schreibbar"))
-                .when(history).hinzufuegenDauerhaft(any(), any(), any(), any(), any(), any(), any(), any());
+                .when(history).hinzufuegenDauerhaft(any(), any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean());
         var broadcast = mock(de.lightrixx.punish.service.BroadcastService.class);
         var kick = mock(de.lightrixx.punish.service.BanKickHelper.class);
         var schutz = mock(ProtectionService.class);

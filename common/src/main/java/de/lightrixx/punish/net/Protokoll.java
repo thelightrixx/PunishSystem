@@ -203,6 +203,10 @@ public final class Protokoll {
     public static final String GUI_KATALOG = "KATALOG";
     public static final String GUI_DOSSIER = "DOSSIER";
     public static final String GUI_RECHTE = "RECHTE";
+    public static final String GUI_FAELLE = "FAELLE";
+    public static final String GUI_FALL = "FALL";
+    public static final String GUI_STRAFKATALOG = "STRAFKATALOG";
+    public static final String GUI_PRUEFUNG = "PRUEFUNG";
 
     public static final int MAX_GUI_ZEILEN = 54;
     public static final int MAX_GUI_TEXT = 1000;
@@ -734,7 +738,11 @@ public final class Protokoll {
     }
 
     public record ChatfilterTreffer(UUID uuid, String name, String kanal, String quelle,
-                                    double bewertung, String textHash, String text, long zeitpunkt) {
+                                    double bewertung, String textHash, String text, long zeitpunkt, boolean beobachtung) {
+        public ChatfilterTreffer(UUID uuid, String name, String kanal, String quelle,
+                                double bewertung, String textHash, String text, long zeitpunkt) {
+            this(uuid, name, kanal, quelle, bewertung, textHash, text, zeitpunkt, false);
+        }
         public ChatfilterTreffer {
             Objects.requireNonNull(uuid, "uuid");
             if (name == null || name.isBlank()) {
@@ -769,6 +777,7 @@ public final class Protokoll {
             out.writeUTF(treffer.textHash());
             out.writeUTF(treffer.text());
             out.writeLong(treffer.zeitpunkt());
+            out.writeBoolean(treffer.beobachtung());
         });
     }
 
@@ -778,8 +787,21 @@ public final class Protokoll {
             throw new IOException("ChatfilterTreffer ohne UUID");
         }
         try {
-            return new ChatfilterTreffer(uuid, in.readUTF(), in.readUTF(), in.readUTF(),
-                    in.readDouble(), in.readUTF(), in.readUTF(), in.readLong());
+            String name = in.readUTF();
+            String kanal = in.readUTF();
+            String quelle = in.readUTF();
+            double score = in.readDouble();
+            String hash = in.readUTF();
+            String text = in.readUTF();
+            long zeit = in.readLong();
+            boolean beobachtung;
+            try {
+                beobachtung = in.readBoolean();
+            } catch (java.io.EOFException e) {
+                // Ältere Bridges senden noch kein Beobachtungskennzeichen.
+                beobachtung = false;
+            }
+            return new ChatfilterTreffer(uuid, name, kanal, quelle, score, hash, text, zeit, beobachtung);
         } catch (IllegalArgumentException e) {
             throw new IOException("Ungültiger ChatfilterTreffer: " + e.getMessage(), e);
         }

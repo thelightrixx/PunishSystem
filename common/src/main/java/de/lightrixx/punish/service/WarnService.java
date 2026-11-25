@@ -111,7 +111,7 @@ public final class WarnService {
 
         if (historyService != null) {
             try {
-                historyService.hinzufuegen(HistoryType.WARN_ADD, ausfuehrer, zielUuid, zielName, grund, null);
+                historyService.hinzufuegen(HistoryType.WARN_ADD, ausfuehrer, zielUuid, zielName, grund, null, silent);
             } catch (Exception e) {
                 LOG.warn("Warn-Add-History für {} konnte nicht geschrieben werden (Warn bleibt bestehen).",
                         zielUuid, e);
@@ -324,7 +324,7 @@ public final class WarnService {
             if (historyService != null) {
                 try {
                     historyService.hinzufuegen(HistoryType.WARN_REMOVE, ausfuehrer, zielUuid, zielName,
-                            "Entfernt (Grund war: " + warn.grund() + ")", null);
+                            "Entfernt (Grund war: " + warn.grund() + ")", null, silent);
                 } catch (Exception e) {
                     LOG.warn("Warn-Remove-History für {} konnte nicht geschrieben werden.", zielUuid, e);
                 }
@@ -358,7 +358,7 @@ public final class WarnService {
             zielInformieren(zielUuid, MessageKeys.ZIEL_WARN_BEARBEITET, platzhalter);
             if (historyService != null) {
                 try {
-                    historyService.hinzufuegen(HistoryType.WARN_EDIT, ausfuehrer, zielUuid, zielName, neuerGrund, null);
+                    historyService.hinzufuegen(HistoryType.WARN_EDIT, ausfuehrer, zielUuid, zielName, neuerGrund, null, silent);
                 } catch (Exception e) {
                     LOG.warn("Warn-Edit-History für {} konnte nicht geschrieben werden (Edit bleibt wirksam).",
                             zielUuid, e);

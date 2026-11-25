@@ -383,6 +383,21 @@ public final class VelocityBefehle {
             logger.warn("Chatfilter-Kanal konnte nicht verdrahtet werden.", e);
         }
         registrar(manager, plugin, proxy, messageService, "chatfilter", List.of(), chatfilter);
+        ModerationsDienst moderation = plugin.moderationsDienst();
+        if (moderation != null) {
+            registrar(manager, plugin, proxy, messageService, "punish-fall", List.of("psfall"),
+                    new ModerationsBefehl(ModerationsBefehl.Bereich.FALL, messageService, config, protectionService,
+                            playerCache, planer, verzeichnis, moderation, historyService, reportService,
+                            plugin.chatfilterStaffelService(), warnService, muteService));
+            registrar(manager, plugin, proxy, messageService, "chatfilter-pruefung", List.of(),
+                    new ModerationsBefehl(ModerationsBefehl.Bereich.PRUEFUNG, messageService, config, protectionService,
+                            playerCache, planer, verzeichnis, moderation, historyService, reportService,
+                            plugin.chatfilterStaffelService(), warnService, muteService));
+            registrar(manager, plugin, proxy, messageService, "punish-katalog", List.of("pskatalog"),
+                    new StrafkatalogBefehl(messageService, config, protectionService, playerCache, planer,
+                            verzeichnis, moderation, new StrafkatalogBefehl.Dienste(warnService, muteService,
+                            timeoutService, banService, freezeService)));
+        }
         registrar(manager, plugin, proxy, messageService, "punish", List.of(),
                 new PunishVorlageCommand(messageService, config, protectionService, playerCache,
                         planer, verzeichnis, vorlagenZiele));

@@ -113,7 +113,7 @@ public final class KickService {
 
         try {
             historyService.hinzufuegen(HistoryType.KICK, effektiverAusfuehrer,
-                    zielUuid, effektiverName, effektiveGrund, null, scope, herkunft);
+                    zielUuid, effektiverName, effektiveGrund, null, scope, herkunft, silent);
         } catch (Exception e) {
             LOG.warn(
                     "Kick-History für {} konnte nicht geschrieben werden (Kick bleibt vollzogen).", zielUuid, e);
@@ -215,7 +215,7 @@ public final class KickService {
             try {
                 historyService.hinzufuegen(HistoryType.IP_KICK, effektiverAusfuehrer,
                         online.uuid(), online.name(),
-                        effektiveGrund + " (IP: " + kanonischeIp + ")", null, scope, herkunft);
+                        effektiveGrund + " (IP: " + kanonischeIp + ")", null, scope, herkunft, silent);
             } catch (Exception e) {
                 LOG.warn("IP_KICK-History für {} fehlgeschlagen (Kick bleibt vollzogen).", online.uuid(), e);
             }
@@ -302,7 +302,7 @@ public final class KickService {
             try {
                 historyService.hinzufuegen(HistoryType.KICK_ALL, effektiverAusfuehrer,
                         online.uuid(), online.name(), effektiveGrund, null,
-                        scopeAlle, herkunftAlle);
+                        scopeAlle, herkunftAlle, silent);
             } catch (Exception e) {
                 LOG.warn("KICK_ALL-History für {} fehlgeschlagen (Kick bleibt vollzogen).", online.uuid(), e);
             }

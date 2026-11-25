@@ -34,6 +34,11 @@ public final class GuiBrueckenDienst {
     private static final int SEITEN_GROESSE = 45;
 
     private final ProxyServer proxy;
+    private volatile ModerationsDienst moderation;
+
+    public void mitModeration(ModerationsDienst moderation) {
+        this.moderation = moderation;
+    }
     private final Logger logger;
     private final Konfiguration config;
     private final PlayerCache playerCache;
@@ -100,6 +105,8 @@ public final class GuiBrueckenDienst {
                 case Protokoll.GUI_KATALOG -> katalog(anfrage);
                 case Protokoll.GUI_DOSSIER -> dossier(anfrage);
                 case Protokoll.GUI_RECHTE -> rechte(anfrage);
+                case Protokoll.GUI_FAELLE, Protokoll.GUI_FALL,
+                        Protokoll.GUI_STRAFKATALOG, Protokoll.GUI_PRUEFUNG -> moderation(anfrage);
                 default -> new Protokoll.GuiAntwort(anfrage.requestId(), false,
                         "Unbekannter GUI-Typ: " + anfrage.typ(), 1, 1, 0, List.of());
             };
@@ -121,7 +128,8 @@ public final class GuiBrueckenDienst {
         for (String knoten : List.of("punish.gui", "punish.ban", "punish.permabann", "punish.mute",
                 "punish.kick", "punish.timeout", "punish.freeze", "punish.warn", "punish.verstoss",
                 "punish.note", "punish.unmute", "punish.pardon", "punish.untimeout", "punish.unfreeze",
-                "punish.allow-silent-syntax", "punish.alts", "punish.status", "punish.history", "punish.reports")) {
+                "punish.allow-silent-syntax", "punish.alts", "punish.status", "punish.history", "punish.reports",
+                "punish.fall", "punish.fall.bearbeiten", "punish.katalog", "punish.chatfilter.pruefung")) {
             if (VelocitySender.hatRecht(spieler.get(), knoten)) {
                 zeilen.add(new Protokoll.GuiZeile("RECHT", knoten, "", "", ""));
             }
@@ -678,6 +686,20 @@ public final class GuiBrueckenDienst {
         }
 
         List<Protokoll.GuiZeile> alle = new ArrayList<>(kopf);
+        if (moderation != null) {
+            var absender = anfrage.absenderUuid() == null ? Optional.<com.velocitypowered.api.proxy.Player>empty()
+                    : proxy.getPlayer(anfrage.absenderUuid());
+            if (absender.isPresent()) {
+                for (var angebot : List.of(new String[]{"punish.fall", "Moderationsfälle", "gui:faelle"},
+                        new String[]{"punish.katalog", "Strafkatalog", "gui:katalog"},
+                        new String[]{"punish.chatfilter.pruefung", "Chatfilter-Prüfung", "gui:pruefung"})) {
+                    if (VelocitySender.hatRecht(absender.get(), angebot[0])) {
+                        alle.add(new Protokoll.GuiZeile("DOSSIER_AKTION", angebot[1],
+                                "Öffnet " + angebot[1] + " für " + name + ".", angebot[2], name));
+                    }
+                }
+            }
+        }
         alle.addAll(zeilen);
         return paginieren(anfrage, alle, "Dossier für " + name);
     }
@@ -690,6 +712,82 @@ public final class GuiBrueckenDienst {
         int bis = Math.min(von + SEITEN_GROESSE, alle.size());
         List<Protokoll.GuiZeile> teil = von < bis ? alle.subList(von, bis) : List.of();
         return new Protokoll.GuiAntwort(anfrage.requestId(), true, kopf, seite, seiten, alle.size(), List.copyOf(teil));
+    }
+
+    private Protokoll.GuiAntwort moderation(Protokoll.GuiAnfrage anfrage) {
+        var absender = anfrage.absenderUuid() == null ? Optional.<com.velocitypowered.api.proxy.Player>empty()
+                : proxy.getPlayer(anfrage.absenderUuid());
+        String recht = switch (anfrage.typ()) {
+            case Protokoll.GUI_STRAFKATALOG -> "punish.katalog";
+            case Protokoll.GUI_PRUEFUNG -> "punish.chatfilter.pruefung";
+            default -> "punish.fall";
+        };
+        if (moderation == null || absender.isEmpty() || !VelocitySender.hatRecht(absender.get(), "punish.gui")
+                || !VelocitySender.hatRecht(absender.get(), recht)) {
+            return new Protokoll.GuiAntwort(anfrage.requestId(), false, "Ansicht nicht verfügbar oder keine Berechtigung.",
+                    1, 1, 0, List.of());
+        }
+        var ziel = loeseZiel(anfrage.ziel());
+        if (ziel.isEmpty()) {
+            return new Protokoll.GuiAntwort(anfrage.requestId(), false, "Spieler nicht gefunden.", 1, 1, 0, List.of());
+        }
+        UUID uuid = ziel.get().uuid();
+        String name = ziel.get().name();
+        List<Protokoll.GuiZeile> zeilen = new ArrayList<>();
+        String kopf;
+        switch (anfrage.typ()) {
+            case Protokoll.GUI_FAELLE -> {
+                kopf = "Moderationsfälle";
+                for (var f : moderation.faelle(uuid)) {
+                    zeilen.add(new Protokoll.GuiZeile("FALL", "Fall #" + f.id() + " · " + f.titel(),
+                            (f.geschlossen() ? "Geschlossen" : "Offen") + "\nErstellt: " + formatZeitpunkt(f.erstellt())
+                                    + "\nEinträge: " + f.eintraege().size(), "gui:fall:" + f.id(), name));
+                }
+            }
+            case Protokoll.GUI_FALL -> {
+                var f = moderation.fall(Long.parseLong(anfrage.extra()));
+                if (!f.uuid().equals(uuid)) {
+                    throw new IllegalArgumentException("Fall gehört nicht zu diesem Spieler.");
+                }
+                kopf = "Fall #" + f.id();
+                zeilen.add(new Protokoll.GuiZeile("INFO", f.titel(), f.geschlossen() ? "Geschlossen" : "Offen", "", name));
+                for (var e : f.eintraege()) {
+                    zeilen.add(new Protokoll.GuiZeile(e.typ(), e.typ() + " · " + e.autor(),
+                            formatZeitpunkt(e.zeit()) + "\n" + e.text(), "", name));
+                }
+                if (VelocitySender.hatRecht(absender.get(), "punish.fall.bearbeiten")) {
+                    zeilen.add(new Protokoll.GuiZeile("AKTION", f.geschlossen() ? "Wieder öffnen" : "Fall schließen", "",
+                            "punish-fall " + (f.geschlossen() ? "reopen " : "close ") + f.id(), name));
+                }
+            }
+            case Protokoll.GUI_STRAFKATALOG -> {
+                kopf = "Strafkatalog";
+                if (config instanceof VelocityKonfiguration velocity) {
+                    var regeln = Strafkatalog.lesen(velocity.moderationsAbschnitt("strafkatalog"));
+                    for (var r : regeln.values().stream().sorted(java.util.Comparator.comparing(Strafkatalog.Regel::id)).toList()) {
+                        long anzahl = moderation.anzahlRegel(uuid, r.id(), r.fensterMillis());
+                        var stufe = r.stufen().get(r.stufenNummer(anzahl) - 1);
+                        zeilen.add(new Protokoll.GuiZeile("REGEL", r.grund() + " · Stufe " + r.stufenNummer(anzahl),
+                                "Vorschlag: " + stufe.anzeige() + "\nBisher: " + anzahl
+                                        + "\nZählt " + r.fensterMillis() / 86_400_000L + " Tage.\nAusführung erst nach Bestätigung.",
+                                VelocitySender.hatRecht(absender.get(), stufe.recht())
+                                        ? "punish-katalog " + name + " " + r.id() + " --global" : "", name));
+                    }
+                }
+            }
+            case Protokoll.GUI_PRUEFUNG -> {
+                kopf = "Chatfilter-Prüfung";
+                for (var p : moderation.pruefungen(uuid)) {
+                    String inhalt = config instanceof VelocityKonfiguration velocity && velocity.chatfilterKlartextUbertragen()
+                            && !p.text().isBlank() ? p.text() : "Hash: " + p.hash();
+                    zeilen.add(new Protokoll.GuiZeile("PRUEFUNG", "Treffer #" + p.id() + " · " + p.status(),
+                            p.quelle() + " · Score " + p.score() + (p.beobachtung() ? " · Beobachtung" : "")
+                                    + "\n" + inhalt, "chatfilter-pruefung info " + p.id(), name));
+                }
+            }
+            default -> throw new IllegalArgumentException("Unbekannte Moderationsansicht.");
+        }
+        return paginieren(anfrage, zeilen, kopf);
     }
 
     private static String formatZeitpunkt(long zeitstempel) {

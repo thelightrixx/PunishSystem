@@ -21,6 +21,35 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ReportService {
+    private final java.util.List<java.util.function.Consumer<ReportRecord>> beobachter =
+            new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final java.util.List<java.util.function.BiConsumer<ReportRecord, Boolean>> ereignisBeobachter =
+            new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void ereignisBeobachterHinzufuegen(java.util.function.BiConsumer<ReportRecord, Boolean> beobachter) {
+        ereignisBeobachter.add(java.util.Objects.requireNonNull(beobachter));
+    }
+
+    public void beobachterHinzufuegen(java.util.function.Consumer<ReportRecord> beobachter) {
+        this.beobachter.add(java.util.Objects.requireNonNull(beobachter));
+    }
+
+    private void meldeAenderung(ReportRecord record, boolean silent) {
+        for (var beobachter : beobachter) {
+            try {
+                beobachter.accept(record);
+            } catch (RuntimeException e) {
+                LOG.error("Report-Beobachter für Report {} fehlgeschlagen.", record.id(), e);
+            }
+        }
+        for (var beobachter : ereignisBeobachter) {
+            try {
+                beobachter.accept(record, silent);
+            } catch (RuntimeException e) {
+                LOG.error("Report-Ereignisbeobachter für Report {} fehlgeschlagen.", record.id(), e);
+            }
+        }
+    }
 
     public record Ergebnis(boolean erfolg, ReportRecord report, long cooldownRestSekunden,
                            String fehler) {
@@ -238,7 +267,7 @@ public final class ReportService {
         if (historyService != null) {
             try {
                 historyService.hinzufuegen(HistoryType.REPORT_ADD, reporterName,
-                        zielUuid, zielName, sauber, null);
+                        zielUuid, zielName, sauber, null, false);
             } catch (Exception e) {
                 LOG.warn("Report-History für {} konnte nicht geschrieben werden (Report bleibt bestehen).",
                         zielUuid, e);
@@ -249,6 +278,7 @@ public final class ReportService {
             logWriter.schreiben(HistoryType.REPORT_ADD, reporterName, zielName,
                     "Grund: " + sauber + ", ID: " + record.id());
         }
+        meldeAenderung(record, false);
         return new Ergebnis(true, record, 0L, null);
     }
 
@@ -341,6 +371,7 @@ public final class ReportService {
 
     private void nachSchliessen(ReportRecord record, long id, String bearbeiter, String grund,
                                 boolean silent) {
+            meldeAenderung(record, silent);
             Map<String, String> platzhalter = new HashMap<>();
             platzhalter.put("spieler", record.zielName());
             platzhalter.put("reporter", record.reporterName());
@@ -355,7 +386,7 @@ public final class ReportService {
                     historyService.hinzufuegen(HistoryType.REPORT_CLOSE, bearbeiter,
                             record.zielUuid(), record.zielName(),
                             record.status().name() + (grund == null || grund.isBlank()
-                                    ? "" : ": " + grund.trim()), null);
+                                    ? "" : ": " + grund.trim()), null, silent);
                 } catch (Exception e) {
                     LOG.warn("Report-Close-History für {} konnte nicht geschrieben werden.", id, e);
                 }
@@ -376,7 +407,7 @@ public final class ReportService {
                     historyService.hinzufuegen(HistoryType.REPORT_CLOSE,
                             bearbeiter == null ? "Konsole" : bearbeiter,
                             record.zielUuid(), record.zielName(),
-                            "Report gelöscht, ID: " + id, null);
+                            "Report gelöscht, ID: " + id, null, false);
                 } catch (Exception e) {
                     LOG.warn("Report-Delete-History für {} konnte nicht geschrieben werden.", id, e);
                 }

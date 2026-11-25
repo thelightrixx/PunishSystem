@@ -40,6 +40,20 @@ commands:
     aliases: [psexport]
     permission: punish.export
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
+  punish-fall:
+    description: Verbindet Reports, Fallnotizen, Beweise und Strafen zu Moderationsfällen.
+    usage: /punish-fall list|info|create|notiz|beweis|report|strafe|close|reopen
+    aliases: [psfall]
+    permission: punish.fall
+  punish-katalog:
+    description: Schlägt die nächste Wiederholungsstufe vor und fordert eine Bestätigung an.
+    usage: /punish-katalog <Spieler> <Regel> [fall=<Nr>] [--global|--server=<Name>]
+    aliases: [pskatalog]
+    permission: punish.katalog
+  chatfilter-pruefung:
+    description: Prüft Chatfilter-Treffer und bereitet bestätigte Korrekturen vor.
+    usage: /chatfilter-pruefung list|info|berechtigt|fehlalarm|korrektur
+    permission: punish.chatfilter.pruefung
   punish-search:
     description: Durchsucht Historie, Notizen und Reports über den Proxy.
     usage: /punish-search <Text> [page:<Nr>]
@@ -265,6 +279,11 @@ commands:
     permission: punish.diagnostics
     permission-message: "§8[§cPunishSystem§8] §cDazu hast du keine Berechtigung."
 permissions:
+  punish.fall: { description: Moderationsfälle lesen., default: false }
+  punish.fall.bearbeiten: { description: Moderationsfälle anlegen und bearbeiten., default: false }
+  punish.katalog: { description: Strafkatalog mit persönlicher Bestätigung verwenden., default: false }
+  punish.chatfilter.pruefung: { description: Chatfilter-Prüfverlauf lesen., default: false }
+  punish.chatfilter.pruefung.bearbeiten: { description: Treffer bewerten und Korrekturen vorbereiten., default: false }
   punish.gui: { description: PunishGUI öffnen., default: false }
   punish.templates: { description: Straf-Vorlagen per /punish ausführen (via Proxy)., default: false }
   punish.undo: { description: Letzte eigene Strafaktion zurücknehmen (via Proxy)., default: false }

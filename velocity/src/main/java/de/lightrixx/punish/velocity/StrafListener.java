@@ -1384,6 +1384,12 @@ public final class StrafListener {
                     ? (hatRecht(absender, "punish.own") || hatRecht(absender, "punish.history"))
                     : hatRecht(absender, "punish.history");
             case Protokoll.GUI_REPORTS, Protokoll.GUI_REPORT_INFO -> hatRecht(absender, "punish.reports");
+            case Protokoll.GUI_FAELLE, Protokoll.GUI_FALL -> hatRecht(absender, "punish.gui")
+                    && hatRecht(absender, "punish.fall");
+            case Protokoll.GUI_STRAFKATALOG -> hatRecht(absender, "punish.gui")
+                    && hatRecht(absender, "punish.katalog");
+            case Protokoll.GUI_PRUEFUNG -> hatRecht(absender, "punish.gui")
+                    && hatRecht(absender, "punish.chatfilter.pruefung");
             case Protokoll.GUI_DOSSIER -> hatRecht(absender, "punish.gui")
                     && hatRecht(absender, "punish.status")
                     && hatRecht(absender, "punish.history")

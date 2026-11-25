@@ -1198,7 +1198,10 @@ public final class BrueckenKanal {
             java.util.Map.entry("psversion", "punish.version"),
             java.util.Map.entry("punish-help", "punish.help"),
             java.util.Map.entry("pshelp", "punish.help"),
-            java.util.Map.entry("chatfilter", "punish.chatfilter"));
+            java.util.Map.entry("chatfilter", "punish.chatfilter"),
+            java.util.Map.entry("punish-fall", "punish.fall"),
+            java.util.Map.entry("punish-katalog", "punish.katalog"),
+            java.util.Map.entry("chatfilter-pruefung", "punish.chatfilter.pruefung"));
 
     static String bridgeErlaubnisFuer(String befehlOhneSlash) {
         if (befehlOhneSlash == null || befehlOhneSlash.isBlank()) {

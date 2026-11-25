@@ -143,7 +143,7 @@ public final class IpTimeoutService {
                     ProtectionService.IgnoreTyp.TIMEOUT, record.scope());
             try {
                 historyService.hinzufuegen(HistoryType.IP_TIMEOUT, ausfuehrer, kanonisch, grund, ablaufFuerWirkung,
-                        wirksam, herkunftNorm);
+                        wirksam, herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("IP-Timeout-History für {} konnte nicht geschrieben werden.", kanonisch, e);
             }
@@ -195,7 +195,7 @@ public final class IpTimeoutService {
             }
             try {
                 historyService.hinzufuegen(HistoryType.IP_UNTIMEOUT, "System", kanonisch,
-                        "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null, scope, herkunftNorm);
+                        "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null, scope, herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für IP-Timeout {} fehlgeschlagen.", kanonisch, e);
             }
@@ -218,7 +218,7 @@ public final class IpTimeoutService {
         try {
             historyService.hinzufuegen(HistoryType.IP_UNTIMEOUT, ausfuehrer, kanonisch,
                     "IP-Timeout aufgehoben (Grund war: " + entfernt.get().grund() + ")", null,
-                    entfernt.get().scope(), herkunftNorm);
+                    entfernt.get().scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("IP-Untimeout-History für {} fehlgeschlagen.", kanonisch, e);
         }
@@ -302,7 +302,7 @@ public final class IpTimeoutService {
         platzhalter.put("herkunft", herkunftNorm);
         try {
             historyService.hinzufuegen(HistoryType.IP_TIMEOUT_EDIT, ausfuehrer, kanonisch,
-                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm);
+                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("IP-Timeout-Edit-History für {} fehlgeschlagen.", kanonisch, e);
         }
@@ -373,7 +373,7 @@ public final class IpTimeoutService {
             try {
                 historyService.hinzufuegen(HistoryType.IP_UNTIMEOUT, ausfuehrer, rec.ip(),
                         "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                        rec.scope(), ServerScope.UNBEKANNT_WERT);
+                        rec.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für IP-Timeout {} fehlgeschlagen.", rec.ip(), e);
             }
@@ -416,7 +416,7 @@ public final class IpTimeoutService {
                 try {
                     historyService.hinzufuegen(HistoryType.IP_UNTIMEOUT, ausfuehrer, rec.ip(),
                             "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                            rec.scope(), ServerScope.UNBEKANNT_WERT);
+                            rec.scope(), ServerScope.UNBEKANNT_WERT, false);
                 } catch (Exception e) {
                     LOG.warn("Ablauf-History für IP-Timeout {} fehlgeschlagen.", rec.ip(), e);
                 }

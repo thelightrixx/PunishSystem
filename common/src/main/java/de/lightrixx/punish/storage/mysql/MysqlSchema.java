@@ -31,11 +31,12 @@ public final class MysqlSchema {
     public static final String T_MISSED_BROADCASTS = "punish_missed_broadcasts";
     public static final String T_MISSED_CURSOR = "punish_missed_cursor";
     public static final String T_META = "punish_meta";
+    public static final String T_MODERATION = "punish_moderation";
 
     public static final List<String> ALLE_TABELLEN = List.of(
             T_BANS, T_MUTES, T_TIMEOUTS, T_FREEZES, T_IP_BANS, T_IP_MUTES, T_IP_TIMEOUTS,
             T_WARNS, T_VERSTOESSE, T_NOTIZEN, T_REPORTS, T_HISTORY, T_HISTORY_ARCHIV, T_SPIELER,
-            T_IP_HISTORIE, T_MISSED_BROADCASTS, T_MISSED_CURSOR);
+            T_IP_HISTORIE, T_MISSED_BROADCASTS, T_MISSED_CURSOR, T_MODERATION);
 
     static final String META_SCHEMA_VERSION = "schema_version";
     static final String META_MIGRATION = "yaml_migration";
@@ -53,6 +54,10 @@ public final class MysqlSchema {
         Objects.requireNonNull(mysql, "Die MySQL-Verbindung darf nicht null sein.");
         try (Connection verbindung = mysql.verbindung();
              Statement statement = verbindung.createStatement()) {
+            statement.execute("CREATE TABLE IF NOT EXISTS " + T_MODERATION + " ("
+                    + "bereich VARCHAR(32) NOT NULL,id BIGINT NOT NULL,daten LONGTEXT NOT NULL,"
+                    + "zaehler BIGINT NOT NULL DEFAULT 0,"
+                    + "PRIMARY KEY (bereich,id))" + ENGINE);
             statement.execute("CREATE TABLE IF NOT EXISTS " + T_BANS + " ("
                     + "uuid CHAR(36) NOT NULL,"
                     + "scope VARCHAR(32) NOT NULL,"

@@ -35,6 +35,7 @@ public final class GuiManager {
     private final Map<UUID, List<String>> dossierAktionen = new ConcurrentHashMap<>();
     private final Map<UUID, Long> rechteAnfragen = new ConcurrentHashMap<>();
     private final Map<UUID, Long> reportIds = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> fallIds = new ConcurrentHashMap<>();
     private static final long SITZUNG_TTL_MILLIS = 60L * 60L * 1000L;
     private static final long EINGABE_TTL_MILLIS = 60L * 1000L;
 
@@ -83,6 +84,7 @@ public final class GuiManager {
         listenSeiten.remove(uuid);
         dossierAktionen.remove(uuid);
         reportIds.remove(uuid);
+        fallIds.remove(uuid);
         rechteAnfragen.remove(uuid);
         GuiDatenDienst.verwerfeRechte(uuid);
     }
@@ -364,7 +366,7 @@ public final class GuiManager {
                         listenSeiten.put(uuid, Math.max(1, versand.seiten()));
                         sitzung.seite(versand.seite());
                     }
-                    if (menue == GuiMenues.Menue.DOSSIER) {
+                    if (menue == GuiMenues.Menue.DOSSIER || istModerationsMenue(menue)) {
                         List<String> aktionen = new ArrayList<>();
                         if (versand != null) {
                             for (Protokoll.GuiZeile zeile : versand.eintraege()) {
@@ -448,6 +450,7 @@ public final class GuiManager {
             case REPORTS -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.REPORTS);
             case REPORT_DETAIL -> klickReportDetail(spieler, sitzung, slot);
             case DOSSIER -> klickListe(spieler, sitzung, slot, GuiMenues.Menue.DOSSIER);
+            case FAELLE, FALL, STRAFKATALOG, PRUEFUNG -> klickListe(spieler, sitzung, slot, holder.menue());
         };
     }
 
@@ -753,6 +756,25 @@ public final class GuiManager {
         return true;
     }
 
+    private static boolean istModerationsMenue(GuiMenues.Menue menue) {
+        return switch (menue) {
+            case FAELLE, FALL, STRAFKATALOG, PRUEFUNG -> true;
+            default -> false;
+        };
+    }
+
+    private void oeffneModeration(Player spieler, GuiMenues.Menue menue, int seite) {
+        String typ = switch (menue) {
+            case FAELLE -> Protokoll.GUI_FAELLE;
+            case FALL -> Protokoll.GUI_FALL;
+            case STRAFKATALOG -> Protokoll.GUI_STRAFKATALOG;
+            case PRUEFUNG -> Protokoll.GUI_PRUEFUNG;
+            default -> throw new IllegalArgumentException("Unbekannte Moderationsansicht.");
+        };
+        ladeUndOeffne(spieler, menue, typ, typ, seite,
+                menue == GuiMenues.Menue.FALL ? String.valueOf(fallIds.getOrDefault(spieler.getUniqueId(), 0L)) : "");
+    }
+
     private boolean klickListe(Player spieler, GuiSitzung sitzung, int slot, GuiMenues.Menue menue) {
         if (verweigertOhneGuiRecht(spieler)) {
             return true;
@@ -769,6 +791,8 @@ public final class GuiManager {
                 oeffneHistory(spieler, seite);
             } else if (menue == GuiMenues.Menue.DOSSIER) {
                 oeffneDossier(spieler, seite);
+            } else if (istModerationsMenue(menue)) {
+                oeffneModeration(spieler, menue, seite);
             } else {
                 oeffneReports(spieler, seite);
             }
@@ -794,6 +818,8 @@ public final class GuiManager {
                 oeffneHistory(spieler, neu);
             } else if (menue == GuiMenues.Menue.DOSSIER) {
                 oeffneDossier(spieler, neu);
+            } else if (istModerationsMenue(menue)) {
+                oeffneModeration(spieler, menue, neu);
             } else {
                 oeffneReports(spieler, neu);
             }
@@ -801,16 +827,17 @@ public final class GuiManager {
         }
         if (slot >= 0 && slot < 45) {
             String aktion = null;
-            if (menue == GuiMenues.Menue.DOSSIER) {
+            if (menue == GuiMenues.Menue.DOSSIER || istModerationsMenue(menue)) {
                 List<String> zwischen = dossierAktionen.get(spieler.getUniqueId());
                 if (zwischen != null && slot < zwischen.size()) {
                     aktion = zwischen.get(slot);
                 }
             }
-            if (aktion == null || aktion.isBlank()) {
+            if ((aktion == null || aktion.isBlank()) && !istModerationsMenue(menue)) {
                 aktion = aktionAusLore(spieler, slot);
             }
-            if (aktion != null && aktion.startsWith("gui:") && menue == GuiMenues.Menue.DOSSIER) {
+            if (aktion != null && aktion.startsWith("gui:")
+                    && (menue == GuiMenues.Menue.DOSSIER || istModerationsMenue(menue))) {
                 dossierAktion(spieler, sitzung, aktion);
                 return true;
             }
@@ -825,6 +852,9 @@ public final class GuiManager {
                     return true;
                 }
                 try {
+                    if (menue == GuiMenues.Menue.STRAFKATALOG || menue == GuiMenues.Menue.PRUEFUNG) {
+                        spieler.closeInventory();
+                    }
                     kanal.sendeBefehl(spieler.getUniqueId(), aktion);
                     spieler.sendMessage(prefixHinweis(Component.text().append(Component.text("Gesendet: ", NamedTextColor.GREEN))
                             .append(Component.text("/" + aktion, NamedTextColor.WHITE)).build()));
@@ -836,6 +866,8 @@ public final class GuiManager {
                         oeffneReports(spieler, sitzung.seite());
                     } else if (menue == GuiMenues.Menue.DOSSIER) {
                         oeffneDossier(spieler, sitzung.seite());
+                    } else if (menue == GuiMenues.Menue.FALL || menue == GuiMenues.Menue.FAELLE) {
+                        oeffneModeration(spieler, menue, sitzung.seite());
                     }
                 } catch (Exception e) {
                     spieler.sendMessage(prefixHinweis("Proxy nicht erreichbar.", NamedTextColor.RED));
@@ -848,6 +880,22 @@ public final class GuiManager {
 
     private void dossierAktion(Player spieler, GuiSitzung sitzung, String aktion) {
         String befehl = aktion.substring("gui:".length()).trim().toLowerCase(java.util.Locale.ROOT);
+        switch (befehl) {
+            case "faelle" -> { oeffneModeration(spieler, GuiMenues.Menue.FAELLE, 1); return; }
+            case "katalog" -> { oeffneModeration(spieler, GuiMenues.Menue.STRAFKATALOG, 1); return; }
+            case "pruefung" -> { oeffneModeration(spieler, GuiMenues.Menue.PRUEFUNG, 1); return; }
+            default -> {
+                if (befehl.startsWith("fall:")) {
+                    try {
+                        fallIds.put(spieler.getUniqueId(), Long.parseLong(befehl.substring(5)));
+                        oeffneModeration(spieler, GuiMenues.Menue.FALL, 1);
+                    } catch (NumberFormatException e) {
+                        spieler.sendMessage(prefixHinweis("Ungültige Fallnummer.", NamedTextColor.RED));
+                    }
+                    return;
+                }
+            }
+        }
         GuiSitzung.Aktion ziel = null;
         for (GuiSitzung.Aktion kandidat : GuiSitzung.Aktion.values()) {
             if (kandidat.befehl().equals(befehl)) {

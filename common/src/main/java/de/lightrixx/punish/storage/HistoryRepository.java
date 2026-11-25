@@ -36,6 +36,28 @@ public final class HistoryRepository {
 
     private volatile ConcurrentHashMap<UUID, List<Object>> rohQuarantaene = new ConcurrentHashMap<>();
     private final AtomicLong zaehler = new AtomicLong(0);
+    private final List<java.util.function.Consumer<de.lightrixx.punish.model.HistoryEreignis>> beobachter =
+            new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void beobachterHinzufuegen(java.util.function.BiConsumer<UUID, HistoryEntry> beobachter) {
+        Objects.requireNonNull(beobachter);
+        this.beobachter.add(e -> beobachter.accept(e.uuid(), e.eintrag()));
+    }
+
+    public void ereignisBeobachterHinzufuegen(java.util.function.Consumer<de.lightrixx.punish.model.HistoryEreignis> beobachter) {
+        this.beobachter.add(Objects.requireNonNull(beobachter));
+    }
+
+    private void meldeNeu(UUID uuid, HistoryEntry eintrag, boolean silent) {
+        var ereignis = new de.lightrixx.punish.model.HistoryEreignis(uuid, eintrag, silent);
+        for (var beobachter : beobachter) {
+            try {
+                beobachter.accept(ereignis);
+            } catch (RuntimeException e) {
+                LOG.error("History-Beobachter für Eintrag {} fehlgeschlagen.", eintrag.id(), e);
+            }
+        }
+    }
 
     private final File historyOrdner;
     private final YamlSpeicher yamlSpeicher;
@@ -209,6 +231,12 @@ public final class HistoryRepository {
     public void hinzufuegenNeu(HistoryType typ, String ausfuehrer, UUID zielUuid,
                                String zielName, String grund, Long ablauf,
                                String scope, String herkunft) {
+        hinzufuegenNeu(typ, ausfuehrer, zielUuid, zielName, grund, ablauf, scope, herkunft, false);
+    }
+
+    public void hinzufuegenNeu(HistoryType typ, String ausfuehrer, UUID zielUuid,
+                               String zielName, String grund, Long ablauf,
+                               String scope, String herkunft, boolean silent) {
         Objects.requireNonNull(typ, "Der History-Typ darf nicht null sein.");
         Objects.requireNonNull(ausfuehrer, "Der Ausführende darf nicht null sein.");
         Objects.requireNonNull(zielUuid, "Die Ziel-UUID darf nicht null sein.");
@@ -229,6 +257,7 @@ public final class HistoryRepository {
             StoreLock.LOCK.writeLock().unlock();
         }
         hinzufuegenIntern(eintrag, zielUuid);
+        meldeNeu(zielUuid, eintrag, silent);
     }
 
     public void hinzufuegenNeu(HistoryType typ, String ausfuehrer, String ziel,
@@ -239,6 +268,11 @@ public final class HistoryRepository {
 
     public void hinzufuegenNeu(HistoryType typ, String ausfuehrer, String ziel,
                                String grund, Long ablauf, String scope, String herkunft) {
+        hinzufuegenNeu(typ, ausfuehrer, ziel, grund, ablauf, scope, herkunft, false);
+    }
+
+    public void hinzufuegenNeu(HistoryType typ, String ausfuehrer, String ziel,
+                               String grund, Long ablauf, String scope, String herkunft, boolean silent) {
         Objects.requireNonNull(typ, "Der History-Typ darf nicht null sein.");
         Objects.requireNonNull(ausfuehrer, "Der Ausführende darf nicht null sein.");
         Objects.requireNonNull(ziel, "Das Ziel darf nicht null sein.");
@@ -259,6 +293,7 @@ public final class HistoryRepository {
             StoreLock.LOCK.writeLock().unlock();
         }
         hinzufuegenIntern(eintrag, schluessel);
+        meldeNeu(schluessel, eintrag, silent);
     }
 
     public List<HistoryEntry> finden(UUID schluessel, int limit) {

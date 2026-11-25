@@ -18,6 +18,15 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class SnakeYamlSpeicher implements YamlSpeicher {
+    private final boolean sicherungen;
+
+    public SnakeYamlSpeicher() {
+        this(true);
+    }
+
+    SnakeYamlSpeicher(boolean sicherungen) {
+        this.sicherungen = sicherungen;
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(SnakeYamlSpeicher.class);
     private static final int CODE_POINT_LIMIT = 32 * 1024 * 1024;
@@ -266,6 +275,9 @@ public final class SnakeYamlSpeicher implements YamlSpeicher {
     }
 
     private Map<String, Object> versucheWiederherstellungAusBackup(File datei) {
+        if (!sicherungen) {
+            return null;
+        }
         for (int stufe = 1; stufe <= 3; stufe++) {
             try {
                 Path bak = datei.toPath().resolveSibling(datei.getName() + ".bak." + stufe);
@@ -302,6 +314,9 @@ public final class SnakeYamlSpeicher implements YamlSpeicher {
     }
 
     private void backupErstellen(File datei) {
+        if (!sicherungen) {
+            return;
+        }
         try {
             Path backupPfad = datei.toPath().resolveSibling(
                     datei.getName() + ".corrupt-" + System.currentTimeMillis()
@@ -350,6 +365,9 @@ public final class SnakeYamlSpeicher implements YamlSpeicher {
     }
 
     private void rotiereBackup(File datei) {
+        if (!sicherungen) {
+            return;
+        }
         try {
             Path eltern = datei.toPath().getParent();
             if (eltern == null || !datei.exists() || datei.length() == 0) {

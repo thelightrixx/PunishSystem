@@ -19,7 +19,7 @@ public final class GuiMenues {
 
     public enum Menue {
         HAUPT, SPIELER, AKTION, GRUND, DAUER, SCOPE, BESTAETIGEN, STATUS, HISTORY, REPORTS,
-        REPORT_DETAIL, DOSSIER
+        REPORT_DETAIL, DOSSIER, FAELLE, FALL, STRAFKATALOG, PRUEFUNG
     }
 
     public record GuiHolder(Menue menue) implements InventoryHolder {

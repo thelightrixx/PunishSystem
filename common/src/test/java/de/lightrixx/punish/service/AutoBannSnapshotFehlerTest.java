@@ -118,4 +118,26 @@ class AutoBannSnapshotFehlerTest {
         org.junit.jupiter.api.Assertions.assertTrue(service.autoBann(UUID.randomUUID(), "Steve", "System", 6, 6));
         verify(beobachter).banGeaendert();
     }
+
+    @Test
+    void stillerAutoBannGibtSilentAnHistorieUndTeamMeldungWeiter() {
+        when(config.limitSnapshot()).thenReturn(new Konfiguration.LimitSnapshot(6, "7d"));
+        when(config.standardGrund(any())).thenReturn("Auto");
+        when(banRepository.bannenWennFrei(any())).thenReturn(true);
+        when(planer.spaeter(any(), org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(mock(de.lightrixx.punish.core.GeplanteAufgabe.class));
+        var history = mock(HistoryService.class);
+        var broadcast = mock(BroadcastService.class);
+        var stillerDienst = new AutoBannService(planer, banRepository, config, new TimeParser(), history, broadcast,
+                mock(LogWriter.class), mock(ProtectionService.class), verstossRepository, mock(MessageService.class),
+                mock(BanKickHelper.class), mock(SpielerVerzeichnis.class));
+        UUID uuid = UUID.randomUUID();
+        org.junit.jupiter.api.Assertions.assertTrue(stillerDienst.autoBann(uuid, "Steve", "Mod", 6, 6, true));
+        verify(history).hinzufuegen(org.mockito.ArgumentMatchers.eq(de.lightrixx.punish.model.HistoryType.AUTO_BANN),
+                org.mockito.ArgumentMatchers.eq("Mod"), org.mockito.ArgumentMatchers.eq(uuid),
+                org.mockito.ArgumentMatchers.eq("Steve"), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq(true));
+        verify(broadcast).senden(org.mockito.ArgumentMatchers.eq(de.lightrixx.punish.core.MessageKeys.BROADCAST_AUTO_BANN),
+                org.mockito.ArgumentMatchers.anyMap(), org.mockito.ArgumentMatchers.eq(true));
+    }
 }

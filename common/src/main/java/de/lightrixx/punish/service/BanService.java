@@ -161,7 +161,7 @@ public final class BanService {
 
         try {
             historyService.hinzufuegenDauerhaft(HistoryType.BAN, ausfuehrer, zielUuid, zielName, grund, ablaufAm,
-                    wirksam, herkunftNorm);
+                    wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             boolean rollback = banRepository.entbannenDauerhaft(zielUuid, wirksam, record);
             LOG.error("Ban-History für {} konnte nicht geschrieben werden; Rollback {}.",
@@ -169,7 +169,7 @@ public final class BanService {
             if (rollback) {
                 try {
                     historyService.hinzufuegen(HistoryType.PARDON, "System", zielUuid, zielName,
-                            "Rollback nach fehlgeschlagener Bann-History", null, wirksam, herkunftNorm);
+                            "Rollback nach fehlgeschlagener Bann-History", null, wirksam, herkunftNorm, silent);
                 } catch (Exception rollbackFehler) {
                     LOG.warn("Rollback-History für {} konnte nicht geschrieben werden.", zielUuid, rollbackFehler);
                 }
@@ -246,7 +246,7 @@ public final class BanService {
 
         try {
             historyService.hinzufuegenDauerhaft(HistoryType.PERMABANN, ausfuehrer, zielUuid, zielName, grund, null,
-                    wirksam, herkunftNorm);
+                    wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             boolean rollback = banRepository.entbannenDauerhaft(zielUuid, wirksam, record);
             LOG.error("Permabann-History für {} konnte nicht geschrieben werden; Rollback {}.",
@@ -254,7 +254,7 @@ public final class BanService {
             if (rollback) {
                 try {
                     historyService.hinzufuegen(HistoryType.PARDON, "System", zielUuid, zielName,
-                            "Rollback nach fehlgeschlagener Permabann-History", null, wirksam, herkunftNorm);
+                            "Rollback nach fehlgeschlagener Permabann-History", null, wirksam, herkunftNorm, silent);
                 } catch (Exception rollbackFehler) {
                     LOG.warn("Rollback-History für {} konnte nicht geschrieben werden.", zielUuid, rollbackFehler);
                 }
@@ -287,7 +287,7 @@ public final class BanService {
             try {
                 historyService.hinzufuegen(HistoryType.PARDON, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,
-                        aktuell.get().scope(), ablaufHerkunft);
+                        aktuell.get().scope(), ablaufHerkunft, silent);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }
@@ -317,7 +317,7 @@ public final class BanService {
                             ? "Aufgehoben (Auto-Bann, Grund war: " + entfernt.get().grund()
                                     + " – Verstöße bleiben, nächster Verstoß = Re-Bann)"
                             : "Aufgehoben (Grund war: " + entfernt.get().grund() + ")",
-                    null, entfernterScope, herkunftNorm);
+                    null, entfernterScope, herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Pardon-History für {} konnte nicht geschrieben werden (Ban bleibt entbannt).", zielUuid, e);
         }
@@ -398,7 +398,7 @@ public final class BanService {
 
         try {
             historyService.hinzufuegen(HistoryType.BAN_EDIT, ausfuehrer, zielUuid, zielName,
-                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm);
+                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Ban-Edit-History für {} konnte nicht geschrieben werden (Ban bleibt aktiv).", zielUuid, e);
         }
@@ -450,7 +450,7 @@ public final class BanService {
         platzhalter.put("herkunft", herkunftNorm);
         try {
             historyService.hinzufuegen(HistoryType.BAN_EDIT, ausfuehrer, zielUuid, zielName,
-                    neu.grund(), null, neu.scope(), herkunftNorm);
+                    neu.grund(), null, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Ban-Edit-History für {} konnte nicht geschrieben werden (Ban bleibt aktiv).", zielUuid, e);
         }
@@ -487,7 +487,7 @@ public final class BanService {
             try {
                 historyService.hinzufuegen(HistoryType.PARDON_ALL, ausfuehrer,
                         record.spielerUuid(), record.spielerName(), grund, null,
-                        record.scope(), herkunftNorm);
+                        record.scope(), herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("PardonAll-History für {} konnte nicht geschrieben werden.", record.spielerUuid(), e);
             }
@@ -576,7 +576,7 @@ public final class BanService {
             try {
                 historyService.hinzufuegen(HistoryType.BAN_ALL, ausfuehrer,
                         record.spielerUuid(), record.spielerName(), grund, ablaufAm,
-                        record.scope(), herkunftNorm);
+                        record.scope(), herkunftNorm, silent);
             } catch (Exception e) {
                 LOG.warn("BAN_ALL-History für {} fehlgeschlagen (Ban bleibt aktiv).", record.spielerUuid(), e);
             }
@@ -765,14 +765,14 @@ public final class BanService {
             try {
                 historyService.hinzufuegen(HistoryType.PARDON, "System", vorabUuid, vorab.spielerName(),
                         "Vorab-Bann auf " + echterName + " (" + echteUuid + ") migriert", null,
-                        vorab.scope(), ServerScope.UNBEKANNT_WERT);
+                        vorab.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Migrations-History (alt) fehlgeschlagen.", e);
             }
             try {
                 historyService.hinzufuegen(HistoryType.BAN, vorab.ausfuehrer(), echteUuid, echterName,
                         vorab.grund() + " (Vorab-Bann migriert)", neu.ablaufAm(),
-                        neu.scope(), ServerScope.UNBEKANNT_WERT);
+                        neu.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.debug("Migrations-History (neu) fehlgeschlagen.", e);
             }
@@ -834,7 +834,7 @@ public final class BanService {
             try {
                 historyService.hinzufuegen(HistoryType.PARDON, ausfuehrer, rec.spielerUuid(),
                         rec.spielerName(), "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                        rec.scope(), ServerScope.UNBEKANNT_WERT);
+                        rec.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.warn("Ablauf-History für {} konnte nicht geschrieben werden.", rec.spielerUuid(), e);
             }

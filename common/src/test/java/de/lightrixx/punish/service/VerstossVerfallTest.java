@@ -58,7 +58,7 @@ class VerstossVerfallTest {
         BanService banService = mock(BanService.class);
         when(banService.finden(any(UUID.class), any())).thenReturn(Optional.empty());
         AutoBannService autoBann = mock(AutoBannService.class);
-        when(autoBann.autoBann(any(), any(), any(), anyInt(), anyInt())).thenReturn(true);
+        when(autoBann.autoBann(any(), any(), any(), anyInt(), anyInt(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(true);
         HistoryService history = mock(HistoryService.class);
         BroadcastService broadcast = mock(BroadcastService.class);
         LogWriter logWriter = mock(LogWriter.class);
@@ -182,7 +182,7 @@ class VerstossVerfallTest {
         umgebung.service().hinzufuegen(uuid, "Steve", "Cheating", "Admin", VerstossStufe.HIGH);
         assertEquals(2, umgebung.service().anzahl(uuid));
         assertEquals(2 + 3, umgebung.service().punkte(uuid));
-        verify(umgebung.autoBann(), never()).autoBann(any(), any(), any(), anyInt(), anyInt());
+        verify(umgebung.autoBann(), never()).autoBann(any(), any(), any(), anyInt(), anyInt(), org.mockito.ArgumentMatchers.anyBoolean());
     }
 
     @Test
@@ -201,7 +201,7 @@ class VerstossVerfallTest {
 
         umgebung.service().hinzufuegen(uuid, "Steve", "Kleinigkeit", "Admin", VerstossStufe.LOW);
         assertEquals(6, umgebung.service().punkte(uuid));
-        verify(umgebung.autoBann(), times(1)).autoBann(any(), any(), any(), anyInt(), anyInt());
+        verify(umgebung.autoBann(), times(1)).autoBann(any(), any(), any(), anyInt(), anyInt(), org.mockito.ArgumentMatchers.anyBoolean());
     }
 
     @Test
@@ -247,7 +247,7 @@ class VerstossVerfallTest {
         ArgumentCaptor<String> historyText = ArgumentCaptor.forClass(String.class);
         verify(umgebung.history(), times(1)).hinzufuegen(
                 eq(HistoryType.VERSTOSS_REMOVE), anyString(), eq(uuid), anyString(),
-                historyText.capture(), isNull());
+                historyText.capture(), isNull(), eq(false));
         assertTrue(historyText.getValue().contains("Stufe: high"));
         assertTrue(historyText.getValue().contains("Grund war: Spam"));
 
@@ -269,7 +269,7 @@ class VerstossVerfallTest {
         ArgumentCaptor<String> historyText = ArgumentCaptor.forClass(String.class);
         verify(umgebung.history(), times(1)).hinzufuegen(
                 eq(HistoryType.VERSTOSS_EDIT), anyString(), eq(uuid), anyString(),
-                historyText.capture(), isNull());
+                historyText.capture(), isNull(), eq(false));
         assertTrue(historyText.getValue().contains("Stufe: high"));
         assertTrue(historyText.getValue().contains("Grund: Spam"));
 

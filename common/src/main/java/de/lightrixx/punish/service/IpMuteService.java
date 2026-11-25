@@ -165,7 +165,7 @@ public final class IpMuteService {
 
         try {
             historyService.hinzufuegen(HistoryType.IP_MUTE, ausfuehrer, kanonisch, grund, ablaufAm,
-                    wirksam, herkunftNorm);
+                    wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("IP-Mute-History für {} konnte nicht geschrieben werden (Mute bleibt aktiv).", kanonisch, e);
         }
@@ -200,7 +200,7 @@ public final class IpMuteService {
             try {
                 historyService.hinzufuegen(HistoryType.IP_UNMUTE, "System", kanonisch,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,
-                        scope, normiereHerkunft(herkunft));
+                        scope, normiereHerkunft(herkunft), silent);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für IP-Mute {} konnte nicht geschrieben werden.", kanonisch, e);
             }
@@ -228,7 +228,7 @@ public final class IpMuteService {
         try {
             historyService.hinzufuegen(HistoryType.IP_UNMUTE, ausfuehrer, kanonisch,
                     "Aufgehoben (Grund war: " + entfernt.get().grund() + ")", null,
-                    entfernt.get().scope(), herkunftNorm);
+                    entfernt.get().scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("IP-Unmute-History für {} konnte nicht geschrieben werden.", kanonisch, e);
         }
@@ -300,7 +300,7 @@ public final class IpMuteService {
 
         try {
             historyService.hinzufuegen(HistoryType.IP_MUTE_EDIT, ausfuehrer, kanonisch,
-                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm);
+                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("IP-Mute-Edit-History für {} konnte nicht geschrieben werden.", kanonisch, e);
         }
@@ -391,7 +391,7 @@ public final class IpMuteService {
                 try {
                     historyService.hinzufuegen(HistoryType.IP_UNMUTE, ausfuehrer, rec.ip(),
                             "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                            rec.scope(), ServerScope.UNBEKANNT_WERT);
+                            rec.scope(), ServerScope.UNBEKANNT_WERT, false);
                 } catch (Exception e) {
                     LOG.warn("Ablauf-History für IP-Mute {} konnte nicht geschrieben werden.", rec.ip(), e);
                 }

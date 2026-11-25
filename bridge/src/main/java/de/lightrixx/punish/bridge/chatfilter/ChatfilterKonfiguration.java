@@ -129,7 +129,7 @@ public final class ChatfilterKonfiguration {
             FileConfiguration proxy = YamlConfiguration.loadConfiguration(sync);
             boolean übernommen = false;
             for (String pfad : List.of("chatfilter.aktiv", "chatfilter.schwelle", "chatfilter.ki-timeout-ms",
-                    "chatfilter.max-zeichen", "chatfilter.klartext-uebertragen", "chatfilter.ki-freigaben")) {
+                    "chatfilter.max-zeichen", "chatfilter.klartext-uebertragen", "chatfilter.ki-freigaben", "chatfilter.beobachten")) {
                 if (proxy.contains(pfad)) {
                     ziel.set(pfad, proxy.get(pfad));
                     übernommen = true;
@@ -152,6 +152,10 @@ public final class ChatfilterKonfiguration {
 
     public boolean aktiv() {
         return leseBool("chatfilter.aktiv", false);
+    }
+
+    public boolean beobachten() {
+        return leseBool("chatfilter.beobachten", false);
     }
 
     public Boolean leseLaufzeitFilter() {

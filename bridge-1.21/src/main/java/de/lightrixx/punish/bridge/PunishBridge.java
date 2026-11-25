@@ -236,6 +236,9 @@ public final class PunishBridge extends JavaPlugin {
         brigadierEintraege.add(tunnel("punish-stats", new BridgeBefehlWeiterleitung(kanalClient, "punish-stats", "punish.stats", false, config)));
         brigadierEintraege.add(tunnel("punish-export", new BridgeBefehlWeiterleitung(kanalClient, "punish-export", "punish.export", false, config)));
         brigadierEintraege.add(tunnel("punish-search", new BridgeBefehlWeiterleitung(kanalClient, "punish-search", "punish.search", false, config)));
+        brigadierEintraege.add(tunnel("punish-fall", new BridgeBefehlWeiterleitung(kanalClient, "punish-fall", "punish.fall", false, config)));
+        brigadierEintraege.add(tunnel("punish-katalog", new BridgeBefehlWeiterleitung(kanalClient, "punish-katalog", "punish.katalog", true, config)));
+        brigadierEintraege.add(tunnel("chatfilter-pruefung", new BridgeBefehlWeiterleitung(kanalClient, "chatfilter-pruefung", "punish.chatfilter.pruefung", false, config)));
         registriereDiagnose(config, kanalClient, muteCache);
         try {
             var datenDienst = new de.lightrixx.punish.bridge.gui.GuiDatenDienst(kanalClient, config);
@@ -885,7 +888,7 @@ public final class PunishBridge extends JavaPlugin {
                         kanalClient.sendeChatfilterTreffer(new de.lightrixx.punish.net.Protokoll.ChatfilterTreffer(
                                 uuid, name, treffer.kanal().name(), treffer.quelle().name(),
                                 treffer.bewertung(), treffer.textHash(), gekuerzt,
-                                System.currentTimeMillis()));
+                                System.currentTimeMillis(), cfConfig.beobachten()));
                     } catch (Exception e) {
                         LOG.debug("Chatfilter-Treffer konnte nicht gemeldet werden.", e);
                     }

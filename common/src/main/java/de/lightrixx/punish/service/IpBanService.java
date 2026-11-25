@@ -101,7 +101,7 @@ public final class IpBanService {
                 editPlatzhalter.put("herkunft", herkunftNorm);
                 try {
                     historyService.hinzufuegen(HistoryType.IP_BAN_EDIT, ausfuehrer, neu.ip(), grund, null,
-                            neu.scope(), herkunftNorm);
+                            neu.scope(), herkunftNorm, silent);
                 } catch (Exception e) {
                     LOG.warn("IP-Bann-Eskalations-History für {} konnte nicht geschrieben werden.", ip, e);
                 }
@@ -129,7 +129,7 @@ public final class IpBanService {
 
         try {
             historyService.hinzufuegen(HistoryType.BAN_IP, ausfuehrer, record.ip(), grund, null,
-                    wirksam, herkunftNorm);
+                    wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Perm-IP-Bann-History für {} konnte nicht geschrieben werden (Bann bleibt aktiv).", ip, e);
         }
@@ -194,7 +194,7 @@ public final class IpBanService {
 
         try {
             historyService.hinzufuegen(HistoryType.BAN_IP, ausfuehrer, record.ip(), grund, ablaufAm,
-                    wirksam, herkunftNorm);
+                    wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Temp-IP-Bann-History für {} konnte nicht geschrieben werden (Bann bleibt aktiv).", ip, e);
         }
@@ -266,7 +266,7 @@ public final class IpBanService {
 
         try {
             historyService.hinzufuegen(HistoryType.IP_BAN_EDIT, ausfuehrer, neu.ip(),
-                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm);
+                    neu.grund(), ablaufAm, neu.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("IP-Bann-Edit-History für {} konnte nicht geschrieben werden (Bann bleibt aktiv).", ip, e);
         }
@@ -320,7 +320,7 @@ public final class IpBanService {
                                     "Abgelaufen (Grund war: " + rec.grund() + ")", null,
                                     rec.scope(), herkunft == null || herkunft.isBlank()
                                             ? ServerScope.UNBEKANNT_WERT
-                                            : herkunft.trim().toLowerCase(java.util.Locale.ROOT));
+                                            : herkunft.trim().toLowerCase(java.util.Locale.ROOT), silent);
                         } catch (Exception e) {
                             LOG.debug("Ablauf-History für IP {} konnte nicht geschrieben werden.", rec.ip(), e);
                         }
@@ -345,7 +345,7 @@ public final class IpBanService {
         try {
             historyService.hinzufuegen(HistoryType.UNBAN_IP, ausfuehrer, record.ip(),
                     "IP-Bann aufgehoben (Grund war: " + record.grund() + ")", null,
-                    record.scope(), herkunftNorm);
+                    record.scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Unban-IP-History für {} konnte nicht geschrieben werden (Unban bleibt wirksam).", record.ip(), e);
         }
@@ -398,7 +398,7 @@ public final class IpBanService {
             try {
                 historyService.hinzufuegen(HistoryType.UNBAN_IP, ausfuehrer, rec.ip(),
                         "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                        rec.scope(), ServerScope.UNBEKANNT_WERT);
+                        rec.scope(), ServerScope.UNBEKANNT_WERT, false);
             } catch (Exception e) {
                 LOG.warn("Ablauf-History für IP {} konnte nicht geschrieben werden.", rec.ip(), e);
             }

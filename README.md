@@ -1,12 +1,12 @@
-# PunishSystem v4.4.3
+# PunishSystem v4.5.0
 
-Dieser Patch ersetzt die irrtümlich als `v4.5.0` veröffentlichte Chatfilter-Korrektur. Die Chatfilter-Funktionen bleiben gegenüber dieser Veröffentlichung unverändert. Wer `v4.5.0` bereits installiert hat, muss alle drei Module einmalig manuell auf `v4.4.3` umstellen und regulär neu starten; der automatische Updater bietet niedrigere Versionsnummern nicht an.
+Mit v4.5.0 kommen verknüpfte Moderationsfälle, ein Strafkatalog mit Wiederholungsstufen, eine befristete Chatfilter-Prüfung und optionale Discord-Team-Meldungen hinzu.
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
 ## Handbuch
 
-Lies das [PunishSystem Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Die 37 Themen führen von der Einrichtung bis zur Fehlerbehebung. Inhalte, Suche, Schriften und interaktive Beispiele funktionieren offline; die Werkzeuge führen keine echten Serverbefehle aus.
+Lies das [PunishSystem Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Die 41 Themen führen von der Einrichtung bis zur Fehlerbehebung. Inhalte, Suche, Schriften und interaktive Beispiele funktionieren offline; die Werkzeuge führen keine echten Serverbefehle aus.
 
 | Aufgabe | Einstieg |
 |---|---|
@@ -29,7 +29,7 @@ Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=
 
 ## Voraussetzungen und Jars
 
-Das [Release v4.4.3](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.4.3) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
+Das [Release v4.5.0](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.0) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
 
 | Einsatzort | Voraussetzung | Jar-Variante |
 |---|---|---|
@@ -53,6 +53,15 @@ Setze das [Scope-Flag](docs/index.html#/scopes) ans Ende des Befehls. Unvollstä
 
 Die [Installationsanleitung](docs/index.html#/installation) enthält die vollständigen YAML-Beispiele, Dateipfade und Prüfschritte. Regeln und Texte werden zentral auf dem Proxy gepflegt; synchronisierte Bridge-Dateien sind keine unabhängige Konfiguration.
 
+## Neue Moderationsabläufe in v4.5.0
+
+- [Moderationsfälle](docs/index.html#/faelle): Reports, Fallnotizen, Beweislinks und Strafentscheidungen unter einer Fallnummer verbinden; im Dossier einsehen.
+- [Strafkatalog](docs/index.html#/strafkatalog): `/punish-katalog <Spieler> spam --global` schlägt abhängig von früheren Katalog-Strafen die nächste Stufe vor. Jede Ausführung braucht eine Bestätigung und das Recht der Strafart.
+- [Chatfilter-Prüfung](docs/index.html#/chatfilter-pruefung): nur Treffer für standardmäßig sieben Tage speichern, Fehlalarme aus der Staffel entfernen und unveränderte automatische Warns/Mutes nach Bestätigung korrigieren. Folgeaktionen gesondert prüfen.
+- [Discord](docs/index.html#/discord): auswählbare Meldungen an einen privaten Teamkanal. Zunächst aus; die geheime Webhook-Adresse ausschließlich auf dem Proxy eintragen. Stille Aktionen mit `-s` bleiben auch dort stumm.
+
+Alle Module gemeinsam aktualisieren und neu starten. Neue Rechte stehen ab Moderator in den Standardbündeln; bestehende eigene Bündel gezielt ergänzen. Bei MySQL wird `punish_moderation` automatisch angelegt; bei YAML entstehen `data/faelle.yml` und `data/chatfilter-pruefung.yml`. Diese Daten in Sicherungen aufnehmen. `chatfilter.beobachten` erlaubt den Test ohne Filterblockade und Staffel-Strafen. Discord und Beobachtungsmodus sind standardmäßig ausgeschaltet.
+
 ## Funktionen
 
 - Banns, Timeouts, Mutes, Freezes, Kicks und IP-Strafen mit globalem oder serverbezogenem Scope.
@@ -63,7 +72,7 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 - MySQL-Speicherung mit YAML-Migration; YAML bleibt als Alternative nutzbar. Bridges halten Strafdaten im RAM.
 - GitHub-Updates mit SHA-256-Prüfung und automatischer Übernahme beim nächsten Start: nativer Update-Ordner auf den Backends, Start-Hook auf dem Linux-Proxy, auch unter Pelican/Docker.
 
-Beim Wechsel von einer Version vor `v4.2.0` alle JARs einmalig manuell auf `v4.4.3` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
+Beim Wechsel von einer Version vor `v4.2.0` alle JARs einmalig manuell auf `v4.5.0` aktualisieren und Proxy sowie Backends neu starten. Der Proxy erzeugt `plugins/update-pending/apply-update.sh`. Unter Linux/Pelican einmalig `sh plugins/update-pending/apply-update.sh ` vor den bisherigen Java-Startbefehl setzen; dessen Java-Argumente beibehalten. Anschließend den Proxy über diesen Startbefehl neu starten. Der Hook benötigt `sh`, `sha256sum`, `cp`, `mv` und `rm` im Container.
 
 Für künftige stabile Updates `update.channel: "Release"` auf dem Proxy verwenden. `/punish-update apply confirm` lädt, prüft und verteilt die Dateien. Mit `/punish-update status` den aktiven Proxy-Start-Hook und die erfolgreichen Transferquittungen aller Backends prüfen, dann Backends und Proxy neu starten. Für die Verteilung muss auf jedem Backend ein Spieler verbunden sein. Ohne Start-Hook bleibt die Proxy-JAR vorgemerkt; das Plugin weist darauf hin. Die [Update-Anleitung](docs/index.html#/betrieb) beschreibt Einrichtung, Sicherung und Fehlerbehandlung.
 

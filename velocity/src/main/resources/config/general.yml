@@ -156,6 +156,38 @@ verstoesse:
     medium: { dauer: "90d", punkte: 2 }
     high: { dauer: "365d", punkte: 3 }
 
+# --- Strafkatalog (/punish-katalog) ---
+# Die Regel-ID (spam) bleibt stabil, auch wenn der sichtbare Grund geändert wird.
+# Es zählen nur bestätigte, erfolgreich ausgeführte Katalog-Strafen je Account und Regel.
+# Die letzte Stufe wiederholt sich. Zeitfenster und Stufen dürfen angepasst werden.
+# Vorschläge werden vor der Ausführung mit einem 60 Sekunden gültigen Klick bestätigt.
+# Erlaubt: warn, mute, timeout, ban, permabann, freeze; Dauer entfällt bei warn/permabann.
+# Bestehende Rechte, Dauernlimits, Rangschutz und Scopes gelten auch hier.
+strafkatalog:
+  regeln:
+    spam:
+      grund: "Spamming"
+      fenster-tage: 30
+      stufen:
+        - { befehl: warn }
+        - { befehl: mute, dauer: "15m" }
+        - { befehl: mute, dauer: "2h" }
+        - { befehl: mute, dauer: "1d" }
+
+# --- Optionale Discord-Team-Meldungen ---
+# Erst eine HTTPS-Webhook-URL aus einem privaten Discord-Teamkanal eintragen und aktivieren.
+# Die URL enthält einen geheimen Token: nicht veröffentlichen oder als Beweislink verwenden.
+# Ein eigener Discord-Bot ist nicht erforderlich. Diese Funktion nimmt keine Befehle entgegen.
+# IP-Ziele sind ausgeblendet; Chatfilter-Prüftexte werden nicht an Discord geschickt.
+# Jede Ereignisgruppe kann durch Entfernen aus der Liste ausgeschaltet werden; [] meldet nichts.
+# Aufhebungen und Bearbeitungen von IP-Strafen gehören zur Gruppe ip.
+discord:
+  aktiv: false
+  webhook-url: ""
+  ereignisse: [report, bann, mute, timeout, freeze, kick, ip, verwarnung, verstoss, aufhebung, bearbeitung]
+  # Einzelne Ereignisse zusätzlich ausnehmen, z. B. [MUTE_ALL, WARN_EDIT, BAN_IP].
+  ausgeschlossene-typen: []
+
 # --- Warn-Eskalation (/warn -> /verstoss) ---
 # Erreicht die Warn-Anzahl eines Spielers exakt eine Schwelle, wird automatisch
 # ein Verstoß der zugehörigen Stufe eingetragen. Der Verstoß zählt danach wie
@@ -248,6 +280,11 @@ reports:
 #   Jede Stufe löst einmal pro Fenster aus (kein Spam bei Dauerfeuer).
 chatfilter:
   aktiv: false
+  # Beobachtung meldet Treffer, blockiert aber keine Inhalte und löst keine Staffel-Strafen aus.
+  beobachten: false
+  # Nur Treffer werden gespeichert; klartext-uebertragen: false speichert ausschließlich Metadaten/Hash.
+  # Nach Ablauf werden Prüftexte samt Prüfdaten gelöscht. Fallverweise enthalten keinen Chattext.
+  pruefung-aufbewahrung-tage: 7
   fenster-minuten: 60
   staffel:
     - { anzahl: 5, aktion: warn }
@@ -430,25 +467,29 @@ rang-buendel:
     "punish.status", "punish.history", "punish.warn",
     "punish.mute", "punish.unmute", "punish.kick",
     "punish.reports", "punish.message.all-punishes"]
-  moderator: ["punish.report", "punish.own", "punish.help", "punish.version",
+  moderator: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes"]
-  manager: ["punish.report", "punish.own", "punish.help", "punish.version",
+  manager: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.stats", "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.message.all-punishes"]
-  richter: ["punish.report", "punish.own", "punish.help", "punish.version",
+  richter: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
     "punish.note", "punish.gui", "punish.allow-silent-syntax", "punish.undo",
     "punish.stats", "punish.chatfilter", "punish.vpn", "punish.message.vpn", "punish.pardon", "punish.message.all-punishes"]
-  admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+  admin: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",
@@ -462,7 +503,8 @@ rang-buendel:
     "punish.verstoss.edit", "punish.verstoss.clear",
     "punish.edit", "punish.deleteip", "punish.reload", "punish.update", "punish.diagnostics",
     "punish.undo", "punish.stats", "punish.export", "punish.search"]
-  p-admin: ["punish.report", "punish.own", "punish.help", "punish.version",
+  p-admin: ["punish.fall", "punish.fall.bearbeiten", "punish.katalog",
+    "punish.chatfilter.pruefung", "punish.chatfilter.pruefung.bearbeiten", "punish.report", "punish.own", "punish.help", "punish.version",
     "punish.status", "punish.status.server", "punish.history", "punish.history.server",
     "punish.warn", "punish.mute", "punish.unmute", "punish.kick",
     "punish.timeout", "punish.untimeout", "punish.freeze", "punish.unfreeze", "punish.reports", "punish.alts",

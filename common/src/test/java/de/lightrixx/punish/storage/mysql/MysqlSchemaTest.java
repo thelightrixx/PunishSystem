@@ -23,12 +23,12 @@ class MysqlSchemaTest {
 
     @Test
     void alleTabellenSindRegistriert() {
-        assertEquals(17, MysqlSchema.ALLE_TABELLEN.size());
+        assertEquals(18, MysqlSchema.ALLE_TABELLEN.size());
         for (String tabelle : List.of("punish_bans", "punish_mutes", "punish_timeouts", "punish_freezes",
                 "punish_ipbans", "punish_ipmutes", "punish_iptimeouts",
                 "punish_warns", "punish_verstoesse", "punish_notizen",
                 "punish_reports", "punish_history", "punish_history_archiv", "punish_spieler",
-                "punish_ip_historie", "punish_missed_broadcasts", "punish_missed_cursor")) {
+                "punish_ip_historie", "punish_missed_broadcasts", "punish_missed_cursor", "punish_moderation")) {
             assertTrue(MysqlSchema.ALLE_TABELLEN.contains(tabelle), "Fehlt: " + tabelle);
         }
         assertFalse(MysqlSchema.ALLE_TABELLEN.contains(MysqlSchema.T_META),
@@ -47,7 +47,7 @@ class MysqlSchemaTest {
         MysqlSchema.initialisieren(mysql);
 
         ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
-        verify(statement, org.mockito.Mockito.times(18)).execute(sql.capture());
+        verify(statement, org.mockito.Mockito.times(19)).execute(sql.capture());
         List<String> alle = new ArrayList<>(sql.getAllValues());
         for (String tabelle : MysqlSchema.ALLE_TABELLEN) {
             boolean gefunden = alle.stream().anyMatch(s -> s.contains("CREATE TABLE IF NOT EXISTS " + tabelle));

@@ -22,6 +22,8 @@
 # =========================================================
 
 chatfilter:
+  # Kommt per Text-Sync vom Proxy: nur beobachten, keine Inhalte blockieren.
+  beobachten: false
   # Master-Schalter. false = Filter komplett aus.
   aktiv: false
 

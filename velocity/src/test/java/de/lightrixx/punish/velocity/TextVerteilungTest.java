@@ -19,6 +19,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 class TextVerteilungTest {
+    @Test
+    void discordWebhookBleibtAufDemProxyUndBeobachtungswertWirdVerteilt() {
+        String roh = "discord:\n  aktiv: true\n  webhook-url: 'nur-ein-testwert'\n"
+                + "chatfilter:\n  beobachten: true\n";
+        String bereinigt = new String(TextVerteilung.bereinigeGeneral(
+                roh.getBytes(java.nio.charset.StandardCharsets.UTF_8)).orElseThrow(), java.nio.charset.StandardCharsets.UTF_8);
+        assertFalse(bereinigt.contains("discord"));
+        assertFalse(bereinigt.contains("nur-ein-testwert"));
+        assertTrue(bereinigt.contains("beobachten: true"));
+    }
 
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(strings = {"", "nur Text", "- liste"})

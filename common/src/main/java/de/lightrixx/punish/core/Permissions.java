@@ -59,6 +59,11 @@ public enum Permissions {
     PUNISH_STATS("punish.stats"),
     PUNISH_EXPORT("punish.export"),
     PUNISH_SEARCH("punish.search"),
+    PUNISH_FALL("punish.fall"),
+    PUNISH_FALL_BEARBEITEN("punish.fall.bearbeiten"),
+    PUNISH_KATALOG("punish.katalog"),
+    PUNISH_CHATFILTER_PRUEFUNG("punish.chatfilter.pruefung"),
+    PUNISH_CHATFILTER_PRUEFUNG_BEARBEITEN("punish.chatfilter.pruefung.bearbeiten"),
     ALLOW_SILENT("punish.allow-silent-syntax"),
 
     BROADCAST_RECEIVE_ALL("punish.message.all-punishes"),

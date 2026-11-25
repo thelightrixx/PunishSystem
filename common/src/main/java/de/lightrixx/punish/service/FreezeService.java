@@ -186,7 +186,7 @@ public final class FreezeService {
 
         try {
             historyService.hinzufuegen(HistoryType.FREEZE, ausfuehrer, zielUuid, zielName, grund,
-                    permanent ? null : ablaufAm, wirksam, herkunftNorm);
+                    permanent ? null : ablaufAm, wirksam, herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Freeze-History für {} konnte nicht geschrieben werden (Freeze bleibt aktiv).", zielUuid, e);
         }
@@ -216,7 +216,7 @@ public final class FreezeService {
             try {
                 historyService.hinzufuegen(HistoryType.UNFREEZE, "System", zielUuid, zielName,
                         "Abgelaufen (Grund war: " + aktuell.get().grund() + ")", null,
-                        scope, normiereHerkunft(herkunft));
+                        scope, normiereHerkunft(herkunft), silent);
             } catch (Exception e) {
                 LOG.debug("Ablauf-History für {} konnte nicht geschrieben werden.", zielUuid, e);
             }
@@ -244,7 +244,7 @@ public final class FreezeService {
         try {
             historyService.hinzufuegen(HistoryType.UNFREEZE, ausfuehrer, zielUuid, zielName,
                     "Aufgehoben (Grund war: " + entfernt.get().grund() + ")", null,
-                    entfernt.get().scope(), herkunftNorm);
+                    entfernt.get().scope(), herkunftNorm, silent);
         } catch (Exception e) {
             LOG.warn("Unfreeze-History für {} konnte nicht geschrieben werden (Entfreeze bleibt wirksam).", zielUuid, e);
         }
@@ -346,7 +346,7 @@ public final class FreezeService {
                 try {
                     historyService.hinzufuegen(HistoryType.UNFREEZE, ausfuehrer, rec.spielerUuid(),
                             rec.spielerName(), "Abgelaufen (Grund war: " + rec.grund() + ")", null,
-                            rec.scope(), ServerScope.UNBEKANNT_WERT);
+                            rec.scope(), ServerScope.UNBEKANNT_WERT, false);
                 } catch (Exception e) {
                     LOG.warn("Ablauf-History für {} konnte nicht geschrieben werden.", rec.spielerUuid(), e);
                 }

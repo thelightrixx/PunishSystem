@@ -46,6 +46,10 @@ public final class ChatfilterService implements AutoCloseable {
     }
 
     private final ChatfilterKonfiguration konfiguration;
+
+    public boolean beobachten() {
+        return konfiguration.beobachten();
+    }
     private volatile WortlistenFilter wortliste;
     private final ToxizitaetsModell modell;
     private final Set<String> kiFreigaben;
