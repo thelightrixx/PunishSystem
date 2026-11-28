@@ -9,11 +9,28 @@ import tempfile
 import unittest
 import zipfile
 import project_tools as tools
+from documentation import fragments, replace_fragments
 
 from project_tools import Handbook, check_jar, field, source_files, VERSION
 
 
 class ProjectToolsTest(unittest.TestCase):
+    def test_shared_text_replacement_keeps_project_content(self):
+        original = '<p>ItemLock</p><!-- SHARED:help -->old<!-- /SHARED:help --><p>GPL-3.0</p>'
+        updated = replace_fragments(original, {"help": "new"})
+        self.assertEqual({"help": "new"}, fragments(updated))
+        self.assertIn('<p>ItemLock</p>', updated)
+        self.assertIn('<p>GPL-3.0</p>', updated)
+        with self.assertRaises(ValueError):
+            replace_fragments(original, {"different": "new"})
+
+    def test_damaged_and_duplicate_shared_markers_are_rejected(self):
+        valid = '<!-- SHARED:help -->text<!-- /SHARED:help -->'
+        for text in (valid * 2, '<!-- SHARED:help -->text',
+                     '<!-- SHARED:help -->text<!-- /SHARED:other -->'):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                fragments(text)
+
     def test_versions_are_stable_and_have_a_lowercase_v(self):
         for invalid in ("1.2.3", "V1.2.3", "v01.2.3", "v1.2.3-beta", "v1.2", "v1.2.3+build"):
             self.assertIsNone(VERSION.fullmatch(invalid))
@@ -128,6 +145,34 @@ class ReleaseContractTest(unittest.TestCase):
         for extra in ('<script src="https://example.invalid/app.js"></script>', '<style>@import "remote.css";</style>', '\ufffd', 'Ã¼'):
             self.write("docs/index.html", self.docs + extra)
             with self.assertRaises(ValueError):
+                tools.check_docs(self.root)
+
+    def test_old_page_and_section_links_remain_valid(self):
+        replacement = ('<section class="page" data-id="betrieb" data-aliases="updates" '
+                       'data-anchor-aliases="alt:neu ganz-alt:">')
+        docs = self.docs.replace('<section class="page" data-id="betrieb">', replacement)
+        docs = docs.replace('<h1>betrieb</h1>', '<h1>betrieb</h1><h2 data-anchor="neu">Neu</h2>')
+        self.write("docs/index.html", docs + '<a href="#/updates/alt">Alt</a><a href="#/betrieb/ganz-alt">Alt</a>')
+        self.assertEqual(6, tools.check_docs(self.root))
+        for invalid in ("alt:fehlt", "alt:neu alt:neu", "neu:neu", "alt:neu kette:alt"):
+            self.write("docs/index.html", docs.replace("alt:neu ganz-alt:", invalid))
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                tools.check_docs(self.root)
+
+    def test_alias_collisions_are_rejected(self):
+        for aliases in ("betrieb", "alt alt", "../escape"):
+            self.write("docs/index.html", self.docs.replace('data-id="betrieb"',
+                       'data-id="betrieb" data-aliases="' + aliases + '"'))
+            with self.subTest(aliases=aliases), self.assertRaises(ValueError):
+                tools.check_docs(self.root)
+
+    def test_local_document_links_must_exist_inside_docs(self):
+        self.write("docs/licenses/PROJECT.txt", "license")
+        self.write("docs/index.html", self.docs + '<a href="licenses/PROJECT.txt">License</a>')
+        tools.check_docs(self.root)
+        for target in ("licenses/missing.txt", "../README.md", "%2e%2e/README.md"):
+            self.write("docs/index.html", self.docs + '<a href="' + target + '">License</a>')
+            with self.subTest(target=target), self.assertRaisesRegex(ValueError, "Lokaler Handbuchverweis"):
                 tools.check_docs(self.root)
 
     def test_configuration_reference_matches_source(self):

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import uuid
+from documentation import check_structure, fragments, replace_fragments
 
 FILES = [
     ".editorconfig", ".gitattributes", ".gitignore", ".mvn/jvm.config", "build_all_jars.bat",
@@ -12,6 +13,7 @@ FILES = [
     "scripts/build.ps1", "scripts/bump-build.ps1", "scripts/project_tools.py", "scripts/test_project_tools.py",
     "scripts/check-version.py", "scripts/check-docs.py", "scripts/prepare-release.py", "scripts/set-version.py",
     "scripts/check-standard.py", "scripts/sync-standard.py",
+    "scripts/documentation.py",
     "scripts/test-tools.ps1",
 ]
 
@@ -53,17 +55,25 @@ def sync(workspace, write=False):
     reference = workspace / "PunishSystem"
     if not (reference / "scripts/project.json").is_file():
         raise ValueError("PunishSystem fehlt. Mit --workspace den gemeinsamen Plugin-Ordner angeben.")
-    source_blocks = blocks((reference / "docs/index.html").read_text(encoding="utf-8-sig"))
+    reference_handbook = (reference / "docs/index.html").read_text(encoding="utf-8-sig")
+    source_blocks = blocks(reference_handbook)
+    source_fragments = fragments(reference_handbook)
+    check_structure(reference, reference_handbook)
+    readme_fragments = fragments((reference / "README.md").read_text(encoding="utf-8-sig"))
     contents = {}
     for relative in FILES:
         path = reference / relative
         if path.is_symlink() or not path.resolve().is_relative_to(reference.resolve()):
             raise ValueError("Gemeinsame Dateien müssen innerhalb von PunishSystem liegen.")
         contents[relative] = path.read_bytes()
-    standard = {"reference": "PunishSystem", "schema": 1,
+    standard = {"reference": "PunishSystem", "schema": 2,
                 "files": {relative: digest(data) for relative, data in contents.items()},
                 **{key: digest(data.encode("utf-8")) for key, data in
-                   zip(("handbookCss", "handbookBoot", "handbookEngine"), source_blocks)}}
+                   zip(("handbookCss", "handbookBoot", "handbookEngine"), source_blocks)},
+                "handbookFragments": {key: digest(value.encode("utf-8"))
+                                      for key, value in source_fragments.items()},
+                "readmeFragments": {key: digest(value.encode("utf-8"))
+                                    for key, value in readme_fragments.items()}}
     contents["scripts/standard.json"] = (json.dumps(standard, indent=2) + "\n").encode("utf-8")
     changes = []
     updates = []
@@ -87,16 +97,22 @@ def sync(workspace, write=False):
         docs = project / "docs/index.html"
         text = docs.read_text(encoding="utf-8-sig")
         blocks(text)  # Validate every destination before any write.
-        updated = replace_blocks(text, source_blocks)
+        updated = replace_fragments(replace_blocks(text, source_blocks), source_fragments)
         if updated != text:
             changes.append(project.name + "/docs/index.html (shared interface)")
             updates.append((docs, updated.encode("utf-8")))
+        readme = project / "README.md"
+        text = readme.read_text(encoding="utf-8-sig")
+        updated = replace_fragments(text, readme_fragments)
+        if updated != text:
+            changes.append(project.name + "/README.md (gemeinsame Texte)")
+            updates.append((readme, updated.encode("utf-8")))
     if write:
         for path, data in updates:
             atomic_write(path, data)
     elif changes:
         raise ValueError("Abweichungen von der Vorlage:\n" + "\n".join(changes))
-    print(f"PunishSystem standard {'synchronized' if write else 'verified'} across {len(projects)} projects; {len(changes)} differences.")
+    print(f"PunishSystem-Vorlage {'übertragen' if write else 'geprüft'}: {len(projects)} Projekte, {len(changes)} Abweichungen.")
 
 
 if __name__ == "__main__":

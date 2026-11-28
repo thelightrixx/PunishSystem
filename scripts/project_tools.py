@@ -14,7 +14,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
-from urllib.parse import unquote
+from urllib.parse import unquote, urlsplit
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -82,6 +82,9 @@ class Handbook(HTMLParser):
         self.stack = []
         self.page = None
         self.references = []
+        self.aliases = {}
+        self.local_links = []
+        self.anchor_aliases = {}
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
@@ -100,12 +103,21 @@ class Handbook(HTMLParser):
             self.pages[identifier] = attrs.get("data-title", "")
             self.page = node["page"] = identifier
             self.targets.setdefault(identifier, [])
+            self.anchor_aliases[identifier] = attrs.get("data-anchor-aliases", "").split()
+            for alias in attrs.get("data-aliases", "").split():
+                if not re.fullmatch("[a-z0-9-]+", alias) or alias in self.aliases:
+                    self.errors.append("Ungültiger oder mehrfacher Kapitelalias: " + alias)
+                self.aliases[alias] = identifier
         if self.page and (tag in {"h2", "h3", "details"} or "cmd-card" in attrs.get("class", "").split()):
             self.targets[self.page].append(node)
         if tag == "pre" and attrs.get("data-source"):
             self.references.append(node)
         if tag == "a" and attrs.get("href", "").startswith("#/"):
             self.links.append(attrs["href"][2:])
+        if tag == "a" and attrs.get("href"):
+            target = urlsplit(attrs["href"])
+            if not target.scheme and not target.netloc and target.path:
+                self.local_links.append(unquote(target.path))
         if tag in {"script", "img", "iframe", "audio", "video", "source"} and attrs.get("src"):
             if not attrs["src"].startswith("data:"):
                 self.external_assets.append(attrs["src"])
@@ -146,6 +158,18 @@ class Handbook(HTMLParser):
                     anchor, suffix = f"{base}-{suffix}", suffix + 1
                 used.add(anchor)
                 node["anchor"] = anchor
+        for page, entries in self.anchor_aliases.items():
+            seen = set()
+            targets = set(result[page])
+            for entry in entries:
+                pair = entry.split(":")
+                if (len(pair) != 2 or not re.fullmatch("[a-z0-9-]+", pair[0]) or
+                        pair[0] in seen or pair[0] in result[page] or
+                        (pair[1] and pair[1] not in targets)):
+                    self.errors.append("Ungültige Abschnittsweiterleitung: " + entry)
+                    continue
+                seen.add(pair[0])
+                result[page].add(pair[0])
         return result
 
 
@@ -159,10 +183,17 @@ def check_docs(root: Path = ROOT) -> int:
     anchors = parser.anchors()
     missing = {"ueberblick", "installation", "schnellstart", "befehle", "betrieb", "changelog"} - parser.pages.keys()
     parser.errors += ["Handbuchseite fehlt: " + page for page in sorted(missing)]
+    parser.errors += ["Kapitelalias kollidiert mit einer Seite: " + alias
+                      for alias in parser.aliases if alias in parser.pages]
     for link in parser.links:
         parts = [unquote(part) for part in link.split("/")]
+        parts[0] = parser.aliases.get(parts[0], parts[0])
         if len(parts) > 2 or parts[0] not in parser.pages or (len(parts) == 2 and parts[1] not in anchors[parts[0]]):
             parser.errors.append("Ungültiger Abschnittslink: #/" + link)
+    for link in parser.local_links:
+        path = root / "docs" / link
+        if not path.resolve().is_relative_to((root / "docs").resolve()) or not path.is_file():
+            parser.errors.append("Lokaler Handbuchverweis fehlt oder liegt außerhalb von docs/: " + link)
     parser.errors += ["Externe Handbuchressource: " + asset for asset in parser.external_assets]
     for identifier in ("searchBtn", "themeBtn", "sidebar", "main"):
         if identifier not in parser.ids:

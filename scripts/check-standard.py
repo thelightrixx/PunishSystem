@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from documentation import check_structure, fragments
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -27,10 +28,18 @@ def check(root=ROOT):
     for key, value in blocks.items():
         if digest(value.encode("utf-8")) != standard[key]:
             errors.append("Handbuchoberfläche weicht ab: " + key)
+    actual = {key: digest(value.encode("utf-8")) for key, value in fragments(handbook).items()}
+    if actual != standard["handbookFragments"]:
+        errors.append("Gemeinsame Handbuchtexte weichen von der Vorlage ab.")
+    readme = (root / "README.md").read_text(encoding="utf-8-sig")
+    actual = {key: digest(value.encode("utf-8")) for key, value in fragments(readme).items()}
+    if actual != standard["readmeFragments"]:
+        errors.append("Gemeinsame README-Texte weichen von der Vorlage ab.")
+    check_structure(root, handbook)
     if errors:
         raise ValueError("\n".join(errors))
     return len(standard["files"])
 
 
 if __name__ == "__main__":
-    print(f"PunishSystem standard verified: {check()} shared files and the offline handbook interface.")
+    print(f"PunishSystem-Vorlage geprüft: {check()} gemeinsame Dateien, Handbuchoberfläche und Dokumentationsbausteine.")

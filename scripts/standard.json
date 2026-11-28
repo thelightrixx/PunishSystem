@@ -1,6 +1,6 @@
 {
   "reference": "PunishSystem",
-  "schema": 1,
+  "schema": 2,
   "files": {
     ".editorconfig": "c6fd565fabbcfcf99e6b3e43e21631756874c9318bfea4c4ce1ad6f95b2a5104",
     ".gitattributes": "2f46122ab7d494da04046ea8d1f049b742b9fd20e38edd342eea26f4003dec2e",
@@ -11,17 +11,33 @@
     ".github/workflows/pages.yml": "bc2a93867500e340d1c4e784bb4db3be6979e9f39a0915340ba4a300fbb35720",
     "scripts/build.ps1": "48d9c98e8ac73cb8ea4d0002b89fd63ba1bfe898f347ebb2ff66ed788dcf37b0",
     "scripts/bump-build.ps1": "2878ea64519eaa64adedfe836b2b8e8b48c4a2dbf6acf751674fce7d2684ef35",
-    "scripts/project_tools.py": "aa280310fdbea8b458fa9b7326d7e7e1cd67f265f5347651333b2ae35cf7767a",
-    "scripts/test_project_tools.py": "cb28ef68c638391bb6489034cd3caa78f06ef14fdf5611c26b9c9aada50ecb1a",
+    "scripts/project_tools.py": "d34ec93e122395062be250f87ce9d388623fdda65541e9651ea2ba957fb41965",
+    "scripts/test_project_tools.py": "be0ed585fbc1ac359f68c3a499b681c35fb3714e8b01a89debd60bc26ca52ccc",
     "scripts/check-version.py": "ae131c3228ace7e46f5d3b9755223e0a5ec4ad375e08856a4a6480fec318c397",
     "scripts/check-docs.py": "e5591186e6ba6095b2eef013c8c3ad45e1e6552b42e187e31afd8ee9bf83f0a5",
     "scripts/prepare-release.py": "58d4f3a821f2215827a1d3290e127dbcf150a0ec47726b80cb3f20f5c7609cce",
     "scripts/set-version.py": "c32df5ed37a5133aa92b7d7e17514e09c87d7e237da18a64426d82976daa736c",
-    "scripts/check-standard.py": "56753f016dfedf57cab6e50d00a6d97adad9cf5b96bc7f0b9c55db8b6c0f0626",
-    "scripts/sync-standard.py": "fbd29b27bbd67ddc07fa732961209fe9574a3345cab79b8263eefad8d22bee39",
+    "scripts/check-standard.py": "31fe180f077878954ad0804b6b0db60096b61342bb4da08f73ca8eebe0e1a082",
+    "scripts/sync-standard.py": "0be19a6579cce64e3541250d1d47ca438805a8fb3e157930618da94c964393ee",
+    "scripts/documentation.py": "4fdebb44529895a3dee3358b5b3003d220c227a42e3ec2394924cf617e3d52c5",
     "scripts/test-tools.ps1": "c30b8c9a71f8b0f458cdd6128d622c73ae5544eeb04361f075432c1a7a5779e5"
   },
-  "handbookCss": "504a71d3fe44e78826a0edf80862198317054fef9a3eba073de1387adb51f5da",
+  "handbookCss": "cee35e68715a56abc96e0778085f9e812c65843d2fd4882b4cb47d4b3645538b",
   "handbookBoot": "fb715aea6db8b85cd11d0dd3519be566cacaed820ce455f44d1799b771e75a76",
-  "handbookEngine": "03ecd0f1e24df1594fd9ff927ec3950e4814c96251af17d6b6dae0afe5546998"
+  "handbookEngine": "386d4a504e6248602305ccd593ad846eaddc8bddd4363e7182874139a9c40d64",
+  "handbookFragments": {
+    "overview-cards": "125da10eb10313393f2ebd48f7d3a5d7c98fb904faa1a04ae02d062c3963c866",
+    "navigation-help": "ffa2e5ba76d0b2588a26684eca01962eec8f793095333451be64e228885bf816",
+    "wayfinder": "aac47dcecc71972f7465d52deac0b37ce769db105094a06f2ddc64a0646ebf96",
+    "offline-help": "78010fc80678d001eaf43075705b0bbe78c5f4ed321d427cb3ac990083195268",
+    "command-syntax": "68598363cc26d334da83d94e9fb164b676c450df532518ea3406da535d7a5958",
+    "development-guide": "58956a183450444bb017d1893ebd5e7867a83fbd97d05a978bb58d7acc16278f",
+    "interface-license": "33ea71e12e8e5e29652d50eb714d045ce8b9190f89896111839edba0e3e2fe55",
+    "font-licenses": "1793e256073db3479c676b0c113d8a91a773b7fee8bf9f600130f5d2dc106515"
+  },
+  "readmeFragments": {
+    "readme-update-note": "1e13a2359f10ba0db42c7b5cb06ca5c1f45520070e55971a0f4d300d365f3d7a",
+    "readme-help": "d3579203bff756ac5df55e27921d4d4ae6bd759081582264e4f3439c07cc6ad3",
+    "readme-build": "4aa8df7d62576aba67e9e1d5fb5b2c136482cf4cd0fc1d7657f8a88ae7ff6d17"
+  }
 }
