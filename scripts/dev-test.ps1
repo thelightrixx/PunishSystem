@@ -53,8 +53,8 @@ function Find-Jdk25 {
     foreach ($J in $Kandidaten) {
         if (-not (Test-Path -LiteralPath $J)) { continue }
         try {
-            $Out = & $J -version 2>&1 | Out-String
-            if ($Out -match 'version "(?<major>\d+)' -and [int]$Matches.major -ge 25 -and (Test-Path -LiteralPath (Join-Path (Split-Path $J -Parent) "javac.exe"))) {
+            $Out = & $J --version | Out-String
+            if ($Out -match '(?:openjdk|java) (?<major>\d+)' -and [int]$Matches.major -ge 25 -and (Test-Path -LiteralPath (Join-Path (Split-Path $J -Parent) "javac.exe"))) {
                 return $J
             }
         } catch { Write-Verbose "JDK-Prüfung für $J fehlgeschlagen: $_" }
