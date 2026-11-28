@@ -9,10 +9,12 @@ Du kannst Bans, Mutes, Timeouts und weitere Strafen global oder für einzelne Se
 | Einsatzort | Voraussetzung | JAR-Endung |
 |---|---|---|
 | Proxy | Velocity ab 3.4.0, Java 21 | `velocity.jar` |
-| Backend | Paper/Purpur 1.21.8, Java 21 | `bridge-1.21.jar` |
+| Backend | Paper/Purpur 1.21.x, Java 21 | `bridge-1.21.jar` |
 | Backend | Paper/Purpur 26.1, Java 25 | `bridge.jar` |
 
 Installiere die Proxy-JAR und je Backend genau eine Bridge, jeweils in derselben Version. Die Bridge ist kein eigenständiges Moderationsplugin. Folia wird nicht unterstützt.
+
+Die 1.21-Bridge behält ihre bisherige API-Kennung `1.21` und wird gegen Paper 1.21.8 gebaut.
 
 Richte zuerst den Speicher auf dem Proxy ein: MySQL ist die Vorgabe, YAML eine Alternative. Danach braucht jede Bridge ein eigenes Tunnel-Secret, das auf Proxy und Backend übereinstimmt. Die [Installation](docs/index.html#/installation) enthält alle Dateipfade und Beispiele. Mit `/punish-setup check` und `/punish-diagnostics` prüfst du die Einrichtung.
 
