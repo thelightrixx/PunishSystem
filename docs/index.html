@@ -1,12 +1,36 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="light">
+<html lang="de" data-project="PunishSystem" data-theme="light">
 <head>
+<!-- Handbuchvorlage PunishSystem
+MIT License
+
+Copyright (c) 2026 lightrixx (de.lightrixx)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PunishSystem Handbuch</title>
-<meta name="description" content="Das PunishSystem Handbuch für Velocity und Paper: Einrichtung, Moderation, Befehle, Konfigurationsreferenz, Update-Prüfung und Fehlerbehebung. Auch offline nutzbar.">
+<meta name="description" content="Moderation fuer Velocity und Paper/Purpur mit Strafen, Faellen, Reports und Chatfilter. Deutsches Offline-Handbuch.">
 <script>
-(function(){try{var t=localStorage.getItem('ps-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
+(function(){try{var t=localStorage.getItem(document.documentElement.getAttribute('data-project') + '-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pref',t);}catch(e){}})();
 </script>
 <style>
 /* JetBrains Mono, Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono), SIL Open Font License 1.1 (https://openfontlicense.org). Eingebettet, damit die Datei ohne Internet funktioniert. */
@@ -499,6 +523,14 @@ details>div{padding:14px 18px 2px}
   details::details-content{block-size:auto;opacity:1;content-visibility:visible;overflow:visible}
   .tbl tr,.cmd-card,.callout,details{break-inside:avoid}
 }
+
+/* Gemeinsame Eingaben fuer fachliche Offline-Rechner. */
+.wk-field input[type=number]{width:100%;border:1px solid var(--line-2);border-radius:var(--r-m);background:var(--bg);color:var(--text);font:500 14px/1.5 var(--mono);padding:9px 12px}
+.wk-field input[type=number]:focus{outline:2px solid var(--focus);outline-offset:0;border-color:transparent}
+.wk-field input[aria-invalid="true"]{border-color:var(--danger)}
+.wk-result.error{color:var(--danger)}
+.plot-plan{display:block;width:100%;height:auto}
+.license-text{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 var(--mono)}
 </style>
 </head>
 <body>
@@ -510,7 +542,7 @@ details>div{padding:14px 18px 2px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
   </button>
   <button class="brand" id="brand" aria-label="Zur Startseite des Handbuchs"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#d62a1d"/><g fill="#fff" transform="rotate(45 14 14)"><rect x="10" y="5" width="11" height="7" rx="1.4"/><rect x="14" y="11" width="3" height="12" rx="1.2"/></g><path d="M5.5 24h13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>PunishSystem <small>Handbuch</small></button>
-  <span class="ver">v4.5.1</span>
+  <span class="ver">v4.5.2</span>
   <div class="grow"></div>
   <button class="search-btn" id="searchBtn" aria-label="Handbuch durchsuchen">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -532,7 +564,7 @@ details>div{padding:14px 18px 2px}
 
 <section class="page" data-id="ueberblick" data-group="Start" data-title="Überblick und Wegweiser">
   <h1>PunishSystem Handbuch</h1>
-  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.5.1 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
+  <p class="lead">Dieses Handbuch beschreibt die Einrichtung und den Betrieb von PunishSystem v4.5.2 auf Velocity mit Paper- oder Purpur-Backends. Für die Moderation findest du Beispiele, Befehle und Rechte; die Suche hilft auch bei Konfigurationsschlüsseln.</p>
   <div class="hero">
     <div class="hero-copy">
       <p>Der Velocity-Proxy verwaltet die Strafdaten. Auf jedem Backend setzt eine passende Bridge die Regeln durch und stellt die Menüs bereit.</p>
@@ -557,7 +589,7 @@ details>div{padding:14px 18px 2px}
       <div class="bs-chat"><em>Strafdaten auf dem Proxy.</em><br><b>Global oder je Server moderieren.</b></div>
     </div>
   </div>
-  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-25">25.11.2026</time> · v4.5.1 · Velocity und Paper/Purpur</p>
+  <p class="doc-meta">Handbuchstand: <time datetime="2026-11-28">28.11.2026</time> · v4.5.2 · Velocity und Paper/Purpur</p>
 
   <h2>Was möchtest du tun?</h2>
   <div class="cards">
@@ -693,13 +725,13 @@ details>div{padding:14px 18px 2px}
   <p>Die Backends müssen bereits in der <code>velocity.toml</code> des Proxys registriert sein. Notiere dir ihre Namen: Jeder Name identifiziert später das passende Backend und sein Secret. Ein Backend ist ein Minecraft-Server hinter Velocity, etwa <code>lobby</code> oder <code>survival</code>.</p>
 
   <h2>Schritt 1: Jars einspielen</h2>
-  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1">Release v4.5.1</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
+  <p>Lade das <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.2">Release v4.5.2</a> herunter. Es enthält die drei Jars und <code>SHA256SUMS.txt</code>. Stoppe Proxy und Backends und lege die passenden Jars jeweils in deren <code>plugins/</code>-Ordner:</p>
   <div class="tbl"><table>
     <thead><tr><th>Jar</th><th>Ziel</th><th>Server</th></tr></thead>
     <tbody>
-      <tr><td><code>PunishSystem-v4.5.1-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
-      <tr><td><code>PunishSystem-v4.5.1-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
-      <tr><td><code>PunishSystem-v4.5.1-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
+      <tr><td><code>PunishSystem-v4.5.2-velocity.jar</code></td><td>Velocity-Proxy</td><td>einmal auf dem Proxy</td></tr>
+      <tr><td><code>PunishSystem-v4.5.2-bridge.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 26.1 oder neuer</td></tr>
+      <tr><td><code>PunishSystem-v4.5.2-bridge-1.21.jar</code></td><td>Paper/Purpur-Backend</td><td>Minecraft 1.21.x</td></tr>
     </tbody>
   </table></div>
   <p>Installiere auf jedem Backend <strong>genau eine</strong> der beiden Bridge-Varianten. Alle verwendeten Jars müssen aus demselben Release und Build stammen. Stabile Releases wie dieses tragen keine zusätzliche Buildnummer.</p>
@@ -709,9 +741,9 @@ details>div{padding:14px 18px 2px}
   <p>Lade die benötigten Jars und <code>SHA256SUMS.txt</code> aus demselben Release. Die Prüfsumme gehört zur unveränderten Download-Datei. Vergleiche vor dem Kopieren jede benötigte Jar mit dem zugehörigen Eintrag; gleichnamige Varianten aus verschiedenen Releases nicht mischen.</p>
   <h3>Windows PowerShell</h3>
   <p>Führe im Downloadordner die Befehle für die von dir geladenen Varianten aus und vergleiche jeden vollständigen Hash mit der Zeile desselben Dateinamens:</p>
-  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.1-velocity.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.1-bridge.jar
-Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.1-bridge-1.21.jar
+  <pre data-lang="powershell">Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.2-velocity.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.2-bridge.jar
+Get-FileHash -Algorithm SHA256 -LiteralPath .\PunishSystem-v4.5.2-bridge-1.21.jar
 Get-Content -LiteralPath .\SHA256SUMS.txt</pre>
   <h3>Linux und macOS</h3>
   <p>Mit allen drei Jars und der Prüfsummendatei im selben Ordner prüfst du unter Linux:</p>
@@ -825,8 +857,6 @@ punish-version</pre>
   <h2>Wie geht es weiter?</h2>
   <p>Nach erfolgreicher Prüfung folgt der <a href="#/schnellstart">Moderations-Schnellstart</a>. Änderungen an Regeln und Texten beginnen unter <a href="#/config-uebersicht">Dateien und Zuständigkeiten</a>. Bestehende Installationen werden nach der Anleitung <a href="#/betrieb">Updates und Sicherungen</a> aktualisiert.</p>
 </section>
-
-<!-- =============================== MODERATION =============================== -->
 
 <section class="page" data-id="schnellstart" data-group="Moderation" data-title="Moderations-Schnellstart">
   <h1>Moderations-Schnellstart</h1>
@@ -1260,8 +1290,6 @@ punish-version</pre>
   <p><code>reports.uebernahme-timeout-minuten</code> gibt übernommene Reports nach der eingestellten Zeit seit der Übernahme wieder frei. Andere Teammitglieder können sie dann übernehmen. Mit dem Standardwert <code>0</code> ist die automatische Freigabe aus.</p>
 </section>
 
-<!-- =============================== BEFEHLSREFERENZ =============================== -->
-
 <section class="page" data-id="faelle" data-group="Moderation" data-title="Moderationsfälle und Beweise">
   <h1>Moderationsfälle und Beweise</h1>
   <p class="lead">Ein Fall verbindet einen Vorfall mit Reports, internen Fallnotizen, Beweislinks und Strafentscheidungen. Ein Spieler kann mehrere getrennte Fälle haben.</p>
@@ -1362,19 +1390,11 @@ punish-version</pre>
 </section>
 
 <section class="page" data-id="befehle" data-group="Befehlsreferenz" data-title="Befehlsübersicht">
-  <h1>Befehlsübersicht</h1>
+  <h1>Befehlsübersicht</h1><div class="command-tools" role="search" aria-label="Befehle filtern"><label for="commandFilter">Befehle filtern</label><div class="command-filter-row"><input id="commandFilter" type="search" placeholder="Name, Stichwort oder Version" autocomplete="off" spellcheck="false" aria-controls="commandIndex" aria-describedby="commandFilterHint"><button type="button" id="commandReset">Zurücksetzen</button></div><p id="commandFilterHint">Mehrere Wörter grenzen die Treffer ein.</p><p id="commandCount" role="status"></p></div><p id="commandEmpty" class="empty" hidden>Keine passenden Treffer. Filter zurücksetzen.</p>
   <p class="lead">Nachschlagewerk für Syntax, Rechte, Aliase und Beispiele. Klicke auf einen Befehl in der Tabelle, um seine vollständige Beschreibung zu öffnen. <code>/punish-help</code> im Spiel zeigt nur Befehle, für die du Rechte hast.</p>
 
   <h2>Alle Befehle</h2>
-  <div class="command-tools" role="search" aria-label="Befehlsübersicht filtern">
-    <label for="commandFilter">Befehle filtern</label>
-    <div class="command-filter-row">
-      <input id="commandFilter" type="search" placeholder="z. B. unmute, psundo oder punish.setup" autocomplete="off" spellcheck="false" aria-controls="commandIndex" aria-describedby="commandFilterHint">
-      <button type="button" id="commandReset">Zurücksetzen</button>
-    </div>
-    <p id="commandFilterHint">Suche nach Name, Zweck, Alias, Permission oder Angaben in der ausführlichen Befehlsbeschreibung. Mehrere Wörter grenzen die Treffer ein. Die Tabelle nennt das Hauptrecht; zusätzliche und alternative Rechte stehen beim jeweiligen Befehl.</p>
-    <p id="commandCount" role="status">49 von 49 Befehlen</p>
-  </div>
+
   <div class="tbl" id="commandIndex"><table>
     <thead><tr><th>Befehl</th><th>Zweck</th><th>Hauptrecht</th></tr></thead>
     <tbody>
@@ -1433,7 +1453,7 @@ punish-version</pre>
       <tr><td><a href="#/chatfilter-pruefung"><code>/chatfilter-pruefung</code></a></td><td>Treffer bewerten und Korrekturen prüfen</td><td><code>punish.chatfilter.pruefung</code></td></tr>
     </tbody>
   </table></div>
-  <p id="commandEmpty" class="empty" hidden>Kein passender Befehl. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
 
   <h2>Nach Aufgabe nachschlagen</h2>
   <div class="tbl"><table>
@@ -1955,8 +1975,6 @@ punish-version</pre>
     <p>Aktive IP-Banns, IP-Mutes und IP-Timeouts aller Scopes werden aufgehoben, die gespeicherte IP wird auf „unbekannt“ gesetzt und die IP-Historie im Spieler-Cache sowie die IP-bezogenen History-Einträge (z.&nbsp;B. <code>BAN_IP</code>, <code>IP_MUTE</code>, <code>IP_TIMEOUT</code>) werden gelöscht. Der spielerbezogene Verlauf bleibt bestehen. Das System nennt danach Banns, Mutes, Timeouts und Cache-Einträge. Mehr unter <a href="#/datenschutz">Datenschutz</a>.</p>
   </article>
 </section>
-
-<!-- =============================== KONFIGURATION UND RECHTE =============================== -->
 
 <section class="page" data-id="config-uebersicht" data-group="Konfiguration und Rechte" data-title="Dateien und Zuständigkeiten">
   <h1>Dateien und Zuständigkeiten</h1>
@@ -2611,7 +2629,7 @@ vorschlaege:
   </details>
 
   <h2 data-anchor="standarddatei">Vollständige Standardwerte</h2>
-  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.5.1</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
+  <p>Dieser Stand stammt aus der mitgelieferten Proxy-Konfiguration von <code>v4.5.2</code>; reine Kommentar- und Leerzeilen sind ausgelassen. Er enthält keine für dein Netzwerk eingerichteten Secrets oder Datenbankzugänge. Vorhandene Dateien deshalb gezielt abgleichen und angepasste Werte erhalten. Die vorherigen Abschnitte erklären die Wirkung der Einstellungen.</p>
   <details><summary>Vollständige Standardwerte der Proxy-general.yml</summary><div>
   <pre data-lang="yaml">config-version: "2026-11-01"
 befehle:
@@ -3326,8 +3344,6 @@ chatfilter:
   <p>Der vollständige Ablauf einschließlich Pelican-Beispiel, Sicherung und Fehlerprüfung steht unter <a href="#/betrieb/start-hook-fuer-linux-und-pelican-einrichten">Start-Hook einrichten</a> und <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</p>
 </section>
 
-<!-- =============================== ERWEITERUNGEN =============================== -->
-
 <section class="page" data-id="chatfilter" data-group="Erweiterungen" data-title="Chatfilter">
   <h1>Chatfilter</h1>
   <p class="lead">Der Chatfilter prüft Texte mit einer Wortliste und optional einem lokalen KI-Modell. Die Auswertung läuft auf den eigenen Servern. Je nach Kanal und KI-Verfügbarkeit können Nachrichten erst nach dem Absenden gemeldet werden.</p>
@@ -3537,8 +3553,6 @@ gratis vip rank</pre>
 Verstöße: %punish_verstoss_punkte%</pre>
 </section>
 
-<!-- =============================== BETRIEB =============================== -->
-
 <section class="page" data-id="speicher" data-group="Betrieb" data-title="Speicher und MySQL">
   <h1>Speicher und MySQL</h1>
   <p class="lead">Auf dem Proxy ist MySQL der Standard (YAML gilt als veraltet). Die Bridges sind speicherlos: Strafen kommen per Sync in ihren RAM-Cache, ein eigener Speicher wird nicht mehr gelesen.</p>
@@ -3601,7 +3615,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   </ul>
 
   <h2>Start-Hook für Linux und Pelican einrichten</h2>
-  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1">v4.5.1</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
+  <p>Beim Wechsel von einer Version vor <code>v4.2.0</code> alle drei Module einmalig manuell auf <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.2">v4.5.2</a> aktualisieren und neu starten. Der bisherige Updater kann den neuen Ablauf noch nicht ausführen. Beim Start erzeugt der Proxy <code>plugins/update-pending/apply-update.sh</code>.</p>
   <p>Der Hook aktualisiert das PunishSystem-Plugin auf dem Velocity-Proxy vor dem Java-Start. Die Velocity-Serversoftware selbst wird dadurch nicht aktualisiert. In einem Netzwerk wird der Hook nur beim Velocity-Proxy eingerichtet; die Backends übernehmen ihre Bridge-Updates über den konfigurierten Server-Update-Ordner.</p>
   <ol class="steps">
     <li><strong>Skript auf dem Proxy prüfen</strong>
@@ -3679,20 +3693,17 @@ Verstöße: %punish_verstoss_punkte%</pre>
 </section>
 
 <section class="page" id="changelogVersions" data-id="changelog" data-group="Betrieb" data-title="Changelog">
-  <h1>Changelog</h1>
+  <h1>Changelog</h1><div class="command-tools" role="search" aria-label="Versionen filtern"><label for="changelogFilter">Versionen filtern</label><div class="command-filter-row"><input id="changelogFilter" type="search" placeholder="Name, Stichwort oder Version" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint"><button type="button" id="changelogReset">Zurücksetzen</button></div><p id="changelogFilterHint">Mehrere Wörter grenzen die Treffer ein.</p><p id="changelogCount" role="status"></p></div><p id="changelogEmpty" class="empty" hidden>Keine passenden Treffer. Filter zurücksetzen.</p>
+<h2 data-anchor="v4-5-2">v4.5.2</h2>
+<p><time datetime="2026-11-28">28.11.2026</time> · Stabile Version</p>
+<ul><li>Projektstruktur, Agentenregeln, Build-, Versions-, Test- und Veröffentlichungsabläufe an PunishSystem angeglichen.</li><li>Handbuchoberfläche mit Navigation, Suche, Farbschema, Druckansicht und eingebetteten Offline-Schriften vereinheitlicht.</li><li>JAR-Prüfungen für Plugin-Identität, Version, Einstiegsklasse, Java-Bytecode und Plattform sowie SHA-256-Prüfsummen vereinheitlicht.</li></ul>
+<h3>Update-Hinweise</h3><p>Alle installierten JARs gemeinsam aktualisieren. Die Proxy-/Bridge-Aufteilung und vorhandenen Daten bleiben erhalten.</p>
+
   <p class="lead">Änderungen an allen neuen Plugin-Versionen ab v4.0.0. Die neueste Veröffentlichung steht oben; jeder Eintrag nennt Datum, Änderungen und nötige Update-Hinweise.</p>
   <p>Für den Austausch der Jars gilt die Anleitung unter <a href="#/betrieb/updates-einspielen">Updates einspielen</a>.</p>
 
-  <div class="command-tools" role="search" aria-label="Changelog filtern">
-    <label for="changelogFilter">Versionen filtern</label>
-    <div class="command-filter-row">
-      <input id="changelogFilter" type="search" placeholder="z. B. v4.4.3, Chatfilter oder VPN" autocomplete="off" spellcheck="false" aria-controls="changelogVersions" aria-describedby="changelogFilterHint">
-      <button type="button" id="changelogReset">Zurücksetzen</button>
-    </div>
-    <p id="changelogFilterHint">Suche nach Version, Datum oder Änderung. Mehrere Wörter grenzen die Treffer ein.</p>
-    <p id="changelogCount" role="status">15 von 15 Versionen</p>
-  </div>
-  <p id="changelogEmpty" class="empty" hidden>Keine passende Version. Prüfe die Schreibweise oder setze den Filter zurück.</p>
+
+
 
   <h2 data-anchor="v4-5-1">v4.5.1</h2>
   <p><time datetime="2026-11-25">25.11.2026</time> · Stabile Veröffentlichung · <a href="https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1" target="_blank" rel="noopener">Release und Downloads</a></p>
@@ -3890,8 +3901,6 @@ Verstöße: %punish_verstoss_punkte%</pre>
   <p>Die Ports der Backend-Server werden per Firewall nur für den Proxy geöffnet. Das gilt für Strafdaten genauso wie für alles andere.</p>
 </section>
 
-<!-- =============================== HILFE =============================== -->
-
 <section class="page" data-id="fehlerbehebung" data-group="Hilfe" data-title="Fehlerbehebung">
   <h1>Fehlerbehebung</h1>
   <p class="lead">Die häufigsten Probleme mit Ursache und Lösung. Am besten zuerst nach der angezeigten Meldung suchen.</p>
@@ -3988,7 +3997,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
         <li>Hat der Spieler das Bypass-Recht <code>punish.chatfilter.bypass</code>?</li>
         <li>Steht der Kanal in <code>kanaele</code> auf <code>aus</code>?</li>
         <li>Wurde der Filter zur Laufzeit mit <code>/chatfilter off</code> ausgeschaltet?</li>
-        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.5.1 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
+        <li>Bei VentureChat v3.8.1 den Proxy und auf jedem Backend die passende Bridge auf v4.5.2 abgleichen und neu starten. Mit einem Account ohne Bypass einen Wortlisten-Test im Chat durchführen; <code>/chatfilter test</code> allein prüft den Versandweg nicht.</li>
       </ul>
     </div>
   </details>
@@ -4114,6 +4123,39 @@ Verstöße: %punish_verstoss_punkte%</pre>
     <div><p>Nein. Befehlsbaukasten, Scope-Demo, Punktebeispiel und MiniMessage-Vorschau laufen nur im Browser. Sie ändern keine Serverdaten und lesen keine aktive Konfiguration. Kopierte Befehle müssen im passenden Netzwerk mit den nötigen Rechten ausgeführt und geprüft werden.</p></div></details>
   <details><summary>Funktioniert das Handbuch ohne Internet?</summary>
     <div><p>Ja. <code>docs/index.html</code> enthält Inhalte, Skripte und Schriften. Suche und interaktive Beispiele funktionieren lokal. Nur externe Links und Downloads benötigen eine Verbindung. Die Druckfunktion gibt das vollständige Handbuch aus; siehe <a href="#/ueberblick/offline">Offline lesen und drucken</a>.</p></div></details>
+
+</section>
+
+<section class="page" data-id="projektstandard" data-title="Projektstandard und Entwicklung" data-group="Projekt">
+<h1>Projektstandard und Entwicklung</h1>
+
+<p>Aufbau, Werkzeuge, Handbuch und Veröffentlichungsregeln folgen PunishSystem. Fachliche Unterschiede und zusätzliche Speicher- oder Protokollmodule bleiben erhalten. Die Hauptnummer gehört zum jeweiligen Plugin.</p>
+<h2>Verbindliche Ablage</h2>
+<div class="tbl"><table><thead><tr><th>Pfad</th><th>Zuständigkeit</th></tr></thead><tbody>
+<tr><td><code>common/</code></td><td>Gemeinsamer Kern, Modelle, Regeln und serverfreie Tests.</td></tr>
+<tr><td>velocity, bridge, bridge-1.21</td><td>Plattformadapter und separat gegen die passende API geprüfte JARs.</td></tr>
+<tr><td><code>scripts/</code></td><td>Build, explizite Versionierung, Projektmanifest, Handbuch- und Artefaktprüfungen.</td></tr>
+<tr><td><code>docs/index.html</code></td><td>Deutsches Offline-Handbuch; dieselbe Navigation, Suche, Typografie, Druckansicht und Farbschema wie PunishSystem.</td></tr>
+<tr><td><code>.tools/</code>, <code>target/</code>, <code>dist/</code></td><td>Ignorierte lokale Werkzeuge, Buildausgaben und geprüfte Übergabedateien.</td></tr>
+<tr><td><code>AGENTS.md</code></td><td>Lokale Agentenregeln; bewusst nicht im Repository.</td></tr>
+</tbody></table></div>
+<h2>Build und Prüfung</h2>
+<pre data-lang="shell">build_all_jars.bat nobump ci
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
+mvn -B -ntp clean verify
+python scripts/check-version.py
+python scripts/check-docs.py
+python scripts/prepare-release.py</pre>
+<p>Zum Bauen JDK 25 oder neuer, Maven 3.9.11 und Python 3.10 oder neuer verwenden. Der Windows-Einstieg kann Maven nach <code>.tools/</code> laden und prüft dessen SHA-512. Der Java-Bytecode zielt auf Java 21. Paper 26.1 benötigt zur Laufzeit Java 25; Paper 1.21.8 benötigt Java 21. Builds ändern keine Versionen oder Quellen.</p>
+<h2>Versionen und Releases</h2>
+<p>Stabile Versionen heißen <code>vMajor.Minor.Patch</code>. Patch ist die Vorgabe für Korrekturen, Kompatibilität, interne Verbesserungen und kleine Erweiterungen. Minor ist für umfassende Änderungen oder größere Funktionspakete vorgesehen; Patch wird dann auf null gesetzt. Neue Hauptnummern und inkompatible Änderungen werden vorher geklärt. Reine Dokumentationsänderungen brauchen keine neue Plugin-Version.</p>
+<pre data-lang="shell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Increment patch
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bump-build.ps1 -Increment minor</pre>
+<p>Nach einer expliziten Versionsänderung README, Handbuch und Changelog inhaltlich aktualisieren. Ein Changelog-Eintrag enthält Version, Datum, belegte Änderungen und nötige Update-Schritte. Alle Module und Plugin-Metadaten tragen dieselbe Version.</p>
+<p>GitHub Actions prüft jeden Push auf <code>main</code> unter Linux und Windows. Nach erfolgreichen Builds und erfolgreicher Pages-Veröffentlichung genau diesen Commit mit der vollständigen Version taggen. Erst der Tag-Push erstellt den stabilen Release. JARs und <code>SHA256SUMS.txt</code> nach Veröffentlichung erneut prüfen. Bestehende Versionen und Tags bleiben unverändert.</p>
+<p>Release-Dateien heißen <code>Projekt-Version-Modul.jar</code>, lokale Kopien <code>Projekt-Version-(Modul).jar</code>. Die vollständige Liste steht in <code>scripts/project.json</code>. <code>dist/</code> enthält zusätzlich Release-Text und einen maschinenlesbaren Prüfbericht. Serverinstallation und Neustart sind ein eigener Arbeitsschritt.</p>
+<h2>Gemeinsamen Standard pflegen</h2><p>Änderungen an gemeinsamen Werkzeugen oder der Handbuchoberfläche zuerst in PunishSystem umsetzen. <code>python scripts/sync-standard.py --check</code> prüft die Geschwisterprojekte; <code>--write</code> überträgt die geprüfte Vorlage und erneuert das Prüfsummenmanifest. Plugin-Inhalte, Versionsnummern, Modul-POMs und projektspezifische Handbuchwerkzeuge bleiben dabei erhalten. Jedes Repository lässt sich weiterhin separat mit <code>python scripts/check-standard.py</code> prüfen.</p><h2>Grenzen der automatischen Prüfung</h2>
+<p>Kompilierung, serverfreie Tests und JAR-Prüfungen belegen API-Kompatibilität und geprüfte Regeln. Sie ersetzen keinen Spielertest auf beiden Servervarianten. Vor dem Produktiveinsatz insbesondere Plugin-Abhängigkeiten, vorhandene Daten, Rechte, Neustart und Updatepfade auf einer getrennten Testinstanz prüfen.</p>
 
 </section>
 
@@ -4302,12 +4344,12 @@ Verstöße: %punish_verstoss_punkte%</pre>
     });
     $$('details', p.el).forEach(function (d) {
       var sm = $('summary', d);
-      d.setAttribute('data-anchor', uniq(slug(sm ? sm.textContent : 'eintrag')));
+      d.setAttribute('data-anchor', uniq(d.getAttribute('data-anchor') || slug(sm ? sm.textContent : 'eintrag')));
     });
     $$('.cmd-card', p.el).forEach(function (c) {
       var cmd = c.getAttribute('data-cmd');
       var name = cmd.replace(/^\//, '');
-      c.setAttribute('data-anchor', uniq(name));
+      c.setAttribute('data-anchor', uniq(c.getAttribute('data-anchor') || slug(name)));
       var kind = kindOf(name);
       if (kind) c.setAttribute('data-kind', kind);
       var chips = '';
@@ -4361,7 +4403,8 @@ Verstöße: %punish_verstoss_punkte%</pre>
     html += '</nav>';
     p.el.insertAdjacentHTML('beforeend', html);
   });
-  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">PunishSystem Handbuch ' + esc($('.ver').textContent) + ' · <a href="https://github.com/thelightrixx/PunishSystem">Quellcode</a> · <a href="https://github.com/thelightrixx/PunishSystem/releases">Downloads</a> · <a href="#/ueberblick/offline">Offline lesen</a></div>');
+  var projectName = document.documentElement.getAttribute('data-project');
+  $('#main').insertAdjacentHTML('beforeend', '<div class="foot">' + esc(projectName) + ' Handbuch ' + esc($('.ver').textContent) + ' · <a href="https://github.com/thelightrixx/' + escAttr(projectName) + '">Quellcode</a> · <a href="https://github.com/thelightrixx/' + escAttr(projectName) + '/releases">Downloads</a> · <a href="#/ueberblick">Offline lesen</a></div>');
 
   /* ---------- Inhaltsverzeichnis ---------- */
   var toc = $('#toc');
@@ -4502,7 +4545,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     if (!p) { p = byId.ueberblick; anchor = ''; }
     if (p !== current) {
       current = p;
-      document.title = (p.id === 'ueberblick' ? 'PunishSystem Handbuch' : p.title + ' | PunishSystem Handbuch');
+      document.title = (p.id === 'ueberblick' ? projectName + ' Handbuch' : p.title + ' | ' + projectName + ' Handbuch');
       $$('a', sidebar).forEach(function (a) {
         if (a.getAttribute('data-p') === p.id) { a.setAttribute('aria-current', 'page'); } else { a.removeAttribute('aria-current'); }
       });
@@ -4556,7 +4599,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   applyTheme(root.getAttribute('data-pref') || 'system');
   themeBtn.addEventListener('click', function () {
     var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    try { localStorage.setItem('ps-theme', next); } catch (e) { /* Speicher gesperrt */ }
+    try { localStorage.setItem(document.documentElement.getAttribute('data-project') + '-theme', next); } catch (e) { /* Speicher gesperrt */ }
     root.setAttribute('data-pref', next);
     applyTheme(next);
   });
@@ -4750,9 +4793,10 @@ Verstöße: %punish_verstoss_punkte%</pre>
   });
   $('#kbd').textContent = /Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘ K' : 'Strg K';
 
-  var commandRows = $$('#commandIndex tbody tr');
+  var commandRows = $$('#commandIndex tbody tr, [data-command-index] tbody tr');
   (function () {
     var field = $('#commandFilter');
+    if (!field) return;
     var cards = {};
     $$('.cmd-card').forEach(function (card) {
       cards[card.getAttribute('data-cmd')] = card;
@@ -4791,6 +4835,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
   });
   (function () {
     var field = $('#changelogFilter');
+    if (!field) return;
     function filterChangelog() {
       var tokens = searchText(field.value, true).split(/\s+/).filter(Boolean);
       var count = 0;
@@ -4849,6 +4894,8 @@ Verstöße: %punish_verstoss_punkte%</pre>
     updateProgress();
   })();
 
+
+/* PROJECT CONTENT */
   /* ---------- Interaktive Werkzeuge ---------- */
   var DAUER_EINHEITEN = {
     s: 1, sek: 1, secs: 1, sec: 1, sekunde: 1, sekunden: 1,
@@ -5173,6 +5220,7 @@ Verstöße: %punish_verstoss_punkte%</pre>
     });
     mmUpdate();
   })();
+
 
   route();
 })();

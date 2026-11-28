@@ -1,11 +1,20 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.lightrixx</groupId>
   <artifactId>punish-parent</artifactId>
-  <version>v4.5.1</version>
+  <version>v4.5.2</version>
   <packaging>pom</packaging>
   <name>PunishSystem (Parent)</name>
+  <description>Moderation fuer Velocity und Paper/Purpur mit Strafen, Faellen, Reports und Chatfilter.</description>
+  <url>https://github.com/thelightrixx/PunishSystem</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
   <modules>
     <module>common</module>
     <module>velocity</module>
@@ -25,6 +34,12 @@
     <hikari.version>6.2.1</hikari.version>
     <mysql.version>9.7.0</mysql.version>
     <onnx.version>1.30.0</onnx.version>
+    <paper.version>26.1.2.build.74-stable</paper.version>
+    <paper.legacy.version>1.21.8-R0.1-SNAPSHOT</paper.legacy.version>
+    <api.version>26.1</api.version>
+    <jar.suffix>paper</jar.suffix>
+    <jacocoArgLine />
+    <jacoco.version>0.8.16</jacoco.version>
   </properties>
   <repositories>
     <repository>
@@ -74,7 +89,42 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -95,7 +145,7 @@
             <!-- Mockito als Agent laden (statt Selbstattach): ByteBudys externer
                  Selbstattach scheitert, wenn der Pfad des lokalen Repositories
                  Nicht-ASCII-Zeichen enthält (Agent JAR not found). -->
-            <argLine>-javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</argLine>
+            <argLine>@{jacocoArgLine} -Djava.io.tmpdir="${project.build.directory}" -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"</argLine>
           </configuration>
         </plugin>
         <plugin>
@@ -110,13 +160,60 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>3.6.0</version>
+          <configuration />
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.4.2</version>
+          <configuration>
+            <forceCreation>true</forceCreation>
+            <archive>
+              <manifestEntries>
+                <Implementation-Title>PunishSystem</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
+              </manifestEntries>
+            </archive>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
   </build>
+  <profiles>
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+            <configuration>
+              <propertyName>jacocoArgLine</propertyName>
+            </configuration>
+            <executions>
+              <execution>
+                <id>testabdeckung-messen</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+                <configuration>
+                  <includes>
+                    <include>de/lightrixx/**</include>
+                  </includes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>testabdeckung-berichten</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

@@ -2,10 +2,10 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
-    tags: [ "v*" ]
+    branches: [main]
+    tags: ["v*"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -13,96 +13,71 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Dokumentation und Changelog prüfen
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import xml.etree.ElementTree as ET
-
-          version = ET.parse("pom.xml").getroot().find("{http://maven.apache.org/POM/4.0.0}version").text
-          readme = Path("README.md").read_text(encoding="utf-8-sig")
-          docs = Path("docs/index.html").read_text(encoding="utf-8-sig")
-          anchor = version.replace(".", "-")
-          checks = {
-              "Versionsangabe in README": f"# PunishSystem {version}" in readme.splitlines(),
-              "Release-Link in README": f"https://github.com/thelightrixx/PunishSystem/releases/tag/{version})" in readme,
-              "Versionsanzeige der Dokumentation": f'<span class="ver">{version}</span>' in docs,
-              "Changelog-Eintrag": f'<h2 data-anchor="{anchor}">{version}</h2>' in docs,
-          }
-          errors = [name for name, valid in checks.items() if not valid]
-          if errors:
-              raise SystemExit("Dokumentation nicht aktuell: " + ", ".join(errors))
-          print(f"README, Dokumentation und Changelog passen zu {version}.")
-          PY
-
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: JDK 25 setzen
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
           java-version: "25"
           cache: maven
-
-      - name: Defekte Cache-Artefakte entfernen
-        run: rm -rf "$HOME/.m2/repository/me/clip/placeholderapi"
-
-      - name: Bauen (mit Tests)
+      - name: Version, Handbuch und Werkzeuge pruefen
         run: |
           set -euo pipefail
-          mvn -B -ntp -pl velocity,bridge,bridge-1.21 -am clean package 2>&1 | tee mvn.log
-
-      - name: Jars bereitstellen
-        run: |
-          set -euo pipefail
-          V=$(grep -m1 -oP '(?<=<version>)[^<]+' pom.xml)
-          TAG_VERSION="v${V#[vV]}"
-          echo "Version: ${V}"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" != "${TAG_VERSION}" ]]; then
-            echo "Tag ${GITHUB_REF_NAME} passt nicht zur Projektversion ${TAG_VERSION}."
-            exit 1
+          python scripts/check-standard.py
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            python scripts/check-version.py --tag "$GITHUB_REF_NAME"
+          else
+            python scripts/check-version.py
           fi
-          mkdir -p dist
-          cp "velocity/target/PunishSystem-${V}-velocity.jar"        "dist/PunishSystem-${TAG_VERSION}-velocity.jar"
-          cp "bridge/target/PunishSystem-${V}-bridge.jar"            "dist/PunishSystem-${TAG_VERSION}-bridge.jar"
-          cp "bridge-1.21/target/PunishSystem-${V}-bridge-1.21.jar"  "dist/PunishSystem-${TAG_VERSION}-bridge-1.21.jar"
-          (cd dist && sha256sum *.jar > SHA256SUMS.txt)
-          ls -l dist
-
-      - name: Jars als Artefakt sichern
+          python scripts/check-docs.py
+          python -m unittest discover -s scripts -p test_project_tools.py
+      - name: Alle Module bauen und testen
+        run: |
+          set -euo pipefail
+          mvn -B -ntp clean verify 2>&1 | tee mvn.log
+      - name: Windows-Werkzeuge pruefen
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: .\scripts\test-tools.ps1
+      - name: JARs und SHA-256 pruefen
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            python scripts/prepare-release.py --tag "$GITHUB_REF_NAME"
+          else
+            python scripts/prepare-release.py
+          fi
+      - name: Gepruefte JARs sichern
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: punishsystem-jars
+          name: jars-${{ matrix.os }}
+          if-no-files-found: error
           path: |
             dist/*.jar
+            dist/*-sources.zip
             dist/SHA256SUMS.txt
-
-      - name: Fehlerdetails ausgeben
+            dist/RELEASE_NOTES.md
+            dist/VERIFICATION.json
+      - name: Fehlerprotokolle sichern
         if: failure()
-        run: |
-          {
-            echo '## Fehlerdiagnose'
-            echo '### Arbeitsverzeichnis und pom'
-            ls -la
-            echo '### mvn.log (letzte 60 Zeilen)'
-            tail -60 mvn.log 2>/dev/null || echo 'mvn.log fehlt'
-            echo '### Fehlerzeilen (erste 60)'
-            grep -a -E '\[ERROR\]|BUILD FAILURE' mvn.log 2>/dev/null | head -60 || echo 'keine [ERROR]-Zeilen'
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "::error title=Fehlerdiagnose::Details stehen in der Step-Summary dieses Runs (mvn-Log, ls, ERROR-Zeilen)."
-          if [ -f mvn.log ]; then
-            grep -a -E '\[ERROR\]' mvn.log | head -40 | while IFS= read -r zeile; do
-              echo "::error title=Maven::${zeile}"
-            done
-            grep -a -E 'Compiling|BUILD' mvn.log | tail -10 | while IFS= read -r zeile; do
-              echo "::error title=Kontext::${zeile}"
-            done
-          fi
-          ls -la velocity/target bridge/target 2>&1 | tail -30 | while IFS= read -r zeile; do
-            echo "::error title=target-Ordner::${zeile}"
-          done
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: diagnostics-${{ matrix.os }}
+          if-no-files-found: ignore
+          path: |
+            mvn.log
+            **/target/surefire-reports/
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -111,17 +86,20 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Jars laden
+      - name: Gepruefte JARs laden
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: punishsystem-jars
+          name: jars-ubuntu-latest
           path: dist
-
-      - name: GitHub Release erstellen
+      - name: Stabilen GitHub-Release erstellen
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           name: ${{ github.ref_name }}
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: false
+          make_latest: true
+          body_path: dist/RELEASE_NOTES.md
+          fail_on_unmatched_files: true
           files: |
             dist/*.jar
+            dist/*-sources.zip
             dist/SHA256SUMS.txt

@@ -1,0 +1,27 @@
+{
+  "reference": "PunishSystem",
+  "schema": 1,
+  "files": {
+    ".editorconfig": "7b9e49bbdb2ba35ca5ff85f0483d37ea6697757bd301bac95982d8a137e7a36a",
+    ".gitattributes": "2f46122ab7d494da04046ea8d1f049b742b9fd20e38edd342eea26f4003dec2e",
+    ".gitignore": "f43e938b223eecb2bbd2eb8bc4c69dd71ab1f1100b7669e18abb4da5175ccb26",
+    ".mvn/jvm.config": "6619ff0ae052fc39851eab0ae4d264394ea837e185ba525b78805a8267ca7872",
+    "build_all_jars.bat": "aa62eca9b59862760c52c165d034cf64f7b18581090fe8468aa498aeaf77f9ad",
+    ".github/workflows/build.yml": "aa60fc19001bff0abe45c0fa15a0a2fd5e5f5b8356d943bcf74068d5f20b7388",
+    ".github/workflows/pages.yml": "1c8f01032f5e167b38920c48c22dab742481eefc36d808880374627e0a025d7a",
+    "scripts/build.ps1": "854fd264ba702290b95696363922fb3051069a837913990363bb6d00b1596cc6",
+    "scripts/bump-build.ps1": "5e8d5bcfcfc77305d3b984c904879bf8bde2018632ee689c8066f9a58434635b",
+    "scripts/project_tools.py": "954170ef28d674521a9dab5fdd633adbdd340ff47af7e892dc7ee2dffb5f4bdb",
+    "scripts/test_project_tools.py": "3768d1992df8dad136a3b7433ec26275bc51e8de61373e8816dd5e33882ce09d",
+    "scripts/check-version.py": "767259f1ab1910194abfc8df01f8464ccc776ed3bb9b2009a7dc4ca212e33a6b",
+    "scripts/check-docs.py": "24c9097a9ba60d35d734c5b0351005f745effdb6c55cc9c9573978bd82684870",
+    "scripts/prepare-release.py": "17dfcbb6158c7352239f53111334ae1d43e94a6f91182a5ed61b47fabc68c9e5",
+    "scripts/set-version.py": "6bddd923e6230d888e9889f7fa7ab59cd31930504971332de2679ec01e16a9b1",
+    "scripts/check-standard.py": "093b63226a08bf26389a54b6981371e33d63a1f9a6a42d8ba30db9882959948c",
+    "scripts/sync-standard.py": "d17e5085db46897f45f12be4cf324afe881fb1c468ef3c6ade6a46629b406b78",
+    "scripts/test-tools.ps1": "c86a9e5c30e086d3646a14e10213f1b69275363d50f5668dbe01427e983291a1"
+  },
+  "handbookCss": "2f116d11549817e2c6b776d8b0d14cd588eeaedb3092cf38f786c99310be6dfc",
+  "handbookBoot": "fb715aea6db8b85cd11d0dd3519be566cacaed820ce455f44d1799b771e75a76",
+  "handbookEngine": "877a46c585b3c5555e0cbf5f643a87cf68cfa66bff1faf3be0348b558f47b890"
+}

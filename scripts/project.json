@@ -1,0 +1,26 @@
+{
+  "name": "PunishSystem",
+  "repository": "thelightrixx/PunishSystem",
+  "reference": "PunishSystem",
+  "javaRelease": 21,
+  "buildJdk": 25,
+  "artifacts": [
+    {
+      "module": "velocity",
+      "metadata": "velocity-plugin.json",
+      "pluginName": "PunishSystemVelocity"
+    },
+    {
+      "module": "bridge",
+      "metadata": "plugin.yml",
+      "pluginName": "PunishSystemBridge",
+      "apiVersion": "26.1"
+    },
+    {
+      "module": "bridge-1.21",
+      "metadata": "plugin.yml",
+      "pluginName": "PunishSystemBridge",
+      "apiVersion": "1.21"
+    }
+  ]
+}

@@ -1,10 +1,41 @@
-# PunishSystem v4.5.1
+# PunishSystem v4.5.2
+
+Moderation fuer Velocity und Paper/Purpur mit Strafen, Faellen, Reports und Chatfilter.
+
+## Handbuch
+
+Lies das [PunishSystem Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Navigation, Suche, Farbschema, Schriften und Druckansicht funktionieren offline.
+
+| Aufgabe | Einstieg |
+|---|---|
+| Plugin einrichten | [Installation](docs/index.html#/installation) |
+| Erste Schritte | [Schnellstart](docs/index.html#/schnellstart) |
+| Syntax und Beispiele | [Befehle](docs/index.html#/befehle) |
+| Betrieb und Sicherungen | [Betrieb](docs/index.html#/betrieb) |
+| Änderungen nachlesen | [Changelog](docs/index.html#/changelog) |
+| Bauen oder veröffentlichen | [Projektstandard](docs/index.html#/projektstandard) |
+
+Mit Strg+K oder / durchsuchst du das Handbuch. Abschnittslinks führen direkt zur passenden Stelle. Die Druckansicht enthält das gesamte Handbuch mit geöffneten Details.
+
+## Voraussetzungen und JARs
+
+Das [Release v4.5.2](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.2) enthält alle passenden JARs und SHA256SUMS.txt.
+
+| Einsatzort | Voraussetzung | Variante |
+|---|---|---|
+| Proxy | Velocity 3.4.0+, Java 21 | velocity |
+| Backend | Paper/Purpur 1.21.8, Java 21 | bridge-1.21 |
+| Backend | Paper/Purpur 26.1, Java 25 | bridge |
+
+Proxy-JAR und genau eine passende Bridge pro Backend installieren. Alle JARs tragen dieselbe Version. Bestehende Daten und Konfigurationen vor Updates sichern. Folia wird nicht unterstützt.
+
+## Funktionen und bestehende Betriebshinweise
 
 Mit v4.5.1 zeigt `/punish-version` neben der Proxy-Version auch die von den Bridges gemeldeten Server-Versionen und lässt sich mit `proxy` oder `server` gezielt einschränken. `/punish-update check` bezieht die gemeldeten Bridge-Versionen in die Prüfung ein und nennt abweichende Server. Die Funktionen aus v4.5.0 – verknüpfte Moderationsfälle, Strafkatalog mit Wiederholungsstufen, befristete Chatfilter-Prüfung und optionale Discord-Team-Meldungen – bleiben unverändert.
 
 PunishSystem verwaltet Strafen für Minecraft-Netzwerke mit einem Velocity-Proxy und Paper-/Purpur-Backends. Der Proxy führt Befehle aus und speichert die Daten. Je Backend setzt eine passende Bridge die Strafen durch und stellt GUI, Chatfilter und PlaceholderAPI bereit. Ein Betrieb der Bridge ohne Velocity ist nicht vorgesehen.
 
-## Handbuch
+### Handbuch
 
 Lies das [PunishSystem Handbuch](https://thelightrixx.github.io/PunishSystem/) oder öffne [docs/index.html](docs/index.html) direkt im Browser. Die 41 Themen führen von der Einrichtung bis zur Fehlerbehebung. Inhalte, Suche, Schriften und interaktive Beispiele funktionieren offline; die Werkzeuge führen keine echten Serverbefehle aus.
 
@@ -27,7 +58,7 @@ Mit `Strg+K` (macOS: `⌘+K`) oder `/` durchsuchst du Befehle, Permissions und K
 
 Bei `/verstoss add` zeigt Tab nach einem Leerzeichen am Ende des Grundes `level=low`, `level=medium` und `level=high`. Die Vorschläge gibt es auch beim [Bearbeiten eines Verstoßes](docs/index.html#/befehle-bearbeiten/punish-edit).
 
-## Voraussetzungen und Jars
+### Voraussetzungen und Jars
 
 Das [Release v4.5.1](https://github.com/thelightrixx/PunishSystem/releases/tag/v4.5.1) enthält alle drei Jars und `SHA256SUMS.txt`. Updates lassen sich für den nächsten Start installieren: Backends übernehmen die Bridge aus ihrem Update-Ordner; auf dem Linux-Proxy erledigt ein einmalig eingerichteter Start-Hook den JAR-Austausch.
 
@@ -39,7 +70,7 @@ Das [Release v4.5.1](https://github.com/thelightrixx/PunishSystem/releases/tag/v
 
 Installiere die Proxy-Jar und **genau eine passende Bridge pro Backend** in den jeweiligen `plugins/`-Ordner. Alle installierten Jars müssen dieselbe Version und Buildnummer haben. Folia wird nicht unterstützt. LuckPerms und PlaceholderAPI sind optional; ohne LuckPerms ist die Schutzprüfung bekannter Offline-Spieler eingeschränkt.
 
-## Reihenfolge der Ersteinrichtung
+### Reihenfolge der Ersteinrichtung
 
 1. Jars einspielen, Proxy und Backends einmal starten und wieder stoppen, damit die Konfigurationsdateien entstehen.
 2. **Proxy-Speicher einrichten.** MySQL ist Standard und benötigt eine erreichbare Datenbank samt Benutzer. Für entfernte Datenbanken `speicher.mysql.use-ssl: true` setzen. Mit dieser Einstellung ist eine TLS-Verbindung erforderlich. Als Dateispeicher ist `speicher.typ: "yaml"` verfügbar. Scheitert der Speicherstart, läuft Velocity ohne PunishSystem-Strafverwaltung weiter.
@@ -53,7 +84,7 @@ Setze das [Scope-Flag](docs/index.html#/scopes) ans Ende des Befehls. Unvollstä
 
 Die [Installationsanleitung](docs/index.html#/installation) enthält die vollständigen YAML-Beispiele, Dateipfade und Prüfschritte. Regeln und Texte werden zentral auf dem Proxy gepflegt; synchronisierte Bridge-Dateien sind keine unabhängige Konfiguration.
 
-## Neue Moderationsabläufe in v4.5.0
+### Neue Moderationsabläufe in v4.5.0
 
 - [Moderationsfälle](docs/index.html#/faelle): Reports, Fallnotizen, Beweislinks und Strafentscheidungen unter einer Fallnummer verbinden; im Dossier einsehen.
 - [Strafkatalog](docs/index.html#/strafkatalog): `/punish-katalog <Spieler> spam --global` schlägt abhängig von früheren Katalog-Strafen die nächste Stufe vor. Jede Ausführung braucht eine Bestätigung und das Recht der Strafart.
@@ -62,7 +93,7 @@ Die [Installationsanleitung](docs/index.html#/installation) enthält die vollst�
 
 Alle Module gemeinsam aktualisieren und neu starten. Neue Rechte stehen ab Moderator in den Standardbündeln; bestehende eigene Bündel gezielt ergänzen. Bei MySQL wird `punish_moderation` automatisch angelegt; bei YAML entstehen `data/faelle.yml` und `data/chatfilter-pruefung.yml`. Diese Daten in Sicherungen aufnehmen. `chatfilter.beobachten` erlaubt den Test ohne Filterblockade und Staffel-Strafen. Discord und Beobachtungsmodus sind standardmäßig ausgeschaltet.
 
-## Funktionen
+### Funktionen
 
 - Banns, Timeouts, Mutes, Freezes, Kicks und IP-Strafen mit globalem oder serverbezogenem Scope.
 - Lokaler VPN-Schutz für IPv4 und IPv6 mit 14 GitHub-Quellen, dauerhaftem Cache und IP-/CIDR-Freigaben. Strenger oder ausgewogener Modus, Quellen-/CIDR-Diagnose mit `/punish-vpn check <IP>` und Quellenstatus. Jeder abgelehnte VPN-Login wird geloggt und bei aktivierten Team-Meldungen ingame gemeldet; nur Routing-Hinweise bleiben gedrosselt. Konfiguration: [vpn-schutz](docs/index.html#/config-general/vpn-schutz).
@@ -88,8 +119,31 @@ Downloads laufen beim Start, Reload und danach alle sechs Stunden im Hintergrund
 
 Stand der Quellenprüfung am 21.11.2026: Alle 14 Standardquellen wurden mit dem produktiven Downloader und Parser erfolgreich geprüft. Die jüngsten Proton-Upstream-Builds schlugen jedoch fehl; der letzte erfolgreiche Build war am 17.11.2026. Ein erfolgreicher Download bestätigt Erreichbarkeit und gültiges Format, nicht eine neue Datenerzeugung beim Anbieter. Die VentureChat-Korrektur ist durch Regressionstests in beiden Bridge-Modulen geprüft; ein Live-Test mit deinem Server gehört weiterhin zur Update-Prüfung.
 
-## Lizenz
+### Lizenz
 
 Plugin und Quellcode stehen unter der [MIT-Lizenz](LICENSE).
 
 Das optionale Chatfilter-Modell `ankekat1000/toxic-bert-german` und sein Vokabular werden nicht mit den Jars ausgeliefert. Das Repository führt dafür die Lizenzangabe **CC BY-NC-SA 4.0**. Hinweise zur separaten Bereitstellung stehen unter [Chatfilter](docs/index.html#/chatfilter).
+
+## Entwicklung und Veröffentlichungen
+
+Aufbau und Abläufe folgen PunishSystem: gemeinsamer Kern in common/, Plattformadapter in eigenen Modulen, deutsches Offline-Handbuch unter docs/ und Werkzeuge unter scripts/. Fachlich notwendige Zusatzmodule bleiben erhalten.
+
+```powershell
+build_all_jars.bat nobump ci
+# Alternativ mit vorhandenem Maven:
+mvn -B -ntp clean verify
+python scripts/check-version.py
+python scripts/check-docs.py
+python scripts/prepare-release.py
+```
+
+Build: JDK 25 oder neuer, Maven 3.9.11 und Python 3.10 oder neuer. Java-Bytecode: Release 21. Geprüfte JARs, Release-Text und Prüfsummen liegen unter dist/. Gewöhnliche Builds ändern keine Version.
+
+Versionen heißen vMajor.Minor.Patch. Patch ist die Vorgabe für Korrekturen und kleine Erweiterungen, Minor für umfassende Änderungen. Mit scripts/bump-build.ps1 ausdrücklich erhöhen, danach README, Handbuch und Changelog aktualisieren. GitHub Actions prüft main unter Windows und Linux; nach erfolgreichem Build und Pages-Deployment erstellt ein passender Versions-Tag den stabilen Release.
+
+Kompilierung und automatisierte Tests ersetzen keine Spielertests auf beiden Servervarianten. Bestehende Daten, Rechte, Plugin-Abhängigkeiten und Updatepfade vor dem Produktiveinsatz auf einer getrennten Testinstanz prüfen.
+
+## Lizenz
+
+Plugin und Quellcode stehen unter der [MIT-Lizenz](LICENSE). Die Handbuchgestaltung stammt aus PunishSystem; ihre MIT-Lizenz und die eingebetteten Schriftlizenzen bleiben erhalten.
