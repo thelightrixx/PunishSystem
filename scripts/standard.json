@@ -21,7 +21,7 @@
     "scripts/sync-standard.py": "fbd29b27bbd67ddc07fa732961209fe9574a3345cab79b8263eefad8d22bee39",
     "scripts/test-tools.ps1": "c30b8c9a71f8b0f458cdd6128d622c73ae5544eeb04361f075432c1a7a5779e5"
   },
-  "handbookCss": "993000b796ebd554d4d364b3aca7163abdeace777bf1b1c1cc1de617e9999631",
+  "handbookCss": "504a71d3fe44e78826a0edf80862198317054fef9a3eba073de1387adb51f5da",
   "handbookBoot": "fb715aea6db8b85cd11d0dd3519be566cacaed820ce455f44d1799b771e75a76",
   "handbookEngine": "03ecd0f1e24df1594fd9ff927ec3950e4814c96251af17d6b6dae0afe5546998"
 }
