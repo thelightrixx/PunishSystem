@@ -66,10 +66,10 @@ public final class IoExecutor {
     }
 
     /**
-     * Schreibauftrag mit Coalescing: Pro Schluessel (z. B. Zieldatei) bleibt nur
-     * der NEUESTE Auftrag liegen – aeltere Auftraege fuer denselben Schluessel
-     * werden verworfen, nicht gestapelt. Verhindert Queue/OOM-Wachstum bei
-     * Join-Stuermen und Massenaktionen mit Vollserialisierung je Datei.
+     * Pro Schlüssel, etwa einer Zieldatei, bleibt nur der neueste Schreibauftrag
+     * in der Warteschlange. Er ersetzt ältere wartende Aufträge für denselben
+     * Schlüssel. So füllen viele Beitritte oder Massenaktionen mit vollständigen
+     * Dateischreibvorgängen nicht den Arbeitsspeicher.
      */
     public void ausfuehrenMitSchluessel(String schluessel, Runnable aufgabe) {
         Objects.requireNonNull(schluessel, "Der Schluessel darf nicht null sein.");

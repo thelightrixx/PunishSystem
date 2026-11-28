@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Regression fuer A11-3: Schlägt der Verstoß-Snapshot fehl, wird der Reset abgebrochen.
+ * Regression für A11-3: Schlägt der Verstoß-Snapshot fehl, wird der Reset abgebrochen.
  * Ein vollständiger Lösch-Fallback würde nicht zuordenbare Verstöße mitentfernen.
  */
 class AutoBannSnapshotFehlerTest {

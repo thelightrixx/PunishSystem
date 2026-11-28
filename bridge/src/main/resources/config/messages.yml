@@ -14,7 +14,7 @@
 # Hinweis: %warn-grund% wird in broadcasts.yml (warn-eskalation) genutzt und ist
 #   hier zur Vollständigkeit mit dokumentiert.
 # MiniMessage-Format, Prefix wird automatisch vorangestellt.
-# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# Nach Änderungen: Server neu starten oder /punish-reload nutzen.
 # =========================================================
 
 # --- Nachrichten für den Spieler selbst ---

@@ -31,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: "25"
           cache: maven
-      - name: Version, Handbuch und Werkzeuge pruefen
+      - name: Version, Handbuch und Werkzeuge prüfen
         run: |
           set -euo pipefail
           python scripts/check-standard.py
@@ -46,11 +46,11 @@ jobs:
         run: |
           set -euo pipefail
           mvn -B -ntp clean verify 2>&1 | tee mvn.log
-      - name: Windows-Werkzeuge pruefen
+      - name: Windows-Werkzeuge prüfen
         if: runner.os == 'Windows'
         shell: powershell
         run: .\scripts\test-tools.ps1
-      - name: JARs und SHA-256 pruefen
+      - name: JARs und SHA-256 prüfen
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
@@ -58,7 +58,7 @@ jobs:
           else
             python scripts/prepare-release.py
           fi
-      - name: Gepruefte JARs sichern
+      - name: Geprüfte JARs sichern
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: jars-${{ matrix.os }}
@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Gepruefte JARs laden
+      - name: Geprüfte JARs laden
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: jars-ubuntu-latest

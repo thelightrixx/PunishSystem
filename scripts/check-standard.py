@@ -1,4 +1,4 @@
-"""Reject accidental drift of the shared PunishSystem project standard."""
+"""Prüft, ob gemeinsame Dateien und Handbuchoberfläche zur PunishSystem-Vorlage passen."""
 import hashlib
 import json
 from pathlib import Path
@@ -17,7 +17,7 @@ def check(root=ROOT):
     for relative, expected in standard["files"].items():
         path = root / relative
         if not path.is_file() or digest(path.read_bytes()) != expected:
-            errors.append("Shared standard differs: " + relative)
+            errors.append("Gemeinsame Datei weicht ab: " + relative)
     handbook = (root / "docs/index.html").read_text(encoding="utf-8-sig")
     style = re.search(r"<style[^>]*>(.*?)</style>", handbook, re.S)
     scripts = re.findall(r"<script[^>]*>(.*?)</script>", handbook, re.S)
@@ -26,7 +26,7 @@ def check(root=ROOT):
               "handbookEngine": scripts[-1].split("/* PROJECT CONTENT */")[0] if scripts else ""}
     for key, value in blocks.items():
         if digest(value.encode("utf-8")) != standard[key]:
-            errors.append("Shared handbook standard differs: " + key)
+            errors.append("Handbuchoberfläche weicht ab: " + key)
     if errors:
         raise ValueError("\n".join(errors))
     return len(standard["files"])

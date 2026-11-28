@@ -8,7 +8,7 @@
 # Platzhalter: %spieler%, %ausfuehrer%, %dauer%, %grund%, %anzahl%, %ip%,
 #   %id%, %text%, %max%, %stufe%, %punkte%, %warn-grund%, %reporter%, %server%,
 #   %bridge%, %proxy%, %quelle%, %kanal%, %score%, %status%
-# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# Nach Änderungen: Server neu starten oder /punish-reload nutzen.
 # =========================================================
 
 # --- Broadcast-Nachrichten (was im Server-Chat angezeigt wird) ---

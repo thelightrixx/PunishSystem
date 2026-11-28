@@ -1,4 +1,4 @@
-"""PunishSystem project standard: shared checked entry point."""
+"""Prüft das Offline-Handbuch und seine Verweise."""
 from project_tools import main
 
 if __name__ == "__main__":

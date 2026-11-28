@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Regression fuer S2-12: Doppelkodierte Umlaute in Quellfiles.
+ * Regression für S2-12: Doppelkodierte Umlaute in Quellfiles.
  * Wenn UTF-8-Bytes als Latin-1/CP1252 gelesen und erneut als UTF-8 gespeichert werden,
  * entstehen die Fehlsequenzen der Familien C3.xx ("Ãö"), C2.xx ("Â..") und E2.. ("âeu").
  * Die drei Lead-Zeichen U+00C3, U+00C2 und U+00E2 kommen im Projektquellcode sonst nicht vor.

@@ -1,56 +1,14 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-    1-Klick Ingame-Test: baut das Plugin und startet einen lokalen Paper-Testserver.
-
+    Baut PunishSystem und bereitet einen lokalen Paper-Server für Bridge-Tests vor.
 .DESCRIPTION
-    Datei ist bewusst ASCII-only (keine Umlaute), damit Windows PowerShell 5.1
-    sie auch ohne BOM korrekt liest.
-
-    Ablauf:
-      1. Sucht JDK 25 (temurin-25 im User-Profil, sonst JAVA_HOME, sonst PATH).
-      2. Sucht Maven (PATH, sonst IntelliJ-bundled Maven).
-      3. Baut per "mvn -q package -DskipTests" (mit -NoBuild ueberspringbar, Module velocity+bridge).
-      4. Legt test-server/ an (EULA auto, server.properties, ops.json).
-      5. Laedt Paper 1.21.x einmalig herunter (PaperMC-API, Fallback feste Version).
-      6. Kopiert die frische Bridge-Jar nach test-server/plugins/.
-         Hinweis: Bridge-only Testnetz. Fuer Velocity-Netz: zusaetzlich
-         velocity/target Jar auf einen Velocity-Proxy (3.4.0) legen.
-      7. Startet den Server. Beenden mit "stop" in der Konsole.
-
-    Der Ordner test-server/ wird bei Bedarf neu angelegt.
-
-.PARAMETER SpielerName
-    Dein Minecraft-Name (Offline-Modus). Wird als OP eingetragen.
-    Kann auch nachtraeglich in test-server/ops.json geaendert werden.
-
-.PARAMETER McVersion
-    Minecraft-Version, z.B. "1.21.8". Default: "1.21.8".
-    Muss zur api-version aus plugin.yml passen (1.21).
-
-.PARAMETER Ram
-    RAM fuer den Server, z.B. "2G". Default: "2G".
-
-.PARAMETER ServerPort
-    Server-Port. Default: 25565.
-
-.PARAMETER OnlineMode
-    Wenn gesetzt, startet der Server mit online-mode=true (nur echte
-    Mojang-Accounts). Default ist offline (false), damit du ohne
-    Auth und mit Zweit-Client (z.B. "Tester123")joinen kannst.
-
-.PARAMETER NoBuild
-    Build ueberspringen (nimmt die neueste Jar aus target/).
-
-.PARAMETER ResetData
-    Loescht Plugin-Daten (test-server/plugins/PunishSystemBridge/) vor dem Start,
-    fuer frische Tests (Banns/Mutes/Verstoesse weg).
-
-.EXAMPLE
-    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-test.ps1 -SpielerName "DeinName"
-
-.EXAMPLE
-    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-test.ps1 -SpielerName "DeinName" -ResetData
+    Der Server liegt unter test-server/ und muss an 127.0.0.1 gebunden sein.
+    Für Tests von Strafen und Scopes ist zusätzlich ein eingerichteter Velocity-Proxy nötig.
+    -PrepareOnly bereitet nur vor, -NoBuild verwendet die aktuelle gebaute Version.
+    -AcceptEula bestätigt die Minecraft-EULA für diesen Testserver.
+    -ResetData verschiebt Bridge-Daten in eine Sicherung unter .tools/test-backups/.
+    Welten und vorhandene Servereinstellungen bleiben erhalten.
 #>
 [CmdletBinding()]
 param(
@@ -60,16 +18,18 @@ param(
     [int]$ServerPort = 25565,
     [switch]$OnlineMode,
     [switch]$NoBuild,
-    [switch]$ResetData
+    [switch]$ResetData,
+    [switch]$PrepareOnly,
+    [switch]$AcceptEula
 )
 
 $ErrorActionPreference = "Stop"
 
-# --- 0. Root pruefen ---
-$Root = Get-Location
+# --- 0. Root prüfen ---
+$Root = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $PomPath = Join-Path $Root "pom.xml"
 if (-not (Test-Path -LiteralPath $PomPath)) {
-    throw "pom.xml nicht gefunden. Skript aus dem Projekt-Root starten (Ordner mit pom.xml)."
+    throw "pom.xml nicht gefunden. Der Projektordner muss pom.xml enthalten."
 }
 $ServerDir = Join-Path $Root "test-server"
 $PluginsDir = Join-Path $ServerDir "plugins"
@@ -94,10 +54,10 @@ function Find-Jdk25 {
         if (-not (Test-Path -LiteralPath $J)) { continue }
         try {
             $Out = & $J -version 2>&1 | Out-String
-            if ($Out -match '"25\.' -or $Out -match ' 25\.' -or $Out -match '25\.0\.') {
+            if ($Out -match 'version "(?<major>\d+)' -and [int]$Matches.major -ge 25 -and (Test-Path -LiteralPath (Join-Path (Split-Path $J -Parent) "javac.exe"))) {
                 return $J
             }
-        } catch { }
+        } catch { Write-Verbose "JDK-Prüfung für $J fehlgeschlagen: $_" }
     }
     return $null
 }
@@ -109,51 +69,28 @@ if (-not $JavaExe) {
 $JavaHome = (Get-Item (Split-Path (Split-Path $JavaExe -Parent) -Parent)).FullName
 Write-Host "JDK 25: $JavaExe"
 
-# --- 2. Maven aufloesen ---
-function Find-Maven {
-    $M = Get-Command "mvn.cmd" -ErrorAction SilentlyContinue
-    if ($M) { return $M.Source }
-    $M2 = Get-Command "mvn" -ErrorAction SilentlyContinue
-    if ($M2) { return $M2.Source }
-    $Bundled = Get-ChildItem "C:\Program Files\JetBrains\IntelliJ IDEA*\plugins\maven\lib\maven3\bin\mvn.cmd" -ErrorAction SilentlyContinue |
-        Select-Object -First 1 -ExpandProperty FullName
-    if ($Bundled) { return $Bundled }
-    $Tools = Join-Path (Get-Location) ".tools\apache-maven-3.9.11\bin\mvn.cmd"
-    if (Test-Path -LiteralPath $Tools) { return $Tools }
-    return $null
-}
-
-$Mvn = Find-Maven
-
-# --- 3. Bauen ---
-if (-not $NoBuild) {
-    if (-not $Mvn) {
-        throw "Maven nicht gefunden (weder PATH noch IntelliJ-bundled). Entweder in IntelliJ bauen (package) und mit -NoBuild starten, oder Maven installieren."
-    }
-    Write-Host "Baue mit Maven: $Mvn"
-    $env:JAVA_HOME = $JavaHome
-    & $Mvn -q package -DskipTests
-    if ($LASTEXITCODE -ne 0) { throw "Maven-Build fehlgeschlagen." }
-} else {
-    Write-Host "Build uebersprungen (-NoBuild)."
-}
+# Derselbe vollständige Build wie in CI; -NoBuild verwendet vorhandene geprüfte Dateien.
+if (!$NoBuild) { & (Join-Path $PSScriptRoot 'build.ps1') }
 
 # Bridge-Modul passend zur Zielversion: 1.21.x -> bridge-1.21, neuere Paper -> bridge.
 $BridgeModul = "bridge-1.21"
 if (-not $McVersion.TrimStart("vV").StartsWith("1.21")) {
     $BridgeModul = "bridge"
 }
-Write-Host "Bridge-Modul fuer Paper ${McVersion}: $BridgeModul"
-$Jar = Get-ChildItem -LiteralPath "$BridgeModul\target" -Filter "*.jar" -ErrorAction SilentlyContinue |
-    Where-Object { ($_.Name -notlike "*sources*") -and ($_.Name -notlike "*javadoc*") -and ($_.Name -notlike "original-*") -and ($_.Name -notlike "*-shaded*") } |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
-if (-not $Jar) {
-    throw "Keine Jar in $BridgeModul\target/ gefunden. Erst bauen (ohne -NoBuild)."
+Write-Host "Bridge-Modul für Paper ${McVersion}: $BridgeModul"
+[xml]$ProjectPom = Get-Content -LiteralPath $PomPath -Raw -Encoding UTF8
+$Version = $ProjectPom.project.version
+$JarPath = Join-Path $Root "$BridgeModul/target/PunishSystem-$Version-$BridgeModul.jar"
+if (!(Test-Path -LiteralPath $JarPath -PathType Leaf)) { throw "JAR fehlt: $JarPath. Zuerst vollständig bauen." }
+$Jar = Get-Item -LiteralPath $JarPath
+Write-Host "Bridge: $($Jar.FullName)"
+Write-Host 'Für Moderations- und Scope-Tests muss die Bridge mit einem Velocity-Proxy verbunden sein.'
+
+foreach ($Directory in @($ServerDir, $PluginsDir)) {
+    if ((Test-Path -LiteralPath $Directory) -and ((Get-Item -LiteralPath $Directory).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        throw "Testverzeichnisse dürfen keine Verzeichnislinks sein: $Directory"
+    }
 }
-Write-Host "Jar: $($Jar.FullName)"
-Write-Warning "Dev-Loop baut mit -DskipTests (keine Unit-Tests). Vor Commits: mvn test laufen lassen."
-Write-Warning "Bridge-only Testnetz: kein Proxy-Scope-Test moeglich (Scopes wirken fail-closed, server-name pruefen). Fuer Scope-Tests Velocity-Jar auf Proxy (3.4.0) legen."
 
 # --- 4. Server-Ordner anlegen ---
 if (-not (Test-Path -LiteralPath $ServerDir)) {
@@ -185,13 +122,13 @@ if (-not (Test-Path -LiteralPath $PaperJar)) {
         $Aktuell = (Get-FileHash -LiteralPath $PaperJar -Algorithm SHA256).Hash
         if ($Aktuell.ToLowerInvariant() -ne $ErwartetesSha.Trim().ToLowerInvariant()) {
             Remove-Item -LiteralPath $PaperJar -Force -ErrorAction SilentlyContinue
-            throw "SHA256-Pruefsumme stimmt nicht (Datei geloescht, Abbruch)."
+            throw "SHA256-Pruefsumme stimmt nicht (Datei gelöscht, Abbruch)."
         }
         Write-Host "SHA256 ok."
         $DownloadOk = $true
     } catch {
         Remove-Item -LiteralPath $PaperJar -Force -ErrorAction SilentlyContinue
-        Write-Warning "Paper-Download/Pruefung fehlgeschlagen: $($_.Exception.Message)"
+        Write-Warning "Paper-Download/Prüfung fehlgeschlagen: $($_.Exception.Message)"
     }
     if (-not $DownloadOk) {
         throw "Paper-Download fehlgeschlagen. Manuell laden (https://papermc.io/downloads/paper) und als test-server/paper.jar ablegen."
@@ -205,8 +142,9 @@ if (-not (Test-Path -LiteralPath $PaperJar)) {
 # --- 6. Standard-Config (nur anlegen, nie ueberschreiben) ---
 $Eula = Join-Path $ServerDir "eula.txt"
 if (-not (Test-Path -LiteralPath $Eula)) {
-    Set-Content -LiteralPath $Eula -Value "eula=true" -Encoding Ascii
+    Set-Content -LiteralPath $Eula -Value "eula=false" -Encoding Ascii
 }
+if ($AcceptEula) { Set-Content -LiteralPath $Eula -Value "eula=true" -Encoding Ascii }
 $Props = Join-Path $ServerDir "server.properties"
 if (-not (Test-Path -LiteralPath $Props)) {
     $OnlineStr = "false"
@@ -214,6 +152,7 @@ if (-not (Test-Path -LiteralPath $Props)) {
     $PropsContent = @(
         "# Auto-generiert von scripts/dev-test.ps1 (nur beim ersten Start, danach von Hand editierbar)",
         "motd=PunishSystem DEV",
+        "server-ip=127.0.0.1",
         "server-port=$ServerPort",
         "online-mode=$OnlineStr",
         "white-list=false",
@@ -233,41 +172,38 @@ if (-not (Test-Path -LiteralPath $Props)) {
     }
 }
 
-# OP eintragen
-if (-not [string]::IsNullOrWhiteSpace($SpielerName)) {
-    $OpsFile = Join-Path $ServerDir "ops.json"
-    $Ops = @()
-    if (Test-Path -LiteralPath $OpsFile) {
-        try { $Ops = Get-Content -LiteralPath $OpsFile -Raw | ConvertFrom-Json } catch { $Ops = @() }
-        if ($null -eq $Ops) { $Ops = @() }
-        if ($Ops -isnot [System.Array]) { $Ops = @($Ops) }
-    }
-    $SchonOp = $false
-    foreach ($O in $Ops) {
-        if ($O.name -eq $SpielerName) { $SchonOp = $true }
-    }
-    if (-not $SchonOp) {
-        $Ops += [ordered]@{ uuid = "00000000-0000-0000-0000-000000000000"; name = $SpielerName; level = 4; bypassesPlayerLimit = $true }
-        # Offline-Modus: UUID ist egal, Paper matcht beim Login per Name neu.
-        ConvertTo-Json @($Ops) -Depth 5 | Set-Content -LiteralPath $OpsFile -Encoding Ascii
-        Write-Host "OP eingetragen: $SpielerName"
-    }
-} else {
-    Write-Host "Hinweis: kein -SpielerName angegeben. Du bist trotzdem OP, wenn du als erster joinst? Nein - trage dich ein: -SpielerName DeinName (oder Konsole: op DeinName)."
+if ((Get-Content -LiteralPath $Props -Raw) -notmatch '(?m)^server-ip=127\.0\.0\.1\s*$') {
+    throw 'Der lokale Testserver muss in server.properties ausdrücklich server-ip=127.0.0.1 verwenden. Vorhandene Einstellungen wurden nicht ersetzt.'
 }
+if ($SpielerName) { Write-Host "Nach dem Start in der Serverkonsole ausführen: op $SpielerName" }
 
 # --- 7. Plugin kopieren ---
-Get-ChildItem -LiteralPath $PluginsDir -Filter "PunishSystem-*.jar" -ErrorAction SilentlyContinue |
-    Remove-Item -Force -ErrorAction SilentlyContinue
-Copy-Item -LiteralPath $Jar.FullName -Destination (Join-Path $PluginsDir $Jar.Name) -Force
+$OtherJars = @(Get-ChildItem -LiteralPath $PluginsDir -File -Filter 'PunishSystem*.jar' | Where-Object { $_.Name -ne 'PunishSystemBridge.jar' })
+if ($OtherJars.Count) { throw 'Andere PunishSystem-JARs liegen im Testserver. Vor dem Start prüfen und doppelte Varianten entfernen.' }
+Copy-Item -LiteralPath $Jar.FullName -Destination (Join-Path $PluginsDir "PunishSystemBridge.jar") -Force
 Write-Host "Plugin kopiert nach test-server/plugins/"
 
 if ($ResetData) {
     $DataDir = Join-Path $PluginsDir "PunishSystemBridge"
     if (Test-Path -LiteralPath $DataDir) {
-        Remove-Item -LiteralPath $DataDir -Recurse -Force
-        Write-Host "Plugin-Daten geloescht (ResetData: plugins/PunishSystemBridge; Proxy-Daten bleiben unberuehrt)."
+        $BackupRoot = [IO.Path]::GetFullPath((Join-Path $Root '.tools/test-backups'))
+        $Backup = Join-Path $BackupRoot ([Guid]::NewGuid().ToString('N') + '-PunishSystemBridge')
+        foreach ($Target in @($DataDir, $Backup)) {
+            $AbsoluteTarget = [IO.Path]::GetFullPath($Target)
+            if (!$AbsoluteTarget.StartsWith($Root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Sicherungsziel liegt außerhalb des Projekts.' }
+        }
+        foreach ($Directory in @((Join-Path $Root '.tools'), $BackupRoot, $DataDir)) {
+            if ((Test-Path -LiteralPath $Directory) -and ((Get-Item -LiteralPath $Directory).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Sicherungsordner darf kein Verzeichnislink sein.' }
+        }
+        New-Item -ItemType Directory -Path $BackupRoot -Force | Out-Null
+        Move-Item -LiteralPath $DataDir -Destination $Backup
+        Write-Host "Bridge-Daten gesichert: $Backup"
     }
+}
+
+if ($PrepareOnly) { Write-Host "Testserver vorbereitet: $ServerDir"; return }
+if ((Get-Content -LiteralPath $Eula -Raw) -notmatch '(?m)^eula=true\s*$') {
+    throw 'Vor dem Start https://aka.ms/MinecraftEULA lesen und danach mit -AcceptEula starten.'
 }
 
 # --- 8. Starten ---

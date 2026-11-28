@@ -206,10 +206,10 @@ public final class KanalClient implements PluginMessageListener {
     }
 
     public void sendeHello(String serverName) {
-        // Der Sendesequenz-Zaehler wird bewusst NICHT zurueckgesetzt: Der Proxy setzt
-        // seinen Empfangszaehler beim HELLO selbst zurueck (BrueckenKanal.sequenzPruefen)
+        // Der Sendezähler läuft weiter. Der Proxy setzt seinen Empfangszähler bei HELLO
+        // selbst zurück (BrueckenKanal.sequenzPruefen)
         // und akzeptiert danach jede Sequenz > 0. Ein Reset hier kollidiert mit parallel
-        // laufenden Sendern (Chatfilter-Treffer, GUI-Anfragen): Beide koennten dieselbe
+        // laufenden Sendern (Chatfilter-Treffer, GUI-Anfragen): Beide könnten dieselbe
         // Sequenz vergeben, der Proxy verwirft das zweite Paket als Replay.
         try {
             if (!sendeAnProxy(Protokoll.hello(serverName, pluginVersion, variante, vollSyncNoetig()))) {

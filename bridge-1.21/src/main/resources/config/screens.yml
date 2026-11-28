@@ -10,7 +10,7 @@
 # Platzhalter: %spieler%, %grund%, %dauer%, %verbleibend%, %ablauf%,
 #   %ausfuehrer%, %anzahl%, %punkte%, %max%, %scope%, %ip%
 # Neue Zeile: <newline> - MiniMessage-Format.
-# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# Nach Änderungen: Server neu starten oder /punish-reload nutzen.
 # =========================================================
 
 # --- Nachrichten für Bann-Screens ---

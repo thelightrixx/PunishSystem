@@ -2,6 +2,7 @@
   "name": "PunishSystem",
   "repository": "thelightrixx/PunishSystem",
   "reference": "PunishSystem",
+  "retiredVersions": ["v4.5.2"],
   "javaRelease": 21,
   "buildJdk": 25,
   "artifacts": [

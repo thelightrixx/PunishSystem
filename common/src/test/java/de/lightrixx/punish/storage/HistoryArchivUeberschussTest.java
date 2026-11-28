@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Regression fuer S2-03 (Audit-Fix F2): Der Ueberschuss-Trimmung nach MySQL-Archiv darf
+ * Regression für S2-03 (Audit-Fix F2): Der Ueberschuss-Trimmung nach MySQL-Archiv darf
  * nur passieren, wenn ARCHIVIEREN erfolgreich war. MySQL-Fehlversuch = Bestand bleibt im Memory.
  *
  * <p>Archiv- und Shard-Anweisungen haben getrennte Statements, damit ein Archivfehler nicht

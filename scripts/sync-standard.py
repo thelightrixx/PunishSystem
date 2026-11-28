@@ -1,4 +1,4 @@
-"""Check or explicitly synchronize the shared standard from the sibling PunishSystem repository."""
+"""Prüft die gemeinsame Vorlage und überträgt Änderungen aus PunishSystem."""
 import argparse
 import hashlib
 import json
@@ -24,7 +24,7 @@ def blocks(text):
     scripts = re.findall(r"<script[^>]*>(.*?)</script>", text, re.S)
     style = re.search(r"<style[^>]*>(.*?)</style>", text, re.S)
     if not style or len(scripts) != 2 or "/* PROJECT CONTENT */" not in scripts[-1]:
-        raise ValueError("Expected the shared offline handbook format.")
+        raise ValueError("Das Handbuch hat nicht den erwarteten Aufbau aus Stilblock und zwei Skripten.")
     return style[1], scripts[0], scripts[-1].split("/* PROJECT CONTENT */", 1)[0]
 
 
@@ -52,13 +52,13 @@ def sync(workspace, write=False):
     workspace = workspace.resolve()
     reference = workspace / "PunishSystem"
     if not (reference / "scripts/project.json").is_file():
-        raise ValueError("PunishSystem is missing from the workspace. Use --workspace to select the plugin folder.")
+        raise ValueError("PunishSystem fehlt. Mit --workspace den gemeinsamen Plugin-Ordner angeben.")
     source_blocks = blocks((reference / "docs/index.html").read_text(encoding="utf-8-sig"))
     contents = {}
     for relative in FILES:
         path = reference / relative
         if path.is_symlink() or not path.resolve().is_relative_to(reference.resolve()):
-            raise ValueError("Shared files must stay within PunishSystem.")
+            raise ValueError("Gemeinsame Dateien müssen innerhalb von PunishSystem liegen.")
         contents[relative] = path.read_bytes()
     standard = {"reference": "PunishSystem", "schema": 1,
                 "files": {relative: digest(data) for relative, data in contents.items()},
@@ -75,12 +75,12 @@ def sync(workspace, write=False):
         if json.loads(manifest.read_text(encoding="utf-8"))["reference"] != "PunishSystem":
             continue
         if project.is_symlink():
-            raise ValueError("Symbolic project directory.")
+            raise ValueError("Ein Projektordner ist ein symbolischer Link.")
         projects.append(project.name)
         for relative, data in contents.items():
             path = project / relative
             if path.is_symlink() or not path.resolve().is_relative_to(project.resolve()):
-                raise ValueError("External destination: " + str(path))
+                raise ValueError("Ziel liegt außerhalb des Projekts: " + str(path))
             if not path.exists() or digest(path.read_bytes()) != digest(data):
                 changes.append(project.name + "/" + relative)
                 updates.append((path, data))
@@ -95,16 +95,16 @@ def sync(workspace, write=False):
         for path, data in updates:
             atomic_write(path, data)
     elif changes:
-        raise ValueError("Standard differs:\n" + "\n".join(changes))
+        raise ValueError("Abweichungen von der Vorlage:\n" + "\n".join(changes))
     print(f"PunishSystem standard {'synchronized' if write else 'verified'} across {len(projects)} projects; {len(changes)} differences.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--write", action="store_true", help="Apply the PunishSystem interface and shared files.")
-    parser.add_argument("--check", action="store_true", help="Check only (default).")
+    parser.add_argument("--write", action="store_true", help="Gemeinsame Dateien und Handbuchoberfläche aus PunishSystem übernehmen.")
+    parser.add_argument("--check", action="store_true", help="Nur prüfen (Vorgabe).")
     args = parser.parse_args()
     if args.write and args.check:
-        parser.error("Use --write or --check, not both.")
+        parser.error("Entweder --write oder --check verwenden.")
     sync(args.workspace, args.write)

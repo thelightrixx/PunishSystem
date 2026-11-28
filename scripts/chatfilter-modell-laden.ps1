@@ -1,4 +1,4 @@
-<# ================================================================
+﻿<# ================================================================
 # PunishSystem - chatfilter-modell-laden.ps1
 # Lädt die Chatfilter-Artefakte (vocab + ONNX-Modell) mit
 # SHA-256-Prüfung in den Bridge-Ordner chatfilter/.
@@ -12,10 +12,11 @@
 # CC-BY-NC-SA-4.0 (Namensnennung, nur nicht-kommerziell, gleiche
 # Lizenz bei Weitergabe), exportiert nach ONNX + dynamisch INT8.
 # Wird NICHT mit dem Plugin verteilt - Verantwortung und Lizenz-
-# Compliance liegen beim Serverbetreiber (bei Shop/Kommerz pruefen!).
+# Compliance liegen beim Serverbetreiber (bei Shop/Kommerz prüfen!).
 # Ohne -ModellUrl wird nur vocab.txt geladen und die Anleitung
 # für den Selbst-Export ausgegeben (einmalig, Build-PC mit Python).
 # ================================================================
+#>
 param(
     [string]$Zielordner = "",
     [string]$ModellUrl = ""
@@ -32,22 +33,32 @@ if ([string]::IsNullOrWhiteSpace($Zielordner)) {
 }
 New-Item -ItemType Directory -Force -Path $Zielordner | Out-Null
 
-function Lade-DateiMitHash($url, $ziel, $erwarteterHash, $pflicht) {
-    Write-Host "[INFO] Lade $(Split-Path $ziel -Leaf) ..."
-    Invoke-WebRequest -Uri $url -OutFile $ziel -UseBasicParsing
-    $hash = (Get-FileHash $ziel -Algorithm SHA256).Hash
-    if ($hash -ne $erwarteterHash) {
-        if ($pflicht) {
-            Write-Host "[FEHLER] SHA-256 stimmt nicht: $ziel"
-            exit 1
-        }
-        Write-Host "[WARN] SHA-256 abweichend (Upstream-Update möglich): $ziel"
+function Lade-DateiMitHash($url, $ziel, $erwarteterHash) {
+    if ((Test-Path -LiteralPath $ziel -PathType Leaf) -and (Get-FileHash -LiteralPath $ziel -Algorithm SHA256).Hash -eq $erwarteterHash) {
+        Write-Host "Bereits vorhanden und geprüft: $(Split-Path $ziel -Leaf)"
         return
+    }
+    Write-Host "[INFO] Lade $(Split-Path $ziel -Leaf) ..."
+    $Zielpfad = [IO.Path]::GetFullPath($ziel)
+    $Temporaer = Join-Path (Split-Path $Zielpfad -Parent) ([IO.Path]::GetRandomFileName() + '.tmp')
+    try {
+        Invoke-WebRequest -Uri $url -OutFile $Temporaer -UseBasicParsing -TimeoutSec 300
+        $hash = (Get-FileHash -LiteralPath $Temporaer -Algorithm SHA256).Hash
+        if ($hash -ne $erwarteterHash) {
+            throw "SHA-256 stimmt nicht. Die vorhandene Datei bleibt erhalten: $Zielpfad"
+        }
+        if (Test-Path -LiteralPath $Zielpfad) {
+            [IO.File]::Replace($Temporaer, $Zielpfad, $Zielpfad + '.bak')
+        } else {
+            [IO.File]::Move($Temporaer, $Zielpfad)
+        }
+    } finally {
+        if (Test-Path -LiteralPath $Temporaer) { Remove-Item -LiteralPath $Temporaer -Force }
     }
     Write-Host "[INFO] SHA-256 ok: $(Split-Path $ziel -Leaf)"
 }
 
-Lade-DateiMitHash $VocabUrl (Join-Path $Zielordner "vocab.txt") $VocabHash $false
+Lade-DateiMitHash $VocabUrl (Join-Path $Zielordner "vocab.txt") $VocabHash
 
 $modellDatei = Join-Path $Zielordner "modell_int8.onnx"
 if ([string]::IsNullOrWhiteSpace($ModellUrl)) {
@@ -62,5 +73,5 @@ if ([string]::IsNullOrWhiteSpace($ModellUrl)) {
     Write-Host "Bis dahin läuft nur Stufe 1 (Wortliste)."
     exit 0
 }
-Lade-DateiMitHash $ModellUrl $modellDatei $ModellHash $true
+Lade-DateiMitHash $ModellUrl $modellDatei $ModellHash
 Write-Host "[INFO] Fertig. In config/chatfilter.yml: chatfilter.aktiv=true setzen."

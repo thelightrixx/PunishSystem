@@ -15,7 +15,7 @@
 # (kein Doppelpost). %anzahl% = Warn-Anzahl, %stufe% = Verstoß-Stufe,
 # %warn-grund% = auslösender Warn-Grund. Zum Abschalten: aktiv: false
 # (dann kommt wieder der normale verstoss-add-Broadcast).
-# Nach Änderungen: Server neustarten oder /punish-reload nutzen.
+# Nach Änderungen: Server neu starten oder /punish-reload nutzen.
 # =========================================================
 
 # --- Broadcast-Nachrichten (was im Server-Chat angezeigt wird) ---

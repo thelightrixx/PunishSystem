@@ -9,7 +9,7 @@
 #   messages.yml   - alle Spieler-Nachrichten (messages.*)
 #   screens.yml    - Bann-/Kick-Screens (screens.*)
 #   broadcasts.yml - Team-Broadcasts (broadcasts.*)
-# Nach Änderungen: Proxy neustarten oder /punish-reload nutzen.
+# Nach Änderungen: Proxy neu starten oder /punish-reload nutzen.
 # =========================================================
 
 # Schema-Version dieser Config (2026-11-01). Bei Downgrade (neuere Config auf älterer Jar)
@@ -34,14 +34,14 @@ netzwerk:
   # Tunnel-Signatur (HMAC-SHA256) zwischen Proxy und Bridges.
   # Pro Bridge ein EIGENES Secret: Schluessel = Velocity-Servername (wie in
   # velocity.toml), Wert = nur dieser Bridge bekanntes Secret. Die Bridge traegt
-  # denselben Wert unter netzwerk.tunnel-secret ein. Ein gemeinsames Secret fuer
+  # denselben Wert unter netzwerk.tunnel-secret ein. Ein gemeinsames Secret für
   # mehrere Bridges ist unsicher (eine kompromittierte Bridge koennte die andere
   # imitieren); identische Werte werden beim Start als Warnung gemeldet.
   # Beispiel:
   # bridge-secrets:
-  #   lobby: "<langes Zufallsgeheimnis fuer lobby>"
-  #   survival: "<anderes langes Zufallsgeheimnis fuer survival>"
-  # Leer = Tunnel deaktiviert (Fail-Closed): Bridges bleiben stumm, bis fuer
+  #   lobby: "<langes Zufallsgeheimnis für lobby>"
+  #   survival: "<anderes langes Zufallsgeheimnis für survival>"
+  # Leer = Tunnel deaktiviert (Fail-Closed): Bridges bleiben stumm, bis für
   # ihre Server jeweils ein Secret gesetzt ist.
   # Die Secrets erscheinen nie in Logs. Mindestens 16 Zeichen Zufall;
   # leere oder nach dem Trimmen kürzere Secrets werden abgewiesen.
